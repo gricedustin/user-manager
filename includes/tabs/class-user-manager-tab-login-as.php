@@ -26,6 +26,18 @@ class User_Manager_Tab_Login_As {
 		}
 
 		$active_session = $sessions[$current_admin_id] ?? null;
+		$notice_code    = isset($_GET['um_login_as_notice']) ? sanitize_key(wp_unslash($_GET['um_login_as_notice'])) : '';
+
+		$notice_messages = [
+			'start_success'         => ['success', __('Temporary password generated successfully. Use the credentials below in a private/incognito window.', 'user-manager')],
+			'restored_success'      => ['success', __('Original password restored successfully.', 'user-manager')],
+			'select_user_required'  => ['error', __('Please select a valid user email before generating a temporary password.', 'user-manager')],
+			'user_not_found'        => ['error', __('The selected user could not be found.', 'user-manager')],
+			'target_admin_blocked'  => ['error', __('For safety, Login As does not allow impersonating another administrator account.', 'user-manager')],
+			'password_hash_missing' => ['error', __('Could not read the selected user password hash. No changes were made.', 'user-manager')],
+			'password_set_failed'   => ['error', __('Could not set the temporary password. Please try again.', 'user-manager')],
+			'restore_failed'        => ['error', __('Could not restore the original password for this session.', 'user-manager')],
+		];
 
 		// Handle form submissions.
 		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['um_login_as_action'])) {
@@ -35,13 +47,20 @@ class User_Manager_Tab_Login_As {
 
 			if ($action === 'start') {
 				$target_id = isset($_POST['um_login_as_user']) ? absint($_POST['um_login_as_user']) : 0;
-				self::handle_start_session($current_admin_id, $target_id);
+				$target_email = isset($_POST['um_login_as_user_email']) ? sanitize_email(wp_unslash($_POST['um_login_as_user_email'])) : '';
+				if ($target_id <= 0 && $target_email !== '') {
+					$target_user = get_user_by('email', $target_email);
+					if ($target_user && isset($target_user->ID)) {
+						$target_id = (int) $target_user->ID;
+					}
+				}
+				$result_code = self::handle_start_session($current_admin_id, $target_id);
 				// Reload to show updated session state and avoid resubmission.
-				wp_safe_redirect(User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS));
+				wp_safe_redirect(add_query_arg('um_login_as_notice', $result_code, User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS)));
 				exit;
 			} elseif ($action === 'restore' && $active_session) {
-				self::handle_restore_session($current_admin_id, $active_session);
-				wp_safe_redirect(User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS));
+				$result_code = self::handle_restore_session($current_admin_id, $active_session);
+				wp_safe_redirect(add_query_arg('um_login_as_notice', $result_code, User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS)));
 				exit;
 			}
 		}
@@ -62,36 +81,43 @@ class User_Manager_Tab_Login_As {
 						<?php esc_html_e('Use this tool to temporarily set a random password for a user so you can log in as them in an incognito/private window. When finished, restore their original password.', 'user-manager'); ?>
 					</p>
 
+					<?php if ($notice_code !== '' && isset($notice_messages[$notice_code]) && is_array($notice_messages[$notice_code])) : ?>
+						<?php
+						$notice_type = $notice_messages[$notice_code][0] === 'success' ? 'notice-success' : 'notice-error';
+						$notice_text = (string) $notice_messages[$notice_code][1];
+						?>
+						<div class="notice <?php echo esc_attr($notice_type); ?> is-dismissible" style="margin: 12px 0 16px;">
+							<p><?php echo esc_html($notice_text); ?></p>
+						</div>
+					<?php endif; ?>
+
 					<h3><?php esc_html_e('Step 1: Choose a user and generate a temporary password', 'user-manager'); ?></h3>
-					<form method="post" action="">
+					<form method="post" action="" id="um-login-as-start-form">
 						<?php wp_nonce_field('um_login_as_action'); ?>
 						<input type="hidden" name="um_login_as_action" value="start" />
 
 						<table class="form-table">
 							<tr>
 								<th scope="row">
-									<label for="um-login-as-user"><?php esc_html_e('Select User', 'user-manager'); ?></label>
+									<label for="um-login-as-user-email"><?php esc_html_e('User Email', 'user-manager'); ?></label>
 								</th>
 								<td>
-									<?php
-									// Fetch all users and sort by email address (A–Z), then render a basic select.
-									$users = get_users([
-										'orderby' => 'user_email',
-										'order'   => 'ASC',
-										'fields'  => ['ID', 'user_email'],
-									]);
-									?>
-									<select name="um_login_as_user" id="um-login-as-user" class="regular-text">
-										<option value=""><?php esc_html_e('— Select a user —', 'user-manager'); ?></option>
-										<?php foreach ($users as $user) : ?>
-											<?php if (empty($user->user_email)) { continue; } ?>
-											<option value="<?php echo (int) $user->ID; ?>">
-												<?php echo esc_html(strtolower($user->user_email)); ?>
-											</option>
-										<?php endforeach; ?>
-									</select>
+									<input type="hidden" name="um_login_as_user" id="um-login-as-user-id" value="" />
+									<input
+										type="text"
+										name="um_login_as_user_email"
+										id="um-login-as-user-email"
+										class="regular-text"
+										list="um-login-as-user-datalist"
+										data-um-lazy-datalist-source="user_emails"
+										placeholder="<?php esc_attr_e('Type to search by email', 'user-manager'); ?>"
+										value=""
+										required
+										autocomplete="off"
+									/>
+									<datalist id="um-login-as-user-datalist"></datalist>
 									<p class="description">
-										<?php esc_html_e('We recommend testing with a user account that matches the role(s) you want to preview.', 'user-manager'); ?>
+										<?php esc_html_e('Start typing an email address, then choose a suggestion. This list loads on first focus to keep the page fast.', 'user-manager'); ?>
 									</p>
 								</td>
 							</tr>
@@ -285,6 +311,43 @@ class User_Manager_Tab_Login_As {
 		</div>
 		<script>
 		(function() {
+			function updateLoginAsHiddenUserId() {
+				var emailInput = document.getElementById('um-login-as-user-email');
+				var hiddenInput = document.getElementById('um-login-as-user-id');
+				if (!emailInput || !hiddenInput) {
+					return;
+				}
+				var listId = emailInput.getAttribute('list');
+				var datalist = listId ? document.getElementById(listId) : null;
+				var typed = (emailInput.value || '').trim().toLowerCase();
+				hiddenInput.value = '';
+				if (!typed || !datalist || !datalist.options) {
+					return;
+				}
+				for (var i = 0; i < datalist.options.length; i++) {
+					var option = datalist.options[i];
+					if (!option) {
+						continue;
+					}
+					var optionValue = (option.value || '').trim().toLowerCase();
+					if (optionValue !== typed) {
+						continue;
+					}
+					var userId = option.getAttribute('data-um-user-id');
+					if (userId) {
+						hiddenInput.value = userId;
+					}
+					return;
+				}
+			}
+
+			var startForm = document.getElementById('um-login-as-start-form');
+			if (startForm) {
+				startForm.addEventListener('submit', function() {
+					updateLoginAsHiddenUserId();
+				});
+			}
+
 			document.addEventListener('click', function(e) {
 				var target = e.target;
 				if (target.classList && target.classList.contains('um-login-as-copy')) {
@@ -297,6 +360,17 @@ class User_Manager_Tab_Login_As {
 					}
 				}
 			});
+
+			document.addEventListener('input', function(e) {
+				if (e.target && e.target.id === 'um-login-as-user-email') {
+					updateLoginAsHiddenUserId();
+				}
+			});
+			document.addEventListener('change', function(e) {
+				if (e.target && e.target.id === 'um-login-as-user-email') {
+					updateLoginAsHiddenUserId();
+				}
+			});
 		})();
 		</script>
 		<?php
@@ -307,20 +381,21 @@ class User_Manager_Tab_Login_As {
 	 *
 	 * @param int $admin_id  Admin user ID.
 	 * @param int $target_id Target user ID.
+	 * @return string Result code for admin notice.
 	 */
-	private static function handle_start_session(int $admin_id, int $target_id): void {
+	private static function handle_start_session(int $admin_id, int $target_id): string {
 		if ($target_id <= 0 || $admin_id <= 0) {
-			return;
+			return 'select_user_required';
 		}
 
 		$target = get_userdata($target_id);
 		if (!$target) {
-			return;
+			return 'user_not_found';
 		}
 
 		// Do not allow logging in as another administrator unless explicitly desired.
 		if (in_array('administrator', (array) $target->roles, true) && $admin_id !== $target_id) {
-			return;
+			return 'target_admin_blocked';
 		}
 
 		// Generate a secure random password.
@@ -338,11 +413,21 @@ class User_Manager_Tab_Login_As {
 		);
 
 		if (empty($hash)) {
-			return;
+			return 'password_hash_missing';
 		}
 
 		// Update the user's password to the temporary value using wp_set_password.
 		wp_set_password($temp_password, $target_id);
+
+		$updated_hash = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT user_pass FROM {$table} WHERE ID = %d",
+				$target_id
+			)
+		);
+		if (empty($updated_hash) || !wp_check_password($temp_password, (string) $updated_hash, $target_id)) {
+			return 'password_set_failed';
+		}
 
 		// Store session metadata keyed by current admin.
 		$sessions = get_option(self::OPTION_KEY, []);
@@ -370,6 +455,8 @@ class User_Manager_Tab_Login_As {
 				'target_user_email' => $target->user_email,
 			]
 		);
+
+		return 'start_success';
 	}
 
 	/**
@@ -377,10 +464,11 @@ class User_Manager_Tab_Login_As {
 	 *
 	 * @param int   $admin_id Admin user ID.
 	 * @param array $session  Session data.
+	 * @return string Result code for admin notice.
 	 */
-	private static function handle_restore_session(int $admin_id, array $session): void {
+	private static function handle_restore_session(int $admin_id, array $session): string {
 		if (empty($session['user_id']) || empty($session['original_hash'])) {
-			return;
+			return 'restore_failed';
 		}
 
 		$user_id       = (int) $session['user_id'];
@@ -390,7 +478,7 @@ class User_Manager_Tab_Login_As {
 		$table = $wpdb->users;
 
 		// Restore the original password hash directly.
-		$wpdb->update(
+		$updated = $wpdb->update(
 			$table,
 			[
 				'user_pass' => $original_hash,
@@ -405,6 +493,9 @@ class User_Manager_Tab_Login_As {
 				'%d',
 			]
 		);
+		if ($updated === false) {
+			return 'restore_failed';
+		}
 
 		// Clear the session for this admin.
 		$sessions = get_option(self::OPTION_KEY, []);
@@ -422,6 +513,8 @@ class User_Manager_Tab_Login_As {
 				'target_user_id' => $user_id,
 			]
 		);
+
+		return 'restored_success';
 	}
 }
 

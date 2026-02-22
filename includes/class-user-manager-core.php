@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.4';
+	const VERSION = '2.2.5';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5374,12 +5374,29 @@ final class User_Manager_Core {
 				}
 				
 				for (var i = 0; i < options.length; i++) {
-					var value = options[i];
-					if (typeof value !== "string" || value === "") {
+					var optionData = options[i];
+					var optionValue = "";
+					var optionUserId = "";
+
+					if (typeof optionData === "string") {
+						optionValue = optionData;
+					} else if (optionData && typeof optionData === "object") {
+						if (typeof optionData.value === "string") {
+							optionValue = optionData.value;
+						}
+						if (typeof optionData.user_id === "number" || typeof optionData.user_id === "string") {
+							optionUserId = String(optionData.user_id);
+						}
+					}
+
+					if (optionValue === "") {
 						continue;
 					}
 					var optionEl = document.createElement("option");
-					optionEl.value = value;
+					optionEl.value = optionValue;
+					if (optionUserId !== "") {
+						optionEl.setAttribute("data-um-user-id", optionUserId);
+					}
 					datalistEl.appendChild(optionEl);
 				}
 				
@@ -5409,7 +5426,10 @@ final class User_Manager_Core {
 					var options = [];
 					if (response && response.success && response.data && Array.isArray(response.data.options)) {
 						options = response.data.options.filter(function(item) {
-							return typeof item === "string" && item !== "";
+							if (typeof item === "string") {
+								return item !== "";
+							}
+							return !!(item && typeof item === "object" && typeof item.value === "string" && item.value !== "");
 						});
 					}
 					sourceCache[source] = options;
@@ -7093,6 +7113,11 @@ final class User_Manager_Core {
 				'options' => self::get_coupon_codes_for_datalist(),
 			]);
 		}
+		if ($source === 'user_emails') {
+			wp_send_json_success([
+				'options' => self::get_user_emails_for_datalist(),
+			]);
+		}
 		
 		wp_send_json_error(['message' => __('Unsupported datalist source.', 'user-manager')], 400);
 	}
@@ -7131,6 +7156,44 @@ final class User_Manager_Core {
 		return array_values(array_unique($codes));
 	}
 	
+	/**
+	 * Get user emails for Login As lazy datalist fields.
+	 *
+	 * @return array<int,array{value:string,user_id:int}>
+	 */
+	private static function get_user_emails_for_datalist(): array {
+		$users = get_users([
+			'orderby' => 'user_email',
+			'order'   => 'ASC',
+			'fields'  => ['ID', 'user_email'],
+		]);
+
+		if (empty($users) || !is_array($users)) {
+			return [];
+		}
+
+		$options = [];
+		$seen_emails = [];
+		foreach ($users as $user) {
+			$user_id = isset($user->ID) ? (int) $user->ID : 0;
+			$email = isset($user->user_email) ? sanitize_email((string) $user->user_email) : '';
+			if ($user_id <= 0 || $email === '') {
+				continue;
+			}
+			$email_key = strtolower($email);
+			if (isset($seen_emails[$email_key])) {
+				continue;
+			}
+			$seen_emails[$email_key] = true;
+			$options[] = [
+				'value'   => $email_key,
+				'user_id' => $user_id,
+			];
+		}
+
+		return $options;
+	}
+
 	/**
 	 * AJAX handler for email preview.
 	 */

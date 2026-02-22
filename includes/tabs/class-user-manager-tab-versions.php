@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.5 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login As: replaced the user dropdown with a type-to-search email input (datalist) that lazy-loads user emails on first focus, improving usability and reducing tab load time on large user lists.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login As: improved Start Session reliability by resolving selected users by email server-side when needed and validating temporary password updates before session storage.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login As: added clear success/error notices after Generate/Restore actions, so blocked or failed actions are visible instead of silent.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.4 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings: added a new "Custom WP-Admin Top Bar Menus & Links" card to configure custom top-bar dropdown menus and links without custom code.', 'user-manager'); ?></li>
