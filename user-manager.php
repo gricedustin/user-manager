@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.2
+ * Version: 2.2.3
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.3 - February 22, 2026
+ * - Coupon datalist fields in wp-admin now lazy-load options on first focus/click instead of loading full coupon lists during initial page render.
+ * - Applied lazy datalist behavior across all current list= coupon fields (Create User, Bulk Create, Bulk Coupons, and Email Users) to reduce admin page load time on stores with many coupons.
+ *
  * 2.2.2 - February 14, 2026
  * - Settings → API: setting renamed to "Enable Page & Post Meta Box for inserting ChatGPT generated content into pages & posts". Meta box now appears on both Page and Post edit screens (previously pages only).
  * - WP-Admin top bar: new "User Manager" link (right side) that goes to the plugin Settings tab.

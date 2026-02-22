@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.3 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Performance update: coupon datalist fields in wp-admin now load options lazily on first focus/click instead of loading every coupon during initial page render.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied lazy datalist loading across all current coupon list= fields in Create User, Bulk Create (upload + paste), Bulk Coupons, and Email Users.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a shared AJAX-backed datalist source for coupon codes so repeated coupon fields can reuse the same loaded options.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.2 <span>(February 14, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings → API: setting renamed to "Enable Page & Post Meta Box for inserting ChatGPT generated content into pages & posts". Meta box now appears on both Page and Post edit screens (previously pages only).', 'user-manager'); ?></li>
