@@ -1,0 +1,19 @@
+---
+description: Always keep plugin version and manual changelog synchronized
+alwaysApply: true
+---
+
+For every change in this repository, keep release metadata in sync unless the user explicitly says not to.
+
+Required updates:
+
+1) Bump plugin version (patch increment by default):
+- `user-manager.php` plugin header: `Version: x.y.z`
+- `includes/class-user-manager-core.php`: `const VERSION = 'x.y.z';`
+
+2) Add/update release notes for that same version in both places:
+- Top changelog block in `user-manager.php`
+- Top entry in `includes/tabs/class-user-manager-tab-versions.php`
+
+3) Keep version number and release date consistent across all version/changelog locations.
+
