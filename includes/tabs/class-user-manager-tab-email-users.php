@@ -11,20 +11,6 @@ class User_Manager_Tab_Email_Users {
 
 	public static function render(): void {
 		$templates     = User_Manager_Core::get_email_templates();
-		$coupon_posts  = get_posts([
-			'post_type'   => 'shop_coupon',
-			'post_status' => 'publish',
-			'numberposts' => -1,
-			'orderby'     => 'title',
-			'order'       => 'ASC',
-		]);
-		$coupons = [];
-		foreach ($coupon_posts as $post) {
-			$coupon = class_exists('WC_Coupon') ? new WC_Coupon($post->ID) : null;
-			if ($coupon && $coupon->get_id()) {
-				$coupons[] = $coupon;
-			}
-		}
 		$activity_data = User_Manager_Core::get_activity_log();
 
 		// Normalize activity log structure (supports older flat arrays and newer ['entries' => []] format).
@@ -186,15 +172,8 @@ class User_Manager_Tab_Email_Users {
 							
 							<div class="um-form-field" id="um-email-users-coupon-code-row">
 								<label for="um-email-users-coupon-code"><?php esc_html_e('Coupon code (for %COUPONCODE% in template)', 'user-manager'); ?></label>
-								<input type="text" name="coupon_code_for_template" id="um-email-users-coupon-code" class="regular-text" list="um-email-users-coupon-code-datalist" placeholder="<?php esc_attr_e('Type to search or leave empty', 'user-manager'); ?>" value="" autocomplete="off" />
-								<datalist id="um-email-users-coupon-code-datalist">
-									<?php if (!empty($coupons)) : ?>
-										<?php foreach ($coupons as $coupon) : ?>
-											<?php /** @var WC_Coupon $coupon */ ?>
-											<option value="<?php echo esc_attr($coupon->get_code()); ?>"></option>
-										<?php endforeach; ?>
-									<?php endif; ?>
-								</datalist>
+								<input type="text" name="coupon_code_for_template" id="um-email-users-coupon-code" class="regular-text" list="um-email-users-coupon-code-datalist" data-um-lazy-datalist-source="coupon_codes" placeholder="<?php esc_attr_e('Type to search or leave empty', 'user-manager'); ?>" value="" autocomplete="off" />
+								<datalist id="um-email-users-coupon-code-datalist"></datalist>
 								<p class="description"><?php esc_html_e('When the selected template contains %COUPONCODE%, this code is used in the email (preview and send). Leave empty to omit or use a default in preview.', 'user-manager'); ?></p>
 							</div>
 							

@@ -20,20 +20,6 @@ class User_Manager_Tab_Bulk_Create {
 		if (empty($paste_column_headers)) {
 			$paste_column_headers = ['email', 'first_name', 'last_name', 'role', 'username', 'password'];
 		}
-		$coupon_posts = get_posts([
-			'post_type'   => 'shop_coupon',
-			'post_status' => 'publish',
-			'numberposts' => -1,
-			'orderby'     => 'title',
-			'order'       => 'ASC',
-		]);
-		$coupons = [];
-		foreach ($coupon_posts as $post) {
-			$coupon = class_exists('WC_Coupon') ? new WC_Coupon($post->ID) : null;
-			if ($coupon && $coupon->get_id()) {
-				$coupons[] = $coupon;
-			}
-		}
 		$activity  = User_Manager_Core::get_activity_log();
 
 		// Normalize activity log structure (supports both flat arrays and ['entries' => []]).
@@ -93,29 +79,15 @@ class User_Manager_Tab_Bulk_Create {
 						
 						<div class="um-form-field">
 							<label for="um-bulk-coupon-code"><?php esc_html_e('Coupon code (for %COUPONCODE% in template)', 'user-manager'); ?></label>
-							<input type="text" name="coupon_code_for_template" id="um-bulk-coupon-code" class="regular-text" list="um-bulk-coupon-code-datalist" placeholder="<?php esc_attr_e('Type to search or leave empty', 'user-manager'); ?>" value="" autocomplete="off" />
-							<datalist id="um-bulk-coupon-code-datalist">
-								<?php if (!empty($coupons)) : ?>
-									<?php foreach ($coupons as $coupon) : ?>
-										<?php /** @var WC_Coupon $coupon */ ?>
-										<option value="<?php echo esc_attr($coupon->get_code()); ?>"></option>
-									<?php endforeach; ?>
-								<?php endif; ?>
-							</datalist>
+							<input type="text" name="coupon_code_for_template" id="um-bulk-coupon-code" class="regular-text" list="um-bulk-coupon-code-datalist" data-um-lazy-datalist-source="coupon_codes" placeholder="<?php esc_attr_e('Type to search or leave empty', 'user-manager'); ?>" value="" autocomplete="off" />
+							<datalist id="um-bulk-coupon-code-datalist"></datalist>
 							<p class="description"><?php esc_html_e('When the selected template contains %COUPONCODE%, this code is used in the email. Leave empty to omit.', 'user-manager'); ?></p>
 						</div>
 						
 						<div class="um-form-field">
 							<label for="um-bulk-allow-email-coupon"><?php esc_html_e('Also Append Each Email to "Allowed Emails" on Coupon', 'user-manager'); ?></label>
-							<input type="text" name="allow_email_coupon_code" id="um-bulk-allow-email-coupon" class="regular-text" list="um-bulk-allow-email-coupon-datalist" placeholder="<?php esc_attr_e('Type to search or leave empty for none', 'user-manager'); ?>" value="" autocomplete="off" />
-							<datalist id="um-bulk-allow-email-coupon-datalist">
-								<?php if (!empty($coupons)) : ?>
-									<?php foreach ($coupons as $coupon) : ?>
-										<?php /** @var WC_Coupon $coupon */ ?>
-										<option value="<?php echo esc_attr($coupon->get_code()); ?>"></option>
-									<?php endforeach; ?>
-								<?php endif; ?>
-							</datalist>
+							<input type="text" name="allow_email_coupon_code" id="um-bulk-allow-email-coupon" class="regular-text" list="um-bulk-allow-email-coupon-datalist" data-um-lazy-datalist-source="coupon_codes" placeholder="<?php esc_attr_e('Type to search or leave empty for none', 'user-manager'); ?>" value="" autocomplete="off" />
+							<datalist id="um-bulk-allow-email-coupon-datalist"></datalist>
 							<p class="description">
 								<?php esc_html_e('Optional. When set, each valid user email created from this CSV will also be added to the “Allowed emails” / email restrictions on the selected WooCommerce coupon.', 'user-manager'); ?>
 							</p>
@@ -218,29 +190,15 @@ class User_Manager_Tab_Bulk_Create {
 						
 						<div class="um-form-field">
 							<label for="um-paste-coupon-code"><?php esc_html_e('Coupon code (for %COUPONCODE% in template)', 'user-manager'); ?></label>
-							<input type="text" name="coupon_code_for_template" id="um-paste-coupon-code" class="regular-text" list="um-paste-coupon-code-datalist" placeholder="<?php esc_attr_e('Type to search or leave empty', 'user-manager'); ?>" value="" autocomplete="off" />
-							<datalist id="um-paste-coupon-code-datalist">
-								<?php if (!empty($coupons)) : ?>
-									<?php foreach ($coupons as $coupon) : ?>
-										<?php /** @var WC_Coupon $coupon */ ?>
-										<option value="<?php echo esc_attr($coupon->get_code()); ?>"></option>
-									<?php endforeach; ?>
-								<?php endif; ?>
-							</datalist>
+							<input type="text" name="coupon_code_for_template" id="um-paste-coupon-code" class="regular-text" list="um-paste-coupon-code-datalist" data-um-lazy-datalist-source="coupon_codes" placeholder="<?php esc_attr_e('Type to search or leave empty', 'user-manager'); ?>" value="" autocomplete="off" />
+							<datalist id="um-paste-coupon-code-datalist"></datalist>
 							<p class="description"><?php esc_html_e('When the selected template contains %COUPONCODE%, this code is used in the email. Leave empty to omit.', 'user-manager'); ?></p>
 						</div>
 						
 						<div class="um-form-field">
 							<label for="um-paste-allow-email-coupon"><?php esc_html_e('Also Append Each Email to "Allowed Emails" on Coupon', 'user-manager'); ?></label>
-							<input type="text" name="allow_email_coupon_code" id="um-paste-allow-email-coupon" class="regular-text" list="um-paste-allow-email-coupon-datalist" placeholder="<?php esc_attr_e('Type to search or leave empty for none', 'user-manager'); ?>" value="" autocomplete="off" />
-							<datalist id="um-paste-allow-email-coupon-datalist">
-								<?php if (!empty($coupons)) : ?>
-									<?php foreach ($coupons as $coupon) : ?>
-										<?php /** @var WC_Coupon $coupon */ ?>
-										<option value="<?php echo esc_attr($coupon->get_code()); ?>"></option>
-									<?php endforeach; ?>
-								<?php endif; ?>
-							</datalist>
+							<input type="text" name="allow_email_coupon_code" id="um-paste-allow-email-coupon" class="regular-text" list="um-paste-allow-email-coupon-datalist" data-um-lazy-datalist-source="coupon_codes" placeholder="<?php esc_attr_e('Type to search or leave empty for none', 'user-manager'); ?>" value="" autocomplete="off" />
+							<datalist id="um-paste-allow-email-coupon-datalist"></datalist>
 							<p class="description">
 								<?php esc_html_e('Optional. When set, each valid user email created from this pasted data will also be added to the “Allowed emails” / email restrictions on the selected WooCommerce coupon.', 'user-manager'); ?>
 							</p>

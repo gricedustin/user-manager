@@ -208,6 +208,9 @@ final class User_Manager_Core {
 		// Activity details endpoint
 		add_action('wp_ajax_user_manager_get_activity_details', [__CLASS__, 'ajax_get_activity_details']);
 		
+		// Lazy datalist options endpoint (loads list options on first focus/click).
+		add_action('wp_ajax_user_manager_get_datalist_options', [__CLASS__, 'ajax_get_datalist_options']);
+		
 		// Register action handlers
 		User_Manager_Actions::init();
 	}
@@ -5026,6 +5029,15 @@ final class User_Manager_Core {
 
 		// Enqueue script for file upload
 		wp_enqueue_script('jquery');
+		
+		// Shared lazy datalist loader for fields using list=.
+		wp_register_script('um-lazy-datalist', false, ['jquery'], self::VERSION, true);
+		wp_enqueue_script('um-lazy-datalist');
+		wp_add_inline_script('um-lazy-datalist', 'window.umLazyDatalistConfig = ' . wp_json_encode([
+			'ajaxUrl' => admin_url('admin-ajax.php'),
+			'nonce'   => wp_create_nonce('user_manager_datalist_options'),
+		]) . ';', 'before');
+		wp_add_inline_script('um-lazy-datalist', self::get_lazy_datalist_script(), 'after');
 	}
 
 	/**
@@ -5170,6 +5182,114 @@ final class User_Manager_Core {
 		else bindChangeThumb();
 		})();';
 		return $js;
+	}
+	
+	/**
+	 * Shared lazy datalist loader for plugin admin forms.
+	 */
+	private static function get_lazy_datalist_script(): string {
+		return '(function($) {
+			if (!$ || !window.umLazyDatalistConfig || !umLazyDatalistConfig.ajaxUrl || !umLazyDatalistConfig.nonce) {
+				return;
+			}
+			
+			var sourceCache = {};
+			var sourceRequests = {};
+			
+			function populateDatalist(datalistEl, options) {
+				if (!datalistEl) {
+					return;
+				}
+				
+				while (datalistEl.firstChild) {
+					datalistEl.removeChild(datalistEl.firstChild);
+				}
+				
+				for (var i = 0; i < options.length; i++) {
+					var value = options[i];
+					if (typeof value !== "string" || value === "") {
+						continue;
+					}
+					var optionEl = document.createElement("option");
+					optionEl.value = value;
+					datalistEl.appendChild(optionEl);
+				}
+				
+				datalistEl.setAttribute("data-um-lazy-loaded", "1");
+				datalistEl.removeAttribute("data-um-lazy-loading");
+			}
+			
+			function getSourceOptions(source) {
+				if (Array.isArray(sourceCache[source])) {
+					return $.Deferred().resolve(sourceCache[source]).promise();
+				}
+				
+				if (sourceRequests[source]) {
+					return sourceRequests[source];
+				}
+				
+				sourceRequests[source] = $.ajax({
+					url: umLazyDatalistConfig.ajaxUrl,
+					method: "GET",
+					dataType: "json",
+					data: {
+						action: "user_manager_get_datalist_options",
+						nonce: umLazyDatalistConfig.nonce,
+						source: source
+					}
+				}).then(function(response) {
+					var options = [];
+					if (response && response.success && response.data && Array.isArray(response.data.options)) {
+						options = response.data.options.filter(function(item) {
+							return typeof item === "string" && item !== "";
+						});
+					}
+					sourceCache[source] = options;
+					return options;
+				}).always(function() {
+					delete sourceRequests[source];
+				});
+				
+				return sourceRequests[source];
+			}
+			
+			function maybeLoadDatalistForInput(inputEl) {
+				if (!inputEl) {
+					return;
+				}
+				
+				var source = inputEl.getAttribute("data-um-lazy-datalist-source");
+				if (!source) {
+					return;
+				}
+				
+				var listId = inputEl.getAttribute("list");
+				if (!listId) {
+					return;
+				}
+				
+				var datalistEl = document.getElementById(listId);
+				if (!datalistEl) {
+					return;
+				}
+				
+				if (datalistEl.getAttribute("data-um-lazy-loaded") === "1" || datalistEl.getAttribute("data-um-lazy-loading") === "1") {
+					return;
+				}
+				
+				datalistEl.setAttribute("data-um-lazy-loading", "1");
+				
+				getSourceOptions(source).done(function(options) {
+					populateDatalist(datalistEl, options || []);
+				}).fail(function() {
+					datalistEl.removeAttribute("data-um-lazy-loading");
+				});
+			}
+			
+			$(document).on("focusin click", "input[list][data-um-lazy-datalist-source]", function() {
+				maybeLoadDatalistForInput(this);
+			});
+		})(jQuery);';
 	}
 
 	/**
@@ -6789,6 +6909,60 @@ final class User_Manager_Core {
 		return $files;
 	}
 
+	/**
+	 * AJAX handler for lazy datalist options.
+	 */
+	public static function ajax_get_datalist_options(): void {
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(['message' => __('Unauthorized', 'user-manager')], 403);
+		}
+		
+		check_ajax_referer('user_manager_datalist_options', 'nonce');
+		
+		$source = isset($_GET['source']) ? sanitize_key(wp_unslash($_GET['source'])) : '';
+		if ($source === 'coupon_codes') {
+			wp_send_json_success([
+				'options' => self::get_coupon_codes_for_datalist(),
+			]);
+		}
+		
+		wp_send_json_error(['message' => __('Unsupported datalist source.', 'user-manager')], 400);
+	}
+	
+	/**
+	 * Get coupon codes for lazy datalist fields.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_coupon_codes_for_datalist(): array {
+		if (!post_type_exists('shop_coupon')) {
+			return [];
+		}
+		
+		$coupon_ids = get_posts([
+			'post_type'   => 'shop_coupon',
+			'post_status' => 'publish',
+			'numberposts' => -1,
+			'orderby'     => 'title',
+			'order'       => 'ASC',
+			'fields'      => 'ids',
+		]);
+		
+		if (empty($coupon_ids) || !is_array($coupon_ids)) {
+			return [];
+		}
+		
+		$codes = [];
+		foreach ($coupon_ids as $coupon_id) {
+			$code = get_the_title($coupon_id);
+			if (is_string($code) && $code !== '') {
+				$codes[] = $code;
+			}
+		}
+		
+		return array_values(array_unique($codes));
+	}
+	
 	/**
 	 * AJAX handler for email preview.
 	 */
