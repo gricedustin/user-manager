@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.4 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings: added a new "Custom WP-Admin Top Bar Menus & Links" card to configure custom top-bar dropdown menus and links without custom code.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Top-bar menus now include visibility and placement options (any user who can see the toolbar vs administrators only, left side vs right side, plus optional force-first ordering on the left).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Custom top-bar links now support admin URL shorthand (for example, admin:edit.php?post_type=shop_coupon), automatic dashicons loading when icons are used, and styling for group headers/left-side first ordering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.3 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Performance update: coupon datalist fields in wp-admin now load options lazily on first focus/click instead of loading every coupon during initial page render.', 'user-manager'); ?></li>

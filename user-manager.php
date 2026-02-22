@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.3
+ * Version: 2.2.4
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.4 - February 22, 2026
+ * - Settings: added a new "Custom WP-Admin Top Bar Menus & Links" card to configure custom top-bar dropdown menus and links without custom code.
+ * - Top-bar menus now support visibility and placement options (any toolbar user vs admins only, left vs right side, optional force-first ordering on the left).
+ * - Added support for admin URL shorthand in menu links (e.g. admin:edit.php?post_type=shop_coupon), automatic dashicons loading, and optional ordering/group header styling for custom top-bar menus.
+ *
  * 2.2.3 - February 22, 2026
  * - Coupon datalist fields in wp-admin now lazy-load options on first focus/click instead of loading full coupon lists during initial page render.
  * - Applied lazy datalist behavior across all current list= coupon fields (Create User, Bulk Create, Bulk Coupons, and Email Users) to reduce admin page load time on stores with many coupons.

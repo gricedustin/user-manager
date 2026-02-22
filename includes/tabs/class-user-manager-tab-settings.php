@@ -531,20 +531,59 @@ if (!defined('ABSPATH')) {
 					</div>
 				</div>
 
-				<!-- WP-Admin Bar Menu Items -->
+				<!-- Custom WP-Admin Top Bar Menus & Links -->
 				<div class="um-admin-card">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-menu-alt"></span>
-						<h2><?php esc_html_e('WP-Admin Bar Menu Items', 'user-manager'); ?></h2>
+						<h2><?php esc_html_e('Custom WP-Admin Top Bar Menus & Links', 'user-manager'); ?></h2>
 					</div>
 					<div class="um-admin-card-body">
-						<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Add custom shortcut menus to the WordPress admin bar (visible on both front-end and back-end). Each item becomes a dropdown; add links line by line as "Label|URL" or use "Group Title|divider" to create a section header.', 'user-manager'); ?></p>
 						<?php
+						$admin_bar_enabled = !isset($settings['admin_bar_menu_items_enabled']) || !empty($settings['admin_bar_menu_items_enabled']);
+						$admin_bar_visibility = isset($settings['admin_bar_menu_visibility']) ? (string) $settings['admin_bar_menu_visibility'] : 'all_toolbar_users';
+						if (!in_array($admin_bar_visibility, ['all_toolbar_users', 'manage_options_only'], true)) {
+							$admin_bar_visibility = 'all_toolbar_users';
+						}
+						$admin_bar_parent = isset($settings['admin_bar_menu_parent']) ? (string) $settings['admin_bar_menu_parent'] : 'top-secondary';
+						if (!in_array($admin_bar_parent, ['root-default', 'top-secondary'], true)) {
+							$admin_bar_parent = 'top-secondary';
+						}
+						$admin_bar_force_first_left = !empty($settings['admin_bar_menu_force_first_left']);
 						$admin_bar_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
 						if (empty($admin_bar_items)) {
 							$admin_bar_items = [ ['title' => '', 'icon' => '', 'shortcuts' => ''] ];
 						}
 						?>
+						<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Create custom top bar dropdown menus (front-end and wp-admin). Define one menu title, then add links line by line. For URLs, you can use full links or admin paths for this site (example: admin:edit.php?post_type=shop_coupon).', 'user-manager'); ?></p>
+
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="admin_bar_menu_items_enabled" id="um-admin-bar-menu-items-enabled" value="1" <?php checked($admin_bar_enabled); ?> />
+								<?php esc_html_e('Enable custom top bar menus', 'user-manager'); ?>
+							</label>
+						</div>
+						<div class="um-form-field">
+							<label for="um-admin-bar-menu-visibility"><?php esc_html_e('Who should see these menus?', 'user-manager'); ?></label>
+							<select name="admin_bar_menu_visibility" id="um-admin-bar-menu-visibility" class="regular-text">
+								<option value="all_toolbar_users" <?php selected($admin_bar_visibility, 'all_toolbar_users'); ?>><?php esc_html_e('Anyone who can see the top admin bar', 'user-manager'); ?></option>
+								<option value="manage_options_only" <?php selected($admin_bar_visibility, 'manage_options_only'); ?>><?php esc_html_e('Administrators only (manage_options)', 'user-manager'); ?></option>
+							</select>
+						</div>
+						<div class="um-form-field">
+							<label for="um-admin-bar-menu-parent"><?php esc_html_e('Menu location in top bar', 'user-manager'); ?></label>
+							<select name="admin_bar_menu_parent" id="um-admin-bar-menu-parent" class="regular-text">
+								<option value="root-default" <?php selected($admin_bar_parent, 'root-default'); ?>><?php esc_html_e('Left side', 'user-manager'); ?></option>
+								<option value="top-secondary" <?php selected($admin_bar_parent, 'top-secondary'); ?>><?php esc_html_e('Right side', 'user-manager'); ?></option>
+							</select>
+						</div>
+						<div class="um-form-field" id="um-admin-bar-force-first-left-wrap" style="<?php echo $admin_bar_parent === 'root-default' ? '' : 'display:none;'; ?>">
+							<label>
+								<input type="checkbox" name="admin_bar_menu_force_first_left" id="um-admin-bar-force-first-left" value="1" <?php checked($admin_bar_force_first_left); ?> />
+								<?php esc_html_e('When on the left side, force custom menu(s) to appear first', 'user-manager'); ?>
+							</label>
+						</div>
+
+						<div id="um-admin-bar-menu-items-wrapper" style="<?php echo $admin_bar_enabled ? '' : 'display:none;'; ?>">
 						<div id="um-admin-bar-menu-list">
 							<?php foreach ($admin_bar_items as $idx => $item) : ?>
 								<div class="um-admin-bar-menu-block" style="margin-bottom: 24px; padding: 16px; border: 1px solid #c3c4c7; border-radius: 4px; background: #f6f7f7;">
@@ -560,8 +599,8 @@ if (!defined('ABSPATH')) {
 									</div>
 									<div class="um-form-field">
 										<label><?php esc_html_e('Shortcuts', 'user-manager'); ?></label>
-										<textarea name="admin_bar_menu_item[<?php echo (int) $idx; ?>][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="Coupon Manager|https://example.com/wp-admin/edit.php?post_type=shop_coupon"><?php echo esc_textarea($item['shortcuts'] ?? ''); ?></textarea>
-										<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. All link titles must be unique.', 'user-manager'); ?></p>
+										<textarea name="admin_bar_menu_item[<?php echo (int) $idx; ?>][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="Coupon Manager|admin:edit.php?post_type=shop_coupon"><?php echo esc_textarea($item['shortcuts'] ?? ''); ?></textarea>
+										<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. Example links: Coupon Manager|admin:edit.php?post_type=shop_coupon', 'user-manager'); ?></p>
 									</div>
 									<button type="button" class="button um-remove-admin-bar-menu"><?php esc_html_e('Remove this menu', 'user-manager'); ?></button>
 								</div>
@@ -570,6 +609,7 @@ if (!defined('ABSPATH')) {
 						<p>
 							<button type="button" class="button" id="um-add-admin-bar-menu"><?php esc_html_e('Add menu', 'user-manager'); ?></button>
 						</p>
+						</div>
 					</div>
 				</div>
 
@@ -704,8 +744,8 @@ if (!defined('ABSPATH')) {
 				</div>
 				<div class="um-form-field">
 					<label><?php esc_html_e('Shortcuts', 'user-manager'); ?></label>
-					<textarea name="admin_bar_menu_item[__INDEX__][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="Coupon Manager|https://example.com/wp-admin/edit.php?post_type=shop_coupon"></textarea>
-					<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. All link titles must be unique.', 'user-manager'); ?></p>
+					<textarea name="admin_bar_menu_item[__INDEX__][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="Coupon Manager|admin:edit.php?post_type=shop_coupon"></textarea>
+					<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. Example links: Coupon Manager|admin:edit.php?post_type=shop_coupon', 'user-manager'); ?></p>
 				</div>
 				<button type="button" class="button um-remove-admin-bar-menu"><?php esc_html_e('Remove this menu', 'user-manager'); ?></button>
 			</div>
@@ -753,6 +793,26 @@ if (!defined('ABSPATH')) {
 			}
 			$('#um-role-change-alert-enabled').on('change', toggleRoleChangeAlertFields);
 			toggleRoleChangeAlertFields();
+
+			function toggleAdminBarMenuItemsEnabled() {
+				if ($('#um-admin-bar-menu-items-enabled').is(':checked')) {
+					$('#um-admin-bar-menu-items-wrapper').show();
+				} else {
+					$('#um-admin-bar-menu-items-wrapper').hide();
+				}
+			}
+			$('#um-admin-bar-menu-items-enabled').on('change', toggleAdminBarMenuItemsEnabled);
+			toggleAdminBarMenuItemsEnabled();
+
+			function toggleAdminBarForceFirstLeftField() {
+				if ($('#um-admin-bar-menu-parent').val() === 'root-default') {
+					$('#um-admin-bar-force-first-left-wrap').show();
+				} else {
+					$('#um-admin-bar-force-first-left-wrap').hide();
+				}
+			}
+			$('#um-admin-bar-menu-parent').on('change', toggleAdminBarForceFirstLeftField);
+			toggleAdminBarForceFirstLeftField();
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;

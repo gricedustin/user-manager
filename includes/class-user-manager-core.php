@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.3';
+	const VERSION = '2.2.4';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -115,6 +115,10 @@ final class User_Manager_Core {
 
 		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_admin_bar_link'], 98);
 		add_action('admin_bar_menu', [__CLASS__, 'add_custom_admin_bar_menu_items'], 99);
+		add_action('wp_enqueue_scripts', [__CLASS__, 'maybe_enqueue_custom_admin_bar_menu_dashicons']);
+		add_action('admin_enqueue_scripts', [__CLASS__, 'maybe_enqueue_custom_admin_bar_menu_dashicons']);
+		add_action('wp_head', [__CLASS__, 'maybe_render_custom_admin_bar_menu_css'], 999);
+		add_action('admin_head', [__CLASS__, 'maybe_render_custom_admin_bar_menu_css'], 999);
 		// Quick Search: default to enabled when setting is not yet saved.
 		$quick_search_enabled = !isset($settings['um_quick_search_enabled']) || !empty($settings['um_quick_search_enabled']);
 		if ($quick_search_enabled) {
@@ -1214,17 +1218,36 @@ final class User_Manager_Core {
 	}
 
 	/**
-	 * Add custom admin bar menu items from Settings > WP-Admin Bar Menu Items.
+	 * Add custom admin bar menu items from Settings > Custom WP-Admin Top Bar Menus & Links.
 	 * Each saved item is a dropdown; shortcuts are parsed from "Label|URL" or "Label|divider" per line.
 	 *
 	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
 	 */
 	public static function add_custom_admin_bar_menu_items($wp_admin_bar): void {
+		if (!is_user_logged_in() || !is_admin_bar_showing()) {
+			return;
+		}
+
 		$settings   = get_option(self::OPTION_KEY, []);
 		$menu_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
 		if (empty($menu_items)) {
 			return;
 		}
+
+		$enabled = !isset($settings['admin_bar_menu_items_enabled']) || !empty($settings['admin_bar_menu_items_enabled']);
+		if (!$enabled) {
+			return;
+		}
+
+		$visibility = isset($settings['admin_bar_menu_visibility']) ? (string) $settings['admin_bar_menu_visibility'] : 'all_toolbar_users';
+		if ($visibility === 'manage_options_only' && !current_user_can('manage_options')) {
+			return;
+		}
+
+		$parent_location = (isset($settings['admin_bar_menu_parent']) && $settings['admin_bar_menu_parent'] === 'root-default')
+			? 'root-default'
+			: 'top-secondary';
+		$force_first_left = !empty($settings['admin_bar_menu_force_first_left']) && $parent_location === 'root-default';
 
 		foreach ($menu_items as $i => $item) {
 			$menu_title = isset($item['title']) ? trim((string) $item['title']) : '';
@@ -1235,19 +1258,27 @@ final class User_Manager_Core {
 			$icon      = isset($item['icon']) ? trim((string) $item['icon']) : '';
 
 			$parent_id = 'um-custom-bar-' . $i;
-			$title_markup = $menu_title;
-			if ($icon !== '' && strpos($icon, 'dashicons-') === 0) {
-				$title_markup = '<span class="ab-icon dashicons ' . esc_attr($icon) . '"></span><span class="ab-label">' . esc_html($menu_title) . '</span>';
+			$wp_admin_bar->remove_node($parent_id);
+
+			$title_markup = esc_html($menu_title);
+			$icon_class = self::normalize_custom_admin_bar_icon_class($icon);
+			if ($icon_class !== '') {
+				$title_markup = '<span class="ab-icon dashicons ' . esc_attr($icon_class) . '" style="margin-top:3px !important;"></span><span class="ab-label">' . esc_html($menu_title) . '</span>';
+			}
+
+			$root_classes = ['um-custom-bar-menu', 'menupop'];
+			if ($force_first_left) {
+				$root_classes[] = 'um-custom-bar-menu-root-first';
 			}
 
 			$wp_admin_bar->add_node([
 				'id'     => $parent_id,
 				'title'  => $title_markup,
 				'href'   => '#',
-				'parent' => 'top-secondary',
+				'parent' => $parent_location,
 				'meta'   => [
 					'title' => $menu_title,
-					'class' => 'um-custom-bar-menu menupop',
+					'class' => implode(' ', $root_classes),
 				],
 			]);
 
@@ -1275,15 +1306,152 @@ final class User_Manager_Core {
 						'meta'   => ['class' => 'um-ab-group-header'],
 					]);
 				} else {
+					$resolved_url = self::normalize_custom_admin_bar_shortcut_url($url);
+					if ($resolved_url === '') {
+						continue;
+					}
 					$wp_admin_bar->add_node([
 						'id'     => $child_id,
 						'title'  => esc_html($label),
-						'href'   => esc_url($url),
+						'href'   => esc_url($resolved_url),
 						'parent' => $parent_id,
 					]);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Normalize a custom admin bar icon class (dashicons only).
+	 */
+	private static function normalize_custom_admin_bar_icon_class(string $icon): string {
+		$icon = trim($icon);
+		if ($icon === '') {
+			return '';
+		}
+
+		$icon = preg_replace('/[^a-zA-Z0-9\-\_\s]/', '', $icon);
+		if (!is_string($icon) || $icon === '') {
+			return '';
+		}
+
+		$parts = preg_split('/\s+/', $icon);
+		if (!is_array($parts)) {
+			return '';
+		}
+		foreach ($parts as $part) {
+			if (strpos($part, 'dashicons-') === 0) {
+				return $part;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Normalize shortcut URL for custom admin bar menus.
+	 *
+	 * Supports:
+	 * - Full URLs (https://example.com/path)
+	 * - admin:edit.php?post_type=shop_coupon
+	 * - edit.php?post_type=shop_coupon (treated as admin URL)
+	 * - /path (treated as site-relative URL)
+	 */
+	private static function normalize_custom_admin_bar_shortcut_url(string $url): string {
+		$url = trim($url);
+		if ($url === '' || strtolower($url) === 'divider') {
+			return '';
+		}
+
+		if (strpos($url, 'admin:') === 0) {
+			$admin_path = ltrim(substr($url, 6), '/');
+			return admin_url($admin_path);
+		}
+
+		$has_scheme = (bool) preg_match('#^[a-zA-Z][a-zA-Z0-9+\-.]*:#', $url);
+		if ($has_scheme || strpos($url, '#') === 0) {
+			return $url;
+		}
+
+		if (strpos($url, '/wp-admin/') === 0) {
+			return admin_url(ltrim(substr($url, strlen('/wp-admin/')), '/'));
+		}
+
+		if (strpos($url, '/') === 0) {
+			return home_url($url);
+		}
+
+		return admin_url(ltrim($url, '/'));
+	}
+
+	/**
+	 * Enqueue dashicons for custom top bar menus when needed.
+	 */
+	public static function maybe_enqueue_custom_admin_bar_menu_dashicons(): void {
+		if (!is_user_logged_in() || !is_admin_bar_showing()) {
+			return;
+		}
+
+		$settings = get_option(self::OPTION_KEY, []);
+		$enabled = !isset($settings['admin_bar_menu_items_enabled']) || !empty($settings['admin_bar_menu_items_enabled']);
+		if (!$enabled) {
+			return;
+		}
+
+		$menu_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
+		if (empty($menu_items)) {
+			return;
+		}
+
+		foreach ($menu_items as $item) {
+			$icon = isset($item['icon']) ? (string) $item['icon'] : '';
+			if (self::normalize_custom_admin_bar_icon_class($icon) !== '') {
+				wp_enqueue_style('dashicons');
+				return;
+			}
+		}
+	}
+
+	/**
+	 * Optional inline CSS for custom top bar menu ordering and group labels.
+	 */
+	public static function maybe_render_custom_admin_bar_menu_css(): void {
+		if (!is_user_logged_in() || !is_admin_bar_showing()) {
+			return;
+		}
+
+		$settings = get_option(self::OPTION_KEY, []);
+		$enabled = !isset($settings['admin_bar_menu_items_enabled']) || !empty($settings['admin_bar_menu_items_enabled']);
+		if (!$enabled) {
+			return;
+		}
+
+		$menu_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
+		if (empty($menu_items)) {
+			return;
+		}
+
+		$parent_location = (isset($settings['admin_bar_menu_parent']) && $settings['admin_bar_menu_parent'] === 'root-default')
+			? 'root-default'
+			: 'top-secondary';
+		$force_first_left = !empty($settings['admin_bar_menu_force_first_left']) && $parent_location === 'root-default';
+		?>
+		<style id="um-custom-admin-bar-menu-css">
+			#wpadminbar .um-ab-group-header > .ab-item {
+				font-weight: 600;
+				opacity: 0.85;
+				pointer-events: none;
+			}
+			<?php if ($force_first_left) : ?>
+			#wp-toolbar > #wp-admin-bar-root-default {
+				display: flex;
+			}
+			#wp-admin-bar-root-default .um-custom-bar-menu-root-first {
+				order: -9999;
+			}
+			<?php endif; ?>
+		</style>
+		<?php
 	}
 
 	/**

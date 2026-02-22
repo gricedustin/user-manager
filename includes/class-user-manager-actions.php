@@ -1664,7 +1664,18 @@ class User_Manager_Actions {
 					}
 				}
 
-				// WP-Admin Bar Menu Items (custom shortcut menus in the admin bar)
+				// Custom WP-Admin Top Bar Menus & Links (custom shortcut menus in the top admin bar)
+				$settings['admin_bar_menu_items_enabled'] = isset($_POST['admin_bar_menu_items_enabled']) && $_POST['admin_bar_menu_items_enabled'] === '1';
+				$visibility = isset($_POST['admin_bar_menu_visibility']) ? sanitize_key(wp_unslash($_POST['admin_bar_menu_visibility'])) : 'all_toolbar_users';
+				$settings['admin_bar_menu_visibility'] = in_array($visibility, ['all_toolbar_users', 'manage_options_only'], true)
+					? $visibility
+					: 'all_toolbar_users';
+				$menu_parent = isset($_POST['admin_bar_menu_parent']) ? sanitize_key(wp_unslash($_POST['admin_bar_menu_parent'])) : 'top-secondary';
+				$settings['admin_bar_menu_parent'] = in_array($menu_parent, ['root-default', 'top-secondary'], true)
+					? $menu_parent
+					: 'top-secondary';
+				$settings['admin_bar_menu_force_first_left'] = isset($_POST['admin_bar_menu_force_first_left']) && $_POST['admin_bar_menu_force_first_left'] === '1';
+
 				$settings['admin_bar_menu_items'] = [];
 				if (!empty($_POST['admin_bar_menu_item']) && is_array($_POST['admin_bar_menu_item'])) {
 					$keys = array_keys($_POST['admin_bar_menu_item']);
