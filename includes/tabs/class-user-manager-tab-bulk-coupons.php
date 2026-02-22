@@ -26,24 +26,21 @@ class User_Manager_Tab_Bulk_Coupons {
 		if ($code_length <= 0) {
 			$code_length = 8;
 		}
-
-		// Load existing coupons for template dropdown
-		$all_coupons = get_posts([
-			'post_type'   => 'shop_coupon',
-			'post_status' => 'publish',
-			'numberposts' => -1,
-			'orderby'     => 'title',
-			'order'       => 'ASC',
-			'fields'      => 'ids',
-		]);
-
+		
 		// Detect if our quick-start template coupon already exists.
+		$basic_template_code = 'basic_coupon_template_10_off_one_time_use_no_expiration';
 		$basic_template_exists = false;
-		foreach ($all_coupons as $cid) {
-			if (get_the_title($cid) === 'basic_coupon_template_10_off_one_time_use_no_expiration') {
-				$basic_template_exists = true;
-				break;
-			}
+		if (function_exists('wc_get_coupon_id_by_code')) {
+			$basic_template_exists = (bool) wc_get_coupon_id_by_code($basic_template_code);
+		} else {
+			$existing_template_ids = get_posts([
+				'post_type'   => 'shop_coupon',
+				'post_status' => 'publish',
+				'numberposts' => 1,
+				'fields'      => 'ids',
+				'name'        => $basic_template_code,
+			]);
+			$basic_template_exists = !empty($existing_template_ids);
 		}
 
 		// Recent Bulk Coupons activity (from admin log)
@@ -75,13 +72,8 @@ class User_Manager_Tab_Bulk_Coupons {
 							<label for="um-bulk-coupons-template">
 								<?php esc_html_e('Copy all data from this existing Coupon as a starting template for each new code', 'user-manager'); ?>
 							</label>
-							<input type="text" name="bulk_coupons_template_code" id="um-bulk-coupons-template" class="regular-text" list="um-bulk-coupons-template-datalist" placeholder="<?php esc_attr_e('Type to search or enter coupon code', 'user-manager'); ?>" value="<?php echo esc_attr($template_code); ?>" autocomplete="off" />
-							<datalist id="um-bulk-coupons-template-datalist">
-								<?php foreach ($all_coupons as $cid) : ?>
-									<?php $code = get_the_title($cid); ?>
-									<option value="<?php echo esc_attr($code); ?>"></option>
-								<?php endforeach; ?>
-							</datalist>
+							<input type="text" name="bulk_coupons_template_code" id="um-bulk-coupons-template" class="regular-text" list="um-bulk-coupons-template-datalist" data-um-lazy-datalist-source="coupon_codes" placeholder="<?php esc_attr_e('Type to search or enter coupon code', 'user-manager'); ?>" value="<?php echo esc_attr($template_code); ?>" autocomplete="off" />
+							<datalist id="um-bulk-coupons-template-datalist"></datalist>
 							<p class="description">
 								<?php esc_html_e('All coupon settings (type, restrictions, usage limits, etc.) will be cloned from this coupon unless overridden below.', 'user-manager'); ?>
 							</p>
