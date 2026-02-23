@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.6
+ * Version: 2.2.7
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.7 - February 22, 2026
+ * - Custom WP-Admin Top Bar Menus & Links: default shortcut examples/placeholders now use /wp-admin/... format instead of admin: format.
+ * - Existing behavior is unchanged: saved shortcuts are still normalized to domain-less admin paths on save.
+ *
  * 2.2.6 - February 22, 2026
  * - Custom WP-Admin Top Bar Menus & Links: defaults/examples now use domain-less admin: paths (no hardcoded domain).
  * - Top-bar menu shortcut values now auto-normalize on save: absolute /wp-admin/ links are converted to admin: paths so links stay portable across domains.

@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.7 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Custom WP-Admin Top Bar Menus & Links: default shortcut examples/placeholders now use /wp-admin/... format instead of admin: format.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Behavior remains the same: saved shortcuts are still normalized to domain-less admin paths on save for portability.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.6 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Custom WP-Admin Top Bar Menus & Links: defaults/examples now use domain-less admin: paths (no hardcoded domain).', 'user-manager'); ?></li>

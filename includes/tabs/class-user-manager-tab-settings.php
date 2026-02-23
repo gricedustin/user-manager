@@ -549,7 +549,7 @@ if (!defined('ABSPATH')) {
 							$admin_bar_parent = 'top-secondary';
 						}
 						$admin_bar_force_first_left = !empty($settings['admin_bar_menu_force_first_left']);
-						$default_shortcuts_example = "Coupon Manager|admin:edit.php?post_type=shop_coupon\nOrder Manager|admin:edit.php?post_type=shop_order\nOrder Exporter|admin:admin.php?page=wc-order-export";
+						$default_shortcuts_example = "Coupon Manager|/wp-admin/edit.php?post_type=shop_coupon\nOrder Manager|/wp-admin/edit.php?post_type=shop_order\nOrder Exporter|/wp-admin/admin.php?page=wc-order-export";
 						$admin_bar_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
 						if (empty($admin_bar_items)) {
 							$admin_bar_items = [[
@@ -559,7 +559,7 @@ if (!defined('ABSPATH')) {
 							]];
 						}
 						?>
-						<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Create custom top bar dropdown menus (front-end and wp-admin). Define one menu title, then add links line by line. For URLs, you can use full links or admin paths for this site (example: admin:edit.php?post_type=shop_coupon).', 'user-manager'); ?></p>
+						<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Create custom top bar dropdown menus (front-end and wp-admin). Define one menu title, then add links line by line. For URLs, you can use full links or admin paths for this site (example: /wp-admin/edit.php?post_type=shop_coupon).', 'user-manager'); ?></p>
 						<p class="description" style="margin-top:-8px;margin-bottom:16px;"><?php esc_html_e('When you save, absolute links that point to /wp-admin/ are automatically normalized to admin: paths (domain removed).', 'user-manager'); ?></p>
 
 						<div class="um-form-field">
@@ -607,7 +607,7 @@ if (!defined('ABSPATH')) {
 									<div class="um-form-field">
 										<label><?php esc_html_e('Shortcuts', 'user-manager'); ?></label>
 										<textarea name="admin_bar_menu_item[<?php echo (int) $idx; ?>][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="<?php echo esc_attr($default_shortcuts_example); ?>"><?php echo esc_textarea($item_shortcuts); ?></textarea>
-										<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. Example links: Coupon Manager|admin:edit.php?post_type=shop_coupon', 'user-manager'); ?></p>
+										<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. Example links: Coupon Manager|/wp-admin/edit.php?post_type=shop_coupon', 'user-manager'); ?></p>
 									</div>
 									<button type="button" class="button um-remove-admin-bar-menu"><?php esc_html_e('Remove this menu', 'user-manager'); ?></button>
 								</div>
@@ -751,10 +751,10 @@ if (!defined('ABSPATH')) {
 				</div>
 				<div class="um-form-field">
 					<label><?php esc_html_e('Shortcuts', 'user-manager'); ?></label>
-					<textarea name="admin_bar_menu_item[__INDEX__][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="Coupon Manager|admin:edit.php?post_type=shop_coupon
-Order Manager|admin:edit.php?post_type=shop_order
-Order Exporter|admin:admin.php?page=wc-order-export"></textarea>
-					<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. Example links: Coupon Manager|admin:edit.php?post_type=shop_coupon', 'user-manager'); ?></p>
+					<textarea name="admin_bar_menu_item[__INDEX__][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="Coupon Manager|/wp-admin/edit.php?post_type=shop_coupon
+Order Manager|/wp-admin/edit.php?post_type=shop_order
+Order Exporter|/wp-admin/admin.php?page=wc-order-export"></textarea>
+					<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. Example links: Coupon Manager|/wp-admin/edit.php?post_type=shop_coupon', 'user-manager'); ?></p>
 				</div>
 				<button type="button" class="button um-remove-admin-bar-menu"><?php esc_html_e('Remove this menu', 'user-manager'); ?></button>
 			</div>
