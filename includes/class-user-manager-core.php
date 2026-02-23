@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.5';
+	const VERSION = '2.2.6';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -254,7 +254,7 @@ final class User_Manager_Core {
 
 		$cart->calculate_totals();
 	}
-	
+
 	/**
 	 * Render Role Switching permissions on user profile screen.
 	 *
@@ -1382,6 +1382,94 @@ final class User_Manager_Core {
 		}
 
 		return admin_url(ltrim($url, '/'));
+	}
+
+	/**
+	 * Normalize multiline admin bar shortcuts for storage.
+	 *
+	 * Converts absolute /wp-admin/ URLs into domain-less admin: paths so
+	 * environments can be moved between domains without editing each link.
+	 */
+	public static function normalize_admin_bar_shortcuts_for_storage(string $shortcuts): string {
+		$lines = preg_split('/\r\n|\r|\n/', $shortcuts);
+		if (!is_array($lines) || empty($lines)) {
+			return '';
+		}
+
+		$normalized_lines = [];
+		foreach ($lines as $line) {
+			$line = trim((string) $line);
+			if ($line === '') {
+				continue;
+			}
+			$pipe = strpos($line, '|');
+			if ($pipe === false) {
+				$normalized_lines[] = $line;
+				continue;
+			}
+			$label = trim(substr($line, 0, $pipe));
+			$url = trim(substr($line, $pipe + 1));
+			if ($label === '') {
+				continue;
+			}
+			$normalized_url = self::normalize_admin_bar_shortcut_value_for_storage($url);
+			if ($normalized_url === '') {
+				continue;
+			}
+			$normalized_lines[] = $label . '|' . $normalized_url;
+		}
+
+		return implode("\n", $normalized_lines);
+	}
+
+	/**
+	 * Normalize a single admin bar shortcut value for storage.
+	 *
+	 * Examples:
+	 * - https://example.com/wp-admin/edit.php?post_type=shop_coupon => admin:edit.php?post_type=shop_coupon
+	 * - /wp-admin/admin.php?page=wc-order-export => admin:admin.php?page=wc-order-export
+	 */
+	private static function normalize_admin_bar_shortcut_value_for_storage(string $url): string {
+		$url = trim($url);
+		if ($url === '') {
+			return '';
+		}
+
+		if (strtolower($url) === 'divider') {
+			return 'divider';
+		}
+
+		if (strpos($url, 'admin:') === 0) {
+			return 'admin:' . ltrim(substr($url, 6), '/');
+		}
+
+		if (strpos($url, '/wp-admin/') === 0) {
+			return 'admin:' . ltrim(substr($url, strlen('/wp-admin/')), '/');
+		}
+
+		$parts = wp_parse_url($url);
+		if (!is_array($parts)) {
+			return $url;
+		}
+
+		$path = isset($parts['path']) ? (string) $parts['path'] : '';
+		$query = isset($parts['query']) ? (string) $parts['query'] : '';
+		if ($path === '') {
+			return $url;
+		}
+
+		$path_lc = strtolower($path);
+		$admin_pos = strpos($path_lc, '/wp-admin/');
+		if ($admin_pos === false) {
+			return $url;
+		}
+
+		$admin_tail = ltrim(substr($path, $admin_pos + strlen('/wp-admin/')), '/');
+		if ($admin_tail === '' && $query === '') {
+			return 'admin:';
+		}
+
+		return 'admin:' . $admin_tail . ($query !== '' ? '?' . $query : '');
 	}
 
 	/**

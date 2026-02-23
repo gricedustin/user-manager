@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.6 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Custom WP-Admin Top Bar Menus & Links: defaults/examples now use domain-less admin: paths (no hardcoded domain).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Top-bar menu shortcuts now auto-normalize on save: absolute /wp-admin/ links are converted to admin: paths so links remain portable across domains/environments.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.5 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Login As: replaced the user dropdown with a type-to-search email input (datalist) that lazy-loads user emails on first focus, improving usability and reducing tab load time on large user lists.', 'user-manager'); ?></li>
