@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.8 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login As: reordered Active Login As Session credential fields so Login URL and SSO Bypass Login URL now appear above Username and Temporary Password.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.7 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Custom WP-Admin Top Bar Menus & Links: default shortcut examples/placeholders now use /wp-admin/... format instead of admin: format.', 'user-manager'); ?></li>
