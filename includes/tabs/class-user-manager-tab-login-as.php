@@ -33,7 +33,6 @@ class User_Manager_Tab_Login_As {
 			'restored_success'      => ['success', __('Original password restored successfully.', 'user-manager')],
 			'select_user_required'  => ['error', __('Please select a valid user email before generating a temporary password.', 'user-manager')],
 			'user_not_found'        => ['error', __('The selected user could not be found.', 'user-manager')],
-			'target_admin_blocked'  => ['error', __('For safety, Login As does not allow impersonating another administrator account.', 'user-manager')],
 			'password_hash_missing' => ['error', __('Could not read the selected user password hash. No changes were made.', 'user-manager')],
 			'password_set_failed'   => ['error', __('Could not set the temporary password. Please try again.', 'user-manager')],
 			'restore_failed'        => ['error', __('Could not restore the original password for this session.', 'user-manager')],
@@ -391,11 +390,6 @@ class User_Manager_Tab_Login_As {
 		$target = get_userdata($target_id);
 		if (!$target) {
 			return 'user_not_found';
-		}
-
-		// Do not allow logging in as another administrator unless explicitly desired.
-		if (in_array('administrator', (array) $target->roles, true) && $admin_id !== $target_id) {
-			return 'target_admin_blocked';
 		}
 
 		// Generate a secure random password.

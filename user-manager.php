@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.8
+ * Version: 2.2.9
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.9 - February 24, 2026
+ * - Login As: removed the restriction that blocked impersonating other administrator accounts. Admins can now use Login As for administrator users too.
+ *
  * 2.2.8 - February 22, 2026
  * - Login As: reordered active session credential fields so Login URL and SSO Bypass Login URL are displayed above Username and Temporary Password.
  *

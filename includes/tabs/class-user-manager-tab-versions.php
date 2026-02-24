@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.9 <span>(February 24, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login As: removed the restriction that blocked impersonating other administrator accounts. Admins can now use Login As for administrator users too.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.8 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Login As: reordered Active Login As Session credential fields so Login URL and SSO Bypass Login URL now appear above Username and Temporary Password.', 'user-manager'); ?></li>
