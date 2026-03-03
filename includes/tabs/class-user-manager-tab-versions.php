@@ -19,6 +19,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.4 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Site Admin: fixed endpoint/menu initialization timing so custom My Account admin endpoints register reliably across plugin load orders.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added explicit rewrite endpoint + query var registration for admin_orders, admin_products, admin_coupons, and admin_users to improve endpoint detection.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added front-end debug URL parameter for administrators: append ?um_my_account_admin_debug=1 to a My Account URL to view a diagnostic panel with endpoint/query/menu/access details.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Improved allowed username parsing for My Account Site Admin access lists so standard WordPress logins, including email-style usernames, are handled correctly.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.3 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings: added a new "My Account Site Admin" card with four viewer controls and per-viewer comma-separated username allow lists: My Account Admin Order Viewer, Product Viewer, Coupon Viewer, and User Viewer.', 'user-manager'); ?></li>

@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 
 final class User_Manager_My_Account_Site_Admin {
 	private const PER_PAGE = 20;
+	private const DEBUG_PARAM = 'um_my_account_admin_debug';
 
 	/**
 	 * Prevent duplicate style output when multiple endpoints render.
@@ -18,19 +19,126 @@ final class User_Manager_My_Account_Site_Admin {
 	private static $styles_rendered = false;
 
 	/**
+	 * Track whether init() has run.
+	 *
+	 * @var bool
+	 */
+	private static $initialized = false;
+
+	/**
 	 * Register hooks.
 	 */
 	public static function init(): void {
-		if (!class_exists('WooCommerce')) {
+		if (self::$initialized) {
 			return;
 		}
+		self::$initialized = true;
 
+		add_action('init', [__CLASS__, 'register_rewrite_endpoints'], 20, 0);
+		add_filter('query_vars', [__CLASS__, 'filter_public_query_vars'], 20, 1);
 		add_filter('woocommerce_get_query_vars', [__CLASS__, 'filter_my_account_query_vars'], 20, 1);
 		add_filter('woocommerce_account_menu_items', [__CLASS__, 'filter_my_account_menu_items'], 40, 1);
+		add_action('woocommerce_before_my_account', [__CLASS__, 'maybe_render_debug_panel'], 1, 0);
 		add_action('woocommerce_account_admin_orders_endpoint', [__CLASS__, 'render_admin_orders_endpoint']);
 		add_action('woocommerce_account_admin_products_endpoint', [__CLASS__, 'render_admin_products_endpoint']);
 		add_action('woocommerce_account_admin_coupons_endpoint', [__CLASS__, 'render_admin_coupons_endpoint']);
 		add_action('woocommerce_account_admin_users_endpoint', [__CLASS__, 'render_admin_users_endpoint']);
+	}
+
+	/**
+	 * Register rewrite endpoints for all My Account Site Admin areas.
+	 */
+	public static function register_rewrite_endpoints(): void {
+		foreach (self::get_area_configs() as $config) {
+			add_rewrite_endpoint($config['endpoint'], EP_ROOT | EP_PAGES);
+		}
+	}
+
+	/**
+	 * Register public query vars for custom endpoints.
+	 *
+	 * @param array $vars Existing query vars.
+	 * @return array
+	 */
+	public static function filter_public_query_vars(array $vars): array {
+		foreach (self::get_area_configs() as $config) {
+			if (!in_array($config['endpoint'], $vars, true)) {
+				$vars[] = $config['endpoint'];
+			}
+		}
+
+		return $vars;
+	}
+
+	/**
+	 * Render debug panel on My Account when debug parameter is present.
+	 */
+	public static function maybe_render_debug_panel(): void {
+		if (!self::is_debug_requested()) {
+			return;
+		}
+
+		if (!function_exists('is_account_page') || !is_account_page()) {
+			return;
+		}
+
+		if (!is_user_logged_in() || !current_user_can('manage_options')) {
+			return;
+		}
+
+		$settings     = User_Manager_Core::get_settings();
+		$current_user = wp_get_current_user();
+		$configs      = self::get_area_configs();
+
+		$areas         = [];
+		$endpoint_urls = [];
+		foreach ($configs as $key => $config) {
+			$enabled_key = $config['enabled_key'];
+			$list_key    = $config['usernames_key'];
+			$raw_list    = (string) ($settings[ $list_key ] ?? '');
+
+			$areas[ $key ] = [
+				'endpoint'                => $config['endpoint'],
+				'enabled'                 => !empty($settings[ $enabled_key ]),
+				'allowed_usernames_raw'   => $raw_list,
+				'allowed_usernames_parsed'=> self::parse_username_list($raw_list),
+				'current_user_has_access' => self::current_user_can_access_area($config),
+				'query_var_value'         => get_query_var($config['endpoint'], ''),
+			];
+
+			$endpoint_urls[ $config['endpoint'] ] = self::get_endpoint_url($config['endpoint']);
+		}
+
+		$wc_query_vars = [];
+		$wc_endpoint   = '';
+		if (function_exists('WC') && WC() && isset(WC()->query) && is_object(WC()->query)) {
+			$wc_query_vars = WC()->query->get_query_vars();
+			$wc_endpoint   = WC()->query->get_current_endpoint();
+		}
+
+		$menu_keys = function_exists('wc_get_account_menu_items') ? array_keys(wc_get_account_menu_items()) : [];
+
+		$payload = [
+			'debug_param'          => self::DEBUG_PARAM,
+			'initialized'          => self::$initialized,
+			'is_account_page'      => function_exists('is_account_page') ? is_account_page() : false,
+			'request_uri'          => isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '',
+			'current_user'         => [
+				'id'    => (int) ($current_user->ID ?? 0),
+				'login' => (string) ($current_user->user_login ?? ''),
+			],
+			'wc_current_endpoint'  => $wc_endpoint,
+			'wc_query_vars'        => $wc_query_vars,
+			'account_menu_keys'    => $menu_keys,
+			'endpoint_urls'        => $endpoint_urls,
+			'areas'                => $areas,
+		];
+
+		echo '<div class="woocommerce-info um-my-account-admin-debug" style="margin-bottom: 16px;">';
+		echo '<strong>' . esc_html__('User Manager Debug: My Account Site Admin', 'user-manager') . '</strong>';
+		echo '<p style="margin:8px 0 10px;">' . esc_html__('Debug is enabled by URL parameter. Remove the parameter to hide this panel.', 'user-manager') . '</p>';
+		echo '<pre style="white-space: pre-wrap; max-height: 420px; overflow: auto; background:#fff; padding:10px; border:1px solid #dcdcde;">' . esc_html(wp_json_encode($payload, JSON_PRETTY_PRINT)) . '</pre>';
+		echo '</div>';
 	}
 
 	/**
@@ -818,7 +926,7 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($part === '') {
 				continue;
 			}
-			$sanitized = sanitize_user($part, true);
+			$sanitized = sanitize_user($part, false);
 			if ($sanitized === '') {
 				continue;
 			}
@@ -1207,6 +1315,22 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		echo '<p class="woocommerce-error">' . esc_html($message) . '</p>';
+	}
+
+	/**
+	 * Determine if the debug URL parameter is enabled.
+	 *
+	 * @return bool
+	 */
+	private static function is_debug_requested(): bool {
+		if (!isset($_GET[ self::DEBUG_PARAM ])) {
+			return false;
+		}
+
+		$raw = sanitize_text_field(wp_unslash($_GET[ self::DEBUG_PARAM ]));
+		$raw = strtolower(trim($raw));
+
+		return $raw !== '' && $raw !== '0' && $raw !== 'false' && $raw !== 'no';
 	}
 }
 

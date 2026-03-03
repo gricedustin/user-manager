@@ -3880,7 +3880,7 @@ class User_Manager_Actions {
 				continue;
 			}
 
-			$username = sanitize_user($part, true);
+			$username = sanitize_user($part, false);
 			if ($username === '') {
 				continue;
 			}
