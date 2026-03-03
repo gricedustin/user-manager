@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.1';
+	const VERSION = '2.2.3';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -111,6 +111,9 @@ final class User_Manager_Core {
 			// Use a late priority so we can adjust columns after WooCommerce or other plugins.
 			add_filter('manage_edit-shop_coupon_columns', [__CLASS__, 'add_coupon_email_column'], 99);
 			add_action('manage_shop_coupon_posts_custom_column', [__CLASS__, 'render_coupon_email_column'], 10, 2);
+		}
+		if (class_exists('User_Manager_My_Account_Site_Admin')) {
+			User_Manager_My_Account_Site_Admin::init();
 		}
 
 		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_admin_bar_link'], 98);

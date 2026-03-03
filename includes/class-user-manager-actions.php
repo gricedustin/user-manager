@@ -1628,6 +1628,24 @@ class User_Manager_Actions {
 				$settings['checkout_ship_to_hide_coupon'] = isset($_POST['checkout_ship_to_hide_coupon']) && $_POST['checkout_ship_to_hide_coupon'] === '1';
 				$settings['checkout_ship_to_show_debug'] = isset($_POST['checkout_ship_to_show_debug']) && $_POST['checkout_ship_to_show_debug'] === '1';
 
+				// My Account Site Admin viewer controls.
+				$settings['my_account_admin_order_viewer_enabled'] = isset($_POST['my_account_admin_order_viewer_enabled']) && $_POST['my_account_admin_order_viewer_enabled'] === '1';
+				$settings['my_account_admin_order_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_order_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_order_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_product_viewer_enabled'] = isset($_POST['my_account_admin_product_viewer_enabled']) && $_POST['my_account_admin_product_viewer_enabled'] === '1';
+				$settings['my_account_admin_product_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_product_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_product_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_coupon_viewer_enabled'] = isset($_POST['my_account_admin_coupon_viewer_enabled']) && $_POST['my_account_admin_coupon_viewer_enabled'] === '1';
+				$settings['my_account_admin_coupon_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_coupon_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_coupon_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_user_viewer_enabled'] = isset($_POST['my_account_admin_user_viewer_enabled']) && $_POST['my_account_admin_user_viewer_enabled'] === '1';
+				$settings['my_account_admin_user_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_user_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_user_viewer_usernames']) : ''
+				);
+
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
 
@@ -3839,6 +3857,39 @@ class User_Manager_Actions {
 			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_COUPONS, 'migration_failed'));
 		}
 		exit;
+	}
+
+	/**
+	 * Normalize and sanitize a comma-separated username list.
+	 */
+	private static function sanitize_username_csv($raw): string {
+		$raw = is_string($raw) ? $raw : '';
+		if ($raw === '') {
+			return '';
+		}
+
+		$parts = preg_split('/[\s,]+/', $raw);
+		if (!is_array($parts)) {
+			return '';
+		}
+
+		$usernames = [];
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+
+			$username = sanitize_user($part, true);
+			if ($username === '') {
+				continue;
+			}
+
+			$usernames[] = strtolower($username);
+		}
+
+		$usernames = array_values(array_unique($usernames));
+		return implode(', ', $usernames);
 	}
 }
 

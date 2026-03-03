@@ -227,6 +227,61 @@ if (!defined('ABSPATH')) {
 					</div>
 				</div>
 
+				<!-- My Account Site Admin -->
+				<div class="um-admin-card">
+					<div class="um-admin-card-header">
+						<span class="dashicons dashicons-admin-site"></span>
+						<h2><?php esc_html_e('My Account Site Admin', 'user-manager'); ?></h2>
+					</div>
+					<div class="um-admin-card-body">
+						<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Add admin-style viewer pages inside WooCommerce My Account for selected users. Enter comma-separated usernames (user_login values) allowed to access each area.', 'user-manager'); ?></p>
+
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="my_account_admin_order_viewer_enabled" id="um-my-account-admin-order-viewer-enabled" value="1" <?php checked($settings['my_account_admin_order_viewer_enabled'] ?? false); ?> />
+								<?php esc_html_e('My Account Admin Order Viewer', 'user-manager'); ?>
+							</label>
+						</div>
+						<div class="um-form-field" id="um-my-account-admin-order-viewer-users-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
+							<label for="um-my-account-admin-order-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
+							<input type="text" name="my_account_admin_order_viewer_usernames" id="um-my-account-admin-order-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_order_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
+						</div>
+
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="my_account_admin_product_viewer_enabled" id="um-my-account-admin-product-viewer-enabled" value="1" <?php checked($settings['my_account_admin_product_viewer_enabled'] ?? false); ?> />
+								<?php esc_html_e('My Account Admin Product Viewer', 'user-manager'); ?>
+							</label>
+						</div>
+						<div class="um-form-field" id="um-my-account-admin-product-viewer-users-field" style="<?php echo empty($settings['my_account_admin_product_viewer_enabled']) ? 'display:none;' : ''; ?>">
+							<label for="um-my-account-admin-product-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
+							<input type="text" name="my_account_admin_product_viewer_usernames" id="um-my-account-admin-product-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_product_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
+						</div>
+
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="my_account_admin_coupon_viewer_enabled" id="um-my-account-admin-coupon-viewer-enabled" value="1" <?php checked($settings['my_account_admin_coupon_viewer_enabled'] ?? false); ?> />
+								<?php esc_html_e('My Account Admin Coupon Viewer', 'user-manager'); ?>
+							</label>
+						</div>
+						<div class="um-form-field" id="um-my-account-admin-coupon-viewer-users-field" style="<?php echo empty($settings['my_account_admin_coupon_viewer_enabled']) ? 'display:none;' : ''; ?>">
+							<label for="um-my-account-admin-coupon-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
+							<input type="text" name="my_account_admin_coupon_viewer_usernames" id="um-my-account-admin-coupon-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_coupon_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
+						</div>
+
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="my_account_admin_user_viewer_enabled" id="um-my-account-admin-user-viewer-enabled" value="1" <?php checked($settings['my_account_admin_user_viewer_enabled'] ?? false); ?> />
+								<?php esc_html_e('My Account Admin User Viewer', 'user-manager'); ?>
+							</label>
+						</div>
+						<div class="um-form-field" id="um-my-account-admin-user-viewer-users-field" style="<?php echo empty($settings['my_account_admin_user_viewer_enabled']) ? 'display:none;' : ''; ?>">
+							<label for="um-my-account-admin-user-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
+							<input type="text" name="my_account_admin_user_viewer_usernames" id="um-my-account-admin-user-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_user_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
+						</div>
+					</div>
+				</div>
+
 				<!-- Bulk Add to Cart -->
 				<div class="um-admin-card">
 					<div class="um-admin-card-header">
@@ -753,6 +808,24 @@ if (!defined('ABSPATH')) {
 			}
 			$('#um-role-change-alert-enabled').on('change', toggleRoleChangeAlertFields);
 			toggleRoleChangeAlertFields();
+
+			function toggleMyAccountAdminViewerField(checkboxSelector, fieldSelector) {
+				if ($(checkboxSelector).is(':checked')) {
+					$(fieldSelector).show();
+				} else {
+					$(fieldSelector).hide();
+				}
+			}
+
+			function toggleMyAccountAdminViewerFields() {
+				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-viewer-users-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-product-viewer-enabled', '#um-my-account-admin-product-viewer-users-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-coupon-viewer-enabled', '#um-my-account-admin-coupon-viewer-users-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-user-viewer-enabled', '#um-my-account-admin-user-viewer-users-field');
+			}
+
+			$('#um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
+			toggleMyAccountAdminViewerFields();
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;

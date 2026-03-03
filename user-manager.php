@@ -2,12 +2,22 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.2
+ * Version: 2.2.3
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.3 - February 22, 2026
+ * - Settings: new "My Account Site Admin" card with four viewer toggles and per-viewer comma-separated username allow lists:
+ *   - My Account Admin Order Viewer
+ *   - My Account Admin Product Viewer
+ *   - My Account Admin Coupon Viewer
+ *   - My Account Admin User Viewer
+ * - WooCommerce My Account: new custom endpoints and menu links for Admin: Orders, Admin: Products, Admin: Coupons, and Admin: Users.
+ * - Each My Account admin area now supports pagination, search, list views, and per-item detail views with "View" buttons.
+ * - Access control: only enabled viewers are shown, and visibility is restricted to usernames listed in settings (with admins retaining access).
+ *
  * 2.2.2 - February 14, 2026
  * - Settings → API: setting renamed to "Enable Page & Post Meta Box for inserting ChatGPT generated content into pages & posts". Meta box now appears on both Page and Post edit screens (previously pages only).
  * - WP-Admin top bar: new "User Manager" link (right side) that goes to the plugin Settings tab.
@@ -102,6 +112,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-user-manager-core.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-user-manager-tabs.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-user-manager-actions.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-user-manager-email.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-user-manager-my-account-site-admin.php';
 require_once plugin_dir_path(__FILE__) . 'includes/checkout-ship-to-predefined.php';
 
 require_once plugin_dir_path(__FILE__) . 'includes/coupon-notifications.php';

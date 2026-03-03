@@ -19,6 +19,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.3 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings: added a new "My Account Site Admin" card with four viewer controls and per-viewer comma-separated username allow lists: My Account Admin Order Viewer, Product Viewer, Coupon Viewer, and User Viewer.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('WooCommerce My Account: added custom admin endpoints and menu links for Admin: Orders, Admin: Products, Admin: Coupons, and Admin: Users.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Each My Account admin area now supports pagination, search, list views, and per-item detail views with dedicated "View" buttons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Access control: each area is only available when enabled in settings and the logged-in username is in that area\'s allow list (administrators keep access).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.2 <span>(February 14, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings → API: setting renamed to "Enable Page & Post Meta Box for inserting ChatGPT generated content into pages & posts". Meta box now appears on both Page and Post edit screens (previously pages only).', 'user-manager'); ?></li>
