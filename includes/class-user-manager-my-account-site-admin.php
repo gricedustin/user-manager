@@ -131,6 +131,11 @@ final class User_Manager_My_Account_Site_Admin {
 			'wc_query_vars'        => $wc_query_vars,
 			'account_menu_keys'    => $menu_keys,
 			'endpoint_urls'        => $endpoint_urls,
+			'order_approval'       => [
+				'allowed_usernames_raw'    => (string) ($settings['my_account_admin_order_approval_usernames'] ?? ''),
+				'allowed_usernames_parsed' => self::parse_username_list((string) ($settings['my_account_admin_order_approval_usernames'] ?? '')),
+				'current_user_can_approve' => self::current_user_can_approve_orders(),
+			],
 			'areas'                => $areas,
 		];
 
@@ -202,6 +207,8 @@ final class User_Manager_My_Account_Site_Admin {
 		if (!self::ensure_area_access('orders')) {
 			return;
 		}
+		self::maybe_handle_order_approval_action();
+		self::render_order_approval_notice();
 
 		$order_id = isset($_GET['order_id']) ? absint(wp_unslash($_GET['order_id'])) : 0;
 		if ($order_id > 0) {
@@ -273,34 +280,32 @@ final class User_Manager_My_Account_Site_Admin {
 		$endpoint     = 'admin_orders';
 		$current_page = self::get_current_page();
 		$search       = self::get_search_query();
-
-		$query_args = [
-			'limit'    => self::PER_PAGE,
-			'page'     => $current_page,
-			'paginate' => true,
-			'orderby'  => 'date',
-			'order'    => 'DESC',
-		];
-
 		if ($search !== '') {
-			if (is_numeric($search)) {
-				$query_args['include'] = [absint($search)];
-			} else {
-				$query_args['search'] = '*' . $search . '*';
+			$all_orders = self::search_orders($search);
+			$paged      = self::paginate_items($all_orders, $current_page, self::PER_PAGE);
+			$orders     = $paged['items'];
+			$pages      = $paged['total_pages'];
+		} else {
+			$result = wc_get_orders([
+				'limit'    => self::PER_PAGE,
+				'page'     => $current_page,
+				'paginate' => true,
+				'orderby'  => 'date',
+				'order'    => 'DESC',
+			]);
+			$orders = [];
+			$pages  = 1;
+
+			if (is_object($result) && isset($result->orders)) {
+				$orders = is_array($result->orders) ? $result->orders : [];
+				$pages  = isset($result->max_num_pages) ? max(1, (int) $result->max_num_pages) : 1;
+			} elseif (is_array($result)) {
+				$orders = $result;
+				$pages  = 1;
 			}
 		}
 
-		$result = wc_get_orders($query_args);
-		$orders = [];
-		$pages  = 1;
-
-		if (is_object($result) && isset($result->orders)) {
-			$orders = is_array($result->orders) ? $result->orders : [];
-			$pages  = isset($result->max_num_pages) ? max(1, (int) $result->max_num_pages) : 1;
-		} elseif (is_array($result)) {
-			$orders = $result;
-			$pages  = 1;
-		}
+		$can_approve = self::current_user_can_approve_orders();
 
 		echo '<h3 class="swh_order_history_title">' . esc_html__('Admin: Orders', 'user-manager') . '</h3>';
 		echo '<p class="swh_order_history_desc"></p>';
@@ -356,6 +361,10 @@ final class User_Manager_My_Account_Site_Admin {
 				echo '<td class="center">';
 				echo '<a class="button breathing_room full_width" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
 				echo '<a class="button breathing_room full_width" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
+				if ($can_approve && $order->has_status('pending')) {
+					$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());
+					echo ' <a class="button breathing_room full_width" href="' . esc_url($approve_url) . '">' . esc_html__('Approve', 'user-manager') . '</a>';
+				}
 				echo '</td>';
 				echo '</tr>';
 			}
@@ -378,9 +387,20 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		$back_url = self::get_list_url('admin_orders');
+		$can_approve = self::current_user_can_approve_orders() && $order->has_status('pending');
 		echo '<h3 class="swh_order_history_title">' . esc_html__('Admin: Orders', 'user-manager') . '</h3>';
 		echo '<p class="swh_order_history_desc"></p>';
-		echo '<a class="button" href="' . esc_url($back_url) . '">' . esc_html__('Back', 'user-manager') . '</a><br><br>';
+		echo '<a class="button" href="' . esc_url($back_url) . '">' . esc_html__('Back', 'user-manager') . '</a>';
+		if ($can_approve) {
+			$approve_args = self::get_list_context_query_args();
+			$approve_args['order_id'] = (int) $order->get_id();
+			if (isset($_GET['print']) && $_GET['print'] === '1') {
+				$approve_args['print'] = '1';
+			}
+			$approve_url = self::get_approve_order_url((int) $order->get_id(), $approve_args);
+			echo ' <a class="button" href="' . esc_url($approve_url) . '">' . esc_html__('Approve', 'user-manager') . '</a>';
+		}
+		echo '<br><br>';
 
 		$date_created = $order->get_date_created();
 		$date_display = $date_created ? $date_created->date_i18n('D M d, Y g:ia') : '';
@@ -448,6 +468,10 @@ final class User_Manager_My_Account_Site_Admin {
 		echo '</address>';
 		echo '</section>';
 
+		if (self::should_show_meta_for_area('orders')) {
+			self::render_meta_table_from_post((int) $order->get_id());
+		}
+
 		if (isset($_GET['print']) && $_GET['print'] === '1') {
 			echo '<script>window.print();</script>';
 		}
@@ -460,21 +484,26 @@ final class User_Manager_My_Account_Site_Admin {
 		$endpoint     = 'admin_products';
 		$current_page = self::get_current_page();
 		$search       = self::get_search_query();
+		$total_pages = 1;
 
-		$args = [
-			'post_type'      => ['product', 'product_variation'],
-			'post_status'    => ['publish', 'private'],
-			'posts_per_page' => self::PER_PAGE,
-			'paged'          => $current_page,
-			'orderby'        => 'date',
-			'order'          => 'DESC',
-			'fields'         => 'ids',
-		];
 		if ($search !== '') {
-			$args['s'] = $search;
+			$matching_ids = self::search_product_ids($search);
+			$paged        = self::paginate_items($matching_ids, $current_page, self::PER_PAGE);
+			$product_ids  = $paged['items'];
+			$total_pages  = $paged['total_pages'];
+		} else {
+			$query = new WP_Query([
+				'post_type'      => ['product', 'product_variation'],
+				'post_status'    => ['publish', 'private'],
+				'posts_per_page' => self::PER_PAGE,
+				'paged'          => $current_page,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+			]);
+			$product_ids = $query->posts;
+			$total_pages = max(1, (int) $query->max_num_pages);
 		}
-
-		$query = new WP_Query($args);
 
 		echo '<h3 class="swh_products_title">' . esc_html__('Admin: Products', 'user-manager') . '</h3>';
 		echo '<p class="swh_products_desc"></p>';
@@ -491,10 +520,10 @@ final class User_Manager_My_Account_Site_Admin {
 		echo '<th></th>';
 		echo '</tr></thead><tbody>';
 
-		if (empty($query->posts)) {
+		if (empty($product_ids)) {
 			echo '<tr><td colspan="7" class="express_checkout_order_approvals_empty">' . esc_html__('No products found.', 'user-manager') . '</td></tr>';
 		} else {
-			foreach ($query->posts as $post_id) {
+			foreach ($product_ids as $post_id) {
 				$product = wc_get_product($post_id);
 				if (!$product) {
 					continue;
@@ -542,8 +571,7 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		echo '</tbody></table>';
-		self::render_pagination($endpoint, $current_page, max(1, (int) $query->max_num_pages), $search);
-		wp_reset_postdata();
+		self::render_pagination($endpoint, $current_page, $total_pages, $search);
 	}
 
 	/**
@@ -605,7 +633,9 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		echo wp_kses_post($product->get_image('woocommerce_thumbnail'));
-		self::render_meta_table_from_post($product_id);
+		if (self::should_show_meta_for_area('products')) {
+			self::render_meta_table_from_post($product_id);
+		}
 	}
 
 	/**
@@ -615,21 +645,25 @@ final class User_Manager_My_Account_Site_Admin {
 		$endpoint     = 'admin_coupons';
 		$current_page = self::get_current_page();
 		$search       = self::get_search_query();
-
-		$args = [
-			'post_type'      => 'shop_coupon',
-			'post_status'    => ['publish', 'private', 'draft'],
-			'posts_per_page' => self::PER_PAGE,
-			'paged'          => $current_page,
-			'orderby'        => 'date',
-			'order'          => 'DESC',
-			'fields'         => 'ids',
-		];
+		$total_pages = 1;
 		if ($search !== '') {
-			$args['s'] = $search;
+			$matching_ids = self::search_coupon_ids($search);
+			$paged        = self::paginate_items($matching_ids, $current_page, self::PER_PAGE);
+			$coupon_ids   = $paged['items'];
+			$total_pages  = $paged['total_pages'];
+		} else {
+			$query = new WP_Query([
+				'post_type'      => 'shop_coupon',
+				'post_status'    => ['publish', 'private', 'draft'],
+				'posts_per_page' => self::PER_PAGE,
+				'paged'          => $current_page,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+			]);
+			$coupon_ids  = $query->posts;
+			$total_pages = max(1, (int) $query->max_num_pages);
 		}
-
-		$query = new WP_Query($args);
 
 		echo '<h3 class="swh_coupons_title">' . esc_html__('Admin: Coupons', 'user-manager') . '</h3>';
 		echo '<p class="swh_coupons_desc"></p>';
@@ -648,10 +682,10 @@ final class User_Manager_My_Account_Site_Admin {
 		echo '<th></th>';
 		echo '</tr></thead><tbody>';
 
-		if (empty($query->posts)) {
+		if (empty($coupon_ids)) {
 			echo '<tr><td colspan="9" class="express_checkout_order_approvals_empty">' . esc_html__('No coupons found.', 'user-manager') . '</td></tr>';
 		} else {
-			foreach ($query->posts as $coupon_id) {
+			foreach ($coupon_ids as $coupon_id) {
 				$coupon = new WC_Coupon($coupon_id);
 				if (!$coupon || !$coupon->get_id()) {
 					continue;
@@ -678,8 +712,7 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		echo '</tbody></table>';
-		self::render_pagination($endpoint, $current_page, max(1, (int) $query->max_num_pages), $search);
-		wp_reset_postdata();
+		self::render_pagination($endpoint, $current_page, $total_pages, $search);
 	}
 
 	/**
@@ -729,7 +762,9 @@ final class User_Manager_My_Account_Site_Admin {
 		echo '</tbody></table>';
 		echo '</section>';
 
-		self::render_meta_table_from_post($coupon_id);
+		if (self::should_show_meta_for_area('coupons')) {
+			self::render_meta_table_from_post($coupon_id);
+		}
 	}
 
 	/**
@@ -739,27 +774,26 @@ final class User_Manager_My_Account_Site_Admin {
 		$endpoint     = 'admin_users';
 		$current_page = self::get_current_page();
 		$search       = self::get_search_query();
-		$offset       = ($current_page - 1) * self::PER_PAGE;
-
-		$args = [
-			'number'      => self::PER_PAGE,
-			'offset'      => $offset,
-			'orderby'     => 'registered',
-			'order'       => 'DESC',
-			'count_total' => true,
-		];
-
 		if ($search !== '') {
-			$args['search']         = '*' . $search . '*';
-			$args['search_columns'] = ['user_login', 'user_email', 'display_name'];
-		}
-
-		$query = new WP_User_Query($args);
-		$users = $query->get_results();
-		$total = (int) $query->get_total();
-		$pages = (int) ceil($total / self::PER_PAGE);
-		if ($pages < 1) {
-			$pages = 1;
+			$matching_users = self::search_users($search);
+			$paged          = self::paginate_items($matching_users, $current_page, self::PER_PAGE);
+			$users          = $paged['items'];
+			$pages          = $paged['total_pages'];
+		} else {
+			$offset = ($current_page - 1) * self::PER_PAGE;
+			$query  = new WP_User_Query([
+				'number'      => self::PER_PAGE,
+				'offset'      => $offset,
+				'orderby'     => 'registered',
+				'order'       => 'DESC',
+				'count_total' => true,
+			]);
+			$users = $query->get_results();
+			$total = (int) $query->get_total();
+			$pages = (int) ceil($total / self::PER_PAGE);
+			if ($pages < 1) {
+				$pages = 1;
+			}
 		}
 
 		echo '<h3 class="swh_users_title">' . esc_html__('Admin: Users', 'user-manager') . '</h3>';
@@ -842,7 +876,9 @@ final class User_Manager_My_Account_Site_Admin {
 		echo '</tbody></table>';
 		echo '</section>';
 
-		self::render_meta_table_from_user($user->ID);
+		if (self::should_show_meta_for_area('users')) {
+			self::render_meta_table_from_user($user->ID);
+		}
 	}
 
 	/**
@@ -864,6 +900,613 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Handle approve-order actions from My Account admin orders.
+	 */
+	private static function maybe_handle_order_approval_action(): void {
+		if (!isset($_GET['um_approve_order'])) {
+			return;
+		}
+
+		$order_id = absint(wp_unslash($_GET['um_approve_order']));
+		$args     = self::get_list_context_query_args();
+
+		if (isset($_GET['order_id']) && absint(wp_unslash($_GET['order_id'])) > 0) {
+			$args['order_id'] = absint(wp_unslash($_GET['order_id']));
+		}
+		if (isset($_GET['print']) && $_GET['print'] === '1') {
+			$args['print'] = '1';
+		}
+
+		if ($order_id <= 0) {
+			self::redirect_order_notice('invalid_order', $args);
+		}
+
+		$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'um_approve_order_' . $order_id)) {
+			self::redirect_order_notice('invalid_nonce', $args);
+		}
+
+		if (!self::current_user_can_approve_orders()) {
+			self::redirect_order_notice('not_allowed', $args);
+		}
+
+		$order = wc_get_order($order_id);
+		if (!$order) {
+			self::redirect_order_notice('order_not_found', $args);
+		}
+
+		if (!$order->has_status('pending')) {
+			self::redirect_order_notice('order_not_pending', $args);
+		}
+
+		$order->update_status(
+			'processing',
+			__('Order approved from My Account Admin Orders.', 'user-manager'),
+			true
+		);
+
+		self::redirect_order_notice('approved', $args);
+	}
+
+	/**
+	 * Redirect to the orders endpoint with a notice code.
+	 *
+	 * @param string $notice_code Notice code.
+	 * @param array  $args Redirect args.
+	 */
+	private static function redirect_order_notice(string $notice_code, array $args = []): void {
+		$args['um_order_notice'] = $notice_code;
+		$url = self::get_endpoint_url('admin_orders', $args);
+		wp_safe_redirect($url);
+		exit;
+	}
+
+	/**
+	 * Render order approval notices.
+	 */
+	private static function render_order_approval_notice(): void {
+		if (!isset($_GET['um_order_notice'])) {
+			return;
+		}
+
+		$code = sanitize_text_field(wp_unslash($_GET['um_order_notice']));
+		$type = 'notice';
+		$message = '';
+
+		switch ($code) {
+			case 'approved':
+				$type = 'success';
+				$message = __('Order approved. Status changed from Pending payment to Processing.', 'user-manager');
+				break;
+			case 'order_not_pending':
+				$type = 'notice';
+				$message = __('Order is not in Pending payment status, so it was not changed.', 'user-manager');
+				break;
+			case 'order_not_found':
+			case 'invalid_order':
+				$type = 'error';
+				$message = __('Order not found.', 'user-manager');
+				break;
+			case 'invalid_nonce':
+				$type = 'error';
+				$message = __('Security check failed for order approval.', 'user-manager');
+				break;
+			case 'not_allowed':
+				$type = 'error';
+				$message = __('You are not allowed to approve orders in this area.', 'user-manager');
+				break;
+		}
+
+		if ($message === '') {
+			return;
+		}
+
+		if (function_exists('wc_print_notice')) {
+			wc_print_notice($message, $type);
+		} else {
+			$class = $type === 'error' ? 'woocommerce-error' : 'woocommerce-info';
+			if ($type === 'success') {
+				$class = 'woocommerce-message';
+			}
+			echo '<p class="' . esc_attr($class) . '">' . esc_html($message) . '</p>';
+		}
+	}
+
+	/**
+	 * Build approve order URL with nonce.
+	 *
+	 * @param int   $order_id Order ID.
+	 * @param array $args Base query args.
+	 * @return string
+	 */
+	private static function get_approve_order_url(int $order_id, array $args = []): string {
+		$args['um_approve_order'] = $order_id;
+		$url = self::get_endpoint_url('admin_orders', $args);
+		return wp_nonce_url($url, 'um_approve_order_' . $order_id);
+	}
+
+	/**
+	 * Check whether the current user can approve pending orders.
+	 *
+	 * @return bool
+	 */
+	private static function current_user_can_approve_orders(): bool {
+		if (!is_user_logged_in()) {
+			return false;
+		}
+		if (current_user_can('manage_options')) {
+			return true;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$allowed  = self::parse_username_list((string) ($settings['my_account_admin_order_approval_usernames'] ?? ''));
+		if (empty($allowed)) {
+			return false;
+		}
+
+		$current = wp_get_current_user();
+		$login   = strtolower((string) ($current->user_login ?? ''));
+		if ($login === '') {
+			return false;
+		}
+
+		return in_array($login, $allowed, true);
+	}
+
+	/**
+	 * Check whether meta sections should render for a specific area.
+	 *
+	 * @param string $area_key Area key.
+	 * @return bool
+	 */
+	private static function should_show_meta_for_area(string $area_key): bool {
+		$configs = self::get_area_configs();
+		if (!isset($configs[ $area_key ]['show_meta_key'])) {
+			return false;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$key      = $configs[ $area_key ]['show_meta_key'];
+
+		return !empty($settings[ $key ]);
+	}
+
+	/**
+	 * Paginate an array of items.
+	 *
+	 * @param array $items Items.
+	 * @param int   $page Page number.
+	 * @param int   $per_page Items per page.
+	 * @return array{items: array, total_pages: int}
+	 */
+	private static function paginate_items(array $items, int $page, int $per_page): array {
+		$total = count($items);
+		$total_pages = (int) ceil($total / max(1, $per_page));
+		if ($total_pages < 1) {
+			$total_pages = 1;
+		}
+
+		$page = max(1, min($page, $total_pages));
+		$offset = ($page - 1) * $per_page;
+		$slice = array_slice($items, $offset, $per_page);
+
+		return [
+			'items' => $slice,
+			'total_pages' => $total_pages,
+		];
+	}
+
+	/**
+	 * Search orders by multiple common fields.
+	 *
+	 * @param string $search Search query.
+	 * @return array<int,WC_Order>
+	 */
+	private static function search_orders(string $search): array {
+		$needle = strtolower(trim($search));
+		if ($needle === '') {
+			return [];
+		}
+
+		$orders = [];
+		$queries = [];
+
+		if (is_numeric($search)) {
+			$single = wc_get_order(absint($search));
+			if ($single instanceof WC_Order) {
+				$orders[(int) $single->get_id()] = $single;
+			}
+		}
+
+		$queries[] = [
+			'limit'    => 300,
+			'paginate' => false,
+			'orderby'  => 'date',
+			'order'    => 'DESC',
+			'search'   => '*' . $search . '*',
+		];
+		$queries[] = [
+			'limit'    => 400,
+			'paginate' => false,
+			'orderby'  => 'date',
+			'order'    => 'DESC',
+		];
+		if (strpos($search, '@') !== false) {
+			$queries[] = [
+				'limit'         => 300,
+				'paginate'      => false,
+				'orderby'       => 'date',
+				'order'         => 'DESC',
+				'billing_email' => $search,
+			];
+		}
+
+		foreach ($queries as $query_args) {
+			$results = wc_get_orders($query_args);
+			if (!is_array($results)) {
+				continue;
+			}
+			foreach ($results as $order) {
+				if (!$order instanceof WC_Order) {
+					continue;
+				}
+				if (!self::order_matches_search($order, $needle)) {
+					continue;
+				}
+				$orders[(int) $order->get_id()] = $order;
+			}
+		}
+
+		$orders = array_values($orders);
+		usort($orders, static function ($a, $b) {
+			$a_date = $a instanceof WC_Order && $a->get_date_created() ? $a->get_date_created()->getTimestamp() : 0;
+			$b_date = $b instanceof WC_Order && $b->get_date_created() ? $b->get_date_created()->getTimestamp() : 0;
+			return $b_date <=> $a_date;
+		});
+
+		return $orders;
+	}
+
+	/**
+	 * Determine if an order matches a search term.
+	 *
+	 * @param WC_Order $order Order.
+	 * @param string   $needle Lowercased search query.
+	 * @return bool
+	 */
+	private static function order_matches_search($order, string $needle): bool {
+		if (!$order instanceof WC_Order) {
+			return false;
+		}
+
+		$billing  = $order->get_address('billing');
+		$shipping = $order->get_address('shipping');
+		$fields = [
+			(string) $order->get_id(),
+			(string) $order->get_order_number(),
+			(string) $order->get_status(),
+			(string) $order->get_billing_email(),
+			(string) $order->get_billing_first_name(),
+			(string) $order->get_billing_last_name(),
+			(string) $order->get_billing_phone(),
+			(string) $order->get_payment_method_title(),
+			implode(' ', array_map('strval', (array) $billing)),
+			implode(' ', array_map('strval', (array) $shipping)),
+		];
+
+		$haystack = strtolower(implode(' | ', $fields));
+		return strpos($haystack, $needle) !== false;
+	}
+
+	/**
+	 * Search products/variations by title, SKU, variation text, and ID.
+	 *
+	 * @param string $search Search query.
+	 * @return array<int,int>
+	 */
+	private static function search_product_ids(string $search): array {
+		$needle = strtolower(trim($search));
+		if ($needle === '') {
+			return [];
+		}
+
+		$ids = [];
+		if (is_numeric($search)) {
+			$single_id = absint($search);
+			$post_type = get_post_type($single_id);
+			if (in_array($post_type, ['product', 'product_variation'], true)) {
+				$ids[] = $single_id;
+			}
+		}
+
+		$queries = [
+			[
+				'post_type'      => ['product', 'product_variation'],
+				'post_status'    => ['publish', 'private'],
+				'posts_per_page' => 800,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+				's'              => $search,
+			],
+			[
+				'post_type'      => ['product', 'product_variation'],
+				'post_status'    => ['publish', 'private'],
+				'posts_per_page' => 800,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+				'meta_query'     => [
+					[
+						'key'     => '_sku',
+						'value'   => $search,
+						'compare' => 'LIKE',
+					],
+				],
+			],
+			[
+				'post_type'      => ['product', 'product_variation'],
+				'post_status'    => ['publish', 'private'],
+				'posts_per_page' => 800,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+			],
+		];
+
+		foreach ($queries as $query_args) {
+			$query = new WP_Query($query_args);
+			if (empty($query->posts)) {
+				continue;
+			}
+			foreach ($query->posts as $post_id) {
+				$product = wc_get_product($post_id);
+				if (!$product) {
+					continue;
+				}
+				if (!self::product_matches_search($product, $needle)) {
+					continue;
+				}
+				$ids[] = (int) $post_id;
+			}
+		}
+
+		$ids = array_values(array_unique($ids));
+		usort($ids, static function ($a, $b) {
+			$a_date = (string) get_post_field('post_date_gmt', $a);
+			$b_date = (string) get_post_field('post_date_gmt', $b);
+			return strcmp($b_date, $a_date);
+		});
+
+		return $ids;
+	}
+
+	/**
+	 * Determine if a product/variation matches a search term.
+	 *
+	 * @param WC_Product $product Product.
+	 * @param string     $needle Lowercased search query.
+	 * @return bool
+	 */
+	private static function product_matches_search($product, string $needle): bool {
+		if (!$product) {
+			return false;
+		}
+
+		$variation_text = $product->is_type('variation')
+			? wc_get_formatted_variation($product, true, false, false)
+			: '';
+		$parent_name = '';
+		if ($product->is_type('variation')) {
+			$parent_name = get_the_title((int) $product->get_parent_id());
+		}
+
+		$fields = [
+			(string) $product->get_id(),
+			(string) $product->get_name(),
+			(string) $parent_name,
+			(string) $variation_text,
+			(string) $product->get_sku(),
+			(string) $product->get_description(),
+			(string) $product->get_short_description(),
+			(string) $product->get_status(),
+		];
+
+		$haystack = strtolower(implode(' | ', $fields));
+		return strpos($haystack, $needle) !== false;
+	}
+
+	/**
+	 * Search coupons by code and core coupon properties.
+	 *
+	 * @param string $search Search query.
+	 * @return array<int,int>
+	 */
+	private static function search_coupon_ids(string $search): array {
+		$needle = strtolower(trim($search));
+		if ($needle === '') {
+			return [];
+		}
+
+		$ids = [];
+		if (is_numeric($search)) {
+			$single_id = absint($search);
+			if (get_post_type($single_id) === 'shop_coupon') {
+				$ids[] = $single_id;
+			}
+		}
+
+		$queries = [
+			[
+				'post_type'      => 'shop_coupon',
+				'post_status'    => ['publish', 'private', 'draft'],
+				'posts_per_page' => 1000,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+				's'              => $search,
+			],
+			[
+				'post_type'      => 'shop_coupon',
+				'post_status'    => ['publish', 'private', 'draft'],
+				'posts_per_page' => 1000,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+			],
+		];
+
+		foreach ($queries as $query_args) {
+			$query = new WP_Query($query_args);
+			if (empty($query->posts)) {
+				continue;
+			}
+			foreach ($query->posts as $coupon_id) {
+				$coupon = new WC_Coupon($coupon_id);
+				if (!$coupon || !$coupon->get_id()) {
+					continue;
+				}
+				if (!self::coupon_matches_search($coupon, $needle)) {
+					continue;
+				}
+				$ids[] = (int) $coupon_id;
+			}
+		}
+
+		$ids = array_values(array_unique($ids));
+		usort($ids, static function ($a, $b) {
+			$a_date = (string) get_post_field('post_date_gmt', $a);
+			$b_date = (string) get_post_field('post_date_gmt', $b);
+			return strcmp($b_date, $a_date);
+		});
+
+		return $ids;
+	}
+
+	/**
+	 * Determine if a coupon matches a search term.
+	 *
+	 * @param WC_Coupon $coupon Coupon.
+	 * @param string    $needle Lowercased query.
+	 * @return bool
+	 */
+	private static function coupon_matches_search($coupon, string $needle): bool {
+		if (!$coupon || !$coupon->get_id()) {
+			return false;
+		}
+
+		$expires = $coupon->get_date_expires();
+		$fields = [
+			(string) $coupon->get_id(),
+			(string) $coupon->get_code(),
+			(string) $coupon->get_amount(),
+			(string) $coupon->get_discount_type(),
+			$coupon->get_free_shipping() ? 'yes' : 'no',
+			(string) $coupon->get_usage_count(),
+			(string) $coupon->get_usage_limit(),
+			(string) $coupon->get_usage_limit_per_user(),
+			$expires ? (string) $expires->date_i18n('Y-m-d H:i:s') : '',
+			(string) get_post_field('post_date', $coupon->get_id()),
+			(string) get_post_field('post_content', $coupon->get_id()),
+			implode(', ', (array) $coupon->get_email_restrictions()),
+		];
+
+		$haystack = strtolower(implode(' | ', $fields));
+		return strpos($haystack, $needle) !== false;
+	}
+
+	/**
+	 * Search users by login/email/name/roles/id plus first/last name.
+	 *
+	 * @param string $search Search query.
+	 * @return array<int,WP_User>
+	 */
+	private static function search_users(string $search): array {
+		$needle = strtolower(trim($search));
+		if ($needle === '') {
+			return [];
+		}
+
+		$users = [];
+		if (is_numeric($search)) {
+			$single = get_user_by('id', absint($search));
+			if ($single instanceof WP_User) {
+				$users[(int) $single->ID] = $single;
+			}
+		}
+
+		$queries = [
+			new WP_User_Query([
+				'number'         => 1200,
+				'orderby'        => 'registered',
+				'order'          => 'DESC',
+				'search'         => '*' . $search . '*',
+				'search_columns' => ['user_login', 'user_email', 'display_name'],
+			]),
+			new WP_User_Query([
+				'number'  => 1200,
+				'orderby' => 'registered',
+				'order'   => 'DESC',
+			]),
+		];
+
+		foreach ($queries as $query) {
+			$results = $query->get_results();
+			if (empty($results)) {
+				continue;
+			}
+
+			foreach ($results as $user) {
+				if (!$user instanceof WP_User) {
+					continue;
+				}
+				if (!self::user_matches_search($user, $needle)) {
+					continue;
+				}
+				$users[(int) $user->ID] = $user;
+			}
+		}
+
+		$users = array_values($users);
+		usort($users, static function ($a, $b) {
+			$a_reg = strtotime((string) ($a->user_registered ?? '')) ?: 0;
+			$b_reg = strtotime((string) ($b->user_registered ?? '')) ?: 0;
+			return $b_reg <=> $a_reg;
+		});
+
+		return $users;
+	}
+
+	/**
+	 * Determine if a user matches a search term.
+	 *
+	 * @param WP_User $user User.
+	 * @param string  $needle Lowercased query.
+	 * @return bool
+	 */
+	private static function user_matches_search($user, string $needle): bool {
+		if (!$user instanceof WP_User) {
+			return false;
+		}
+
+		$first_name = (string) get_user_meta($user->ID, 'first_name', true);
+		$last_name  = (string) get_user_meta($user->ID, 'last_name', true);
+		$fields = [
+			(string) $user->ID,
+			(string) $user->user_login,
+			(string) $user->user_email,
+			(string) $user->display_name,
+			(string) $first_name,
+			(string) $last_name,
+			implode(', ', (array) $user->roles),
+			(string) $user->user_registered,
+		];
+
+		$haystack = strtolower(implode(' | ', $fields));
+		return strpos($haystack, $needle) !== false;
 	}
 
 	/**
@@ -948,24 +1591,28 @@ final class User_Manager_My_Account_Site_Admin {
 				'menu_label'    => __('Admin: Orders', 'user-manager'),
 				'enabled_key'   => 'my_account_admin_order_viewer_enabled',
 				'usernames_key' => 'my_account_admin_order_viewer_usernames',
+				'show_meta_key' => 'my_account_admin_order_viewer_show_meta',
 			],
 			'products' => [
 				'endpoint'      => 'admin_products',
 				'menu_label'    => __('Admin: Products', 'user-manager'),
 				'enabled_key'   => 'my_account_admin_product_viewer_enabled',
 				'usernames_key' => 'my_account_admin_product_viewer_usernames',
+				'show_meta_key' => 'my_account_admin_product_viewer_show_meta',
 			],
 			'coupons' => [
 				'endpoint'      => 'admin_coupons',
 				'menu_label'    => __('Admin: Coupons', 'user-manager'),
 				'enabled_key'   => 'my_account_admin_coupon_viewer_enabled',
 				'usernames_key' => 'my_account_admin_coupon_viewer_usernames',
+				'show_meta_key' => 'my_account_admin_coupon_viewer_show_meta',
 			],
 			'users' => [
 				'endpoint'      => 'admin_users',
 				'menu_label'    => __('Admin: Users', 'user-manager'),
 				'enabled_key'   => 'my_account_admin_user_viewer_enabled',
 				'usernames_key' => 'my_account_admin_user_viewer_usernames',
+				'show_meta_key' => 'my_account_admin_user_viewer_show_meta',
 			],
 		];
 	}

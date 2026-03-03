@@ -19,6 +19,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.5 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Site Admin settings: added a "Show Meta Data area" checkbox for each viewer (Orders, Products, Coupons, Users). These are off by default.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('My Account Site Admin settings: added "Order approval allowed usernames (comma-separated)" under the Order Viewer settings.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Admin: Orders endpoint now shows an "Approve" button for pending payment orders for allowed approvers; approving changes order status from Pending payment to Processing with nonce checks and notices.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Improved search behavior across all My Account Site Admin lists (Orders, Products, Coupons, Users) with broader matching and filtered results.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.4 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Site Admin: fixed endpoint/menu initialization timing so custom My Account admin endpoints register reliably across plugin load orders.', 'user-manager'); ?></li>
