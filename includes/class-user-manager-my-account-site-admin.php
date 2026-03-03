@@ -19,6 +19,13 @@ final class User_Manager_My_Account_Site_Admin {
 	private static $styles_rendered = false;
 
 	/**
+	 * Runtime notice code for order approval actions handled inline.
+	 *
+	 * @var string
+	 */
+	private static $order_action_notice_code = '';
+
+	/**
 	 * Track whether init() has run.
 	 *
 	 * @var bool
@@ -913,36 +920,33 @@ final class User_Manager_My_Account_Site_Admin {
 			return;
 		}
 
+		self::$order_action_notice_code = '';
 		$order_id = absint(wp_unslash($_GET['um_approve_order']));
-		$args     = self::get_list_context_query_args();
-
-		if (isset($_GET['order_id']) && absint(wp_unslash($_GET['order_id'])) > 0) {
-			$args['order_id'] = absint(wp_unslash($_GET['order_id']));
-		}
-		if (isset($_GET['print']) && $_GET['print'] === '1') {
-			$args['print'] = '1';
-		}
-
 		if ($order_id <= 0) {
-			self::redirect_order_notice('invalid_order', $args);
+			self::$order_action_notice_code = 'invalid_order';
+			return;
 		}
 
 		$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
 		if ($nonce === '' || !wp_verify_nonce($nonce, 'um_approve_order_' . $order_id)) {
-			self::redirect_order_notice('invalid_nonce', $args);
+			self::$order_action_notice_code = 'invalid_nonce';
+			return;
 		}
 
 		if (!self::current_user_can_approve_orders()) {
-			self::redirect_order_notice('not_allowed', $args);
+			self::$order_action_notice_code = 'not_allowed';
+			return;
 		}
 
 		$order = wc_get_order($order_id);
 		if (!$order) {
-			self::redirect_order_notice('order_not_found', $args);
+			self::$order_action_notice_code = 'order_not_found';
+			return;
 		}
 
 		if (!$order->has_status('pending')) {
-			self::redirect_order_notice('order_not_pending', $args);
+			self::$order_action_notice_code = 'order_not_pending';
+			return;
 		}
 
 		$order->update_status(
@@ -951,31 +955,22 @@ final class User_Manager_My_Account_Site_Admin {
 			true
 		);
 
-		self::redirect_order_notice('approved', $args);
-	}
-
-	/**
-	 * Redirect to the orders endpoint with a notice code.
-	 *
-	 * @param string $notice_code Notice code.
-	 * @param array  $args Redirect args.
-	 */
-	private static function redirect_order_notice(string $notice_code, array $args = []): void {
-		$args['um_order_notice'] = $notice_code;
-		$url = self::get_endpoint_url('admin_orders', $args);
-		wp_safe_redirect($url);
-		exit;
+		self::$order_action_notice_code = 'approved';
 	}
 
 	/**
 	 * Render order approval notices.
 	 */
 	private static function render_order_approval_notice(): void {
-		if (!isset($_GET['um_order_notice'])) {
+		$code = self::$order_action_notice_code;
+		if ($code === '' && isset($_GET['um_order_notice'])) {
+			$code = sanitize_text_field(wp_unslash($_GET['um_order_notice']));
+		}
+
+		if ($code === '') {
 			return;
 		}
 
-		$code = sanitize_text_field(wp_unslash($_GET['um_order_notice']));
 		$type = 'notice';
 		$message = '';
 
@@ -1016,6 +1011,9 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 			echo '<p class="' . esc_attr($class) . '">' . esc_html($message) . '</p>';
 		}
+
+		// Prevent re-running approval action on page refresh by removing action params from URL.
+		echo '<script>(function(){try{var url=new URL(window.location.href);url.searchParams.delete("um_approve_order");url.searchParams.delete("_wpnonce");url.searchParams.delete("um_order_notice");window.history.replaceState({},document.title,url.toString());}catch(e){}})();</script>';
 	}
 
 	/**
