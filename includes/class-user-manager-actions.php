@@ -1636,6 +1636,7 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_approval_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_order_approval_usernames']) ? wp_unslash($_POST['my_account_admin_order_approval_usernames']) : ''
 				);
+				$settings['my_account_admin_order_default_pending_enabled'] = isset($_POST['my_account_admin_order_default_pending_enabled']) && $_POST['my_account_admin_order_default_pending_enabled'] === '1';
 				$settings['my_account_admin_order_viewer_show_meta'] = isset($_POST['my_account_admin_order_viewer_show_meta']) && $_POST['my_account_admin_order_viewer_show_meta'] === '1';
 				$settings['my_account_admin_product_viewer_enabled'] = isset($_POST['my_account_admin_product_viewer_enabled']) && $_POST['my_account_admin_product_viewer_enabled'] === '1';
 				$settings['my_account_admin_product_viewer_usernames'] = self::sanitize_username_csv(

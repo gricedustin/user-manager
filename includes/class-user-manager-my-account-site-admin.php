@@ -39,6 +39,8 @@ final class User_Manager_My_Account_Site_Admin {
 		add_filter('woocommerce_get_query_vars', [__CLASS__, 'filter_my_account_query_vars'], 20, 1);
 		add_filter('woocommerce_account_menu_items', [__CLASS__, 'filter_my_account_menu_items'], 40, 1);
 		add_action('woocommerce_before_my_account', [__CLASS__, 'maybe_render_debug_panel'], 1, 0);
+		add_action('woocommerce_new_order', [__CLASS__, 'maybe_default_new_order_to_pending'], 20, 1);
+		add_filter('woocommerce_payment_complete_order_status', [__CLASS__, 'filter_payment_complete_order_status'], 20, 3);
 		add_action('woocommerce_account_admin_orders_endpoint', [__CLASS__, 'render_admin_orders_endpoint']);
 		add_action('woocommerce_account_admin_products_endpoint', [__CLASS__, 'render_admin_products_endpoint']);
 		add_action('woocommerce_account_admin_coupons_endpoint', [__CLASS__, 'render_admin_coupons_endpoint']);
@@ -135,6 +137,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'allowed_usernames_raw'    => (string) ($settings['my_account_admin_order_approval_usernames'] ?? ''),
 				'allowed_usernames_parsed' => self::parse_username_list((string) ($settings['my_account_admin_order_approval_usernames'] ?? '')),
 				'current_user_can_approve' => self::current_user_can_approve_orders(),
+				'default_new_orders_pending_enabled' => !empty($settings['my_account_admin_order_default_pending_enabled']),
 			],
 			'areas'                => $areas,
 		];
@@ -1054,6 +1057,67 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return in_array($login, $allowed, true);
+	}
+
+	/**
+	 * Enforce default pending-payment status for new orders when enabled.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	public static function maybe_default_new_order_to_pending($order_id): void {
+		if (!self::is_default_new_orders_pending_enabled()) {
+			return;
+		}
+
+		$order = wc_get_order(absint($order_id));
+		if (!$order) {
+			return;
+		}
+
+		$current_status = (string) $order->get_status();
+		if ($current_status === 'pending' || $current_status === 'checkout-draft') {
+			return;
+		}
+
+		if (in_array($current_status, ['cancelled', 'refunded', 'trash'], true)) {
+			return;
+		}
+
+		$order->update_status(
+			'pending',
+			__('Order defaulted to Pending payment by User Manager setting.', 'user-manager'),
+			false
+		);
+	}
+
+	/**
+	 * Keep payment-complete transitions in pending when default pending is enabled.
+	 *
+	 * @param string   $status Proposed status.
+	 * @param int      $order_id Order ID.
+	 * @param WC_Order $order Order object.
+	 * @return string
+	 */
+	public static function filter_payment_complete_order_status($status, $order_id, $order): string {
+		if (!self::is_default_new_orders_pending_enabled()) {
+			return (string) $status;
+		}
+
+		if ($status === 'pending') {
+			return 'pending';
+		}
+
+		return 'pending';
+	}
+
+	/**
+	 * Setting flag: default new orders to pending payment.
+	 *
+	 * @return bool
+	 */
+	private static function is_default_new_orders_pending_enabled(): bool {
+		$settings = User_Manager_Core::get_settings();
+		return !empty($settings['my_account_admin_order_default_pending_enabled']);
 	}
 
 	/**
