@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.7';
+	const VERSION = '2.2.8';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1762,10 +1762,12 @@ final class User_Manager_Core {
 		$identifier_column = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
+		$force_debug       = self::is_bulk_add_to_cart_debug_requested();
+		$debug_enabled     = (isset($options['debug_mode']) && (string) $options['debug_mode'] === '1') || $force_debug;
 
 		$output = '<div class="bulk-add-to-cart-form" style="max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
 
-		if (isset($_POST['bulk_add_to_cart_submit'])) {
+		if (isset($_POST['bulk_add_to_cart_submit']) && $debug_enabled) {
 			$output .= '<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #dc3545;">';
 			$output .= '<h3 style="margin-top: 0; color: #dc3545;">' . esc_html__('Debug Information', 'user-manager') . '</h3>';
 
@@ -1801,6 +1803,13 @@ final class User_Manager_Core {
 			$output .= '<li>' . esc_html__('Quantity Column:', 'user-manager') . ' ' . esc_html($quantity_column) . '</li>';
 			$output .= '</ul>';
 
+			$output .= '</div>';
+		}
+
+		if ($force_debug && !isset($_POST['bulk_add_to_cart_submit'])) {
+			$output .= '<div style="margin-bottom: 20px; padding: 12px 15px; background: #fff8e5; border-left: 4px solid #dba617;">';
+			$output .= '<strong>' . esc_html__('Bulk Add to Cart debug mode is active via URL parameter.', 'user-manager') . '</strong> ';
+			$output .= esc_html__('Submit a CSV to see verbose processing notices.', 'user-manager');
 			$output .= '</div>';
 		}
 
@@ -1847,6 +1856,7 @@ final class User_Manager_Core {
 			$label
 		) . '</li>';
 		$output .= '<li>' . esc_html__('Upload your CSV file and click "Add to Cart"', 'user-manager') . '</li>';
+		$output .= '<li>' . esc_html__('Optional debugging: append ?um_bulk_add_to_cart_debug=1 to this page URL to force verbose diagnostics.', 'user-manager') . '</li>';
 		$output .= '</ol>';
 		$output .= '</div>';
 
@@ -1936,6 +1946,10 @@ final class User_Manager_Core {
 			return;
 		}
 
+		if (function_exists('wc_load_cart')) {
+			wc_load_cart();
+		}
+
 		if (!function_exists('WC') || !WC()->cart) {
 			if (function_exists('WC')) {
 				WC()->cart = new WC_Cart();
@@ -1975,9 +1989,16 @@ final class User_Manager_Core {
 		$identifier_type  = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
 		$quantity_col     = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
 		$debug_mode       = isset($options['debug_mode']) ? (string) $options['debug_mode'] : '0';
+		$debug_enabled    = $debug_mode === '1' || self::is_bulk_add_to_cart_debug_requested();
 
-		if ($debug_mode === '1') {
+		$normalized_headers = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], $headers);
+		$normalized_lookup  = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], [$identifier_col, $quantity_col]);
+		$identifier_lookup  = $normalized_lookup[0] ?? 'product_id';
+		$quantity_lookup    = $normalized_lookup[1] ?? 'quantity';
+
+		if ($debug_enabled) {
 			wc_add_notice('CSV Headers: ' . implode(', ', $headers), 'notice');
+			wc_add_notice('Normalized Headers: ' . implode(', ', $normalized_headers), 'notice');
 			wc_add_notice(
 				'Using settings - Identifier Column: ' . $identifier_col .
 				', Type: ' . $identifier_type .
@@ -1986,11 +2007,10 @@ final class User_Manager_Core {
 			);
 		}
 
-		$lower_headers    = array_map('strtolower', $headers);
-		$identifier_index = array_search(strtolower($identifier_col), $lower_headers, true);
-		$quantity_index   = array_search(strtolower($quantity_col), $lower_headers, true);
+		$identifier_index = array_search($identifier_lookup, $normalized_headers, true);
+		$quantity_index   = array_search($quantity_lookup, $normalized_headers, true);
 
-		if ($debug_mode === '1') {
+		if ($debug_enabled) {
 			wc_add_notice(
 				'Column indices - Identifier: ' . ($identifier_index !== false ? $identifier_index : 'not found') .
 				', Quantity: ' . ($quantity_index !== false ? $quantity_index : 'not found'),
@@ -2020,9 +2040,10 @@ final class User_Manager_Core {
 		while (($row = fgetcsv($handle)) !== false) {
 			$row_number++;
 			$identifier = isset($row[$identifier_index]) ? trim((string) $row[$identifier_index]) : '';
-			$quantity   = isset($row[$quantity_index]) ? (int) $row[$quantity_index] : 0;
+			$quantity_raw = isset($row[$quantity_index]) ? (string) $row[$quantity_index] : '';
+			$quantity   = self::bulk_add_to_cart_parse_quantity($quantity_raw);
 
-			if ($debug_mode === '1') {
+			if ($debug_enabled) {
 				wc_add_notice('Processing row ' . $row_number . ' - Identifier: ' . $identifier . ', Quantity: ' . $quantity, 'notice');
 			}
 
@@ -2032,53 +2053,14 @@ final class User_Manager_Core {
 					esc_html__('Row %1$d: Invalid identifier or quantity (Identifier: "%2$s", Quantity: "%3$s")', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
-					isset($row[$quantity_index]) ? esc_html((string) $row[$quantity_index]) : ''
+					esc_html($quantity_raw)
 				);
 				continue;
 			}
 
-			$product = null;
-			switch ($identifier_type) {
-				case 'product_id':
-					$product = wc_get_product($identifier);
-					break;
-				case 'product_sku':
-					$product_id = wc_get_product_id_by_sku($identifier);
-					$product    = $product_id ? wc_get_product($product_id) : null;
-					break;
-				case 'product_slug':
-					if (function_exists('wc_get_product_id_by_slug')) {
-						$product_id = wc_get_product_id_by_slug($identifier);
-						$product    = $product_id ? wc_get_product($product_id) : null;
-					}
-					break;
-				case 'product_title':
-					global $wpdb;
-					$product_id = $wpdb->get_var(
-						$wpdb->prepare(
-							"SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type = 'product'",
-							$identifier
-						)
-					);
-					$product = $product_id ? wc_get_product($product_id) : null;
-					break;
-				case 'meta_field':
-					global $wpdb;
-					$meta_field_name = isset($options['meta_field_name']) ? (string) $options['meta_field_name'] : '';
-					if ($meta_field_name !== '') {
-						$product_id = $wpdb->get_var(
-							$wpdb->prepare(
-								"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value = %s",
-								$meta_field_name,
-								$identifier
-							)
-						);
-						$product = $product_id ? wc_get_product($product_id) : null;
-					}
-					break;
-			}
+			$product = self::bulk_add_to_cart_find_product($identifier, $identifier_type, $options);
 
-			if ($debug_mode === '1') {
+			if ($debug_enabled) {
 				wc_add_notice(
 					'Product lookup for ' . $identifier . ': ' . ($product ? 'Found' : 'Not found'),
 					'notice'
@@ -2119,7 +2101,7 @@ final class User_Manager_Core {
 				continue;
 			}
 
-			$cart_item_key = WC()->cart->add_to_cart($product->get_id(), $quantity);
+			$cart_item_key = self::bulk_add_to_cart_add_product_to_cart($product, $quantity);
 			if ($cart_item_key) {
 				$success_count++;
 				$name = $product->get_name();
@@ -2127,7 +2109,7 @@ final class User_Manager_Core {
 					$successful_additions[$name] = 0;
 				}
 				$successful_additions[$name] += $quantity;
-				if ($debug_mode === '1') {
+				if ($debug_enabled) {
 					wc_add_notice('Successfully added product ' . $identifier . ' to cart', 'success');
 				}
 			} else {
@@ -2138,7 +2120,7 @@ final class User_Manager_Core {
 					esc_html($identifier),
 					esc_html((string) $quantity)
 				);
-				if ($debug_mode === '1') {
+				if ($debug_enabled) {
 					wc_add_notice('Failed to add product ' . $identifier . ' to cart', 'error');
 				}
 			}
@@ -2210,6 +2192,172 @@ final class User_Manager_Core {
 			wp_safe_redirect(wc_get_cart_url());
 			exit;
 		}
+	}
+
+	/**
+	 * URL debug flag for Bulk Add to Cart frontend.
+	 */
+	private static function is_bulk_add_to_cart_debug_requested(): bool {
+		if (!isset($_GET['um_bulk_add_to_cart_debug'])) {
+			return false;
+		}
+
+		$raw = sanitize_text_field(wp_unslash($_GET['um_bulk_add_to_cart_debug']));
+		$raw = strtolower(trim($raw));
+
+		return $raw !== '' && $raw !== '0' && $raw !== 'false' && $raw !== 'no';
+	}
+
+	/**
+	 * Normalize CSV/header keys for robust matching.
+	 */
+	private static function bulk_add_to_cart_normalize_header(string $header): string {
+		$header = str_replace("\xEF\xBB\xBF", '', $header);
+		$header = trim($header);
+		$header = strtolower($header);
+		$header = preg_replace('/\s+/', '_', $header);
+		return (string) $header;
+	}
+
+	/**
+	 * Parse CSV quantity values safely.
+	 */
+	private static function bulk_add_to_cart_parse_quantity(string $raw): int {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return 0;
+		}
+
+		$normalized = str_replace(',', '', $raw);
+		$normalized = preg_replace('/[^0-9.\-]/', '', $normalized);
+		if ($normalized === '' || !is_numeric($normalized)) {
+			return 0;
+		}
+
+		$value = (float) $normalized;
+		return $value > 0 ? (int) floor($value) : 0;
+	}
+
+	/**
+	 * Resolve product by configured identifier.
+	 *
+	 * @param string $identifier Identifier value from CSV.
+	 * @param string $identifier_type Identifier type setting.
+	 * @param array  $options Bulk settings.
+	 * @return WC_Product|null
+	 */
+	private static function bulk_add_to_cart_find_product(string $identifier, string $identifier_type, array $options) {
+		switch ($identifier_type) {
+			case 'product_id':
+				return wc_get_product(absint($identifier));
+
+			case 'product_sku':
+				$product_id = wc_get_product_id_by_sku($identifier);
+				return $product_id ? wc_get_product($product_id) : null;
+
+			case 'product_slug':
+				return self::bulk_add_to_cart_find_product_by_slug($identifier);
+
+			case 'product_title':
+				return self::bulk_add_to_cart_find_product_by_title($identifier);
+
+			case 'meta_field':
+				$meta_field_name = isset($options['meta_field_name']) ? (string) $options['meta_field_name'] : '';
+				if ($meta_field_name === '') {
+					return null;
+				}
+				return self::bulk_add_to_cart_find_product_by_meta($identifier, $meta_field_name);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Resolve product by slug (product or variation).
+	 */
+	private static function bulk_add_to_cart_find_product_by_slug(string $identifier) {
+		$slug = sanitize_title($identifier);
+		if ($slug === '') {
+			return null;
+		}
+
+		global $wpdb;
+		$product_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_name = %s AND post_type IN ('product','product_variation') AND post_status IN ('publish','private') ORDER BY post_type = 'product_variation' DESC, ID DESC LIMIT 1",
+				$slug
+			)
+		);
+
+		return $product_id ? wc_get_product((int) $product_id) : null;
+	}
+
+	/**
+	 * Resolve product by exact title (product or variation).
+	 */
+	private static function bulk_add_to_cart_find_product_by_title(string $identifier) {
+		global $wpdb;
+		$product_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type IN ('product','product_variation') AND post_status IN ('publish','private') ORDER BY post_type = 'product_variation' DESC, ID DESC LIMIT 1",
+				$identifier
+			)
+		);
+
+		return $product_id ? wc_get_product((int) $product_id) : null;
+	}
+
+	/**
+	 * Resolve product by custom meta value (product or variation).
+	 */
+	private static function bulk_add_to_cart_find_product_by_meta(string $identifier, string $meta_key) {
+		global $wpdb;
+		$product_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT pm.post_id
+				 FROM {$wpdb->postmeta} pm
+				 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+				 WHERE pm.meta_key = %s
+				   AND pm.meta_value = %s
+				   AND p.post_type IN ('product','product_variation')
+				   AND p.post_status IN ('publish','private')
+				 ORDER BY p.post_type = 'product_variation' DESC, pm.post_id DESC
+				 LIMIT 1",
+				$meta_key,
+				$identifier
+			)
+		);
+
+		return $product_id ? wc_get_product((int) $product_id) : null;
+	}
+
+	/**
+	 * Add a product (including variations) to the cart.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @param int        $quantity Quantity.
+	 * @return string|false
+	 */
+	private static function bulk_add_to_cart_add_product_to_cart($product, int $quantity) {
+		if (!$product || !function_exists('WC') || !WC()->cart) {
+			return false;
+		}
+
+		if ($product->is_type('variation')) {
+			$variation_id = (int) $product->get_id();
+			$parent_id    = (int) $product->get_parent_id();
+			if ($variation_id <= 0 || $parent_id <= 0) {
+				return false;
+			}
+
+			$attributes = method_exists($product, 'get_variation_attributes')
+				? (array) $product->get_variation_attributes()
+				: [];
+
+			return WC()->cart->add_to_cart($parent_id, $quantity, $variation_id, $attributes);
+		}
+
+		return WC()->cart->add_to_cart((int) $product->get_id(), $quantity);
 	}
 
 	/**

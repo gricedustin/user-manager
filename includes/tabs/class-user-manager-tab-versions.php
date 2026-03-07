@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.8 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings → Bulk Add to Cart: expanded this area with clear shortcode usage ([bulk_add_to_cart]) and front-end debug parameter instructions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart: added front-end URL debug switch ?um_bulk_add_to_cart_debug=1 to force verbose diagnostics for CSV processing.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart processing fixes: robust CSV header normalization (including UTF-8 BOM handling), safer quantity parsing, improved product lookup (ID/SKU/slug/title/meta for products and variations), and improved variation add-to-cart behavior using parent + variation attributes.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.7 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Orders: fixed approve flow to handle status updates inline and display WooCommerce success/error notices without redirecting after output begins.', 'user-manager'); ?></li>

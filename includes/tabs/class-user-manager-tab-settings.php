@@ -335,6 +335,20 @@ if (!defined('ABSPATH')) {
 							</p>
 						</div>
 						<div class="um-form-field">
+							<label class="um-label-block"><?php esc_html_e('Shortcode usage', 'user-manager'); ?></label>
+							<input type="text" readonly class="regular-text code" value="[bulk_add_to_cart]" onclick="this.select();" />
+							<p class="description">
+								<?php esc_html_e('Place this shortcode on a page to show the CSV upload form for logged-in users.', 'user-manager'); ?>
+							</p>
+						</div>
+						<div class="um-form-field">
+							<label class="um-label-block"><?php esc_html_e('Front-end debug URL parameter', 'user-manager'); ?></label>
+							<input type="text" readonly class="large-text code" value="?um_bulk_add_to_cart_debug=1" onclick="this.select();" />
+							<p class="description">
+								<?php esc_html_e('Append this parameter to the page with [bulk_add_to_cart] to force verbose debug notices for that request, even if debug mode is unchecked.', 'user-manager'); ?>
+							</p>
+						</div>
+						<div class="um-form-field">
 							<label>
 								<input type="checkbox" name="bulk_add_to_cart_redirect_to_cart" value="1" <?php checked(($bulk_settings['redirect_to_cart'] ?? '1') === '1'); ?> />
 								<?php esc_html_e('Redirect to cart page after processing CSV file', 'user-manager'); ?>
