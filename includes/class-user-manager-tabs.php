@@ -22,6 +22,7 @@ require_once __DIR__ . '/tabs/class-user-manager-tab-coupons.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-bulk-coupons.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-tools.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-settings.php';
+require_once __DIR__ . '/tabs/class-user-manager-tab-addons.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-reports.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-documentation.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-versions.php';
@@ -74,6 +75,9 @@ class User_Manager_Tabs {
 				break;
 			case User_Manager_Core::TAB_SETTINGS:
 				User_Manager_Tab_Settings::render();
+				break;
+			case User_Manager_Core::TAB_ADDONS:
+				User_Manager_Tab_Addons::render();
 				break;
 			case User_Manager_Core::TAB_REPORTS:
 				User_Manager_Tab_Reports::render();

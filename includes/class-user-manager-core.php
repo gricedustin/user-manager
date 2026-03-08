@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.8';
+	const VERSION = '2.2.9';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -37,6 +37,7 @@ final class User_Manager_Core {
 	const TAB_COUPONS         = 'coupons';
 	const TAB_TOOLS           = 'tools';
 	const TAB_SETTINGS        = 'settings';
+	const TAB_ADDONS         = 'addons';
 	const TAB_REPORTS         = 'reports';
 	const TAB_DOCUMENTATION   = 'documentation';
 	const TAB_VERSIONS        = 'versions';
@@ -5908,6 +5909,10 @@ final class User_Manager_Core {
 					<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Settings', 'user-manager'); ?>
 				</a>
+				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
+					<span class="dashicons dashicons-admin-plugins" style="font-size:16px;line-height:1.4;"></span>
+					<?php esc_html_e('Add-ons', 'user-manager'); ?>
+				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_DOCUMENTATION ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_DOCUMENTATION)); ?>">
 					<span class="dashicons dashicons-book" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Docs', 'user-manager'); ?>
@@ -5943,6 +5948,7 @@ final class User_Manager_Core {
 			self::TAB_COUPONS,
 			self::TAB_TOOLS,
 			self::TAB_SETTINGS,
+			self::TAB_ADDONS,
 			self::TAB_REPORTS,
 			self::TAB_DOCUMENTATION,
 			self::TAB_VERSIONS,
