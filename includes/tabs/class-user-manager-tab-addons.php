@@ -333,8 +333,16 @@ class User_Manager_Tab_Addons {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
 				$('#um-addons-form-action').val(targetAction);
 			});
-			$('input[name="submit"]').on('click', function() {
+			$('button[name="submit"], input[name="submit"]').on('click', function() {
 				$('#um-addons-form-action').val('user_manager_save_settings');
+			});
+			// Fallback for Enter-key submits: default to settings save unless
+			// an explicit add-on action button triggered submission.
+			$('#um-addons-form-action').closest('form').on('submit', function() {
+				var $active = $(document.activeElement);
+				if (!$active.hasClass('um-addon-action-submit')) {
+					$('#um-addons-form-action').val('user_manager_save_settings');
+				}
 			});
 
 			function toggleMyAccountAdminViewerField(checkboxSelector, fieldSelector) {
