@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.35
+ * Version: 2.2.36
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.36 - February 22, 2026
+ * - User Role Switching add-on now includes the same top-level Activate checkbox pattern used by other add-ons.
+ * - Role Switching settings/history area now hides when the add-on is deactivated and reappears when activated.
+ * - Add-ons tab JS now toggles the Role Switching settings area based on activation state.
+ *
  * 2.2.35 - February 22, 2026
  * - Added explicit Activate checkboxes to add-ons that previously relied on content presence: My Account Site Admin, WP-Admin Notifications, WP-Admin Bar Menu Items, and WP-Admin CSS.
  * - Add-ons save flow now stores these activation toggles and Add-ons cards show/hide their settings areas based on activation state.

@@ -22,21 +22,17 @@ class User_Manager_Addon_Role_Switching {
 				<h2><?php esc_html_e('User Role Switching', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
+				<div class="um-form-field">
+					<label>
+						<input type="checkbox" name="role_switching_enabled" id="um-role-switching-enabled" value="1" <?php checked($role_switch_enabled); ?> />
+						<?php esc_html_e('Activate User Role Switching', 'user-manager'); ?>
+					</label>
+					<p class="description">
+						<?php esc_html_e('Enable front-end role switcher and user profile permissions.', 'user-manager'); ?>
+					</p>
+				</div>
+				<div id="um-role-switching-fields" style="<?php echo $role_switch_enabled ? '' : 'display:none;'; ?>">
 				<table class="form-table">
-					<tr>
-						<th scope="row">
-							<label for="um-role-switching-enabled"><?php esc_html_e('Activate User Role Switching', 'user-manager'); ?></label>
-						</th>
-						<td>
-							<label>
-								<input type="checkbox" name="role_switching_enabled" id="um-role-switching-enabled" value="1" <?php checked($role_switch_enabled); ?> />
-								<?php esc_html_e('Enable front-end role switcher and user profile permissions.', 'user-manager'); ?>
-							</label>
-							<p class="description">
-								<?php esc_html_e('When enabled, eligible users see a "View as role" bar at the bottom of the site and can temporarily switch roles for preview and QA.', 'user-manager'); ?>
-							</p>
-						</td>
-					</tr>
 					<tr>
 						<th scope="row">
 							<label><?php esc_html_e('Hide Roles from Front-end Switcher', 'user-manager'); ?></label>
@@ -228,6 +224,7 @@ class User_Manager_Addon_Role_Switching {
 				<p class="description" style="margin-top:10px;">
 					<?php esc_html_e('Tip: Edit a user profile to grant or remove role switching permissions for that user.', 'user-manager'); ?>
 				</p>
+				</div>
 			</div>
 		</div>
 		<?php

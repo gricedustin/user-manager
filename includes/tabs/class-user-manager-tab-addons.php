@@ -382,6 +382,10 @@ class User_Manager_Tab_Addons {
 				$('#um-wp-admin-css-fields').toggle($('#um-wp-admin-css-enabled').is(':checked'));
 			}
 
+			function toggleRoleSwitchingFields() {
+				$('#um-role-switching-fields').toggle($('#um-role-switching-enabled').is(':checked'));
+			}
+
 			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
 			toggleMyAccountAdminViewerFields();
 			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', function() {
@@ -417,6 +421,7 @@ class User_Manager_Tab_Addons {
 			});
 			toggleOpenAiAddonFields();
 			$('#um-role-switching-enabled').on('change', function() {
+				toggleRoleSwitchingFields();
 				refreshAddonCardAutoState($('#um-addon-card-role-switching'));
 			});
 			$('#um-quick-search-enabled').on('change', function() {
@@ -446,6 +451,7 @@ class User_Manager_Tab_Addons {
 			toggleCustomAdminNotificationsFields();
 			toggleAdminBarMenuItemsFields();
 			toggleWpAdminCssFields();
+			toggleRoleSwitchingFields();
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;

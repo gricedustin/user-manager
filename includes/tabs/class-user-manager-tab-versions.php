@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.36 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('User Role Switching add-on now includes the same top-level Activate checkbox pattern used by other add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Role Switching settings/history area now hides when the add-on is deactivated and reappears when activated.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons tab JS now toggles the Role Switching settings area based on activation state.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.35 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added explicit Activate checkboxes to add-ons that previously relied on content presence: My Account Site Admin, WP-Admin Notifications, WP-Admin Bar Menu Items, and WP-Admin CSS.', 'user-manager'); ?></li>
