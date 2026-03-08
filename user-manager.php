@@ -8,170 +8,170 @@
  * 
  * Changelog:
  * 
- * 2.2.36 - February 22, 2026
+ * 2.2.36 - March 8, 2026
  * - User Role Switching add-on now includes the same top-level Activate checkbox pattern used by other add-ons.
  * - Role Switching settings/history area now hides when the add-on is deactivated and reappears when activated.
  * - Add-ons tab JS now toggles the Role Switching settings area based on activation state.
  *
- * 2.2.35 - February 22, 2026
+ * 2.2.35 - March 8, 2026
  * - Added explicit Activate checkboxes to add-ons that previously relied on content presence: My Account Site Admin, WP-Admin Notifications, WP-Admin Bar Menu Items, and WP-Admin CSS.
  * - Add-ons save flow now stores these activation toggles and Add-ons cards show/hide their settings areas based on activation state.
  * - Added runtime gating so disabled add-ons do not output admin notifications, admin bar custom menus, WP-Admin CSS, or My Account Site Admin features.
  *
- * 2.2.34 - February 22, 2026
+ * 2.2.34 - March 8, 2026
  * - Add-ons retitles: Quick Search Bar → WP-Admin Quick Search Bar, Coupons for New Users → Coupon Automatically Created for New User, and Blog Post Idea Generator → Post Idea Generator.
  * - Updated related add-on labels/messages to match the new naming.
  * - Re-sorted Add-ons cards A–Z by the current card titles.
  *
- * 2.2.33 - February 22, 2026
+ * 2.2.33 - March 8, 2026
  * - Settings > General Settings: moved coupon-related options out of User Experience into a new "Coupons" card.
  * - Settings > General Settings: moved post-meta-related options into a new "Post Meta" card.
  * - User Experience card now focuses on UX/search behavior while coupon and post meta controls are grouped in dedicated cards.
  *
- * 2.2.32 - February 22, 2026
+ * 2.2.32 - March 8, 2026
  * - Moved the "Display Quick Search Bar" control from Settings into Add-ons as a dedicated "Quick Search Bar" card.
  * - Add-ons now saves the Quick Search Bar toggle, and General Settings saves no longer overwrite this add-on setting.
  * - Quick Search Bar remains enabled by default unless explicitly disabled.
  *
- * 2.2.31 - February 22, 2026
+ * 2.2.31 - March 8, 2026
  * - Settings filter now uses keyword search only (removed the "Filter by area" dropdown).
  * - Retained auto-expand behavior while searching so matching cards/fields open automatically.
  * - Clearing the keyword filter returns Settings cards to the default collapsed state.
  *
- * 2.2.30 - February 22, 2026
+ * 2.2.30 - March 8, 2026
  * - Retitled Add-ons card names for clarity: Role Switching → User Role Switching, Custom WP-Admin Notifications → WP-Admin Notifications, Bulk Coupons → Coupon Bulk Creator, and ChatGPT Content Generator → Post Content Generator.
  * - Updated matching activation labels for renamed add-ons.
  * - Synced documentation labels to the new add-on names.
  *
- * 2.2.29 - February 22, 2026
+ * 2.2.29 - March 8, 2026
  * - Settings tab cards now load collapsed by default for a cleaner first view.
  * - When a Settings filter is active (area or keyword), matching cards auto-expand to show results immediately.
  * - Clearing filters returns cards to the default collapsed state.
  *
- * 2.2.28 - February 22, 2026
+ * 2.2.28 - March 8, 2026
  * - Fixed Login As user search results not appearing for valid email searches.
  * - Updated Login As AJAX user lookup to support WP_User_Query partial-field result objects as well as WP_User objects.
  * - Login As type-to-search now correctly returns username/email matches again.
  *
- * 2.2.27 - February 22, 2026
+ * 2.2.27 - March 8, 2026
  * - Added a dedicated Add-ons card for "Blog Post Idea Generator" with its own Activate checkbox.
  * - Moved Blog Post Idea Generator out of the ChatGPT Content Generator area and into its own add-on section.
  * - Blog Post Importer remains under ChatGPT Content Generator, while idea generation now has separate add-on activation.
  *
- * 2.2.26 - February 22, 2026
+ * 2.2.26 - March 8, 2026
  * - Add-ons > ChatGPT Content Generator: added an Activate checkbox to enable/disable this add-on.
  * - Moved Blog Post Importer and Blog Post Idea Generator UI from Tools into the ChatGPT Content Generator area on the Add-ons tab.
  * - Tools sub-section under Settings now shows only utility tools (template imports and log/reset actions); blog content generation tools now live with ChatGPT settings.
  *
- * 2.2.25 - February 22, 2026
+ * 2.2.25 - March 8, 2026
  * - Settings tab layout changed to a single-column card layout.
  * - Added a new Settings Filter panel at the top of Settings with area + keyword filters.
  * - Settings filter now lets admins isolate specific settings by card title, labels, descriptions, and field values.
  *
- * 2.2.24 - February 22, 2026
+ * 2.2.24 - March 8, 2026
  * - Moved "Coupon Lookup by Email" out of Tools and into Reports as its own sub menu link.
  * - Reports sub-links now include: General Reports, User Activity, Admin Log, and Coupon Lookup by Email.
  * - Legacy coupon lookup URLs using tab=tools now route to Reports > Coupon Lookup by Email when coupon_lookup_email is present.
  *
- * 2.2.23 - February 22, 2026
+ * 2.2.23 - March 8, 2026
  * - Settings tab now includes WooCommerce-style sub-links: General Settings (default), Email Templates, and Tools.
  * - Moved the former top-level Email Templates and Tools views under Settings sub-links.
  * - Legacy ?tab=email-templates and ?tab=tools URLs now open Settings and land in the correct sub-section.
  *
- * 2.2.22 - February 22, 2026
+ * 2.2.22 - March 8, 2026
  * - Docs tab now includes WooCommerce-style sub-links: Documentation (default) and Versions.
  * - Moved Versions content into the Docs tab as a sub-section while preserving the full changelog view.
  * - Legacy ?tab=versions URLs now open Docs and land on the Versions sub-section for backward compatibility.
  *
- * 2.2.21 - February 22, 2026
+ * 2.2.21 - March 8, 2026
  * - Reports tab now includes WooCommerce-style text sub-links: General Reports, User Activity, and Admin Log.
  * - Moved the former top-level User Activity (tab=login-history) and Admin Log (tab=activity-log) views under Reports sub-links.
  * - Added backward-compatible routing so legacy tab URLs still open Reports and land in the correct sub-section.
  *
- * 2.2.20 - February 22, 2026
+ * 2.2.20 - March 8, 2026
  * - Settings tab: added a new "API Keys" card and moved the ChatGPT / OpenAI API Key field there.
  * - Add-ons tab: renamed the API card to "ChatGPT Content Generator".
  * - Add-ons API card now focuses on prompt/meta-box options and references Settings > API Keys for key management.
  *
- * 2.2.19 - February 22, 2026
+ * 2.2.19 - March 8, 2026
  * - Moved Bulk Coupons into Add-ons as a dedicated add-on card with an Activate checkbox.
  * - Bulk Coupons create/template actions now run from the Add-ons page and redirect back to Add-ons with notices.
  * - Removed the top-level Bulk Coupons nav tab and route legacy ?tab=bulk-coupons requests to Add-ons.
  *
- * 2.2.18 - February 22, 2026
+ * 2.2.18 - March 8, 2026
  * - Moved Coupons settings into three dedicated Add-ons cards: Coupons for New Users, Coupon Notifications for Users with Coupons, and Coupon Remaining Balances (Simple Gift Card & Store Credit Functionality).
  * - Coupon settings are now saved through the shared Add-ons save flow.
  * - Removed the top-level Coupons nav tab and route legacy ?tab=coupons requests to the Add-ons tab.
  *
- * 2.2.17 - February 22, 2026
+ * 2.2.17 - March 8, 2026
  * - Add-ons tab now keeps all add-on cards collapsed by default on page load, regardless of active state.
  * - Added a clear active-state indicator in each add-on card header (status pill with dot + Active/Inactive label).
  * - Active add-ons now remain visibly highlighted even while collapsed.
  *
- * 2.2.16 - February 22, 2026
+ * 2.2.16 - March 8, 2026
  * - Add-ons: moved Role Switching into the main alphabetical card list so it appears inline with the other add-ons.
  * - Role Switching add-on no longer renders an extra inner collapsible wrapper (removed collapse-inside-collapse UI).
  * - Role Switching settings now save through the shared Add-ons save flow while preserving Role Switching settings history logging.
  *
- * 2.2.15 - February 22, 2026
+ * 2.2.15 - March 8, 2026
  * - Login As user search: switched to a more reliable AJAX request path and added a clickable result list under the search field.
  * - Login As search now maps selections and typed values more robustly (case-insensitive username/email matching).
  * - Login As admin-account impersonation guard was removed (regression fix) so administrator targets can be impersonated again as previously requested.
  *
- * 2.2.14 - February 22, 2026
+ * 2.2.14 - March 8, 2026
  * - Add-ons tab now explicitly uses the single-column grid class to prevent multi-column layouts on wide screens.
  * - Role Switching add-on wrapper now also uses the single-column grid class for consistent one-column rendering.
  *
- * 2.2.13 - February 22, 2026
+ * 2.2.13 - March 8, 2026
  * - Add-ons tab layout updated to a single-column view.
  * - Add-ons cards reordered alphabetically (A–Z) for easier scanning.
  *
- * 2.2.12 - February 22, 2026
+ * 2.2.12 - March 8, 2026
  * - Added a Cursor AI rule to enforce tab/add-on file organization: one file per top-level tab, and one file per add-on inside the Add-ons tab.
  * - Refactored the Add-ons tab so each add-on now renders from its own file/class, with the Add-ons tab file reduced to orchestration + shared UI behavior.
  * - Preserved existing Add-ons functionality (collapsible state, templates, and dynamic settings behavior) while splitting implementation across dedicated add-on files.
  *
- * 2.2.11 - February 22, 2026
+ * 2.2.11 - March 8, 2026
  * - Moved Role Switching out of its top-level tab and into the Add-ons area.
  * - Legacy ?tab=role-switching URLs now open Add-ons so existing bookmarks continue to work.
  * - Add-ons cards now auto-collapse when inactive and can be expanded from the card header.
  *
- * 2.2.10 - February 22, 2026
+ * 2.2.10 - March 8, 2026
  * - Login As: replaced the large Select User dropdown with an AJAX search field that searches by username or email address.
  * - Login As: user search now loads matches on demand for better performance on large sites (e.g., 10,000+ users) instead of preloading all users.
  * - Login As: start-session handler now accepts typed username/email values and resolves them server-side when no hidden user ID is selected.
  *
- * 2.2.9 - February 22, 2026
+ * 2.2.9 - March 8, 2026
  * - Added a new top-level "Add-ons" tab in User Manager navigation next to Settings.
  * - Moved these cards out of Settings and into Add-ons: My Account Site Admin, Bulk Add to Cart, Checkout Pre-Defined Addresses, Custom WP-Admin Notifications, WP-Admin Bar Menu Items, WP-Admin CSS, and API.
  * - Updated settings save handling so Settings and Add-ons each save only their own fields and return to the correct tab after save.
  *
- * 2.2.8 - February 22, 2026
+ * 2.2.8 - March 8, 2026
  * - Settings → Bulk Add to Cart: expanded this area with clear shortcode usage ([bulk_add_to_cart]) and front-end debug parameter instructions.
  * - Bulk Add to Cart: added front-end URL debug switch ?um_bulk_add_to_cart_debug=1 to force verbose CSV processing diagnostics.
  * - Bulk Add to Cart processing fixes: robust CSV header normalization (including UTF-8 BOM handling), safer quantity parsing, improved product lookup (ID/SKU/slug/title/meta for products and variations), and improved variation add-to-cart behavior using parent + variation attributes.
  *
- * 2.2.7 - February 22, 2026
+ * 2.2.7 - March 8, 2026
  * - Fixed My Account Admin Orders approve flow: approving an order now keeps the user on the current order/list view and displays a WooCommerce success/error notice instead of attempting a late redirect that could result in a blank screen.
  * - Added URL cleanup after approve notices to remove action nonce/query args from the browser URL so page refresh does not re-run the approve action.
  *
- * 2.2.6 - February 22, 2026
+ * 2.2.6 - March 8, 2026
  * - My Account Site Admin (Order Viewer): added checkbox "Default all new orders into a payment pending status" under order approval settings.
  * - When enabled, new WooCommerce orders are defaulted to Pending payment, and payment-complete status transitions remain Pending payment until manually approved.
  *
- * 2.2.5 - February 22, 2026
+ * 2.2.5 - March 8, 2026
  * - My Account Site Admin settings: added "Show Meta Data area" checkbox for each viewer (Orders, Products, Coupons, Users). Off by default.
  * - My Account Site Admin settings: added "Order approval allowed usernames (comma-separated)" under Order Viewer settings.
  * - Admin: Orders endpoint now shows an "Approve" button for pending payment orders to allowed approver usernames; clicking Approve moves the order to Processing (with nonce + notices).
  * - Improved search behavior in all My Account Site Admin lists (Orders, Products, Coupons, Users) with broader field matching and better result filtering.
  *
- * 2.2.4 - February 22, 2026
+ * 2.2.4 - March 8, 2026
  * - My Account Site Admin: fixed endpoint/menu initialization timing so custom My Account admin endpoints register reliably across plugin load orders.
  * - Added explicit rewrite endpoint + query var registration for admin_orders, admin_products, admin_coupons, and admin_users to improve endpoint detection.
  * - Added front-end debug URL parameter for administrators: ?um_my_account_admin_debug=1 on My Account now shows a diagnostic panel with endpoint/query/menu/access details.
  * - Improved allowed username handling for My Account Site Admin access lists to support normal WordPress logins (including email-style usernames) without over-stripping characters.
  *
- * 2.2.3 - February 22, 2026
+ * 2.2.3 - March 8, 2026
  * - Settings: new "My Account Site Admin" card with four viewer toggles and per-viewer comma-separated username allow lists:
  *   - My Account Admin Order Viewer
  *   - My Account Admin Product Viewer

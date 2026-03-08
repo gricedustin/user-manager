@@ -19,7 +19,7 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.2.36 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.36 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('User Role Switching add-on now includes the same top-level Activate checkbox pattern used by other add-ons.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Role Switching settings/history area now hides when the add-on is deactivated and reappears when activated.', 'user-manager'); ?></li>
@@ -27,7 +27,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.35 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.35 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added explicit Activate checkboxes to add-ons that previously relied on content presence: My Account Site Admin, WP-Admin Notifications, WP-Admin Bar Menu Items, and WP-Admin CSS.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add-ons save flow now stores these activation toggles and Add-ons cards show/hide their settings areas based on activation state.', 'user-manager'); ?></li>
@@ -35,7 +35,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.34 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.34 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons retitles: Quick Search Bar → WP-Admin Quick Search Bar, Coupons for New Users → Coupon Automatically Created for New User, and Blog Post Idea Generator → Post Idea Generator.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Updated related add-on labels/messages to match the new naming.', 'user-manager'); ?></li>
@@ -43,7 +43,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.33 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.33 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings > General Settings: moved coupon-related options out of User Experience into a new "Coupons" card.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Settings > General Settings: moved post-meta-related options into a new "Post Meta" card.', 'user-manager'); ?></li>
@@ -51,7 +51,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.32 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.32 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved the "Display Quick Search Bar" control from Settings into Add-ons as a dedicated "Quick Search Bar" card.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add-ons now saves the Quick Search Bar toggle, and General Settings saves no longer overwrite this add-on setting.', 'user-manager'); ?></li>
@@ -59,7 +59,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.31 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.31 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings filter now uses keyword search only (removed the "Filter by area" dropdown).', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Retained auto-expand behavior while searching so matching cards/fields open automatically.', 'user-manager'); ?></li>
@@ -67,7 +67,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.30 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.30 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Retitled Add-ons card names for clarity: Role Switching → User Role Switching, Custom WP-Admin Notifications → WP-Admin Notifications, Bulk Coupons → Coupon Bulk Creator, and ChatGPT Content Generator → Post Content Generator.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Updated matching activation labels for renamed add-ons.', 'user-manager'); ?></li>
@@ -75,7 +75,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.29 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.29 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings tab cards now load collapsed by default for a cleaner first view.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('When a Settings filter is active (area or keyword), matching cards auto-expand to show results immediately.', 'user-manager'); ?></li>
@@ -83,7 +83,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.28 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.28 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Login As user search results not appearing for valid email searches.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Updated Login As AJAX user lookup to support WP_User_Query partial-field result objects as well as WP_User objects.', 'user-manager'); ?></li>
@@ -91,7 +91,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.27 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.27 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a dedicated Add-ons card for "Blog Post Idea Generator" with its own Activate checkbox.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Moved Blog Post Idea Generator out of the ChatGPT Content Generator area and into its own add-on section.', 'user-manager'); ?></li>
@@ -99,7 +99,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.26 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.26 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons > ChatGPT Content Generator now includes an Activate checkbox to enable/disable the add-on.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Moved Blog Post Importer and Blog Post Idea Generator UI from Tools into the ChatGPT Content Generator area on the Add-ons tab.', 'user-manager'); ?></li>
@@ -107,7 +107,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.25 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.25 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings tab layout changed to a single-column card layout.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Added a new Settings Filter panel at the top of Settings with area + keyword filters.', 'user-manager'); ?></li>
@@ -115,7 +115,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.24 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.24 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved "Coupon Lookup by Email" out of Tools and into Reports as its own sub menu link.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Reports sub-links now include General Reports, User Activity, Admin Log, and Coupon Lookup by Email.', 'user-manager'); ?></li>
@@ -123,7 +123,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.23 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.23 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings tab now includes WooCommerce-style sub-links: General Settings (default), Email Templates, and Tools.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Moved the former top-level Email Templates and Tools views under Settings sub-links.', 'user-manager'); ?></li>
@@ -131,7 +131,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.22 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.22 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Docs tab now includes WooCommerce-style sub-links: Documentation (default) and Versions.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Moved Versions content into the Docs tab as a sub-section while preserving the full changelog view.', 'user-manager'); ?></li>
@@ -139,7 +139,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.21 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.21 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Reports tab now includes WooCommerce-style text sub-links: General Reports, User Activity, and Admin Log.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Moved the former top-level User Activity (tab=login-history) and Admin Log (tab=activity-log) views under Reports sub-links.', 'user-manager'); ?></li>
@@ -147,7 +147,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.20 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.20 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings tab: added a new "API Keys" card and moved the ChatGPT / OpenAI API Key field there.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add-ons tab: renamed the API card to "ChatGPT Content Generator".', 'user-manager'); ?></li>
@@ -155,7 +155,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.19 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.19 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved Bulk Coupons into Add-ons as a dedicated add-on card with an Activate checkbox.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Bulk Coupons create/template actions now submit from Add-ons and return to Add-ons with success/error notices.', 'user-manager'); ?></li>
@@ -163,7 +163,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.18 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.18 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved Coupons settings into three dedicated Add-ons cards: Coupons for New Users, Coupon Notifications for Users with Coupons, and Coupon Remaining Balances (Simple Gift Card & Store Credit Functionality).', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Coupon settings now save via the shared Add-ons save flow, keeping all add-on configuration in one place.', 'user-manager'); ?></li>
@@ -171,7 +171,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.17 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.17 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tab now keeps all add-on cards collapsed by default on page load, regardless of active state.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Added a clear active-state indicator in each add-on card header (status pill with dot + Active/Inactive label).', 'user-manager'); ?></li>
@@ -179,7 +179,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.16 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.16 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons: moved Role Switching into the main alphabetical card list so it appears inline with the other add-ons.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Role Switching add-on no longer renders an extra inner collapsible wrapper (removed collapse-inside-collapse UI).', 'user-manager'); ?></li>
@@ -187,7 +187,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.15 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.15 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Login As search now uses a more reliable AJAX request flow and displays a clickable result list under the user search field.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Login As selection mapping was hardened with case-insensitive username/email matching for typed values and picked suggestions.', 'user-manager'); ?></li>
@@ -195,21 +195,21 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.14 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.14 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tab now explicitly uses the single-column grid class to force one-column rendering on wide screens.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Role Switching add-on wrapper now also uses the single-column grid class for consistent one-column layout.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.13 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.13 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tab layout updated to a single-column view.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add-ons cards reordered alphabetically (A–Z) for easier scanning.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.12 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.12 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a Cursor AI rule that enforces file organization: one file per top-level tab, and one dedicated file per add-on in the Add-ons tab.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Refactored Add-ons rendering so each add-on card now lives in its own file/class, while class-user-manager-tab-addons.php now acts as the orchestrator.', 'user-manager'); ?></li>
@@ -217,7 +217,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.11 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.11 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved Role Switching out of its top-level tab and into the Add-ons area.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Legacy ?tab=role-switching links now resolve to the Add-ons tab for backward compatibility.', 'user-manager'); ?></li>
@@ -225,7 +225,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.10 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.10 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Login As: replaced the large "Select User" dropdown with an AJAX search field that searches by username or email address.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Login As: user search now loads matches on demand (instead of preloading all users), improving performance on large sites.', 'user-manager'); ?></li>
@@ -233,7 +233,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.9 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.9 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new top-level "Add-ons" tab in the User Manager navigation next to Settings.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Moved these cards out of Settings and into Add-ons: My Account Site Admin, Bulk Add to Cart, Checkout Pre-Defined Addresses, Custom WP-Admin Notifications, WP-Admin Bar Menu Items, WP-Admin CSS, and API.', 'user-manager'); ?></li>
@@ -241,7 +241,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.8 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.8 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings → Bulk Add to Cart: expanded this area with clear shortcode usage ([bulk_add_to_cart]) and front-end debug parameter instructions.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Bulk Add to Cart: added front-end URL debug switch ?um_bulk_add_to_cart_debug=1 to force verbose diagnostics for CSV processing.', 'user-manager'); ?></li>
@@ -249,21 +249,21 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.7 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.7 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Orders: fixed approve flow to handle status updates inline and display WooCommerce success/error notices without redirecting after output begins.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Added URL cleanup after approve notices to remove nonce/action query args so page refresh does not re-trigger approval actions.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.6 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.6 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Site Admin (Order Viewer): added checkbox "Default all new orders into a payment pending status" under order approval settings.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('When enabled, new WooCommerce orders are defaulted to Pending payment, and payment-complete transitions remain Pending payment until manually approved.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.5 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.5 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Site Admin settings: added a "Show Meta Data area" checkbox for each viewer (Orders, Products, Coupons, Users). These are off by default.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('My Account Site Admin settings: added "Order approval allowed usernames (comma-separated)" under the Order Viewer settings.', 'user-manager'); ?></li>
@@ -272,7 +272,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.4 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.4 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Site Admin: fixed endpoint/menu initialization timing so custom My Account admin endpoints register reliably across plugin load orders.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Added explicit rewrite endpoint + query var registration for admin_orders, admin_products, admin_coupons, and admin_users to improve endpoint detection.', 'user-manager'); ?></li>
@@ -281,7 +281,7 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.2.3 <span>(February 22, 2026)</span></h4>
+						<h4>2.2.3 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings: added a new "My Account Site Admin" card with four viewer controls and per-viewer comma-separated username allow lists: My Account Admin Order Viewer, Product Viewer, Coupon Viewer, and User Viewer.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('WooCommerce My Account: added custom admin endpoints and menu links for Admin: Orders, Admin: Products, Admin: Coupons, and Admin: Users.', 'user-manager'); ?></li>
