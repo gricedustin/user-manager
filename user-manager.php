@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.25
+ * Version: 2.2.26
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.26 - February 22, 2026
+ * - Add-ons > ChatGPT Content Generator: added an Activate checkbox to enable/disable this add-on.
+ * - Moved Blog Post Importer and Blog Post Idea Generator UI from Tools into the ChatGPT Content Generator area on the Add-ons tab.
+ * - Tools sub-section under Settings now shows only utility tools (template imports and log/reset actions); blog content generation tools now live with ChatGPT settings.
+ *
  * 2.2.25 - February 22, 2026
  * - Settings tab layout changed to a single-column card layout.
  * - Added a new Settings Filter panel at the top of Settings with area + keyword filters.

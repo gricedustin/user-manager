@@ -54,6 +54,12 @@ class User_Manager_Tab_Addons {
 			</div>
 		</form>
 
+		<?php if (!empty($settings['openai_content_generator_enabled'])) : ?>
+			<div id="um-openai-blog-tools-area">
+				<?php User_Manager_Tab_Tools::render(false, true); ?>
+			</div>
+		<?php endif; ?>
+
 		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template(); ?>
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template(); ?>
 
@@ -364,9 +370,23 @@ class User_Manager_Tab_Addons {
 			$('#um-checkout-ship-to-predefined').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-checkout-predefined'));
 			});
+			function toggleOpenAiAddonFields() {
+				if ($('#um-openai-content-generator-enabled').is(':checked')) {
+					$('#um-openai-content-generator-fields').show();
+					$('#um-openai-blog-tools-area').show();
+				} else {
+					$('#um-openai-content-generator-fields').hide();
+					$('#um-openai-blog-tools-area').hide();
+				}
+			}
+			$('#um-openai-content-generator-enabled').on('change', function() {
+				toggleOpenAiAddonFields();
+				refreshAddonCardAutoState($('#um-addon-card-api'));
+			});
 			$('#um-openai-page-meta-box').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-api'));
 			});
+			toggleOpenAiAddonFields();
 			$('#um-role-switching-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-role-switching'));
 			});

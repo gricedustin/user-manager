@@ -57,7 +57,7 @@ if (!defined('ABSPATH')) {
 			return;
 		}
 		if ($settings_section === 'tools') {
-			User_Manager_Tab_Tools::render();
+			User_Manager_Tab_Tools::render(true, false);
 			return;
 		}
 

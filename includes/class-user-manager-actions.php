@@ -1610,6 +1610,7 @@ class User_Manager_Actions {
 
 			case 'addons':
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
+				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
 
@@ -2840,6 +2841,11 @@ class User_Manager_Actions {
 		if (!current_user_can('edit_posts')) {
 			wp_die(__('You do not have permission to access this page.', 'user-manager'));
 		}
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['openai_content_generator_enabled'])) {
+			wp_safe_redirect(add_query_arg(['tab' => User_Manager_Core::TAB_ADDONS, 'um_msg' => 'error'], admin_url('admin.php?page=' . User_Manager_Core::SETTINGS_PAGE_SLUG)));
+			exit;
+		}
 
 		check_admin_referer('user_manager_blog_post_importer');
 
@@ -2870,7 +2876,7 @@ class User_Manager_Actions {
 		}
 
 		if (empty($posts)) {
-			wp_safe_redirect(add_query_arg(['tab' => User_Manager_Core::TAB_TOOLS, 'um_msg' => 'blog_importer_no_posts'], admin_url('admin.php?page=' . User_Manager_Core::SETTINGS_PAGE_SLUG)));
+			wp_safe_redirect(add_query_arg(['tab' => User_Manager_Core::TAB_ADDONS, 'um_msg' => 'blog_importer_no_posts'], admin_url('admin.php?page=' . User_Manager_Core::SETTINGS_PAGE_SLUG)));
 			exit;
 		}
 
@@ -2988,7 +2994,7 @@ class User_Manager_Actions {
 			$created[] = ['id' => $post_id, 'title' => $p['title']];
 		}
 
-		User_Manager_Core::add_activity_log('blog_post_import', $current_user_id, 'Tools', [
+		User_Manager_Core::add_activity_log('blog_post_import', $current_user_id, 'ChatGPT Content Generator', [
 			'created_count'       => count($created),
 			'apply_random_image'  => $apply_random_image,
 			'spread_dates_used'   => $use_spread,
@@ -2999,7 +3005,7 @@ class User_Manager_Actions {
 		set_transient('um_blog_importer_created_' . $current_user_id, $created, 60);
 
 		wp_safe_redirect(add_query_arg([
-			'tab'    => User_Manager_Core::TAB_TOOLS,
+			'tab'    => User_Manager_Core::TAB_ADDONS,
 			'um_msg' => 'blog_importer_ok',
 			'count'  => count($created),
 		], admin_url('admin.php?page=' . User_Manager_Core::SETTINGS_PAGE_SLUG)));
@@ -3021,6 +3027,9 @@ class User_Manager_Actions {
 			wp_send_json_error(['message' => __('You do not have permission to do this.', 'user-manager'), 'debug' => ['code' => 'permission_denied']]);
 		}
 		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['openai_content_generator_enabled'])) {
+			wp_send_json_error(['message' => __('ChatGPT Content Generator add-on is disabled.', 'user-manager'), 'debug' => ['code' => 'addon_disabled']]);
+		}
 		$api_key = isset($settings['openai_api_key']) ? trim((string) $settings['openai_api_key']) : '';
 		if ($api_key === '') {
 			wp_send_json_error(['message' => __('OpenAI API key is not configured in Settings.', 'user-manager'), 'debug' => ['code' => 'no_api_key']]);
@@ -3224,6 +3233,9 @@ class User_Manager_Actions {
 			wp_send_json_error(['message' => __('You do not have permission.', 'user-manager')]);
 		}
 		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['openai_content_generator_enabled'])) {
+			wp_send_json_error(['message' => __('ChatGPT Content Generator add-on is disabled.', 'user-manager')]);
+		}
 		$api_key = isset($settings['openai_api_key']) ? trim((string) $settings['openai_api_key']) : '';
 		if ($api_key === '') {
 			wp_send_json_error(['message' => __('OpenAI API key is not configured in Settings.', 'user-manager')]);
@@ -3282,6 +3294,9 @@ class User_Manager_Actions {
 	 */
 	public static function register_page_chatgpt_meta_box(): void {
 		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['openai_content_generator_enabled'])) {
+			return;
+		}
 		if (empty($settings['openai_page_meta_box'])) {
 			return;
 		}
@@ -3439,6 +3454,9 @@ class User_Manager_Actions {
 			wp_send_json_error(['message' => __('You do not have permission to edit pages.', 'user-manager')]);
 		}
 		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['openai_content_generator_enabled'])) {
+			wp_send_json_error(['message' => __('ChatGPT Content Generator add-on is disabled.', 'user-manager')]);
+		}
 		$api_key = isset($settings['openai_api_key']) ? trim((string) $settings['openai_api_key']) : '';
 		if ($api_key === '') {
 			wp_send_json_error(['message' => __('OpenAI API key is not configured in Settings.', 'user-manager')]);
@@ -3517,6 +3535,10 @@ class User_Manager_Actions {
 		if (!wp_verify_nonce($nonce, 'user_manager_page_chatgpt_insert')) {
 			wp_send_json_error(['message' => __('Verification failed.', 'user-manager')]);
 		}
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['openai_content_generator_enabled'])) {
+			wp_send_json_error(['message' => __('ChatGPT Content Generator add-on is disabled.', 'user-manager')]);
+		}
 		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
 		$content = isset($_POST['content']) ? wp_kses_post(wp_unslash($_POST['content'])) : '';
 		if (!$post_id) {
@@ -3558,7 +3580,6 @@ class User_Manager_Actions {
 			'ID'           => $post_id,
 			'post_content' => $new_content,
 		]);
-		$settings = User_Manager_Core::get_settings();
 		$log_admin_activity = isset($settings['log_admin_activity']) ? !empty($settings['log_admin_activity']) : true;
 		if ($log_admin_activity) {
 			User_Manager_Core::add_activity_log('page_chatgpt_content_inserted', get_current_user_id(), 'ChatGPT Page Meta Box', [

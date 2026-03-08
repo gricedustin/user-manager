@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.26 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons > ChatGPT Content Generator now includes an Activate checkbox to enable/disable the add-on.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved Blog Post Importer and Blog Post Idea Generator UI from Tools into the ChatGPT Content Generator area on the Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tools under Settings now focuses on utility tools (template imports and log/reset actions), while blog content generation tools live with ChatGPT settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.25 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings tab layout changed to a single-column card layout.', 'user-manager'); ?></li>
