@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.32 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved the "Display Quick Search Bar" control from Settings into Add-ons as a dedicated "Quick Search Bar" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons now saves the Quick Search Bar toggle, and General Settings saves no longer overwrite this add-on setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Quick Search Bar remains enabled by default unless explicitly disabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.31 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings filter now uses keyword search only (removed the "Filter by area" dropdown).', 'user-manager'); ?></li>

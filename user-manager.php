@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.31
+ * Version: 2.2.32
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.32 - February 22, 2026
+ * - Moved the "Display Quick Search Bar" control from Settings into Add-ons as a dedicated "Quick Search Bar" card.
+ * - Add-ons now saves the Quick Search Bar toggle, and General Settings saves no longer overwrite this add-on setting.
+ * - Quick Search Bar remains enabled by default unless explicitly disabled.
+ *
  * 2.2.31 - February 22, 2026
  * - Settings filter now uses keyword search only (removed the "Filter by area" dropdown).
  * - Retained auto-expand behavior while searching so matching cards/fields open automatically.

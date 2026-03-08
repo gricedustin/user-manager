@@ -16,6 +16,7 @@ require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users
 require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php';
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
+require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
 require_once __DIR__ . '/class-user-manager-addon-api.php';
@@ -42,6 +43,7 @@ class User_Manager_Tab_Addons {
 				<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
 				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
+				<?php User_Manager_Addon_Quick_Search::render($settings); ?>
 				<?php User_Manager_Addon_Role_Switching::render(); ?>
 				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings); ?>
 				<?php User_Manager_Addon_WP_Admin_CSS::render($settings); ?>
@@ -399,6 +401,9 @@ class User_Manager_Tab_Addons {
 			toggleOpenAiAddonFields();
 			$('#um-role-switching-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-role-switching'));
+			});
+			$('#um-quick-search-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-quick-search'));
 			});
 			$('#um-nuc-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-coupons-new-users'));

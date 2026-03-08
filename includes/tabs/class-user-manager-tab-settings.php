@@ -240,15 +240,6 @@ if (!defined('ABSPATH')) {
 						</div>
 						<div class="um-form-field">
 							<label>
-								<input type="checkbox" name="um_quick_search_enabled" value="1" <?php checked($settings['um_quick_search_enabled'] ?? true); ?> />
-								<?php esc_html_e('Display Quick Search Bar', 'user-manager'); ?>
-							</label>
-							<p class="description">
-								<?php esc_html_e('Adds a "Search" icon to the WordPress admin bar that opens a quick search dropdown for posts, products, orders, users, product categories, and media.', 'user-manager'); ?>
-							</p>
-						</div>
-						<div class="um-form-field">
-							<label>
 								<input type="checkbox" name="coupon_email_converter" value="1" <?php checked($settings['coupon_email_converter'] ?? false); ?> />
 								<?php esc_html_e('Enable Coupon Email List Converter meta box', 'user-manager'); ?>
 							</label>
