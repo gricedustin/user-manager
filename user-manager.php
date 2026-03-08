@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.37
+ * Version: 2.2.38
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.38 - March 8, 2026
+ * - WP-Admin Bar Menu Items add-on: each custom menu now has a "Top Bar Side" option (Left or Right).
+ * - Custom top bar menus now render on the selected side (`root-default` for left, `top-secondary` for right).
+ * - Menu side selection is saved per menu item and defaults to Right for backward compatibility.
+ *
  * 2.2.37 - March 8, 2026
  * - Docs tab documentation view now uses a single-column layout instead of two columns.
  * - Updated docs layout wrapper to use the same single-column grid style used by other admin areas.

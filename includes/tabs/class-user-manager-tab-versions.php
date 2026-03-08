@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.38 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('WP-Admin Bar Menu Items add-on: each custom menu now has a "Top Bar Side" option (Left or Right).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Custom top bar menus now render on the selected side (`root-default` for left, `top-secondary` for right).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Menu side selection is saved per menu item and defaults to Right for backward compatibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.37 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Docs tab documentation view now uses a single-column layout instead of two columns.', 'user-manager'); ?></li>

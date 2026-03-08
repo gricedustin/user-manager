@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.37';
+	const VERSION = '2.2.38';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1268,6 +1268,8 @@ final class User_Manager_Core {
 			}
 			$shortcuts = isset($item['shortcuts']) ? (string) $item['shortcuts'] : '';
 			$icon      = isset($item['icon']) ? trim((string) $item['icon']) : '';
+			$side      = isset($item['side']) && $item['side'] === 'left' ? 'left' : 'right';
+			$parent    = $side === 'left' ? 'root-default' : 'top-secondary';
 
 			$parent_id = 'um-custom-bar-' . $i;
 			$title_markup = $menu_title;
@@ -1279,7 +1281,7 @@ final class User_Manager_Core {
 				'id'     => $parent_id,
 				'title'  => $title_markup,
 				'href'   => '#',
-				'parent' => 'top-secondary',
+				'parent' => $parent,
 				'meta'   => [
 					'title' => $menu_title,
 					'class' => 'um-custom-bar-menu menupop',

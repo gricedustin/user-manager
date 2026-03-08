@@ -28,7 +28,7 @@ class User_Manager_Addon_WP_Admin_Bar_Menu_Items {
 			}
 		}
 		if (empty($admin_bar_items)) {
-			$admin_bar_items = [['title' => '', 'icon' => '', 'shortcuts' => '']];
+			$admin_bar_items = [['title' => '', 'icon' => '', 'shortcuts' => '', 'side' => 'right']];
 		}
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-admin-bar-menu" data-um-active-selectors="#um-admin-bar-menu-items-enabled">
@@ -57,6 +57,15 @@ class User_Manager_Addon_WP_Admin_Bar_Menu_Items {
 								<label><?php esc_html_e('Icon override', 'user-manager'); ?></label>
 								<input type="text" name="admin_bar_menu_item[<?php echo (int) $idx; ?>][icon]" class="regular-text" value="<?php echo esc_attr($item['icon'] ?? ''); ?>" placeholder="dashicons-admin-links" />
 								<p class="description"><?php esc_html_e('Dashicons class (e.g. dashicons-admin-links). See', 'user-manager'); ?> <a href="https://developer.wordpress.org/resource/dashicons/" target="_blank" rel="noopener">developer.wordpress.org/resource/dashicons</a></p>
+							</div>
+							<div class="um-form-field">
+								<label for="um-admin-bar-menu-side-<?php echo (int) $idx; ?>"><?php esc_html_e('Top Bar Side', 'user-manager'); ?></label>
+								<?php $side = isset($item['side']) && $item['side'] === 'left' ? 'left' : 'right'; ?>
+								<select name="admin_bar_menu_item[<?php echo (int) $idx; ?>][side]" id="um-admin-bar-menu-side-<?php echo (int) $idx; ?>" class="regular-text">
+									<option value="right" <?php selected($side, 'right'); ?>><?php esc_html_e('Right side (default)', 'user-manager'); ?></option>
+									<option value="left" <?php selected($side, 'left'); ?>><?php esc_html_e('Left side', 'user-manager'); ?></option>
+								</select>
+								<p class="description"><?php esc_html_e('Choose where this menu appears in the WP admin top bar.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label><?php esc_html_e('Shortcuts', 'user-manager'); ?></label>
@@ -89,6 +98,14 @@ class User_Manager_Addon_WP_Admin_Bar_Menu_Items {
 					<label><?php esc_html_e('Icon override', 'user-manager'); ?></label>
 					<input type="text" name="admin_bar_menu_item[__INDEX__][icon]" class="regular-text" value="" placeholder="dashicons-admin-links" />
 					<p class="description"><?php esc_html_e('Dashicons class (e.g. dashicons-admin-links). See', 'user-manager'); ?> <a href="https://developer.wordpress.org/resource/dashicons/" target="_blank" rel="noopener">developer.wordpress.org/resource/dashicons</a></p>
+				</div>
+				<div class="um-form-field">
+					<label><?php esc_html_e('Top Bar Side', 'user-manager'); ?></label>
+					<select name="admin_bar_menu_item[__INDEX__][side]" class="regular-text">
+						<option value="right"><?php esc_html_e('Right side (default)', 'user-manager'); ?></option>
+						<option value="left"><?php esc_html_e('Left side', 'user-manager'); ?></option>
+					</select>
+					<p class="description"><?php esc_html_e('Choose where this menu appears in the WP admin top bar.', 'user-manager'); ?></p>
 				</div>
 				<div class="um-form-field">
 					<label><?php esc_html_e('Shortcuts', 'user-manager'); ?></label>

@@ -1819,9 +1819,12 @@ class User_Manager_Actions {
 						$menu_title = isset($row['title']) ? sanitize_text_field(wp_unslash($row['title'])) : '';
 						$shortcuts  = isset($row['shortcuts']) ? sanitize_textarea_field(wp_unslash($row['shortcuts'])) : '';
 						$icon       = isset($row['icon']) ? sanitize_text_field(wp_unslash($row['icon'])) : '';
+						$side       = isset($row['side']) ? sanitize_key(wp_unslash($row['side'])) : 'right';
+						$side       = $side === 'left' ? 'left' : 'right';
 						$settings['admin_bar_menu_items'][] = [
-							'title'    => $menu_title,
-							'icon'     => $icon,
+							'title'     => $menu_title,
+							'icon'      => $icon,
+							'side'      => $side,
 							'shortcuts' => $shortcuts,
 						];
 					}
