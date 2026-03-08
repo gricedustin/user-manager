@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.23';
+	const VERSION = '2.2.24';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5913,6 +5913,9 @@ final class User_Manager_Core {
 			return self::TAB_ADDONS;
 		}
 		if ($tab === self::TAB_LOGIN_HISTORY || $tab === self::TAB_ACTIVITY_LOG) {
+			return self::TAB_REPORTS;
+		}
+		if ($tab === self::TAB_TOOLS && isset($_GET['coupon_lookup_email'])) {
 			return self::TAB_REPORTS;
 		}
 		if ($tab === self::TAB_EMAIL_TEMPLATES || $tab === self::TAB_TOOLS) {

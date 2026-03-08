@@ -13,7 +13,7 @@ class User_Manager_Tab_Reports {
 		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_REPORTS);
 		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_REPORTS;
 		$reports_section = isset($_GET['reports_section']) ? sanitize_key(wp_unslash($_GET['reports_section'])) : '';
-		$valid_sections = ['general', 'user-activity', 'admin-log'];
+		$valid_sections = ['general', 'user-activity', 'admin-log', 'coupon-lookup-email'];
 
 		// Backward compatibility: legacy top-level tabs now live under Reports sub links.
 		if ($reports_section === '') {
@@ -21,6 +21,8 @@ class User_Manager_Tab_Reports {
 				$reports_section = 'user-activity';
 			} elseif ($requested_tab === User_Manager_Core::TAB_ACTIVITY_LOG) {
 				$reports_section = 'admin-log';
+			} elseif ($requested_tab === User_Manager_Core::TAB_TOOLS && isset($_GET['coupon_lookup_email'])) {
+				$reports_section = 'coupon-lookup-email';
 			}
 		}
 		if (!in_array($reports_section, $valid_sections, true)) {
@@ -30,6 +32,7 @@ class User_Manager_Tab_Reports {
 		$general_url = add_query_arg('reports_section', 'general', $base_url);
 		$user_activity_url = add_query_arg('reports_section', 'user-activity', $base_url);
 		$admin_log_url = add_query_arg('reports_section', 'admin-log', $base_url);
+		$coupon_lookup_url = add_query_arg('reports_section', 'coupon-lookup-email', $base_url);
 
 		?>
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
@@ -46,6 +49,11 @@ class User_Manager_Tab_Reports {
 			<li>
 				<a href="<?php echo esc_url($admin_log_url); ?>" class="<?php echo $reports_section === 'admin-log' ? 'current' : ''; ?>">
 					<?php esc_html_e('Admin Log', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($coupon_lookup_url); ?>" class="<?php echo $reports_section === 'coupon-lookup-email' ? 'current' : ''; ?>">
+					<?php esc_html_e('Coupon Lookup by Email', 'user-manager'); ?>
 				</a>
 			</li>
 		</ul>
@@ -59,6 +67,14 @@ class User_Manager_Tab_Reports {
 
 		if ($reports_section === 'admin-log') {
 			User_Manager_Tab_Activity_Log::render();
+			return;
+		}
+		if ($reports_section === 'coupon-lookup-email') {
+			User_Manager_Tab_Tools::render_coupon_lookup_by_email_card(
+				User_Manager_Core::TAB_REPORTS,
+				['reports_section' => 'coupon-lookup-email'],
+				'Reports'
+			);
 			return;
 		}
 

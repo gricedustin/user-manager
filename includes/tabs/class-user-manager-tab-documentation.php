@@ -170,7 +170,7 @@ class User_Manager_Tab_Documentation {
 								<span class="dashicons dashicons-admin-tools"></span>
 								<div class="um-feature-item-content">
 									<h4><?php esc_html_e('Tools', 'user-manager'); ?></h4>
-									<p><?php esc_html_e('Run utility tasks such as importing demo and automated coupon email templates, clearing logs and view data, and using the Coupon Lookup by Email tool to inspect coupons tied to a specific address.', 'user-manager'); ?></p>
+									<p><?php esc_html_e('Run utility tasks such as importing demo and automated coupon email templates, clearing logs and view data, and blog content helper tools.', 'user-manager'); ?></p>
 								</div>
 							</div>
 							<div class="um-feature-item">
