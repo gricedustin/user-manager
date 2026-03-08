@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.21
+ * Version: 2.2.22
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.22 - February 22, 2026
+ * - Docs tab now includes WooCommerce-style sub-links: Documentation (default) and Versions.
+ * - Moved Versions content into the Docs tab as a sub-section while preserving the full changelog view.
+ * - Legacy ?tab=versions URLs now open Docs and land on the Versions sub-section for backward compatibility.
+ *
  * 2.2.21 - February 22, 2026
  * - Reports tab now includes WooCommerce-style text sub-links: General Reports, User Activity, and Admin Log.
  * - Moved the former top-level User Activity (tab=login-history) and Admin Log (tab=activity-log) views under Reports sub-links.

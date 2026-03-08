@@ -10,6 +10,43 @@ if (!defined('ABSPATH')) {
 class User_Manager_Tab_Documentation {
 
 	public static function render(): void {
+		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_DOCUMENTATION);
+		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_DOCUMENTATION;
+		$docs_section = isset($_GET['docs_section']) ? sanitize_key(wp_unslash($_GET['docs_section'])) : '';
+		$valid_sections = ['documentation', 'versions'];
+
+		// Backward compatibility: legacy Versions tab now lives under Docs sub links.
+		if ($docs_section === '' && $requested_tab === User_Manager_Core::TAB_VERSIONS) {
+			$docs_section = 'versions';
+		}
+		if (!in_array($docs_section, $valid_sections, true)) {
+			$docs_section = 'documentation';
+		}
+
+		$documentation_url = add_query_arg('docs_section', 'documentation', $base_url);
+		$versions_url = add_query_arg('docs_section', 'versions', $base_url);
+
+		?>
+		<ul class="subsubsub" style="margin: 12px 0 14px;">
+			<li>
+				<a href="<?php echo esc_url($documentation_url); ?>" class="<?php echo $docs_section === 'documentation' ? 'current' : ''; ?>">
+					<?php esc_html_e('Documentation', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($versions_url); ?>" class="<?php echo $docs_section === 'versions' ? 'current' : ''; ?>">
+					<?php esc_html_e('Versions', 'user-manager'); ?>
+				</a>
+			</li>
+		</ul>
+		<br class="clear" />
+		<?php
+
+		if ($docs_section === 'versions') {
+			User_Manager_Tab_Versions::render();
+			return;
+		}
+
 		?>
 		<div class="um-admin-grid">
 			<div class="um-admin-card">

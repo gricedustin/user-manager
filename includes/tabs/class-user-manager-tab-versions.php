@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.22 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Docs tab now includes WooCommerce-style sub-links: Documentation (default) and Versions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved Versions content into the Docs tab as a sub-section while preserving the full changelog view.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Legacy ?tab=versions URLs now resolve to Docs and open the Versions sub-section for backward compatibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.21 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Reports tab now includes WooCommerce-style text sub-links: General Reports, User Activity, and Admin Log.', 'user-manager'); ?></li>

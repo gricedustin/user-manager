@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.21';
+	const VERSION = '2.2.22';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5899,10 +5899,6 @@ final class User_Manager_Core {
 					<span class="dashicons dashicons-book" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Docs', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_VERSIONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_VERSIONS)); ?>">
-					<span class="dashicons dashicons-backup" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Versions', 'user-manager'); ?>
-				</a>
 			</h2>
 			<?php self::render_admin_notice($message); ?>
 			<?php User_Manager_Tabs::render_tab($active_tab); ?>
@@ -5926,6 +5922,9 @@ final class User_Manager_Core {
 		}
 		if ($tab === self::TAB_LOGIN_HISTORY || $tab === self::TAB_ACTIVITY_LOG) {
 			return self::TAB_REPORTS;
+		}
+		if ($tab === self::TAB_VERSIONS) {
+			return self::TAB_DOCUMENTATION;
 		}
 		$allowed = [
 			self::TAB_CREATE_USER,
