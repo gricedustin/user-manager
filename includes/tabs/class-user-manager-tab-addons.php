@@ -10,6 +10,7 @@ if (!defined('ABSPATH')) {
 require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
+require_once __DIR__ . '/class-user-manager-addon-blog-post-idea-generator.php';
 require_once __DIR__ . '/class-user-manager-addon-checkout-predefined-addresses.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users-with-coupons.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php';
@@ -32,6 +33,7 @@ class User_Manager_Tab_Addons {
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single">
 				<?php User_Manager_Addon_API::render($settings); ?>
+				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings); ?>
 				<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
 				<?php User_Manager_Addon_Bulk_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
@@ -56,7 +58,12 @@ class User_Manager_Tab_Addons {
 
 		<?php if (!empty($settings['openai_content_generator_enabled'])) : ?>
 			<div id="um-openai-blog-tools-area">
-				<?php User_Manager_Tab_Tools::render(false, true); ?>
+				<?php User_Manager_Tab_Tools::render(false, true, false); ?>
+			</div>
+		<?php endif; ?>
+		<?php if (!empty($settings['openai_blog_post_idea_generator_enabled'])) : ?>
+			<div id="um-openai-blog-idea-generator-area">
+				<?php User_Manager_Tab_Tools::render(false, false, true); ?>
 			</div>
 		<?php endif; ?>
 
@@ -385,6 +392,9 @@ class User_Manager_Tab_Addons {
 			});
 			$('#um-openai-page-meta-box').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-api'));
+			});
+			$('#um-openai-blog-post-idea-generator-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-blog-post-idea-generator'));
 			});
 			toggleOpenAiAddonFields();
 			$('#um-role-switching-enabled').on('change', function() {

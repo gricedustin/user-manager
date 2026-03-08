@@ -1611,6 +1611,7 @@ class User_Manager_Actions {
 			case 'addons':
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
+				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
 
@@ -3233,8 +3234,8 @@ class User_Manager_Actions {
 			wp_send_json_error(['message' => __('You do not have permission.', 'user-manager')]);
 		}
 		$settings = User_Manager_Core::get_settings();
-		if (empty($settings['openai_content_generator_enabled'])) {
-			wp_send_json_error(['message' => __('ChatGPT Content Generator add-on is disabled.', 'user-manager')]);
+		if (empty($settings['openai_blog_post_idea_generator_enabled'])) {
+			wp_send_json_error(['message' => __('Blog Post Idea Generator add-on is disabled.', 'user-manager')]);
 		}
 		$api_key = isset($settings['openai_api_key']) ? trim((string) $settings['openai_api_key']) : '';
 		if ($api_key === '') {

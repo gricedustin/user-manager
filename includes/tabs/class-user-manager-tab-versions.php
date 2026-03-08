@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.27 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a dedicated Add-ons card for "Blog Post Idea Generator" with its own Activate checkbox.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved Blog Post Idea Generator out of the ChatGPT Content Generator area and into its own add-on section.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Blog Post Importer remains under ChatGPT Content Generator, while idea generation now uses separate add-on activation.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.26 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons > ChatGPT Content Generator now includes an Activate checkbox to enable/disable the add-on.', 'user-manager'); ?></li>

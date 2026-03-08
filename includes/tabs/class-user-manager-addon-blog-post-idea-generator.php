@@ -1,0 +1,34 @@
+<?php
+/**
+ * Add-on card: Blog Post Idea Generator.
+ */
+
+if (!defined('ABSPATH')) {
+	exit;
+}
+
+class User_Manager_Addon_Blog_Post_Idea_Generator {
+
+	public static function render(array $settings): void {
+		?>
+		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-blog-post-idea-generator" data-um-active-selectors="#um-openai-blog-post-idea-generator-enabled">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-lightbulb"></span>
+				<h2><?php esc_html_e('Blog Post Idea Generator', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<div class="um-form-field">
+					<label>
+						<input type="checkbox" id="um-openai-blog-post-idea-generator-enabled" name="openai_blog_post_idea_generator_enabled" value="1" <?php checked(!empty($settings['openai_blog_post_idea_generator_enabled'])); ?> />
+						<?php esc_html_e('Activate Blog Post Idea Generator', 'user-manager'); ?>
+					</label>
+				</div>
+				<p class="description" style="margin-top:0;">
+					<?php esc_html_e('Shows a dedicated Blog Post Idea Generator area in Add-ons for brainstorming topics and headlines with ChatGPT.', 'user-manager'); ?>
+				</p>
+			</div>
+		</div>
+		<?php
+	}
+}
+

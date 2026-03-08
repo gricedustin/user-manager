@@ -9,12 +9,12 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Tab_Tools {
 
-	public static function render(bool $show_utility_cards = true, bool $show_blog_cards = true): void {
+	public static function render(bool $show_utility_cards = true, bool $show_blog_importer_card = true, bool $show_blog_idea_generator_card = true): void {
 		$blog_categories = [];
 		$um_blog_spread_first = current_time('Y-m-d');
 		$um_blog_spread_last  = current_time('Y-m-d');
 		$um_has_chatgpt_key = false;
-		if ($show_blog_cards) {
+		if ($show_blog_importer_card || $show_blog_idea_generator_card) {
 			$blog_categories = get_categories(['taxonomy' => 'category', 'hide_empty' => false]);
 			$last_published = get_posts(['post_type' => 'post', 'post_status' => 'publish', 'numberposts' => 1, 'orderby' => 'date', 'order' => 'DESC']);
 			$um_blog_spread_first = !empty($last_published) ? get_the_date('Y-m-d', $last_published[0]) : current_time('Y-m-d');
@@ -92,7 +92,7 @@ class User_Manager_Tab_Tools {
 			</div>
 
 			<?php endif; ?>
-			<?php if ($show_blog_cards) : ?>
+			<?php if ($show_blog_importer_card) : ?>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-edit-page"></span>
@@ -549,6 +549,9 @@ class User_Manager_Tab_Tools {
 				</div>
 			</div>
 
+			<?php endif; ?>
+
+			<?php if ($show_blog_idea_generator_card) : ?>
 			<?php
 			$um_idea_posts = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'future'], 'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 500, 'no_found_rows' => true]);
 			$um_idea_titles = array_map('get_the_title', $um_idea_posts);
