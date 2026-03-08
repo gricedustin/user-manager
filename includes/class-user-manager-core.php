@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.20';
+	const VERSION = '2.2.21';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5879,14 +5879,6 @@ final class User_Manager_Core {
 					<span class="dashicons dashicons-email" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Templates', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_ACTIVITY_LOG ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ACTIVITY_LOG)); ?>">
-					<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Admin Log', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_LOGIN_HISTORY ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_LOGIN_HISTORY)); ?>">
-					<span class="dashicons dashicons-clock" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('User Activity', 'user-manager'); ?>
-				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_REPORTS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REPORTS)); ?>">
 					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Reports', 'user-manager'); ?>
@@ -5931,6 +5923,9 @@ final class User_Manager_Core {
 		}
 		if ($tab === self::TAB_BULK_COUPONS) {
 			return self::TAB_ADDONS;
+		}
+		if ($tab === self::TAB_LOGIN_HISTORY || $tab === self::TAB_ACTIVITY_LOG) {
+			return self::TAB_REPORTS;
 		}
 		$allowed = [
 			self::TAB_CREATE_USER,

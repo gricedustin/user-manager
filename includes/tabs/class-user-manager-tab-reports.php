@@ -10,7 +10,59 @@ if (!defined('ABSPATH')) {
 class User_Manager_Tab_Reports {
 
 	public static function render(): void {
-		$report = isset($_GET['report']) ? sanitize_key($_GET['report']) : '';
+		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_REPORTS);
+		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_REPORTS;
+		$reports_section = isset($_GET['reports_section']) ? sanitize_key(wp_unslash($_GET['reports_section'])) : '';
+		$valid_sections = ['general', 'user-activity', 'admin-log'];
+
+		// Backward compatibility: legacy top-level tabs now live under Reports sub links.
+		if ($reports_section === '') {
+			if ($requested_tab === User_Manager_Core::TAB_LOGIN_HISTORY) {
+				$reports_section = 'user-activity';
+			} elseif ($requested_tab === User_Manager_Core::TAB_ACTIVITY_LOG) {
+				$reports_section = 'admin-log';
+			}
+		}
+		if (!in_array($reports_section, $valid_sections, true)) {
+			$reports_section = 'general';
+		}
+
+		$general_url = add_query_arg('reports_section', 'general', $base_url);
+		$user_activity_url = add_query_arg('reports_section', 'user-activity', $base_url);
+		$admin_log_url = add_query_arg('reports_section', 'admin-log', $base_url);
+
+		?>
+		<ul class="subsubsub" style="margin: 12px 0 14px;">
+			<li>
+				<a href="<?php echo esc_url($general_url); ?>" class="<?php echo $reports_section === 'general' ? 'current' : ''; ?>">
+					<?php esc_html_e('General Reports', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($user_activity_url); ?>" class="<?php echo $reports_section === 'user-activity' ? 'current' : ''; ?>">
+					<?php esc_html_e('User Activity', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($admin_log_url); ?>" class="<?php echo $reports_section === 'admin-log' ? 'current' : ''; ?>">
+					<?php esc_html_e('Admin Log', 'user-manager'); ?>
+				</a>
+			</li>
+		</ul>
+		<br class="clear" />
+		<?php
+
+		if ($reports_section === 'user-activity') {
+			User_Manager_Tab_Login_History::render();
+			return;
+		}
+
+		if ($reports_section === 'admin-log') {
+			User_Manager_Tab_Activity_Log::render();
+			return;
+		}
+
+		$report = isset($_GET['report']) ? sanitize_key(wp_unslash($_GET['report'])) : '';
 		$valid_reports = [
 			'user-logins',
 			'coupons-used',
@@ -56,8 +108,6 @@ class User_Manager_Tab_Reports {
 		if (!in_array($report, $valid_reports, true)) {
 			$report = '';
 		}
-		
-		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_REPORTS);
 
 		// Human-readable labels for each report (without "Recent"/"All").
 		$report_labels = [

@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.20
+ * Version: 2.2.21
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.21 - February 22, 2026
+ * - Reports tab now includes WooCommerce-style text sub-links: General Reports, User Activity, and Admin Log.
+ * - Moved the former top-level User Activity (tab=login-history) and Admin Log (tab=activity-log) views under Reports sub-links.
+ * - Added backward-compatible routing so legacy tab URLs still open Reports and land in the correct sub-section.
+ *
  * 2.2.20 - February 22, 2026
  * - Settings tab: added a new "API Keys" card and moved the ChatGPT / OpenAI API Key field there.
  * - Add-ons tab: renamed the API card to "ChatGPT Content Generator".
