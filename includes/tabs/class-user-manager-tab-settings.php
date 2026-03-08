@@ -10,6 +10,57 @@ if (!defined('ABSPATH')) {
 	class User_Manager_Tab_Settings {
 
 	public static function render(): void {
+		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS);
+		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_SETTINGS;
+		$settings_section = isset($_GET['settings_section']) ? sanitize_key(wp_unslash($_GET['settings_section'])) : '';
+		$valid_sections = ['general', 'email-templates', 'tools'];
+
+		// Backward compatibility: legacy tabs now live under Settings sub links.
+		if ($settings_section === '') {
+			if ($requested_tab === User_Manager_Core::TAB_EMAIL_TEMPLATES) {
+				$settings_section = 'email-templates';
+			} elseif ($requested_tab === User_Manager_Core::TAB_TOOLS) {
+				$settings_section = 'tools';
+			}
+		}
+		if (!in_array($settings_section, $valid_sections, true)) {
+			$settings_section = 'general';
+		}
+
+		$general_url = add_query_arg('settings_section', 'general', $base_url);
+		$email_templates_url = add_query_arg('settings_section', 'email-templates', $base_url);
+		$tools_url = add_query_arg('settings_section', 'tools', $base_url);
+
+		?>
+		<ul class="subsubsub" style="margin: 12px 0 14px;">
+			<li>
+				<a href="<?php echo esc_url($general_url); ?>" class="<?php echo $settings_section === 'general' ? 'current' : ''; ?>">
+					<?php esc_html_e('General Settings', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($email_templates_url); ?>" class="<?php echo $settings_section === 'email-templates' ? 'current' : ''; ?>">
+					<?php esc_html_e('Email Templates', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($tools_url); ?>" class="<?php echo $settings_section === 'tools' ? 'current' : ''; ?>">
+					<?php esc_html_e('Tools', 'user-manager'); ?>
+				</a>
+			</li>
+		</ul>
+		<br class="clear" />
+		<?php
+
+		if ($settings_section === 'email-templates') {
+			User_Manager_Tab_Email_Templates::render();
+			return;
+		}
+		if ($settings_section === 'tools') {
+			User_Manager_Tab_Tools::render();
+			return;
+		}
+
 		$settings = User_Manager_Core::get_settings();
 		?>
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">

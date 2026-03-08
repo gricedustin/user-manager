@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.22';
+	const VERSION = '2.2.23';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5875,17 +5875,9 @@ final class User_Manager_Core {
 					<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Send Email', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_EMAIL_TEMPLATES ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_EMAIL_TEMPLATES)); ?>">
-					<span class="dashicons dashicons-email" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Templates', 'user-manager'); ?>
-				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_REPORTS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REPORTS)); ?>">
 					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Reports', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_TOOLS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_TOOLS)); ?>">
-					<span class="dashicons dashicons-admin-tools" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Tools', 'user-manager'); ?>
 				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_SETTINGS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_SETTINGS)); ?>">
 					<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;"></span>
@@ -5922,6 +5914,9 @@ final class User_Manager_Core {
 		}
 		if ($tab === self::TAB_LOGIN_HISTORY || $tab === self::TAB_ACTIVITY_LOG) {
 			return self::TAB_REPORTS;
+		}
+		if ($tab === self::TAB_EMAIL_TEMPLATES || $tab === self::TAB_TOOLS) {
+			return self::TAB_SETTINGS;
 		}
 		if ($tab === self::TAB_VERSIONS) {
 			return self::TAB_DOCUMENTATION;
