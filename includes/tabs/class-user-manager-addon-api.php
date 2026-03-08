@@ -14,14 +14,12 @@ class User_Manager_Addon_API {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-api" data-um-active-selectors="#um-openai-page-meta-box">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-admin-generic"></span>
-				<h2><?php esc_html_e('API', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('ChatGPT Content Generator', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
-				<div class="um-form-field">
-					<label for="um-openai-api-key"><?php esc_html_e('ChatGPT / OpenAI API Key', 'user-manager'); ?></label>
-					<input type="password" name="openai_api_key" id="um-openai-api-key" class="regular-text" value="<?php echo esc_attr($settings['openai_api_key'] ?? ''); ?>" autocomplete="off" />
-					<p class="description"><?php esc_html_e('Used for the Blog Post Importer "Auto write from ChatGPT" on the Tools tab. Leave empty to hide that feature. Get an API key from platform.openai.com.', 'user-manager'); ?></p>
-				</div>
+				<p class="description" style="margin-top:0;">
+					<?php esc_html_e('API key management is now in Settings > API Keys. Use this add-on to configure ChatGPT content behavior.', 'user-manager'); ?>
+				</p>
 				<div class="um-form-field">
 					<label for="um-openai-prompt-append"><?php esc_html_e('Appended Information to AI Prompt', 'user-manager'); ?></label>
 					<textarea name="openai_prompt_append" id="um-openai-prompt-append" class="large-text" rows="4" style="width:100%;"><?php echo esc_textarea($settings['openai_prompt_append'] ?? ''); ?></textarea>

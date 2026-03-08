@@ -1600,6 +1600,7 @@ class User_Manager_Actions {
 				$settings['display_post_meta_meta_box'] = isset($_POST['display_post_meta_meta_box']) && $_POST['display_post_meta_meta_box'] === '1';
 				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 				$settings['sftp_directories'] = isset($_POST['sftp_directories']) ? sanitize_textarea_field(wp_unslash($_POST['sftp_directories'])) : '';
+				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';
 				$settings['send_from_email'] = isset($_POST['send_from_email']) ? sanitize_email(wp_unslash($_POST['send_from_email'])) : '';
 				$settings['reply_to_email'] = isset($_POST['reply_to_email']) ? sanitize_email(wp_unslash($_POST['reply_to_email'])) : '';
@@ -1609,7 +1610,6 @@ class User_Manager_Actions {
 
 			case 'addons':
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
-				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
 

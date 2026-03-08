@@ -254,6 +254,21 @@ if (!defined('ABSPATH')) {
 					</div>
 				</div>
 
+				<!-- API Keys -->
+				<div class="um-admin-card">
+					<div class="um-admin-card-header">
+						<span class="dashicons dashicons-admin-network"></span>
+						<h2><?php esc_html_e('API Keys', 'user-manager'); ?></h2>
+					</div>
+					<div class="um-admin-card-body">
+						<div class="um-form-field">
+							<label for="um-openai-api-key"><?php esc_html_e('ChatGPT / OpenAI API Key', 'user-manager'); ?></label>
+							<input type="password" name="openai_api_key" id="um-openai-api-key" class="regular-text" value="<?php echo esc_attr($settings['openai_api_key'] ?? ''); ?>" autocomplete="off" />
+							<p class="description"><?php esc_html_e('Used for ChatGPT-powered content tools. Leave empty to disable ChatGPT requests. Get an API key from platform.openai.com.', 'user-manager'); ?></p>
+						</div>
+					</div>
+				</div>
+
 				<!-- Save button -->
 				<div class="um-admin-card um-admin-card-full">
 					<div class="um-admin-card-body">

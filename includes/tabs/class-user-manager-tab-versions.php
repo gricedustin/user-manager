@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.20 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings tab: added a new "API Keys" card and moved the ChatGPT / OpenAI API Key field there.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons tab: renamed the API card to "ChatGPT Content Generator".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons API card now focuses on prompt/meta-box options and references Settings > API Keys for key management.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.19 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved Bulk Coupons into Add-ons as a dedicated add-on card with an Activate checkbox.', 'user-manager'); ?></li>
