@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.18 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved Coupons settings into three dedicated Add-ons cards: Coupons for New Users, Coupon Notifications for Users with Coupons, and Coupon Remaining Balances (Simple Gift Card & Store Credit Functionality).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Coupon settings now save via the shared Add-ons save flow, keeping all add-on configuration in one place.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed the top-level Coupons navigation tab and route legacy ?tab=coupons requests to Add-ons for backward compatibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.17 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tab now keeps all add-on cards collapsed by default on page load, regardless of active state.', 'user-manager'); ?></li>

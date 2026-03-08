@@ -10,6 +10,9 @@ if (!defined('ABSPATH')) {
 require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-checkout-predefined-addresses.php';
+require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users-with-coupons.php';
+require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php';
+require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
@@ -30,6 +33,9 @@ class User_Manager_Tab_Addons {
 				<?php User_Manager_Addon_API::render($settings); ?>
 				<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
 				<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
+				<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
+				<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
+				<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
 				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
 				<?php User_Manager_Addon_Role_Switching::render(); ?>
@@ -90,6 +96,53 @@ class User_Manager_Tab_Addons {
 			font-weight: 700;
 			font-size: 18px;
 			line-height: 1;
+		}
+		.um-checkbox-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			gap: 8px;
+			margin-top: 8px;
+		}
+		.um-checkbox-chip {
+			display: flex;
+			align-items: flex-start;
+			gap: 8px;
+			padding: 8px 10px;
+			border: 1px solid #dcdcde;
+			border-radius: 4px;
+			background: #f6f7f7;
+		}
+		.um-checkbox-chip input {
+			margin-top: 2px;
+		}
+		.um-checkbox-chip span {
+			display: inline-block;
+			font-size: 13px;
+			line-height: 1.4;
+			font-weight: 400;
+		}
+		.um-checkbox-section-title {
+			margin: 0 0 6px;
+			font-size: 14px;
+			font-weight: 600;
+		}
+		.um-settings-two-column {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 24px;
+			margin-top: 12px;
+		}
+		.um-settings-two-column .um-settings-column {
+			flex: 1 1 280px;
+		}
+		.um-settings-two-column label {
+			display: inline-block;
+			margin-bottom: 6px;
+		}
+		@media (max-width: 600px) {
+			.um-checkbox-grid {
+				grid-template-columns: 1fr;
+			}
 		}
 		</style>
 
@@ -242,6 +295,17 @@ class User_Manager_Tab_Addons {
 			$('#um-checkout-ship-to-predefined').on('change', toggleCheckoutShipToFields);
 			toggleCheckoutShipToFields();
 
+			function toggleNucEmailTemplateField() {
+				$('#nuc-email-template-select').toggle($('#nuc_send_email').is(':checked'));
+			}
+			$('#nuc_send_email').on('change', toggleNucEmailTemplateField);
+			toggleNucEmailTemplateField();
+			$('#um-preview-nuc-email-btn').on('click', function() {
+				if (typeof window.umShowEmailPreview === 'function') {
+					window.umShowEmailPreview('nuc');
+				}
+			});
+
 			function toggleMyAccountAdminViewerField(checkboxSelector, fieldSelector) {
 				if ($(checkboxSelector).is(':checked')) {
 					$(fieldSelector).show();
@@ -279,6 +343,15 @@ class User_Manager_Tab_Addons {
 			});
 			$('#um-role-switching-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-role-switching'));
+			});
+			$('#um-nuc-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-coupons-new-users'));
+			});
+			$('#um-coupon-notifications-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-coupon-notifications'));
+			});
+			$('#um-coupon-remainder-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
 			});
 
 			$('#um-add-admin-notification').on('click', function() {

@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.17';
+	const VERSION = '2.2.18';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5871,10 +5871,6 @@ final class User_Manager_Core {
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Login As', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_COUPONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_COUPONS)); ?>">
-					<span class="dashicons dashicons-tickets-alt" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Coupons', 'user-manager'); ?>
-				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_BULK_COUPONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_BULK_COUPONS)); ?>">
 					<span class="dashicons dashicons-tickets-alt" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Bulk Coupons', 'user-manager'); ?>
@@ -5932,6 +5928,9 @@ final class User_Manager_Core {
 	public static function get_current_tab(): string {
 		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : self::TAB_CREATE_USER;
 		if ($tab === self::TAB_ROLE_SWITCHING) {
+			return self::TAB_ADDONS;
+		}
+		if ($tab === self::TAB_COUPONS) {
 			return self::TAB_ADDONS;
 		}
 		$allowed = [

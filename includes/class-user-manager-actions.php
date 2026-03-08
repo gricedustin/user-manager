@@ -1500,7 +1500,7 @@ class User_Manager_Actions {
 
 		switch ($section) {
 			case 'new_user_coupons':
-				$redirect_tab = User_Manager_Core::TAB_COUPONS;
+				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['nuc_enabled'] = isset($_POST['nuc_enabled']) && $_POST['nuc_enabled'] === '1';
 				$settings['nuc_when'] = isset($_POST['nuc_when']) ? sanitize_text_field(wp_unslash($_POST['nuc_when'])) : 'after_registration';
 				$settings['nuc_template_code'] = isset($_POST['nuc_template_code']) ? sanitize_text_field(wp_unslash($_POST['nuc_template_code'])) : '';
@@ -1526,7 +1526,7 @@ class User_Manager_Actions {
 				break;
 			
 			case 'coupon_notifications':
-				$redirect_tab = User_Manager_Core::TAB_COUPONS;
+				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['user_coupon_notifications_enabled'] = isset($_POST['user_coupon_notifications_enabled']) && $_POST['user_coupon_notifications_enabled'] === '1';
 				$settings['coupon_notifications_show_on_cart'] = isset($_POST['coupon_notifications_show_on_cart']) && $_POST['coupon_notifications_show_on_cart'] === '1';
 				$settings['coupon_notifications_show_on_checkout'] = isset($_POST['coupon_notifications_show_on_checkout']) && $_POST['coupon_notifications_show_on_checkout'] === '1';
@@ -1551,7 +1551,7 @@ class User_Manager_Actions {
 				break;
 
 			case 'coupon_remainder':
-				$redirect_tab = User_Manager_Core::TAB_COUPONS;
+				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['coupon_remainder_enabled'] = isset($_POST['coupon_remainder_enabled']) && $_POST['coupon_remainder_enabled'] === '1';
 				$settings['coupon_remainder_min_amount'] = isset($_POST['coupon_remainder_min_amount']) ? (float) $_POST['coupon_remainder_min_amount'] : 0;
 				$settings['coupon_remainder_source_prefixes'] = isset($_POST['coupon_remainder_source_prefixes']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_remainder_source_prefixes'])) : '';
@@ -1606,6 +1606,68 @@ class User_Manager_Actions {
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
+
+				// Coupons for New Users.
+				$settings['nuc_enabled'] = isset($_POST['nuc_enabled']) && $_POST['nuc_enabled'] === '1';
+				$settings['nuc_when'] = isset($_POST['nuc_when']) ? sanitize_text_field(wp_unslash($_POST['nuc_when'])) : 'after_registration';
+				$settings['nuc_template_code'] = isset($_POST['nuc_template_code']) ? sanitize_text_field(wp_unslash($_POST['nuc_template_code'])) : '';
+				$settings['nuc_amount_override'] = isset($_POST['nuc_amount_override']) ? sanitize_text_field(wp_unslash($_POST['nuc_amount_override'])) : '';
+				$settings['nuc_code_length'] = isset($_POST['nuc_code_length']) ? absint($_POST['nuc_code_length']) : 8;
+				$settings['nuc_prefix'] = isset($_POST['nuc_prefix']) ? sanitize_text_field(wp_unslash($_POST['nuc_prefix'])) : '';
+				$settings['nuc_postfix'] = isset($_POST['nuc_postfix']) ? sanitize_text_field(wp_unslash($_POST['nuc_postfix'])) : '';
+				$settings['nuc_after_date'] = isset($_POST['nuc_after_date']) ? sanitize_text_field(wp_unslash($_POST['nuc_after_date'])) : '';
+				$settings['nuc_email_contains'] = isset($_POST['nuc_email_contains']) ? sanitize_text_field(wp_unslash($_POST['nuc_email_contains'])) : '';
+				$settings['nuc_email_exclude'] = isset($_POST['nuc_email_exclude']) ? sanitize_text_field(wp_unslash($_POST['nuc_email_exclude'])) : '';
+				$settings['nuc_exp_days'] = isset($_POST['nuc_exp_days']) ? absint($_POST['nuc_exp_days']) : 0;
+				$settings['nuc_send_email'] = isset($_POST['nuc_send_email']) && $_POST['nuc_send_email'] === '1';
+				$settings['nuc_email_template'] = isset($_POST['nuc_email_template']) ? sanitize_key($_POST['nuc_email_template']) : '';
+				$settings['nuc_auto_draft_duplicates'] = isset($_POST['nuc_auto_draft_duplicates']) && $_POST['nuc_auto_draft_duplicates'] === '1';
+				$settings['nuc_debug_mode'] = isset($_POST['nuc_debug_mode']) && $_POST['nuc_debug_mode'] === '1';
+				$settings['nuc_run_everywhere'] = isset($_POST['nuc_run_everywhere']) && $_POST['nuc_run_everywhere'] === '1';
+				$settings['nuc_run_my_account'] = isset($_POST['nuc_run_my_account']) && $_POST['nuc_run_my_account'] === '1';
+				$settings['nuc_run_cart'] = isset($_POST['nuc_run_cart']) && $_POST['nuc_run_cart'] === '1';
+				$settings['nuc_run_checkout'] = isset($_POST['nuc_run_checkout']) && $_POST['nuc_run_checkout'] === '1';
+				$settings['nuc_run_product'] = isset($_POST['nuc_run_product']) && $_POST['nuc_run_product'] === '1';
+				$settings['nuc_run_shop'] = isset($_POST['nuc_run_shop']) && $_POST['nuc_run_shop'] === '1';
+				$settings['nuc_run_home'] = isset($_POST['nuc_run_home']) && $_POST['nuc_run_home'] === '1';
+
+				// Coupon Notifications for Users with Coupons.
+				$settings['user_coupon_notifications_enabled'] = isset($_POST['user_coupon_notifications_enabled']) && $_POST['user_coupon_notifications_enabled'] === '1';
+				$settings['coupon_notifications_show_on_cart'] = isset($_POST['coupon_notifications_show_on_cart']) && $_POST['coupon_notifications_show_on_cart'] === '1';
+				$settings['coupon_notifications_show_on_checkout'] = isset($_POST['coupon_notifications_show_on_checkout']) && $_POST['coupon_notifications_show_on_checkout'] === '1';
+				$settings['coupon_notifications_show_on_my_account'] = isset($_POST['coupon_notifications_show_on_my_account']) && $_POST['coupon_notifications_show_on_my_account'] === '1';
+				$settings['coupon_notifications_show_on_home'] = isset($_POST['coupon_notifications_show_on_home']) && $_POST['coupon_notifications_show_on_home'] === '1';
+				$settings['coupon_notifications_show_on_product'] = isset($_POST['coupon_notifications_show_on_product']) && $_POST['coupon_notifications_show_on_product'] === '1';
+				$settings['coupon_notifications_show_on_archives'] = isset($_POST['coupon_notifications_show_on_archives']) && $_POST['coupon_notifications_show_on_archives'] === '1';
+				$settings['coupon_notifications_show_on_posts'] = isset($_POST['coupon_notifications_show_on_posts']) && $_POST['coupon_notifications_show_on_posts'] === '1';
+				$settings['coupon_notifications_show_on_pages'] = isset($_POST['coupon_notifications_show_on_pages']) && $_POST['coupon_notifications_show_on_pages'] === '1';
+				$settings['coupon_notifications_collapse_threshold'] = isset($_POST['coupon_notifications_collapse_threshold'])
+					? max(0, absint($_POST['coupon_notifications_collapse_threshold']))
+					: 1;
+				$settings['coupon_notifications_clear_coupons_when_cart_empty'] = isset($_POST['coupon_notifications_clear_coupons_when_cart_empty']) && $_POST['coupon_notifications_clear_coupons_when_cart_empty'] === '1';
+				$settings['coupon_notifications_debug'] = isset($_POST['coupon_notifications_debug']) && $_POST['coupon_notifications_debug'] === '1';
+				$settings['coupon_notifications_hide_store_credit'] = isset($_POST['coupon_notifications_hide_store_credit']) && $_POST['coupon_notifications_hide_store_credit'] === '1';
+				$settings['coupon_notifications_block_support'] = isset($_POST['coupon_notifications_block_support']) && $_POST['coupon_notifications_block_support'] === '1';
+				$settings['coupon_notifications_sort_by_expiration'] = isset($_POST['coupon_notifications_sort_by_expiration']) && $_POST['coupon_notifications_sort_by_expiration'] === '1';
+				$settings['coupon_notifications_block_checkout_shipping_notice'] = isset($_POST['coupon_notifications_block_checkout_shipping_notice']) && $_POST['coupon_notifications_block_checkout_shipping_notice'] === '1';
+				$settings['coupon_notifications_classic_checkout_shipping_notice'] = isset($_POST['coupon_notifications_classic_checkout_shipping_notice']) && $_POST['coupon_notifications_classic_checkout_shipping_notice'] === '1';
+				$settings['coupon_notifications_shipping_notice_title'] = isset($_POST['coupon_notifications_shipping_notice_title']) ? sanitize_text_field(wp_unslash($_POST['coupon_notifications_shipping_notice_title'])) : 'Coupon Notice';
+				$settings['coupon_notifications_shipping_notice_description'] = isset($_POST['coupon_notifications_shipping_notice_description']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_notifications_shipping_notice_description'])) : 'Coupons and store credits apply to product prices only, and do not cover shipping costs. Shipping is calculated separately from our shipping carriers.';
+
+				// Coupon Remaining Balances.
+				$settings['coupon_remainder_enabled'] = isset($_POST['coupon_remainder_enabled']) && $_POST['coupon_remainder_enabled'] === '1';
+				$settings['coupon_remainder_min_amount'] = isset($_POST['coupon_remainder_min_amount']) ? (float) $_POST['coupon_remainder_min_amount'] : 0;
+				$settings['coupon_remainder_source_prefixes'] = isset($_POST['coupon_remainder_source_prefixes']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_remainder_source_prefixes'])) : '';
+				$settings['coupon_remainder_source_contains'] = isset($_POST['coupon_remainder_source_contains']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_remainder_source_contains'])) : '';
+				$settings['coupon_remainder_source_suffixes'] = isset($_POST['coupon_remainder_source_suffixes']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_remainder_source_suffixes'])) : '';
+				$settings['coupon_remainder_generated_prefix'] = isset($_POST['coupon_remainder_generated_prefix']) ? sanitize_text_field(wp_unslash($_POST['coupon_remainder_generated_prefix'])) : '';
+				$settings['coupon_remainder_debug'] = isset($_POST['coupon_remainder_debug']) && $_POST['coupon_remainder_debug'] === '1';
+				$settings['coupon_remainder_checkout_debug'] = isset($_POST['coupon_remainder_checkout_debug']) && $_POST['coupon_remainder_checkout_debug'] === '1';
+				$settings['coupon_remainder_checkout_notice'] = isset($_POST['coupon_remainder_checkout_notice']) && $_POST['coupon_remainder_checkout_notice'] === '1';
+				$settings['coupon_remainder_checkout_notice_block'] = isset($_POST['coupon_remainder_checkout_notice_block']) && $_POST['coupon_remainder_checkout_notice_block'] === '1';
+				$settings['coupon_remainder_order_received_notice'] = isset($_POST['coupon_remainder_order_received_notice']) && $_POST['coupon_remainder_order_received_notice'] === '1';
+				$settings['coupon_remainder_copy_expiration'] = isset($_POST['coupon_remainder_copy_expiration']) && $_POST['coupon_remainder_copy_expiration'] === '1';
+				$settings['coupon_remainder_free_shipping'] = isset($_POST['coupon_remainder_free_shipping']) && $_POST['coupon_remainder_free_shipping'] === '1';
 
 				// Checkout: Ship To Pre-Defined Addresses
 				$settings['checkout_ship_to_predefined_enabled'] = isset($_POST['checkout_ship_to_predefined_enabled']) && $_POST['checkout_ship_to_predefined_enabled'] === '1';
@@ -3802,7 +3864,7 @@ class User_Manager_Actions {
 		check_admin_referer('user_manager_migrate_store_credit_coupons');
 
 		if (!class_exists('WooCommerce')) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_COUPONS, 'migration_failed_no_wc'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, 'migration_failed_no_wc'));
 			exit;
 		}
 
@@ -3811,7 +3873,7 @@ class User_Manager_Actions {
 			: [];
 
 		if (empty($coupon_ids)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_COUPONS, 'migration_no_selection'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, 'migration_no_selection'));
 			exit;
 		}
 
@@ -3899,12 +3961,12 @@ class User_Manager_Actions {
 
 		if ($migrated_count > 0) {
 			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(
-				User_Manager_Core::TAB_COUPONS, 
+				User_Manager_Core::TAB_ADDONS,
 				'migration_success',
 				$extra_params
 			));
 		} else {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_COUPONS, 'migration_failed'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, 'migration_failed'));
 		}
 		exit;
 	}
