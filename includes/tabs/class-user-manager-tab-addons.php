@@ -19,7 +19,7 @@ class User_Manager_Tab_Addons {
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-2col">
 				<!-- My Account Site Admin -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-addon-collapsible" id="um-addon-card-my-account" data-um-active-selectors="#um-my-account-admin-order-viewer-enabled,#um-my-account-admin-product-viewer-enabled,#um-my-account-admin-coupon-viewer-enabled,#um-my-account-admin-user-viewer-enabled">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-admin-site"></span>
 						<h2><?php esc_html_e('My Account Site Admin', 'user-manager'); ?></h2>
@@ -110,7 +110,7 @@ class User_Manager_Tab_Addons {
 				</div>
 
 				<!-- Bulk Add to Cart -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-addon-collapsible" id="um-addon-card-bulk-add-to-cart" data-um-active-selectors="input[name='bulk_add_to_cart_enabled']">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-cart"></span>
 						<h2><?php esc_html_e('Bulk Add to Cart', 'user-manager'); ?></h2>
@@ -198,7 +198,7 @@ class User_Manager_Tab_Addons {
 				</div>
 
 				<!-- Checkout: Ship To Pre-Defined Addresses -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-addon-collapsible" id="um-addon-card-checkout-predefined" data-um-active-selectors="#um-checkout-ship-to-predefined">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-location-alt"></span>
 						<h2><?php esc_html_e('Checkout Pre-Defined Addresses', 'user-manager'); ?></h2>
@@ -354,7 +354,7 @@ class User_Manager_Tab_Addons {
 				</div>
 
 				<!-- Custom WP-Admin Notifications -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-addon-collapsible" id="um-addon-card-custom-notifications">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-megaphone"></span>
 						<h2><?php esc_html_e('Custom WP-Admin Notifications', 'user-manager'); ?></h2>
@@ -400,7 +400,7 @@ class User_Manager_Tab_Addons {
 				</div>
 
 				<!-- WP-Admin Bar Menu Items -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-addon-collapsible" id="um-addon-card-admin-bar-menu">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-menu-alt"></span>
 						<h2><?php esc_html_e('WP-Admin Bar Menu Items', 'user-manager'); ?></h2>
@@ -442,7 +442,7 @@ class User_Manager_Tab_Addons {
 				</div>
 
 				<!-- WP-Admin CSS -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-addon-collapsible" id="um-addon-card-admin-css">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-art"></span>
 						<h2><?php esc_html_e('WP-Admin CSS', 'user-manager'); ?></h2>
@@ -498,7 +498,7 @@ class User_Manager_Tab_Addons {
 				</div>
 
 				<!-- API -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-addon-collapsible" id="um-addon-card-api" data-um-active-selectors="#um-openai-page-meta-box">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-admin-generic"></span>
 						<h2><?php esc_html_e('API', 'user-manager'); ?></h2>
@@ -515,7 +515,7 @@ class User_Manager_Tab_Addons {
 							<p class="description"><?php esc_html_e('This text is added to the end of the prompt on every "Auto write from ChatGPT" request to provide extra context (e.g. tone, audience, keywords). Leave blank to skip.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
-							<label><input type="checkbox" name="openai_page_meta_box" value="1" <?php checked(!empty($settings['openai_page_meta_box'])); ?> /> <?php esc_html_e('Enable Page & Post Meta Box for inserting ChatGPT generated content into pages & posts', 'user-manager'); ?></label>
+							<label><input type="checkbox" id="um-openai-page-meta-box" name="openai_page_meta_box" value="1" <?php checked(!empty($settings['openai_page_meta_box'])); ?> /> <?php esc_html_e('Enable Page & Post Meta Box for inserting ChatGPT generated content into pages & posts', 'user-manager'); ?></label>
 							<p class="description"><?php esc_html_e('When enabled, page edit screens show a meta box to generate content via ChatGPT and insert it at the bottom of the page (block format).', 'user-manager'); ?></p>
 						</div>
 					</div>
@@ -530,6 +530,35 @@ class User_Manager_Tab_Addons {
 				</div>
 			</div>
 		</form>
+		<?php
+		$role_switch_settings = get_option('view_website_by_role_settings', []);
+		$role_switch_enabled  = !empty($role_switch_settings['enabled']);
+		?>
+		<div class="um-admin-grid" style="margin-top:18px;">
+			<div class="um-admin-card um-admin-card-full um-addon-collapsible" id="um-addon-card-role-switching" data-um-active-selectors="#um-role-switching-enabled">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-visibility"></span>
+					<h2><?php esc_html_e('Role Switching', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p class="description" style="margin-top:0;">
+						<?php esc_html_e('Role Switching has been moved into Add-ons. Expand this section to configure role switching settings and review role-switch history.', 'user-manager'); ?>
+					</p>
+					<details id="um-role-switching-embedded" <?php echo $role_switch_enabled ? 'open' : ''; ?>>
+						<summary style="cursor:pointer;font-weight:600;">
+							<?php echo $role_switch_enabled ? esc_html__('Role Switching is active — click to expand/collapse', 'user-manager') : esc_html__('Role Switching is inactive — click to expand/collapse', 'user-manager'); ?>
+						</summary>
+						<div style="margin-top:12px;">
+							<?php
+							if (class_exists('User_Manager_Tab_Role_Switching')) {
+								User_Manager_Tab_Role_Switching::render();
+							}
+							?>
+						</div>
+					</details>
+				</div>
+			</div>
+		</div>
 		<script type="text/template" id="um-admin-notification-template">
 			<div class="um-admin-notification-block" style="margin-bottom: 24px; padding: 16px; border: 1px solid #c3c4c7; border-radius: 4px; background: #f6f7f7;">
 				<h3 class="um-settings-subsection um-admin-notification-number" style="margin-top: 0;"><?php esc_html_e('New notification', 'user-manager'); ?></h3>
@@ -576,6 +605,114 @@ class User_Manager_Tab_Addons {
 		</script>
 		<script>
 		jQuery(document).ready(function($) {
+			function isAddonCardActive($card) {
+				var selectorsRaw = ($card.attr('data-um-active-selectors') || '').trim();
+				if (selectorsRaw !== '') {
+					var selectors = selectorsRaw.split(',');
+					for (var i = 0; i < selectors.length; i++) {
+						var selector = $.trim(selectors[i]);
+						if (!selector) {
+							continue;
+						}
+						var $inputs = $(selector);
+						if ($inputs.length && $inputs.filter(':checked').length > 0) {
+							return true;
+						}
+					}
+					return false;
+				}
+
+				var cardId = $card.attr('id') || '';
+				if (cardId === 'um-addon-card-custom-notifications') {
+					var hasNotification = false;
+					$('#um-custom-admin-notifications-list .um-admin-notification-block').each(function() {
+						var $block = $(this);
+						var title = $.trim($block.find('input[name*="[title]"]').val() || '');
+						var body = $.trim($block.find('textarea[name*="[body]"]').val() || '');
+						if (title !== '' || body !== '') {
+							hasNotification = true;
+							return false;
+						}
+					});
+					return hasNotification;
+				}
+				if (cardId === 'um-addon-card-admin-bar-menu') {
+					var hasMenu = false;
+					$('#um-admin-bar-menu-list .um-admin-bar-menu-block').each(function() {
+						var $block = $(this);
+						var title = $.trim($block.find('input[name*="[title]"]').val() || '');
+						var shortcuts = $.trim($block.find('textarea[name*="[shortcuts]"]').val() || '');
+						if (title !== '' || shortcuts !== '') {
+							hasMenu = true;
+							return false;
+						}
+					});
+					return hasMenu;
+				}
+				if (cardId === 'um-addon-card-admin-css') {
+					var allCss = $.trim($('#um-wp-admin-css-all').val() || '');
+					var usersCss = $.trim($('#um-wp-admin-css-users-css').val() || '');
+					return allCss !== '' || usersCss !== '';
+				}
+				return false;
+			}
+
+			function setAddonCardCollapsed($card, collapsed, skipAnimation) {
+				var $body = $card.children('.um-admin-card-body').first();
+				if (!$body.length) {
+					return;
+				}
+
+				var $indicator = $card.children('.um-admin-card-header').find('.um-addon-collapse-indicator');
+				if (collapsed) {
+					$card.addClass('um-addon-collapsed');
+					if (skipAnimation) {
+						$body.hide();
+					} else {
+						$body.stop(true, true).slideUp(150);
+					}
+					$indicator.text('+');
+				} else {
+					$card.removeClass('um-addon-collapsed');
+					if (skipAnimation) {
+						$body.show();
+					} else {
+						$body.stop(true, true).slideDown(150);
+					}
+					$indicator.text('−');
+				}
+			}
+
+			function refreshAddonCardAutoState($card, skipAnimation) {
+				var isActive = isAddonCardActive($card);
+				setAddonCardCollapsed($card, !isActive, skipAnimation);
+			}
+
+			function initAddonCollapsibleCards() {
+				$('.um-addon-collapsible').each(function() {
+					var $card = $(this);
+					var $header = $card.children('.um-admin-card-header').first();
+					if (!$header.length) {
+						return;
+					}
+
+					if (!$header.find('.um-addon-collapse-indicator').length) {
+						$header.append('<span class="um-addon-collapse-indicator" style="margin-left:auto;font-weight:700;font-size:18px;line-height:1;">−</span>');
+					}
+					$header.css('cursor', 'pointer');
+					$header.on('click', function(e) {
+						if ($(e.target).closest('a,button,input,select,textarea,label').length) {
+							return;
+						}
+						setAddonCardCollapsed($card, !$card.hasClass('um-addon-collapsed'));
+					});
+
+					refreshAddonCardAutoState($card, true);
+				});
+			}
+
+			initAddonCollapsibleCards();
+
 			function umToggleBulkMetaFieldRow() {
 				var type = $('#um-bulk-identifier-type').val();
 				if (type === 'meta_field') {
@@ -620,12 +757,25 @@ class User_Manager_Tab_Addons {
 
 			$('#um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
 			toggleMyAccountAdminViewerFields();
+			$('#um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-my-account'));
+			});
+			$("input[name='bulk_add_to_cart_enabled']").on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-bulk-add-to-cart'));
+			});
+			$('#um-checkout-ship-to-predefined').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-checkout-predefined'));
+			});
+			$('#um-openai-page-meta-box').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-api'));
+			});
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;
 				var tpl = $('#um-admin-notification-template').html().replace(/__INDEX__/g, count);
 				$('#um-custom-admin-notifications-list').append(tpl);
 				$('#um-custom-admin-notifications-list .um-admin-notification-block').last().find('.um-admin-notification-number').text('<?php echo esc_js(__('Notification', 'user-manager')); ?> ' + (count + 1));
+				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
 			});
 			$('#um-custom-admin-notifications-list').on('click', '.um-remove-admin-notification', function() {
 				$(this).closest('.um-admin-notification-block').remove();
@@ -640,6 +790,7 @@ class User_Manager_Tab_Addons {
 						}
 					});
 				});
+				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
 			});
 
 			$('#um-add-admin-bar-menu').on('click', function() {
@@ -647,6 +798,7 @@ class User_Manager_Tab_Addons {
 				var tpl = $('#um-admin-bar-menu-template').html().replace(/__INDEX__/g, count);
 				$('#um-admin-bar-menu-list').append(tpl);
 				$('#um-admin-bar-menu-list .um-admin-bar-menu-block').last().find('.um-admin-bar-menu-number').text('<?php echo esc_js(__('Menu', 'user-manager')); ?> ' + (count + 1));
+				refreshAddonCardAutoState($('#um-addon-card-admin-bar-menu'));
 			});
 			$('#um-admin-bar-menu-list').on('click', '.um-remove-admin-bar-menu', function() {
 				$(this).closest('.um-admin-bar-menu-block').remove();
@@ -661,6 +813,16 @@ class User_Manager_Tab_Addons {
 						}
 					});
 				});
+				refreshAddonCardAutoState($('#um-addon-card-admin-bar-menu'));
+			});
+			$('#um-custom-admin-notifications-list').on('input change', 'input, textarea', function() {
+				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
+			});
+			$('#um-admin-bar-menu-list').on('input change', 'input, textarea', function() {
+				refreshAddonCardAutoState($('#um-addon-card-admin-bar-menu'));
+			});
+			$('#um-wp-admin-css-all, #um-wp-admin-css-users-css').on('input change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-admin-css'));
 			});
 		});
 		</script>
