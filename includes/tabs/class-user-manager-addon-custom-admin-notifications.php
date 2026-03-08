@@ -43,6 +43,7 @@ class User_Manager_Addon_Custom_Admin_Notifications {
 						<input type="checkbox" name="custom_admin_notifications_enabled" id="um-custom-admin-notifications-enabled" value="1" <?php checked($is_enabled); ?><?php echo $form_attr; ?> />
 						<?php esc_html_e('Activate WP-Admin Notifications', 'user-manager'); ?>
 					</label>
+					<p class="description"><?php esc_html_e('Display custom notice banners across wp-admin, optionally filtered by URL match.', 'user-manager'); ?></p>
 				</div>
 				<div id="um-custom-admin-notifications-fields" style="<?php echo $is_enabled ? '' : 'display:none;'; ?>">
 				<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Add custom admin notices at the top of WP-Admin screens. Each notification can be limited to URLs that contain a specific string (e.g. shop_coupon for coupon edit screens), or shown on all admin screens if URL match is blank.', 'user-manager'); ?></p>

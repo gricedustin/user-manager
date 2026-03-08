@@ -23,6 +23,7 @@ class User_Manager_Addon_API {
 						<input type="checkbox" id="um-openai-content-generator-enabled" name="openai_content_generator_enabled" value="1" <?php checked(!empty($settings['openai_content_generator_enabled'])); ?><?php echo $form_attr; ?> />
 						<?php esc_html_e('Activate Post Content Generator', 'user-manager'); ?>
 					</label>
+					<p class="description"><?php esc_html_e('Enable AI-powered blog content generation and import tools in this add-on card.', 'user-manager'); ?></p>
 				</div>
 
 				<div id="um-openai-content-generator-fields" style="<?php echo empty($settings['openai_content_generator_enabled']) ? 'display:none;' : ''; ?>">

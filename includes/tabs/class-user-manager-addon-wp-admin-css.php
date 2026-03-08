@@ -39,6 +39,7 @@ class User_Manager_Addon_WP_Admin_CSS {
 						<input type="checkbox" name="wp_admin_css_enabled" id="um-wp-admin-css-enabled" value="1" <?php checked($is_enabled); ?><?php echo $form_attr; ?> />
 						<?php esc_html_e('Activate WP-Admin CSS', 'user-manager'); ?>
 					</label>
+					<p class="description"><?php esc_html_e('Inject custom CSS into wp-admin globally, by role, or for specific users.', 'user-manager'); ?></p>
 				</div>
 				<div id="um-wp-admin-css-fields" style="<?php echo $is_enabled ? '' : 'display:none;'; ?>">
 				<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Apply custom CSS only in the WordPress admin (wp-admin). You can target all roles, exclude specific roles from the global CSS, apply CSS to specific users (by login, email, or ID), and/or add per-role CSS.', 'user-manager'); ?></p>

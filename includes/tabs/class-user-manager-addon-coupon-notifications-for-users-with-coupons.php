@@ -23,6 +23,7 @@ class User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons {
 						<input type="checkbox" name="user_coupon_notifications_enabled" id="um-coupon-notifications-enabled" value="1" <?php checked($enabled); ?> />
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
+					<p class="description"><?php esc_html_e('Show eligible coupon reminders to logged-in users across selected storefront pages.', 'user-manager'); ?></p>
 				</div>
 
 				<div id="um-coupon-notifications-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
