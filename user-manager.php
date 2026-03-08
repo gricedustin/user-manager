@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.40
+ * Version: 2.2.41
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.41 - March 8, 2026
+ * - Admin Log "View Details" now includes an "All Logged Form Data" section that recursively displays all stored entry fields.
+ * - Added nested key rendering for activity detail payloads so values from arrays/objects are visible with full key paths.
+ * - Added sensitive-field masking in details output for keys containing password, API key, token, secret, nonce, authorization, or cookie.
+ *
  * 2.2.40 - March 8, 2026
  * - Fixed Add-ons reindexing for WP-Admin Bar Menu Items so all field types (including the new side selector) keep correct names after removing rows.
  * - User Role Switching add-on: replaced full get_users() load with paginated WP_User_Query output in the "Users with Role Switching Access" table for better performance.

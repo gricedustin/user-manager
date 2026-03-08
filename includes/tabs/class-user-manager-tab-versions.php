@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.41 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Admin Log "View Details" now includes an "All Logged Form Data" section that recursively displays all stored entry fields.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added nested key rendering for activity detail payloads so values from arrays/objects are visible with full key paths.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added sensitive-field masking in details output for keys containing password, API key, token, secret, nonce, authorization, or cookie.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.40 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Add-ons reindexing for WP-Admin Bar Menu Items so all field types (including the new side selector) keep correct names after removing rows.', 'user-manager'); ?></li>

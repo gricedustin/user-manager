@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.40';
+	const VERSION = '2.2.41';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -7853,6 +7853,35 @@ final class User_Manager_Core {
 			</tbody>
 		</table>
 		<?php endif; ?>
+
+		<?php
+		$all_logged_rows = self::flatten_activity_detail_rows($extra);
+		?>
+		<?php if (!empty($all_logged_rows)) : ?>
+		<h4 style="margin: 16px 0 8px;"><?php esc_html_e('All Logged Form Data', 'user-manager'); ?></h4>
+		<table class="widefat striped">
+			<thead>
+				<tr>
+					<th style="width: 36%;"><?php esc_html_e('Field', 'user-manager'); ?></th>
+					<th><?php esc_html_e('Value', 'user-manager'); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ($all_logged_rows as $row) : ?>
+					<?php
+					$field_path = isset($row['path']) ? (string) $row['path'] : '';
+					$raw_value  = $row['value'] ?? '';
+					$is_masked  = self::is_sensitive_activity_detail_path($field_path);
+					$formatted  = $is_masked ? __('[redacted]', 'user-manager') : self::format_activity_detail_scalar($raw_value);
+					?>
+					<tr>
+						<td><code><?php echo esc_html($field_path); ?></code></td>
+						<td style="white-space: pre-wrap; word-break: break-word;"><?php echo esc_html($formatted); ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php endif; ?>
 		
 		<!-- Notification Message -->
 		<div style="margin-top: 16px; padding: 12px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
@@ -7866,6 +7895,86 @@ final class User_Manager_Core {
 		$html = ob_get_clean();
 
 		wp_send_json_success(['html' => $html]);
+	}
+
+	/**
+	 * Flatten nested activity log details into key/value rows.
+	 *
+	 * @param mixed  $value Raw data value.
+	 * @param string $path  Current field path.
+	 * @return array<int, array{path: string, value: mixed}>
+	 */
+	private static function flatten_activity_detail_rows($value, string $path = ''): array {
+		$rows = [];
+
+		if (is_object($value)) {
+			$value = (array) $value;
+		}
+
+		if (is_array($value)) {
+			if (empty($value) && $path !== '') {
+				$rows[] = ['path' => $path, 'value' => []];
+			} else {
+				foreach ($value as $key => $child_value) {
+					$key       = (string) $key;
+					$child_key = ($path === '') ? $key : $path . '[' . $key . ']';
+					$rows      = array_merge($rows, self::flatten_activity_detail_rows($child_value, $child_key));
+				}
+			}
+			return $rows;
+		}
+
+		$rows[] = [
+			'path'  => $path !== '' ? $path : 'value',
+			'value' => $value,
+		];
+
+		return $rows;
+	}
+
+	/**
+	 * Normalize scalar values for display in Activity Details modal.
+	 *
+	 * @param mixed $value Scalar-ish value.
+	 */
+	private static function format_activity_detail_scalar($value): string {
+		if (is_bool($value)) {
+			return $value ? 'true' : 'false';
+		}
+		if ($value === null) {
+			return 'null';
+		}
+		if (is_scalar($value)) {
+			return (string) $value;
+		}
+
+		$encoded = wp_json_encode($value);
+		return is_string($encoded) ? $encoded : '';
+	}
+
+	/**
+	 * Detect sensitive detail keys that should be masked in UI.
+	 */
+	private static function is_sensitive_activity_detail_path(string $path): bool {
+		$needle = strtolower($path);
+		$sensitive_tokens = [
+			'password',
+			'user_pass',
+			'api_key',
+			'token',
+			'secret',
+			'nonce',
+			'authorization',
+			'cookie',
+		];
+
+		foreach ($sensitive_tokens as $token) {
+			if ($token !== '' && strpos($needle, $token) !== false) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	
