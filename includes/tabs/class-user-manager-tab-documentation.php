@@ -48,7 +48,7 @@ class User_Manager_Tab_Documentation {
 		}
 
 		?>
-		<div class="um-admin-grid">
+		<div class="um-admin-grid um-admin-grid-single">
 			<div class="um-admin-card">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-info-outline"></span>
