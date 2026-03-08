@@ -101,7 +101,7 @@ if (!defined('ABSPATH')) {
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single">
 				<!-- User & Login -->
-				<div class="um-admin-card um-settings-filter-card" data-card="user-login" data-title="<?php echo esc_attr__('User & Login', 'user-manager'); ?>">
+				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="user-login" data-title="<?php echo esc_attr__('User & Login', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-admin-users"></span>
 						<h2><?php esc_html_e('User & Login', 'user-manager'); ?></h2>
@@ -132,7 +132,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- Email Settings -->
-				<div class="um-admin-card um-settings-filter-card" data-card="email-settings" data-title="<?php echo esc_attr__('Email Settings', 'user-manager'); ?>">
+				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="email-settings" data-title="<?php echo esc_attr__('Email Settings', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-email"></span>
 						<h2><?php esc_html_e('Email Settings', 'user-manager'); ?></h2>
@@ -169,7 +169,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- Activity & Logging -->
-				<div class="um-admin-card um-settings-filter-card" data-card="activity-logging" data-title="<?php echo esc_attr__('Activity & Logging', 'user-manager'); ?>">
+				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="activity-logging" data-title="<?php echo esc_attr__('Activity & Logging', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-list-view"></span>
 						<h2><?php esc_html_e('Activity & Logging', 'user-manager'); ?></h2>
@@ -237,7 +237,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- User Experience -->
-				<div class="um-admin-card um-settings-filter-card" data-card="user-experience" data-title="<?php echo esc_attr__('User Experience', 'user-manager'); ?>">
+				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="user-experience" data-title="<?php echo esc_attr__('User Experience', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-admin-appearance"></span>
 						<h2><?php esc_html_e('User Experience', 'user-manager'); ?></h2>
@@ -310,7 +310,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- User Creation & Import -->
-				<div class="um-admin-card um-settings-filter-card" data-card="user-import" data-title="<?php echo esc_attr__('User Creation & Import', 'user-manager'); ?>">
+				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="user-import" data-title="<?php echo esc_attr__('User Creation & Import', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-upload"></span>
 						<h2><?php esc_html_e('User Creation & Import', 'user-manager'); ?></h2>
@@ -338,7 +338,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- API Keys -->
-				<div class="um-admin-card um-settings-filter-card" data-card="api-keys" data-title="<?php echo esc_attr__('API Keys', 'user-manager'); ?>">
+				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="api-keys" data-title="<?php echo esc_attr__('API Keys', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-admin-network"></span>
 						<h2><?php esc_html_e('API Keys', 'user-manager'); ?></h2>
@@ -362,6 +362,28 @@ if (!defined('ABSPATH')) {
 				</div>
 			</div>
 		</form>
+		<style>
+		.um-settings-collapsible-card .um-admin-card-header {
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.um-settings-collapse-indicator {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 20px;
+			height: 20px;
+			border: 1px solid #c3c4c7;
+			border-radius: 999px;
+			background: #fff;
+			font-weight: 600;
+			line-height: 1;
+		}
+		</style>
 		<script>
 		jQuery(document).ready(function($) {
 			// Toggle throttle emails count field
@@ -401,9 +423,59 @@ if (!defined('ABSPATH')) {
 				return normalizeFilterText(text.join(' '));
 			}
 
+			function isSettingsFilterActive() {
+				var cardFilter = normalizeFilterText($('#um-settings-filter-card').val());
+				var keyword = normalizeFilterText($('#um-settings-filter-text').val());
+				return (cardFilter !== '' && cardFilter !== 'all') || keyword !== '';
+			}
+
+			function setSettingsCardCollapsed($card, collapsed, skipAnimation) {
+				var $body = $card.children('.um-admin-card-body').first();
+				if (!$body.length) {
+					return;
+				}
+				$card.attr('data-um-collapsed', collapsed ? '1' : '0');
+				$card.find('.um-settings-collapse-indicator').first().text(collapsed ? '+' : '−');
+				if (skipAnimation) {
+					$body.toggle(!collapsed);
+				} else if (collapsed) {
+					$body.stop(true, true).slideUp(120);
+				} else {
+					$body.stop(true, true).slideDown(120);
+				}
+			}
+
+			function initSettingsCardCollapse() {
+				$('.um-settings-collapsible-card .um-admin-card-header').each(function() {
+					var $header = $(this);
+					$header.attr('role', 'button').attr('tabindex', '0');
+					if (!$header.find('.um-settings-collapse-indicator').length) {
+						$header.append('<span class="um-settings-collapse-indicator" aria-hidden="true">+</span>');
+					}
+				});
+
+				$('.um-settings-collapsible-card').each(function() {
+					setSettingsCardCollapsed($(this), true, true);
+				});
+
+				$('.um-settings-collapsible-card .um-admin-card-header').on('click keydown', function(e) {
+					if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') {
+						return;
+					}
+					if (isSettingsFilterActive()) {
+						return;
+					}
+					e.preventDefault();
+					var $card = $(this).closest('.um-settings-collapsible-card');
+					var collapsed = $card.attr('data-um-collapsed') === '1';
+					setSettingsCardCollapsed($card, !collapsed, false);
+				});
+			}
+
 			function applySettingsFilter() {
 				var cardFilter = normalizeFilterText($('#um-settings-filter-card').val());
 				var keyword = normalizeFilterText($('#um-settings-filter-text').val());
+				var filterActive = isSettingsFilterActive();
 				var anyVisible = false;
 
 				$('.um-settings-filter-card').each(function() {
@@ -431,6 +503,9 @@ if (!defined('ABSPATH')) {
 					var showCard = cardMatches && (keyword === '' || hasKeywordMatch);
 					$card.toggle(showCard);
 					if (showCard) {
+						setSettingsCardCollapsed($card, !filterActive, true);
+					}
+					if (showCard) {
 						anyVisible = true;
 					}
 				});
@@ -445,6 +520,7 @@ if (!defined('ABSPATH')) {
 				$('#um-settings-filter-text').val('');
 				applySettingsFilter();
 			});
+			initSettingsCardCollapse();
 			applySettingsFilter();
 		});
 		</script>

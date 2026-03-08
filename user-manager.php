@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.28
+ * Version: 2.2.29
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.29 - February 22, 2026
+ * - Settings tab cards now load collapsed by default for a cleaner first view.
+ * - When a Settings filter is active (area or keyword), matching cards auto-expand to show results immediately.
+ * - Clearing filters returns cards to the default collapsed state.
+ *
  * 2.2.28 - February 22, 2026
  * - Fixed Login As user search results not appearing for valid email searches.
  * - Updated Login As AJAX user lookup to support WP_User_Query partial-field result objects as well as WP_User objects.

@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.29 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings tab cards now load collapsed by default for a cleaner first view.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When a Settings filter is active (area or keyword), matching cards auto-expand to show results immediately.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clearing filters returns Settings cards to the default collapsed state.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.28 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Login As user search results not appearing for valid email searches.', 'user-manager'); ?></li>
