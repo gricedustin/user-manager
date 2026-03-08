@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 
 require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
+require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
 require_once __DIR__ . '/class-user-manager-addon-checkout-predefined-addresses.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users-with-coupons.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php';
@@ -26,12 +27,13 @@ class User_Manager_Tab_Addons {
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		?>
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-			<input type="hidden" name="action" value="user_manager_save_settings" />
+			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="addons" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single">
 				<?php User_Manager_Addon_API::render($settings); ?>
 				<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
+				<?php User_Manager_Addon_Bulk_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
@@ -305,6 +307,27 @@ class User_Manager_Tab_Addons {
 					window.umShowEmailPreview('nuc');
 				}
 			});
+			$('#um-bulk-coupons-send-email').on('change', function() {
+				$('#um-bulk-coupons-template-select').toggle(this.checked);
+			});
+			$('#um-bulk-coupons-template-select').toggle($('#um-bulk-coupons-send-email').is(':checked'));
+			$('.um-bulk-coupons-preview-email-btn').on('click', function() {
+				if (typeof window.umShowEmailPreview === 'function') {
+					window.umShowEmailPreview('bulk-coupons');
+				}
+			});
+			function toggleBulkCouponsFields() {
+				$('#um-bulk-coupons-fields').toggle($('#um-bulk-coupons-enabled').is(':checked'));
+			}
+			$('#um-bulk-coupons-enabled').on('change', toggleBulkCouponsFields);
+			toggleBulkCouponsFields();
+			$('.um-addon-action-submit').on('click', function() {
+				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
+				$('#um-addons-form-action').val(targetAction);
+			});
+			$('input[name="submit"]').on('click', function() {
+				$('#um-addons-form-action').val('user_manager_save_settings');
+			});
 
 			function toggleMyAccountAdminViewerField(checkboxSelector, fieldSelector) {
 				if ($(checkboxSelector).is(':checked')) {
@@ -334,6 +357,9 @@ class User_Manager_Tab_Addons {
 			});
 			$("input[name='bulk_add_to_cart_enabled']").on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-bulk-add-to-cart'));
+			});
+			$('#um-bulk-coupons-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-bulk-coupons'));
 			});
 			$('#um-checkout-ship-to-predefined').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-checkout-predefined'));

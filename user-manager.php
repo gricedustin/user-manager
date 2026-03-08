@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.18
+ * Version: 2.2.19
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.19 - February 22, 2026
+ * - Moved Bulk Coupons into Add-ons as a dedicated add-on card with an Activate checkbox.
+ * - Bulk Coupons create/template actions now run from the Add-ons page and redirect back to Add-ons with notices.
+ * - Removed the top-level Bulk Coupons nav tab and route legacy ?tab=bulk-coupons requests to Add-ons.
+ *
  * 2.2.18 - February 22, 2026
  * - Moved Coupons settings into three dedicated Add-ons cards: Coupons for New Users, Coupon Notifications for Users with Coupons, and Coupon Remaining Balances (Simple Gift Card & Store Credit Functionality).
  * - Coupon settings are now saved through the shared Add-ons save flow.

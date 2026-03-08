@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.18';
+	const VERSION = '2.2.19';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5871,10 +5871,6 @@ final class User_Manager_Core {
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Login As', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_BULK_COUPONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_BULK_COUPONS)); ?>">
-					<span class="dashicons dashicons-tickets-alt" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Bulk Coupons', 'user-manager'); ?>
-				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_EMAIL_USERS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_EMAIL_USERS)); ?>">
 					<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Send Email', 'user-manager'); ?>
@@ -5931,6 +5927,9 @@ final class User_Manager_Core {
 			return self::TAB_ADDONS;
 		}
 		if ($tab === self::TAB_COUPONS) {
+			return self::TAB_ADDONS;
+		}
+		if ($tab === self::TAB_BULK_COUPONS) {
 			return self::TAB_ADDONS;
 		}
 		$allowed = [
@@ -6578,6 +6577,10 @@ final class User_Manager_Core {
 				break;
 			case 'migration_no_selection':
 				$content = __('Please select at least one coupon to migrate.', 'user-manager');
+				$type = 'warning';
+				break;
+			case 'bulk_coupons_disabled':
+				$content = __('Bulk Coupons is currently disabled in Add-ons. Enable it first to create bulk coupon codes.', 'user-manager');
 				$type = 'warning';
 				break;
 			case 'activity_log_cleared':

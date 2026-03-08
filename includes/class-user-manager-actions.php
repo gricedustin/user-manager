@@ -95,11 +95,18 @@ class User_Manager_Actions {
 			wp_die(__('You do not have permission to access this page.', 'user-manager'));
 		}
 
-		check_admin_referer('user_manager_bulk_coupons');
+		check_admin_referer('user_manager_bulk_coupons', 'user_manager_bulk_coupons_nonce');
+		$redirect_tab = User_Manager_Core::TAB_ADDONS;
+
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['bulk_coupons_enabled'])) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'bulk_coupons_disabled'));
+			exit;
+		}
 
 		// Ensure WooCommerce coupon API is available.
 		if (!class_exists('WC_Coupon')) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -136,7 +143,6 @@ class User_Manager_Actions {
 		}
 
 		// Persist last-used form values into settings.
-		$settings = User_Manager_Core::get_settings();
 		$settings['bulk_coupons_template_code']      = $template_code;
 		$settings['bulk_coupons_total']              = $total_to_create;
 		$settings['bulk_coupons_emails']             = $emails_raw;
@@ -151,13 +157,13 @@ class User_Manager_Actions {
 		update_option(User_Manager_Core::OPTION_KEY, $settings);
 
 		if (empty($template_code)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
 		$template_coupon = new WC_Coupon($template_code);
 		if (!$template_coupon || !$template_coupon->get_id()) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -181,7 +187,7 @@ class User_Manager_Actions {
 		}
 
 		if ($total_to_create <= 0) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -340,14 +346,14 @@ class User_Manager_Actions {
 		}
 
 		if ($created <= 0) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
 		$redirect = add_query_arg(
 			'count',
 			$created,
-			User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'bulk_coupons_created')
+			User_Manager_Core::get_redirect_with_message($redirect_tab, 'bulk_coupons_created')
 		);
 
 		if (!empty($created_coupons)) {
@@ -1722,6 +1728,7 @@ class User_Manager_Actions {
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
+				$settings['bulk_coupons_enabled'] = isset($_POST['bulk_coupons_enabled']) && $_POST['bulk_coupons_enabled'] === '1';
 
 				$bulk_settings = [
 					'redirect_to_cart'   => isset($_POST['bulk_add_to_cart_redirect_to_cart']) && $_POST['bulk_add_to_cart_redirect_to_cart'] === '1' ? '1' : '0',
@@ -3766,10 +3773,16 @@ class User_Manager_Actions {
 			wp_die(__('You do not have permission to access this page.', 'user-manager'));
 		}
 
-		check_admin_referer('user_manager_create_basic_coupon_template');
+		check_admin_referer('user_manager_create_basic_coupon_template', 'user_manager_create_basic_coupon_template_nonce');
+		$redirect_tab = User_Manager_Core::TAB_ADDONS;
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['bulk_coupons_enabled'])) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'bulk_coupons_disabled'));
+			exit;
+		}
 
 		if (!class_exists('WC_Coupon')) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -3779,7 +3792,7 @@ class User_Manager_Actions {
 		$existing_id = function_exists('wc_get_coupon_id_by_code') ? wc_get_coupon_id_by_code($code) : 0;
 
 		if ($existing_id) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'success'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'success'));
 			exit;
 		}
 
@@ -3792,7 +3805,7 @@ class User_Manager_Actions {
 		]);
 
 		if (is_wp_error($coupon_id) || !$coupon_id) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -3812,7 +3825,7 @@ class User_Manager_Actions {
 
 		$coupon->save();
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'success'));
+		wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'success'));
 		exit;
 	}
 
