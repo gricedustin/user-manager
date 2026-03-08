@@ -41,17 +41,16 @@ class User_Manager_Tab_Addons {
 				<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
 				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
-				<?php User_Manager_Addon_Role_Switching::render(); ?>
-				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings); ?>
-				<?php User_Manager_Addon_Quick_Search::render($settings); ?>
-				<?php User_Manager_Addon_WP_Admin_CSS::render($settings); ?>
-				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
-
 			</div>
 		</form>
 		<div class="um-admin-grid um-admin-grid-single">
 			<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
 			<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings, $settings_form_id); ?>
+			<?php User_Manager_Addon_Role_Switching::render($settings_form_id); ?>
+			<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings, $settings_form_id); ?>
+			<?php User_Manager_Addon_Quick_Search::render($settings, $settings_form_id); ?>
+			<?php User_Manager_Addon_WP_Admin_CSS::render($settings, $settings_form_id); ?>
+			<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-body">
 					<p style="margin:0;">
@@ -61,8 +60,8 @@ class User_Manager_Tab_Addons {
 			</div>
 		</div>
 
-		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template(); ?>
-		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template(); ?>
+		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template($settings_form_id); ?>
+		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template($settings_form_id); ?>
 
 		<style>
 		.um-addon-collapsible .um-admin-card-header {

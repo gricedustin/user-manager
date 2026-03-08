@@ -9,7 +9,8 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Addon_Role_Switching {
 
-	public static function render(): void {
+	public static function render(string $settings_form_id = ''): void {
+		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$role_switch_settings = get_option('view_website_by_role_settings', []);
 		$role_switch_enabled  = !empty($role_switch_settings['enabled']);
 		$hidden_roles         = $role_switch_settings['hidden_roles'] ?? [];
@@ -24,7 +25,7 @@ class User_Manager_Addon_Role_Switching {
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
 					<label>
-						<input type="checkbox" name="role_switching_enabled" id="um-role-switching-enabled" value="1" <?php checked($role_switch_enabled); ?> />
+						<input type="checkbox" name="role_switching_enabled" id="um-role-switching-enabled" value="1" <?php checked($role_switch_enabled); ?><?php echo $form_attr; ?> />
 						<?php esc_html_e('Activate User Role Switching', 'user-manager'); ?>
 					</label>
 					<p class="description">
@@ -40,7 +41,7 @@ class User_Manager_Addon_Role_Switching {
 						<td>
 							<?php foreach ($roles as $role_key => $role_name) : ?>
 								<label style="display:block;margin-bottom:5px;">
-									<input type="checkbox" name="hidden_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $hidden_roles, true)); ?> />
+									<input type="checkbox" name="hidden_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $hidden_roles, true)); ?><?php echo $form_attr; ?> />
 									<?php echo esc_html($role_name); ?>
 								</label>
 							<?php endforeach; ?>
@@ -55,7 +56,7 @@ class User_Manager_Addon_Role_Switching {
 						</th>
 						<td>
 							<label>
-								<input type="checkbox" name="allow_reset" id="um-role-switching-allow-reset" value="1" <?php checked($allow_reset); ?> />
+								<input type="checkbox" name="allow_reset" id="um-role-switching-allow-reset" value="1" <?php checked($allow_reset); ?><?php echo $form_attr; ?> />
 								<?php esc_html_e('Enable the "Reset to Default Roles" button in the front-end switcher.', 'user-manager'); ?>
 							</label>
 							<p class="description">
