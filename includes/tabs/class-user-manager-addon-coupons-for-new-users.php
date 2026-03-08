@@ -15,7 +15,7 @@ class User_Manager_Addon_Coupons_For_New_Users {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-coupons-new-users" data-um-active-selectors="#um-nuc-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-tickets-alt"></span>
-				<h2><?php esc_html_e('Coupons for New Users', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Coupon Automatically Created for New User', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">

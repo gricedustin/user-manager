@@ -3235,7 +3235,7 @@ class User_Manager_Actions {
 		}
 		$settings = User_Manager_Core::get_settings();
 		if (empty($settings['openai_blog_post_idea_generator_enabled'])) {
-			wp_send_json_error(['message' => __('Blog Post Idea Generator add-on is disabled.', 'user-manager')]);
+			wp_send_json_error(['message' => __('Post Idea Generator add-on is disabled.', 'user-manager')]);
 		}
 		$api_key = isset($settings['openai_api_key']) ? trim((string) $settings['openai_api_key']) : '';
 		if ($api_key === '') {

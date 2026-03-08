@@ -29,7 +29,7 @@ class User_Manager_Addon_API {
 					<?php esc_html_e('API key management is now in Settings > API Keys. Use this add-on to configure ChatGPT content behavior.', 'user-manager'); ?>
 				</p>
 				<p class="description" style="margin-top:0;">
-					<?php esc_html_e('When activated, Blog Post Importer and Blog Post Idea Generator tools appear below on the Add-ons tab (save Add-ons after enabling).', 'user-manager'); ?>
+					<?php esc_html_e('When activated, Blog Post Importer and Post Idea Generator tools appear below on the Add-ons tab (save Add-ons after enabling).', 'user-manager'); ?>
 				</p>
 				<div class="um-form-field">
 					<label for="um-openai-prompt-append"><?php esc_html_e('Appended Information to AI Prompt', 'user-manager'); ?></label>

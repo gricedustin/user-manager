@@ -560,7 +560,7 @@ class User_Manager_Tab_Tools {
 			<div class="um-admin-card um-admin-card-full" id="um-blog-idea-generator-card" data-ideas-nonce="<?php echo esc_attr(wp_create_nonce('user_manager_blog_ideas')); ?>">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-lightbulb"></span>
-					<h2><?php esc_html_e('Blog Post Idea Generator', 'user-manager'); ?></h2>
+					<h2><?php esc_html_e('Post Idea Generator', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
 					<?php if ($um_has_chatgpt_key) : ?>

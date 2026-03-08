@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.34 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons retitles: Quick Search Bar → WP-Admin Quick Search Bar, Coupons for New Users → Coupon Automatically Created for New User, and Blog Post Idea Generator → Post Idea Generator.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated related add-on labels/messages to match the new naming.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Re-sorted Add-ons cards A–Z by the current card titles.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.33 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings > General Settings: moved coupon-related options out of User Experience into a new "Coupons" card.', 'user-manager'); ?></li>

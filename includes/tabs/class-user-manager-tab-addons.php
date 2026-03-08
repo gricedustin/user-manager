@@ -33,20 +33,20 @@ class User_Manager_Tab_Addons {
 			<input type="hidden" name="settings_section" value="addons" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single">
-				<?php User_Manager_Addon_API::render($settings); ?>
-				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings); ?>
 				<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
-				<?php User_Manager_Addon_Bulk_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
+				<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
+				<?php User_Manager_Addon_Bulk_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
-				<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
-				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
 				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
-				<?php User_Manager_Addon_Quick_Search::render($settings); ?>
+				<?php User_Manager_Addon_API::render($settings); ?>
+				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings); ?>
 				<?php User_Manager_Addon_Role_Switching::render(); ?>
 				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings); ?>
 				<?php User_Manager_Addon_WP_Admin_CSS::render($settings); ?>
+				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
+				<?php User_Manager_Addon_Quick_Search::render($settings); ?>
 
 				<div class="um-admin-card um-admin-card-full">
 					<div class="um-admin-card-body">
