@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.24
+ * Version: 2.2.25
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.25 - February 22, 2026
+ * - Settings tab layout changed to a single-column card layout.
+ * - Added a new Settings Filter panel at the top of Settings with area + keyword filters.
+ * - Settings filter now lets admins isolate specific settings by card title, labels, descriptions, and field values.
+ *
  * 2.2.24 - February 22, 2026
  * - Moved "Coupon Lookup by Email" out of Tools and into Reports as its own sub menu link.
  * - Reports sub-links now include: General Reports, User Activity, Admin Log, and Coupon Lookup by Email.

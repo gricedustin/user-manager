@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.25 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings tab layout changed to a single-column card layout.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new Settings Filter panel at the top of Settings with area + keyword filters.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Settings filter now lets admins isolate specific settings by card title, labels, descriptions, and field values.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.24 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved "Coupon Lookup by Email" out of Tools and into Reports as its own sub menu link.', 'user-manager'); ?></li>

@@ -63,13 +63,45 @@ if (!defined('ABSPATH')) {
 
 		$settings = User_Manager_Core::get_settings();
 		?>
+		<div class="um-admin-card um-admin-card-full" style="margin-top: 20px;">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-filter"></span>
+				<h2><?php esc_html_e('Settings Filter', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+					<div style="min-width:240px;">
+						<label for="um-settings-filter-card"><strong><?php esc_html_e('Filter by area', 'user-manager'); ?></strong></label>
+						<select id="um-settings-filter-card" class="regular-text">
+							<option value="all"><?php esc_html_e('All settings areas', 'user-manager'); ?></option>
+							<option value="user-login"><?php esc_html_e('User & Login', 'user-manager'); ?></option>
+							<option value="email-settings"><?php esc_html_e('Email Settings', 'user-manager'); ?></option>
+							<option value="activity-logging"><?php esc_html_e('Activity & Logging', 'user-manager'); ?></option>
+							<option value="user-experience"><?php esc_html_e('User Experience', 'user-manager'); ?></option>
+							<option value="user-import"><?php esc_html_e('User Creation & Import', 'user-manager'); ?></option>
+							<option value="api-keys"><?php esc_html_e('API Keys', 'user-manager'); ?></option>
+						</select>
+					</div>
+					<div style="min-width:280px; flex:1;">
+						<label for="um-settings-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-settings-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter settings by label, description, or value...', 'user-manager'); ?>" />
+					</div>
+					<div>
+						<button type="button" class="button" id="um-settings-filter-clear"><?php esc_html_e('Clear Filter', 'user-manager'); ?></button>
+					</div>
+				</div>
+				<p class="description" id="um-settings-filter-empty" style="display:none; margin-top: 10px;">
+					<?php esc_html_e('No settings match the current filter.', 'user-manager'); ?>
+				</p>
+			</div>
+		</div>
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 			<input type="hidden" name="action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="general" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
-			<div class="um-admin-grid um-admin-grid-2col">
+			<div class="um-admin-grid um-admin-grid-single">
 				<!-- User & Login -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-settings-filter-card" data-card="user-login" data-title="<?php echo esc_attr__('User & Login', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-admin-users"></span>
 						<h2><?php esc_html_e('User & Login', 'user-manager'); ?></h2>
@@ -100,7 +132,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- Email Settings -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-settings-filter-card" data-card="email-settings" data-title="<?php echo esc_attr__('Email Settings', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-email"></span>
 						<h2><?php esc_html_e('Email Settings', 'user-manager'); ?></h2>
@@ -137,7 +169,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- Activity & Logging -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-settings-filter-card" data-card="activity-logging" data-title="<?php echo esc_attr__('Activity & Logging', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-list-view"></span>
 						<h2><?php esc_html_e('Activity & Logging', 'user-manager'); ?></h2>
@@ -205,7 +237,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- User Experience -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-settings-filter-card" data-card="user-experience" data-title="<?php echo esc_attr__('User Experience', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-admin-appearance"></span>
 						<h2><?php esc_html_e('User Experience', 'user-manager'); ?></h2>
@@ -278,7 +310,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- User Creation & Import -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-settings-filter-card" data-card="user-import" data-title="<?php echo esc_attr__('User Creation & Import', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-upload"></span>
 						<h2><?php esc_html_e('User Creation & Import', 'user-manager'); ?></h2>
@@ -306,7 +338,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- API Keys -->
-				<div class="um-admin-card">
+				<div class="um-admin-card um-settings-filter-card" data-card="api-keys" data-title="<?php echo esc_attr__('API Keys', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-admin-network"></span>
 						<h2><?php esc_html_e('API Keys', 'user-manager'); ?></h2>
@@ -321,7 +353,7 @@ if (!defined('ABSPATH')) {
 				</div>
 
 				<!-- Save button -->
-				<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card um-admin-card-full um-settings-save-card">
 					<div class="um-admin-card-body">
 						<p style="margin:0;">
 							<?php submit_button(__('Save Settings', 'user-manager'), 'primary', 'submit', false); ?>
@@ -352,6 +384,68 @@ if (!defined('ABSPATH')) {
 			}
 			$('#um-role-change-alert-enabled').on('change', toggleRoleChangeAlertFields);
 			toggleRoleChangeAlertFields();
+
+			function normalizeFilterText(str) {
+				return (str || '').toString().toLowerCase().trim();
+			}
+
+			function settingFieldText($field) {
+				var text = [];
+				text.push($field.text());
+				$field.find('input, select, textarea').each(function() {
+					var $input = $(this);
+					text.push($input.val());
+					text.push($input.attr('placeholder'));
+					text.push($input.attr('name'));
+				});
+				return normalizeFilterText(text.join(' '));
+			}
+
+			function applySettingsFilter() {
+				var cardFilter = normalizeFilterText($('#um-settings-filter-card').val());
+				var keyword = normalizeFilterText($('#um-settings-filter-text').val());
+				var anyVisible = false;
+
+				$('.um-settings-filter-card').each(function() {
+					var $card = $(this);
+					var cardKey = normalizeFilterText($card.data('card'));
+					var cardTitle = normalizeFilterText($card.data('title'));
+					var cardMatches = (cardFilter === '' || cardFilter === 'all' || cardFilter === cardKey);
+					var hasKeywordMatch = false;
+
+					$card.find('.um-form-field').each(function() {
+						var $field = $(this);
+						var matched = (keyword === '' || settingFieldText($field).indexOf(keyword) !== -1);
+						$field.toggle(matched);
+						if (matched) {
+							hasKeywordMatch = true;
+						}
+					});
+
+					// If keyword only matches the card title, show all fields in that card.
+					if (keyword !== '' && !hasKeywordMatch && cardTitle.indexOf(keyword) !== -1) {
+						$card.find('.um-form-field').show();
+						hasKeywordMatch = true;
+					}
+
+					var showCard = cardMatches && (keyword === '' || hasKeywordMatch);
+					$card.toggle(showCard);
+					if (showCard) {
+						anyVisible = true;
+					}
+				});
+
+				$('#um-settings-filter-empty').toggle(!anyVisible);
+			}
+
+			$('#um-settings-filter-card').on('change', applySettingsFilter);
+			$('#um-settings-filter-text').on('input', applySettingsFilter);
+			$('#um-settings-filter-clear').on('click', function() {
+				$('#um-settings-filter-card').val('all');
+				$('#um-settings-filter-text').val('');
+				applySettingsFilter();
+			});
+			applySettingsFilter();
 		});
 		</script>
 		<?php
