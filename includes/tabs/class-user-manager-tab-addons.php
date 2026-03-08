@@ -49,8 +49,55 @@ class User_Manager_Tab_Addons {
 		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template(); ?>
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template(); ?>
 
+		<style>
+		.um-addon-collapsible .um-admin-card-header {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+		.um-addon-active-indicator {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			font-size: 11px;
+			font-weight: 600;
+			line-height: 1.4;
+			border: 1px solid #dcdcde;
+			background: #f6f7f7;
+			color: #50575e;
+		}
+		.um-addon-active-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: #8c8f94;
+			box-shadow: 0 0 0 2px rgba(140, 143, 148, 0.2);
+		}
+		.um-addon-collapsible.um-addon-active .um-addon-active-indicator {
+			background: #edfaef;
+			border-color: #7ad07f;
+			color: #137333;
+		}
+		.um-addon-collapsible.um-addon-active .um-addon-active-dot {
+			background: #2ea043;
+			box-shadow: 0 0 0 2px rgba(46, 160, 67, 0.25);
+		}
+		.um-addon-collapse-indicator {
+			margin-left: 8px;
+			font-weight: 700;
+			font-size: 18px;
+			line-height: 1;
+		}
+		</style>
+
 		<script>
 		jQuery(document).ready(function($) {
+			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
+			var addonInactiveText = '<?php echo esc_js(__('Inactive', 'user-manager')); ?>';
+
 			function isAddonCardActive($card) {
 				var selectorsRaw = ($card.attr('data-um-active-selectors') || '').trim();
 				if (selectorsRaw !== '') {
@@ -129,9 +176,19 @@ class User_Manager_Tab_Addons {
 				}
 			}
 
-			function refreshAddonCardAutoState($card, skipAnimation) {
+			function setAddonCardActiveState($card, isActive) {
+				var $header = $card.children('.um-admin-card-header').first();
+				var $activeIndicator = $header.find('.um-addon-active-indicator');
+				if (!$activeIndicator.length) {
+					return;
+				}
+				$card.toggleClass('um-addon-active', isActive);
+				$activeIndicator.find('.um-addon-active-label').text(isActive ? addonActiveText : addonInactiveText);
+			}
+
+			function refreshAddonCardAutoState($card) {
 				var isActive = isAddonCardActive($card);
-				setAddonCardCollapsed($card, !isActive, skipAnimation);
+				setAddonCardActiveState($card, isActive);
 			}
 
 			function initAddonCollapsibleCards() {
@@ -142,8 +199,11 @@ class User_Manager_Tab_Addons {
 						return;
 					}
 
+					if (!$header.find('.um-addon-active-indicator').length) {
+						$header.append('<span class="um-addon-active-indicator"><span class="um-addon-active-dot"></span><span class="um-addon-active-label"><?php echo esc_js(__('Inactive', 'user-manager')); ?></span></span>');
+					}
 					if (!$header.find('.um-addon-collapse-indicator').length) {
-						$header.append('<span class="um-addon-collapse-indicator" style="margin-left:auto;font-weight:700;font-size:18px;line-height:1;">−</span>');
+						$header.append('<span class="um-addon-collapse-indicator">+</span>');
 					}
 					$header.css('cursor', 'pointer');
 					$header.on('click', function(e) {
@@ -153,7 +213,9 @@ class User_Manager_Tab_Addons {
 						setAddonCardCollapsed($card, !$card.hasClass('um-addon-collapsed'));
 					});
 
-					refreshAddonCardAutoState($card, true);
+					// Keep all add-on cards collapsed by default.
+					setAddonCardCollapsed($card, true, true);
+					refreshAddonCardAutoState($card);
 				});
 			}
 

@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.16
+ * Version: 2.2.17
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.17 - February 22, 2026
+ * - Add-ons tab now keeps all add-on cards collapsed by default on page load, regardless of active state.
+ * - Added a clear active-state indicator in each add-on card header (status pill with dot + Active/Inactive label).
+ * - Active add-ons now remain visibly highlighted even while collapsed.
+ *
  * 2.2.16 - February 22, 2026
  * - Add-ons: moved Role Switching into the main alphabetical card list so it appears inline with the other add-ons.
  * - Role Switching add-on no longer renders an extra inner collapsible wrapper (removed collapse-inside-collapse UI).
