@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.27';
+	const VERSION = '2.2.28';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -7108,25 +7108,34 @@ final class User_Manager_Core {
 		$results = [];
 		$seen    = [];
 		foreach ($user_query->get_results() as $user) {
-			if (!($user instanceof WP_User)) {
+			if (!is_object($user)) {
 				continue;
 			}
-			$user_id = (int) $user->ID;
+
+			// WP_User_Query may return WP_User objects or lightweight row objects
+			// depending on the "fields" argument. Support both formats.
+			$user_id = isset($user->ID) ? (int) $user->ID : 0;
 			if ($user_id <= 0 || isset($seen[$user_id])) {
 				continue;
 			}
 			$seen[$user_id] = true;
 
-			$label = (string) $user->user_login;
-			if (!empty($user->user_email)) {
-				$label .= ' (' . $user->user_email . ')';
+			$user_login = isset($user->user_login) ? (string) $user->user_login : '';
+			$user_email = isset($user->user_email) ? (string) $user->user_email : '';
+			if ($user_login === '' && $user_email === '') {
+				continue;
+			}
+
+			$label = $user_login !== '' ? $user_login : $user_email;
+			if ($user_email !== '') {
+				$label .= ' (' . $user_email . ')';
 			}
 
 			$results[] = [
 				'id'    => $user_id,
 				'label' => $label,
-				'login' => (string) $user->user_login,
-				'email' => (string) $user->user_email,
+				'login' => $user_login,
+				'email' => $user_email,
 			];
 		}
 
