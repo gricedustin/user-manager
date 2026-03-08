@@ -32,6 +32,7 @@ class User_Manager_Tab_Addons {
 				<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
 				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
+				<?php User_Manager_Addon_Role_Switching::render(); ?>
 				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings); ?>
 				<?php User_Manager_Addon_WP_Admin_CSS::render($settings); ?>
 
@@ -45,7 +46,6 @@ class User_Manager_Tab_Addons {
 			</div>
 		</form>
 
-		<?php User_Manager_Addon_Role_Switching::render(); ?>
 		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template(); ?>
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template(); ?>
 

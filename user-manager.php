@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.15
+ * Version: 2.2.16
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.16 - February 22, 2026
+ * - Add-ons: moved Role Switching into the main alphabetical card list so it appears inline with the other add-ons.
+ * - Role Switching add-on no longer renders an extra inner collapsible wrapper (removed collapse-inside-collapse UI).
+ * - Role Switching settings now save through the shared Add-ons save flow while preserving Role Switching settings history logging.
+ *
  * 2.2.15 - February 22, 2026
  * - Login As user search: switched to a more reliable AJAX request path and added a clickable result list under the search field.
  * - Login As search now maps selections and typed values more robustly (case-insensitive username/email matching).

@@ -1671,6 +1671,44 @@ class User_Manager_Actions {
 				];
 				update_option('bulk_add_to_cart_settings', $bulk_settings);
 
+				// Role Switching settings.
+				$role_switch_settings    = get_option('view_website_by_role_settings', []);
+				$old_role_switch_enabled = !empty($role_switch_settings['enabled']);
+				$old_hidden_roles        = isset($role_switch_settings['hidden_roles']) && is_array($role_switch_settings['hidden_roles']) ? $role_switch_settings['hidden_roles'] : [];
+				$old_allow_reset         = !empty($role_switch_settings['allow_reset']);
+
+				$new_role_switch_enabled = isset($_POST['role_switching_enabled']) && $_POST['role_switching_enabled'] === '1';
+				$new_hidden_roles        = isset($_POST['hidden_roles']) ? array_map('sanitize_text_field', (array) wp_unslash($_POST['hidden_roles'])) : [];
+				$new_allow_reset         = isset($_POST['allow_reset']) && $_POST['allow_reset'] === '1';
+
+				update_option(
+					'view_website_by_role_settings',
+					[
+						'enabled'      => $new_role_switch_enabled,
+						'hidden_roles' => $new_hidden_roles,
+						'allow_reset'  => $new_allow_reset,
+					]
+				);
+
+				$role_switch_changes = [];
+				if ($old_role_switch_enabled !== $new_role_switch_enabled) {
+					$role_switch_changes[] = $new_role_switch_enabled ? 'Enabled Role Switching' : 'Disabled Role Switching';
+				}
+				$added_roles   = array_diff($new_hidden_roles, $old_hidden_roles);
+				$removed_roles = array_diff($old_hidden_roles, $new_hidden_roles);
+				if (!empty($added_roles)) {
+					$role_switch_changes[] = 'Hidden roles: ' . implode(', ', $added_roles);
+				}
+				if (!empty($removed_roles)) {
+					$role_switch_changes[] = 'Unhidden roles: ' . implode(', ', $removed_roles);
+				}
+				if ($old_allow_reset !== $new_allow_reset) {
+					$role_switch_changes[] = $new_allow_reset ? 'Enabled Reset Default Roles' : 'Disabled Reset Default Roles';
+				}
+				if (!empty($role_switch_changes)) {
+					User_Manager_Core::add_role_switch_history('Settings Update', implode(' | ', $role_switch_changes));
+				}
+
 				// Custom WP-Admin Notifications (indices may be 0,1,2 or 0,2 after a remove; we normalize to sequential)
 				$settings['custom_admin_notifications'] = [];
 				if (!empty($_POST['custom_admin_notification']) && is_array($_POST['custom_admin_notification'])) {
