@@ -70,18 +70,6 @@ if (!defined('ABSPATH')) {
 			</div>
 			<div class="um-admin-card-body">
 				<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-					<div style="min-width:240px;">
-						<label for="um-settings-filter-card"><strong><?php esc_html_e('Filter by area', 'user-manager'); ?></strong></label>
-						<select id="um-settings-filter-card" class="regular-text">
-							<option value="all"><?php esc_html_e('All settings areas', 'user-manager'); ?></option>
-							<option value="user-login"><?php esc_html_e('User & Login', 'user-manager'); ?></option>
-							<option value="email-settings"><?php esc_html_e('Email Settings', 'user-manager'); ?></option>
-							<option value="activity-logging"><?php esc_html_e('Activity & Logging', 'user-manager'); ?></option>
-							<option value="user-experience"><?php esc_html_e('User Experience', 'user-manager'); ?></option>
-							<option value="user-import"><?php esc_html_e('User Creation & Import', 'user-manager'); ?></option>
-							<option value="api-keys"><?php esc_html_e('API Keys', 'user-manager'); ?></option>
-						</select>
-					</div>
 					<div style="min-width:280px; flex:1;">
 						<label for="um-settings-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
 						<input type="text" id="um-settings-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter settings by label, description, or value...', 'user-manager'); ?>" />
@@ -424,9 +412,8 @@ if (!defined('ABSPATH')) {
 			}
 
 			function isSettingsFilterActive() {
-				var cardFilter = normalizeFilterText($('#um-settings-filter-card').val());
 				var keyword = normalizeFilterText($('#um-settings-filter-text').val());
-				return (cardFilter !== '' && cardFilter !== 'all') || keyword !== '';
+				return keyword !== '';
 			}
 
 			function setSettingsCardCollapsed($card, collapsed, skipAnimation) {
@@ -473,26 +460,28 @@ if (!defined('ABSPATH')) {
 			}
 
 			function applySettingsFilter() {
-				var cardFilter = normalizeFilterText($('#um-settings-filter-card').val());
 				var keyword = normalizeFilterText($('#um-settings-filter-text').val());
 				var filterActive = isSettingsFilterActive();
 				var anyVisible = false;
 
 				$('.um-settings-filter-card').each(function() {
 					var $card = $(this);
-					var cardKey = normalizeFilterText($card.data('card'));
 					var cardTitle = normalizeFilterText($card.data('title'));
-					var cardMatches = (cardFilter === '' || cardFilter === 'all' || cardFilter === cardKey);
 					var hasKeywordMatch = false;
 
-					$card.find('.um-form-field').each(function() {
-						var $field = $(this);
-						var matched = (keyword === '' || settingFieldText($field).indexOf(keyword) !== -1);
-						$field.toggle(matched);
-						if (matched) {
-							hasKeywordMatch = true;
-						}
-					});
+					if (keyword === '') {
+						$card.find('.um-form-field').show();
+						hasKeywordMatch = true;
+					} else {
+						$card.find('.um-form-field').each(function() {
+							var $field = $(this);
+							var matched = settingFieldText($field).indexOf(keyword) !== -1;
+							$field.toggle(matched);
+							if (matched) {
+								hasKeywordMatch = true;
+							}
+						});
+					}
 
 					// If keyword only matches the card title, show all fields in that card.
 					if (keyword !== '' && !hasKeywordMatch && cardTitle.indexOf(keyword) !== -1) {
@@ -500,7 +489,7 @@ if (!defined('ABSPATH')) {
 						hasKeywordMatch = true;
 					}
 
-					var showCard = cardMatches && (keyword === '' || hasKeywordMatch);
+					var showCard = (keyword === '' || hasKeywordMatch);
 					$card.toggle(showCard);
 					if (showCard) {
 						setSettingsCardCollapsed($card, !filterActive, true);
@@ -513,10 +502,8 @@ if (!defined('ABSPATH')) {
 				$('#um-settings-filter-empty').toggle(!anyVisible);
 			}
 
-			$('#um-settings-filter-card').on('change', applySettingsFilter);
 			$('#um-settings-filter-text').on('input', applySettingsFilter);
 			$('#um-settings-filter-clear').on('click', function() {
-				$('#um-settings-filter-card').val('all');
 				$('#um-settings-filter-text').val('');
 				applySettingsFilter();
 			});

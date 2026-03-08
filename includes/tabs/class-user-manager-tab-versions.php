@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.31 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings filter now uses keyword search only (removed the "Filter by area" dropdown).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Retained auto-expand behavior while searching so matching cards/fields open automatically.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clearing the keyword filter returns Settings cards to the default collapsed state.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.30 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Retitled Add-ons card names for clarity: Role Switching → User Role Switching, Custom WP-Admin Notifications → WP-Admin Notifications, Bulk Coupons → Coupon Bulk Creator, and ChatGPT Content Generator → Post Content Generator.', 'user-manager'); ?></li>
