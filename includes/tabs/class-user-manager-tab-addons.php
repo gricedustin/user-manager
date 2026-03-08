@@ -44,9 +44,9 @@ class User_Manager_Tab_Addons {
 				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings); ?>
 				<?php User_Manager_Addon_Role_Switching::render(); ?>
 				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings); ?>
+				<?php User_Manager_Addon_Quick_Search::render($settings); ?>
 				<?php User_Manager_Addon_WP_Admin_CSS::render($settings); ?>
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
-				<?php User_Manager_Addon_Quick_Search::render($settings); ?>
 
 				<div class="um-admin-card um-admin-card-full">
 					<div class="um-admin-card-body">

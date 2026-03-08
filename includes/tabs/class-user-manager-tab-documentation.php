@@ -183,7 +183,7 @@ class User_Manager_Tab_Documentation {
 							<div class="um-feature-item">
 								<span class="dashicons dashicons-search"></span>
 								<div class="um-feature-item-content">
-									<h4><?php esc_html_e('WP-Admin Quick Search Bar', 'user-manager'); ?></h4>
+									<h4><?php esc_html_e('WP-Admin Bar Quick Search', 'user-manager'); ?></h4>
 									<p><?php esc_html_e('An optional admin bar search icon that opens a dropdown of search fields for active post types, users, and terms, with smart single-result redirects into the right edit screens.', 'user-manager'); ?></p>
 								</div>
 							</div>

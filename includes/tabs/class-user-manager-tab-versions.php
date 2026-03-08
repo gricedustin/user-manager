@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.39 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled add-on card "WP-Admin Quick Search Bar" to "WP-Admin Bar Quick Search" (including activation label text).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Re-sorted Add-ons cards A–Z by the current displayed card titles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Docs feature label to match the new quick search add-on name.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.38 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('WP-Admin Bar Menu Items add-on: each custom menu now has a "Top Bar Side" option (Left or Right).', 'user-manager'); ?></li>
