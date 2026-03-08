@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.42
+ * Version: 2.2.43
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.43 - March 8, 2026
+ * - Add-ons: ensured Post Content Generator and Post Idea Generator migrated sections are always mounted and toggle reliably from their activation checkboxes.
+ * - Add-ons: Blog Post Importer and Post Idea Generator tool areas now show/hide live when toggles are changed, improving visibility and migration reliability from Tools.
+ *
  * 2.2.42 - March 8, 2026
  * - Refactor: split large Core activity-log/detail methods into a dedicated module trait file for cleaner organization.
  * - Refactor: split large Reports tracking numbers/notes render+export methods into a dedicated reports module trait file.
