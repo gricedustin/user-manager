@@ -120,8 +120,8 @@ class User_Manager_Tab_Documentation {
 							<div class="um-feature-item">
 								<span class="dashicons dashicons-admin-site-alt3"></span>
 								<div class="um-feature-item-content">
-									<h4><?php esc_html_e('Role Switching', 'user-manager'); ?></h4>
-									<p><?php esc_html_e('A dedicated Role Switching tab plus a front-end switcher bar let approved users preview the site as other roles, with permissions and history changes logged into the Admin Activity Log.', 'user-manager'); ?></p>
+									<h4><?php esc_html_e('User Role Switching', 'user-manager'); ?></h4>
+									<p><?php esc_html_e('The User Role Switching add-on plus a front-end switcher bar let approved users preview the site as other roles, with permissions and history changes logged into the Admin Activity Log.', 'user-manager'); ?></p>
 								</div>
 							</div>
 							<div class="um-feature-item">
@@ -134,7 +134,7 @@ class User_Manager_Tab_Documentation {
 							<div class="um-feature-item">
 								<span class="dashicons dashicons-tickets-alt"></span>
 								<div class="um-feature-item-content">
-									<h4><?php esc_html_e('Bulk Coupons', 'user-manager'); ?></h4>
+									<h4><?php esc_html_e('Coupon Bulk Creator', 'user-manager'); ?></h4>
 									<p><?php esc_html_e('Clone an existing WooCommerce coupon into many unique codes using either a fixed count or per-email mode, with support for amount and expiration overrides, custom code prefix/suffix, random-length codes, and full logging plus on-screen summaries.', 'user-manager'); ?></p>
 								</div>
 							</div>
@@ -251,7 +251,7 @@ class User_Manager_Tab_Documentation {
 							<li><strong><?php esc_html_e('Bulk Add to Cart', 'user-manager'); ?></strong> — <?php esc_html_e('Activation, redirect, CSV column mapping, identifier type.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('User Creation & Import', 'user-manager'); ?></strong> — <?php esc_html_e('Update existing users, SFTP/directory paths for CSV import.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('Checkout', 'user-manager'); ?></strong> — <?php esc_html_e('Ship To Pre-Defined Addresses and related checkout options.', 'user-manager'); ?></li>
-							<li><strong><?php esc_html_e('Custom WP-Admin Notifications', 'user-manager'); ?></strong> — <?php esc_html_e('Admin notices and dismissible messages in wp-admin.', 'user-manager'); ?></li>
+							<li><strong><?php esc_html_e('WP-Admin Notifications', 'user-manager'); ?></strong> — <?php esc_html_e('Admin notices and dismissible messages in wp-admin.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('WP-Admin Bar Menu Items', 'user-manager'); ?></strong> — <?php esc_html_e('Custom shortcut menus in the admin bar (label and links).', 'user-manager'); ?></li>
 						</ul>
 					</div>

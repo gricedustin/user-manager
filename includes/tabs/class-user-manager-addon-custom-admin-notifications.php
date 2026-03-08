@@ -18,7 +18,7 @@ class User_Manager_Addon_Custom_Admin_Notifications {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-custom-notifications">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-megaphone"></span>
-				<h2><?php esc_html_e('Custom WP-Admin Notifications', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('WP-Admin Notifications', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Add custom admin notices at the top of WP-Admin screens. Each notification can be limited to URLs that contain a specific string (e.g. shop_coupon for coupon edit screens), or shown on all admin screens if URL match is blank.', 'user-manager'); ?></p>

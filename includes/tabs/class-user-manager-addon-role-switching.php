@@ -19,13 +19,13 @@ class User_Manager_Addon_Role_Switching {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-role-switching" data-um-active-selectors="#um-role-switching-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-visibility"></span>
-				<h2><?php esc_html_e('Role Switching', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('User Role Switching', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<table class="form-table">
 					<tr>
 						<th scope="row">
-							<label for="um-role-switching-enabled"><?php esc_html_e('Activate Role Switching', 'user-manager'); ?></label>
+							<label for="um-role-switching-enabled"><?php esc_html_e('Activate User Role Switching', 'user-manager'); ?></label>
 						</th>
 						<td>
 							<label>

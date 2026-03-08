@@ -14,13 +14,13 @@ class User_Manager_Addon_API {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-api" data-um-active-selectors="#um-openai-content-generator-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-admin-generic"></span>
-				<h2><?php esc_html_e('ChatGPT Content Generator', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Post Content Generator', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" id="um-openai-content-generator-enabled" name="openai_content_generator_enabled" value="1" <?php checked(!empty($settings['openai_content_generator_enabled'])); ?> />
-						<?php esc_html_e('Activate ChatGPT Content Generator', 'user-manager'); ?>
+						<?php esc_html_e('Activate Post Content Generator', 'user-manager'); ?>
 					</label>
 				</div>
 
