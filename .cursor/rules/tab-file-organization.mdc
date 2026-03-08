@@ -15,3 +15,9 @@ When updating this plugin:
 3) For new add-ons:
    - Create a new add-on file instead of expanding an existing add-on file with unrelated features.
 
+4) Avoid extremely large files:
+   - Prefer smaller, focused files over monoliths.
+   - If a file approaches ~800 lines (or clearly has multiple responsibilities), split it into dedicated modules/classes/traits.
+   - Do not wait until a file becomes "very large" before refactoring; split incrementally as features are added.
+   - Keep orchestration files lean and move feature-specific logic into purpose-named files.
+
