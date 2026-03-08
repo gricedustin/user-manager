@@ -326,8 +326,32 @@ class User_Manager_Tab_Addons {
 			function toggleBulkCouponsFields() {
 				$('#um-bulk-coupons-fields').toggle($('#um-bulk-coupons-enabled').is(':checked'));
 			}
+			function toggleBulkAddToCartAddonFields() {
+				var enabled = $("input[name='bulk_add_to_cart_enabled']").is(':checked');
+				$('#um-bulk-add-to-cart-fields').toggle(enabled);
+				if (enabled) {
+					umToggleBulkMetaFieldRow();
+				}
+			}
+			function toggleNewUserCouponAddonFields() {
+				var enabled = $('#um-nuc-enabled').is(':checked');
+				$('#um-nuc-fields').toggle(enabled);
+				if (enabled) {
+					toggleNucEmailTemplateField();
+				}
+			}
+			function toggleCouponNotificationsAddonFields() {
+				$('#um-coupon-notifications-fields').toggle($('#um-coupon-notifications-enabled').is(':checked'));
+			}
+			function toggleCouponRemainderAddonFields() {
+				$('#um-coupon-remainder-fields').toggle($('#um-coupon-remainder-enabled').is(':checked'));
+			}
 			$('#um-bulk-coupons-enabled').on('change', toggleBulkCouponsFields);
 			toggleBulkCouponsFields();
+			toggleBulkAddToCartAddonFields();
+			toggleNewUserCouponAddonFields();
+			toggleCouponNotificationsAddonFields();
+			toggleCouponRemainderAddonFields();
 			$('.um-addon-action-submit').on('click', function() {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
 				$('#um-addons-form-action').val(targetAction);
@@ -392,6 +416,7 @@ class User_Manager_Tab_Addons {
 				refreshAddonCardAutoState($('#um-addon-card-my-account'));
 			});
 			$("input[name='bulk_add_to_cart_enabled']").on('change', function() {
+				toggleBulkAddToCartAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-bulk-add-to-cart'));
 			});
 			$('#um-bulk-coupons-enabled').on('change', function() {
@@ -431,12 +456,15 @@ class User_Manager_Tab_Addons {
 				refreshAddonCardAutoState($('#um-addon-card-quick-search'));
 			});
 			$('#um-nuc-enabled').on('change', function() {
+				toggleNewUserCouponAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupons-new-users'));
 			});
 			$('#um-coupon-notifications-enabled').on('change', function() {
+				toggleCouponNotificationsAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupon-notifications'));
 			});
 			$('#um-coupon-remainder-enabled').on('change', function() {
+				toggleCouponRemainderAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
 			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {

@@ -26,6 +26,7 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 						<?php esc_html_e('Enables the [bulk_add_to_cart] CSV upload form on the front-end and processes uploaded files to add multiple products to the WooCommerce cart.', 'user-manager'); ?>
 					</p>
 				</div>
+				<div id="um-bulk-add-to-cart-fields" style="<?php echo !empty($settings['bulk_add_to_cart_enabled']) ? '' : 'display:none;'; ?>">
 				<div class="um-form-field">
 					<label class="um-label-block"><?php esc_html_e('Shortcode usage', 'user-manager'); ?></label>
 					<input type="text" readonly class="regular-text code" value="[bulk_add_to_cart]" onclick="this.select();" />
@@ -92,6 +93,7 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 					<p class="description">
 						<?php esc_html_e('When enabled, extra WooCommerce notices will describe how the CSV was parsed and how each row was handled.', 'user-manager'); ?>
 					</p>
+				</div>
 				</div>
 			</div>
 		</div>

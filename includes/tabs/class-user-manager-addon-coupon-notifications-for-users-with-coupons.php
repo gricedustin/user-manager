@@ -18,14 +18,15 @@ class User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons {
 				<h2><?php esc_html_e('Coupon Notifications for Users with Coupons', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
-				<p class="description"><?php esc_html_e('Shows a dismissible banner on selected storefront pages listing every coupon tied to the logged-in user.', 'user-manager'); ?></p>
-
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="user_coupon_notifications_enabled" id="um-coupon-notifications-enabled" value="1" <?php checked($enabled); ?> />
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 				</div>
+
+				<div id="um-coupon-notifications-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
+					<p class="description"><?php esc_html_e('Shows a dismissible banner on selected storefront pages listing every coupon tied to the logged-in user.', 'user-manager'); ?></p>
 
 				<div class="um-settings-two-column">
 					<div class="um-settings-column">
@@ -131,6 +132,7 @@ class User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons {
 							<p class="description"><?php esc_html_e('Description text displayed in the shipping notice.', 'user-manager'); ?></p>
 						</div>
 					</div>
+				</div>
 				</div>
 			</div>
 		</div>

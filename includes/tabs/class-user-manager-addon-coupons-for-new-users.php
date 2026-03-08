@@ -27,6 +27,7 @@ class User_Manager_Addon_Coupons_For_New_Users {
 					<p class="description"><?php esc_html_e('Coupons are not bulk generated; each user is evaluated when they log in and visit a page you enabled below.', 'user-manager'); ?></p>
 				</div>
 
+				<div id="um-nuc-fields" style="<?php echo !empty($settings['nuc_enabled']) ? '' : 'display:none;'; ?>">
 				<div class="um-form-field">
 					<label for="nuc_when"><?php esc_html_e('When to Create', 'user-manager'); ?></label>
 					<select name="nuc_when" id="nuc_when" class="regular-text">
@@ -191,6 +192,7 @@ class User_Manager_Addon_Coupons_For_New_Users {
 						<?php esc_html_e('Enable Debug Mode (front-end overlay)', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Displays live troubleshooting data for administrators on the front-end so you can see why coupons were or were not created.', 'user-manager'); ?></p>
+				</div>
 				</div>
 			</div>
 		</div>

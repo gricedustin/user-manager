@@ -17,10 +17,6 @@ class User_Manager_Addon_Coupon_Remaining_Balances {
 				<h2><?php esc_html_e('Coupon Remaining Balances (Simple Gift Card & Store Credit Functionality)', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
-				<p class="description">
-					<?php esc_html_e('Behaves like a lightweight gift card/store credit: after checkout, unused funds from qualifying fixed cart coupons are rolled into a brand-new coupon tied to the shopper\'s email, with a single-use limit.', 'user-manager'); ?>
-				</p>
-
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="coupon_remainder_enabled" id="um-coupon-remainder-enabled" value="1" <?php checked(!empty($settings['coupon_remainder_enabled'])); ?> />
@@ -30,6 +26,11 @@ class User_Manager_Addon_Coupon_Remaining_Balances {
 						<?php esc_html_e('If parameters are met after checkout, the system creates a fresh fixed cart coupon covering the remaining balance, sets usage limit to 1, and restricts it to the shopper\'s email automatically.', 'user-manager'); ?>
 					</p>
 				</div>
+
+				<div id="um-coupon-remainder-fields" style="<?php echo !empty($settings['coupon_remainder_enabled']) ? '' : 'display:none;'; ?>">
+				<p class="description">
+					<?php esc_html_e('Behaves like a lightweight gift card/store credit: after checkout, unused funds from qualifying fixed cart coupons are rolled into a brand-new coupon tied to the shopper\'s email, with a single-use limit.', 'user-manager'); ?>
+				</p>
 
 				<div class="um-form-field">
 					<label for="coupon_remainder_min_amount"><?php esc_html_e('Only Create if Remaining Value is Above', 'user-manager'); ?></label>
@@ -128,6 +129,7 @@ promo"><?php echo esc_textarea($settings['coupon_remainder_source_contains'] ?? 
 				<p class="description">
 					<?php esc_html_e('This offers a gift card-like workflow using native WooCommerce coupons - no additional coupon types or heavy plugins required. Technically, you can use 1 shared coupon code that 500 people might use, limited to 1 per person each, and each person will still get their remaining balance.', 'user-manager'); ?>
 				</p>
+				</div>
 			</div>
 		</div>
 		<?php
