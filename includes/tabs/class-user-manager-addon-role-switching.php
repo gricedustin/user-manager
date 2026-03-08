@@ -13,7 +13,7 @@ class User_Manager_Addon_Role_Switching {
 		$role_switch_settings = get_option('view_website_by_role_settings', []);
 		$role_switch_enabled  = !empty($role_switch_settings['enabled']);
 		?>
-		<div class="um-admin-grid" style="margin-top:18px;">
+		<div class="um-admin-grid um-admin-grid-single" style="margin-top:18px;">
 			<div class="um-admin-card um-admin-card-full um-addon-collapsible" id="um-addon-card-role-switching" data-um-active-selectors="#um-role-switching-enabled">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-visibility"></span>

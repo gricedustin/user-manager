@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.13
+ * Version: 2.2.14
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.14 - February 22, 2026
+ * - Add-ons tab now explicitly uses the single-column grid class to prevent multi-column layouts on wide screens.
+ * - Role Switching add-on wrapper now also uses the single-column grid class for consistent one-column rendering.
+ *
  * 2.2.13 - February 22, 2026
  * - Add-ons tab layout updated to a single-column view.
  * - Add-ons cards reordered alphabetically (A–Z) for easier scanning.
