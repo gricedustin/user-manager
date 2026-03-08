@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.13 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tab layout updated to a single-column view.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons cards reordered alphabetically (A–Z) for easier scanning.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.12 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a Cursor AI rule that enforces file organization: one file per top-level tab, and one dedicated file per add-on in the Add-ons tab.', 'user-manager'); ?></li>

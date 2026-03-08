@@ -26,14 +26,14 @@ class User_Manager_Tab_Addons {
 			<input type="hidden" name="action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="addons" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
-			<div class="um-admin-grid um-admin-grid-2col">
-				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
+			<div class="um-admin-grid">
+				<?php User_Manager_Addon_API::render($settings); ?>
 				<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
 				<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
+				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
 				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings); ?>
 				<?php User_Manager_Addon_WP_Admin_CSS::render($settings); ?>
-				<?php User_Manager_Addon_API::render($settings); ?>
 
 				<div class="um-admin-card um-admin-card-full">
 					<div class="um-admin-card-body">
