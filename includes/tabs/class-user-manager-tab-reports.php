@@ -7420,9 +7420,22 @@ class User_Manager_Tab_Reports {
 		$comments_table = $wpdb->comments;
 		$posts_table    = $wpdb->posts;
 
+		$total_sql = $wpdb->prepare(
+			"SELECT COUNT(*)
+			 FROM {$comments_table} c
+			 INNER JOIN {$posts_table} p ON c.comment_post_ID = p.ID
+			WHERE c.comment_type = 'order_note'
+			  AND c.comment_approved = 1
+			  AND p.post_type = 'shop_order'
+			  AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold', 'wc-pending', 'wc-refunded')
+			  AND c.comment_content LIKE %s",
+			'%has been shipped%'
+		);
+		$total_found = (int) $wpdb->get_var($total_sql);
+
 		// Find order notes that contain "has been shipped" and belong to orders, newest first.
 		$sql = $wpdb->prepare(
-			"SELECT SQL_CALC_FOUND_ROWS c.comment_ID, c.comment_post_ID, c.comment_content, c.comment_date
+			"SELECT c.comment_ID, c.comment_post_ID, c.comment_content, c.comment_date
 			 FROM {$comments_table} c
 			 INNER JOIN {$posts_table} p ON c.comment_post_ID = p.ID
 			WHERE c.comment_type = 'order_note'
@@ -7438,7 +7451,6 @@ class User_Manager_Tab_Reports {
 		);
 
 		$rows        = $wpdb->get_results($sql);
-		$total_found = (int) $wpdb->get_var('SELECT FOUND_ROWS()');
 		$total_pages = max(1, (int) ceil($total_found / $per_page));
 
 		$current_url = add_query_arg('report', 'orders-tracking-notes', User_Manager_Core::get_page_url(User_Manager_Core::TAB_REPORTS));

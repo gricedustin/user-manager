@@ -489,7 +489,7 @@ class User_Manager_Tab_Addons {
 					var $block = $(this);
 					var idx = i;
 					$block.find('.um-admin-bar-menu-number').text('<?php echo esc_js(__('Menu', 'user-manager')); ?> ' + (idx + 1));
-					$block.find('input, textarea').each(function() {
+					$block.find('input, textarea, select').each(function() {
 						var name = $(this).attr('name');
 						if (name && name.indexOf('admin_bar_menu_item[') === 0) {
 							$(this).attr('name', name.replace(/admin_bar_menu_item\[\d+\]/, 'admin_bar_menu_item[' + idx + ']'));
@@ -501,7 +501,7 @@ class User_Manager_Tab_Addons {
 			$('#um-custom-admin-notifications-list').on('input change', 'input, textarea', function() {
 				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
 			});
-			$('#um-admin-bar-menu-list').on('input change', 'input, textarea', function() {
+			$('#um-admin-bar-menu-list').on('input change', 'input, textarea, select', function() {
 				refreshAddonCardAutoState($('#um-addon-card-admin-bar-menu'));
 			});
 			$('#um-wp-admin-css-all, #um-wp-admin-css-users-css').on('input change', function() {

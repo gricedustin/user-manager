@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.40 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Add-ons reindexing for WP-Admin Bar Menu Items so all field types (including the new side selector) keep correct names after removing rows.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('User Role Switching add-on: replaced full get_users() load with paginated WP_User_Query output in the "Users with Role Switching Access" table for better performance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reports: replaced SQL_CALC_FOUND_ROWS/FOUND_ROWS() in Orders Tracking Notes with a separate COUNT(*) query for better compatibility and scaling.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.39 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Retitled add-on card "WP-Admin Quick Search Bar" to "WP-Admin Bar Quick Search" (including activation label text).', 'user-manager'); ?></li>

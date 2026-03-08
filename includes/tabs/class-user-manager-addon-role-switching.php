@@ -67,6 +67,21 @@ class User_Manager_Addon_Role_Switching {
 
 				<hr style="margin:20px 0;" />
 				<h3 style="margin:0 0 12px;"><?php esc_html_e('Users with Role Switching Access', 'user-manager'); ?></h3>
+				<?php
+				$users_per_page  = 25;
+				$users_page      = isset($_GET['um_role_users_page']) ? max(1, absint($_GET['um_role_users_page'])) : 1;
+				$users_query     = new WP_User_Query([
+					'meta_key'     => 'view_website_by_role_permissions',
+					'meta_compare' => 'EXISTS',
+					'number'       => $users_per_page,
+					'paged'        => $users_page,
+					'orderby'      => 'login',
+					'order'        => 'ASC',
+				]);
+				$users            = $users_query->get_results();
+				$users_total      = (int) $users_query->get_total();
+				$users_total_page = max(1, (int) ceil($users_total / max(1, $users_per_page)));
+				?>
 				<table class="wp-list-table widefat fixed striped">
 					<thead>
 						<tr>
@@ -80,7 +95,6 @@ class User_Manager_Addon_Role_Switching {
 					</thead>
 					<tbody>
 						<?php
-						$users     = get_users();
 						$has_users = false;
 						foreach ($users as $user) {
 							$user_meta = get_user_meta($user->ID, 'view_website_by_role_permissions', true);
@@ -115,6 +129,39 @@ class User_Manager_Addon_Role_Switching {
 						<?php endif; ?>
 					</tbody>
 				</table>
+				<?php if ($users_total_page > 1) : ?>
+					<?php
+					$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
+					$prev_url = add_query_arg('um_role_users_page', max(1, $users_page - 1), $base_url);
+					$next_url = add_query_arg('um_role_users_page', min($users_total_page, $users_page + 1), $base_url);
+					?>
+					<div class="tablenav" style="margin-top:10px;">
+						<div class="tablenav-pages">
+							<span class="displaying-num">
+								<?php
+								echo esc_html(
+									sprintf(
+										/* translators: 1: current page, 2: total pages */
+										__('Page %1$d of %2$d', 'user-manager'),
+										$users_page,
+										$users_total_page
+									)
+								);
+								?>
+							</span>
+							<?php if ($users_page > 1) : ?>
+								<a class="button" href="<?php echo esc_url($prev_url); ?>#um-addon-card-role-switching"><?php esc_html_e('Previous', 'user-manager'); ?></a>
+							<?php else : ?>
+								<span class="button disabled"><?php esc_html_e('Previous', 'user-manager'); ?></span>
+							<?php endif; ?>
+							<?php if ($users_page < $users_total_page) : ?>
+								<a class="button" href="<?php echo esc_url($next_url); ?>#um-addon-card-role-switching"><?php esc_html_e('Next', 'user-manager'); ?></a>
+							<?php else : ?>
+								<span class="button disabled"><?php esc_html_e('Next', 'user-manager'); ?></span>
+							<?php endif; ?>
+						</div>
+					</div>
+				<?php endif; ?>
 
 				<hr style="margin:20px 0;" />
 				<h3 style="margin:0 0 12px;"><?php esc_html_e('Users Who Have Changed Their Role', 'user-manager'); ?></h3>
