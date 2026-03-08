@@ -9,7 +9,12 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Tab_Tools {
 
-	public static function render(bool $show_utility_cards = true, bool $show_blog_importer_card = true, bool $show_blog_idea_generator_card = true): void {
+	public static function render(
+		bool $show_utility_cards = true,
+		bool $show_blog_importer_card = true,
+		bool $show_blog_idea_generator_card = true,
+		bool $wrap_blog_idea_card = true
+	): void {
 		$blog_categories = [];
 		$um_blog_spread_first = current_time('Y-m-d');
 		$um_blog_spread_last  = current_time('Y-m-d');
@@ -556,13 +561,18 @@ class User_Manager_Tab_Tools {
 			$um_idea_posts = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'future'], 'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 500, 'no_found_rows' => true]);
 			$um_idea_titles = array_map('get_the_title', $um_idea_posts);
 			$um_idea_prompt = __('Here are all of our blog post titles, what are some other topics and/or headlines you might recommend?', 'user-manager') . "\n\n" . implode("\n", $um_idea_titles);
+			$um_idea_nonce  = wp_create_nonce('user_manager_blog_ideas');
 			?>
-			<div class="um-admin-card um-admin-card-full" id="um-blog-idea-generator-card" data-ideas-nonce="<?php echo esc_attr(wp_create_nonce('user_manager_blog_ideas')); ?>">
+			<?php if ($wrap_blog_idea_card) : ?>
+			<div class="um-admin-card um-admin-card-full" id="um-blog-idea-generator-card" data-ideas-nonce="<?php echo esc_attr($um_idea_nonce); ?>">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-lightbulb"></span>
 					<h2><?php esc_html_e('Post Idea Generator', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+			<?php else : ?>
+			<div id="um-blog-idea-generator-card" data-ideas-nonce="<?php echo esc_attr($um_idea_nonce); ?>">
+			<?php endif; ?>
 					<?php if ($um_has_chatgpt_key) : ?>
 						<p style="margin-top: 0;">
 							<label for="um-blog-idea-topic-focus" style="display:block; font-weight: 600; margin-bottom: 6px;"><?php esc_html_e('Optional topic focus', 'user-manager'); ?></label>
@@ -577,8 +587,12 @@ class User_Manager_Tab_Tools {
 					<label for="um-blog-idea-prompt" style="display:block; font-weight: 600; margin-bottom: 6px; margin-top: 16px;"><?php esc_html_e('AI Prompt Support', 'user-manager'); ?></label>
 					<textarea id="um-blog-idea-prompt" class="large-text code" rows="12" readonly style="width: 100%; box-sizing: border-box; cursor: text;" onclick="this.select();"><?php echo esc_textarea($um_idea_prompt); ?></textarea>
 					<p class="description"><?php esc_html_e('Copy this prompt to use with an AI assistant. It includes all your blog post titles (newest to oldest) so the AI can suggest related topics or headlines.', 'user-manager'); ?></p>
+			<?php if ($wrap_blog_idea_card) : ?>
 				</div>
 			</div>
+			<?php else : ?>
+			</div>
+			<?php endif; ?>
 			<?php if ($um_has_chatgpt_key) : ?>
 			<script>
 			(function(){
