@@ -1,0 +1,17 @@
+---
+description: Keep tabs and add-ons split into dedicated files
+alwaysApply: true
+---
+
+When updating this plugin:
+
+1) Every top-level User Manager tab must have its own dedicated tab file.
+   - Do not merge multiple top-level tabs into one renderer file.
+
+2) The Add-ons tab is a special case:
+   - Each add-on must live in its own dedicated file/class.
+   - Keep `class-user-manager-tab-addons.php` as a lightweight orchestrator that composes add-on files.
+
+3) For new add-ons:
+   - Create a new add-on file instead of expanding an existing add-on file with unrelated features.
+

@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.12 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a Cursor AI rule that enforces file organization: one file per top-level tab, and one dedicated file per add-on in the Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Refactored Add-ons rendering so each add-on card now lives in its own file/class, while class-user-manager-tab-addons.php now acts as the orchestrator.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preserved Add-ons behavior (collapsible cards, dynamic templates, and toggle logic) while splitting implementation across dedicated files.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.11 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved Role Switching out of its top-level tab and into the Add-ons area.', 'user-manager'); ?></li>

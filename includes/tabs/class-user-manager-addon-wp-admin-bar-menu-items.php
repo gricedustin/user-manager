@@ -1,0 +1,80 @@
+<?php
+/**
+ * Add-on card: WP-Admin Bar Menu Items.
+ */
+
+if (!defined('ABSPATH')) {
+	exit;
+}
+
+class User_Manager_Addon_WP_Admin_Bar_Menu_Items {
+
+	public static function render(array $settings): void {
+		$admin_bar_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
+		if (empty($admin_bar_items)) {
+			$admin_bar_items = [['title' => '', 'icon' => '', 'shortcuts' => '']];
+		}
+		?>
+		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-admin-bar-menu">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-menu-alt"></span>
+				<h2><?php esc_html_e('WP-Admin Bar Menu Items', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Add custom shortcut menus to the WordPress admin bar (visible on both front-end and back-end). Each item becomes a dropdown; add links line by line as "Label|URL" or use "Group Title|divider" to create a section header.', 'user-manager'); ?></p>
+				<div id="um-admin-bar-menu-list">
+					<?php foreach ($admin_bar_items as $idx => $item) : ?>
+						<div class="um-admin-bar-menu-block" style="margin-bottom: 24px; padding: 16px; border: 1px solid #c3c4c7; border-radius: 4px; background: #f6f7f7;">
+							<h3 class="um-settings-subsection um-admin-bar-menu-number" style="margin-top: 0;"><?php echo esc_html(sprintf(__('Menu %d', 'user-manager'), $idx + 1)); ?></h3>
+							<div class="um-form-field">
+								<label><?php esc_html_e('Title of shortcuts menu item', 'user-manager'); ?></label>
+								<input type="text" name="admin_bar_menu_item[<?php echo (int) $idx; ?>][title]" class="large-text" value="<?php echo esc_attr($item['title'] ?? ''); ?>" placeholder="<?php esc_attr_e('e.g. Admin Menu', 'user-manager'); ?>" />
+							</div>
+							<div class="um-form-field">
+								<label><?php esc_html_e('Icon override', 'user-manager'); ?></label>
+								<input type="text" name="admin_bar_menu_item[<?php echo (int) $idx; ?>][icon]" class="regular-text" value="<?php echo esc_attr($item['icon'] ?? ''); ?>" placeholder="dashicons-admin-links" />
+								<p class="description"><?php esc_html_e('Dashicons class (e.g. dashicons-admin-links). See', 'user-manager'); ?> <a href="https://developer.wordpress.org/resource/dashicons/" target="_blank" rel="noopener">developer.wordpress.org/resource/dashicons</a></p>
+							</div>
+							<div class="um-form-field">
+								<label><?php esc_html_e('Shortcuts', 'user-manager'); ?></label>
+								<textarea name="admin_bar_menu_item[<?php echo (int) $idx; ?>][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="Coupon Manager|https://example.com/wp-admin/edit.php?post_type=shop_coupon"><?php echo esc_textarea($item['shortcuts'] ?? ''); ?></textarea>
+								<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. All link titles must be unique.', 'user-manager'); ?></p>
+							</div>
+							<button type="button" class="button um-remove-admin-bar-menu"><?php esc_html_e('Remove this menu', 'user-manager'); ?></button>
+						</div>
+					<?php endforeach; ?>
+				</div>
+				<p>
+					<button type="button" class="button" id="um-add-admin-bar-menu"><?php esc_html_e('Add menu', 'user-manager'); ?></button>
+				</p>
+			</div>
+		</div>
+		<?php
+	}
+
+	public static function render_template(): void {
+		?>
+		<script type="text/template" id="um-admin-bar-menu-template">
+			<div class="um-admin-bar-menu-block" style="margin-bottom: 24px; padding: 16px; border: 1px solid #c3c4c7; border-radius: 4px; background: #f6f7f7;">
+				<h3 class="um-settings-subsection um-admin-bar-menu-number" style="margin-top: 0;"><?php esc_html_e('New menu', 'user-manager'); ?></h3>
+				<div class="um-form-field">
+					<label><?php esc_html_e('Title of shortcuts menu item', 'user-manager'); ?></label>
+					<input type="text" name="admin_bar_menu_item[__INDEX__][title]" class="large-text" value="" placeholder="<?php esc_attr_e('e.g. Admin Menu', 'user-manager'); ?>" />
+				</div>
+				<div class="um-form-field">
+					<label><?php esc_html_e('Icon override', 'user-manager'); ?></label>
+					<input type="text" name="admin_bar_menu_item[__INDEX__][icon]" class="regular-text" value="" placeholder="dashicons-admin-links" />
+					<p class="description"><?php esc_html_e('Dashicons class (e.g. dashicons-admin-links). See', 'user-manager'); ?> <a href="https://developer.wordpress.org/resource/dashicons/" target="_blank" rel="noopener">developer.wordpress.org/resource/dashicons</a></p>
+				</div>
+				<div class="um-form-field">
+					<label><?php esc_html_e('Shortcuts', 'user-manager'); ?></label>
+					<textarea name="admin_bar_menu_item[__INDEX__][shortcuts]" rows="8" class="large-text" style="width:100%;" placeholder="Coupon Manager|https://example.com/wp-admin/edit.php?post_type=shop_coupon"></textarea>
+					<p class="description"><?php esc_html_e('One per line: Link Title|URL. Use "Group Title|divider" for a section header. All link titles must be unique.', 'user-manager'); ?></p>
+				</div>
+				<button type="button" class="button um-remove-admin-bar-menu"><?php esc_html_e('Remove this menu', 'user-manager'); ?></button>
+			</div>
+		</script>
+		<?php
+	}
+}
+
