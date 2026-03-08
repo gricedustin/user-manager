@@ -41,7 +41,7 @@ class User_Manager_Addon_API {
 					<label><input type="checkbox" id="um-openai-page-meta-box" name="openai_page_meta_box" value="1" <?php checked(!empty($settings['openai_page_meta_box'])); ?><?php echo $form_attr; ?> /> <?php esc_html_e('Enable Page & Post Meta Box for inserting ChatGPT generated content into pages & posts', 'user-manager'); ?></label>
 					<p class="description"><?php esc_html_e('When enabled, page edit screens show a meta box to generate content via ChatGPT and insert it at the bottom of the page (block format).', 'user-manager'); ?></p>
 				</div>
-				<?php User_Manager_Tab_Tools::render(false, true, false); ?>
+				<?php User_Manager_Tab_Tools::render(false, true, false, true, false, false); ?>
 				</div>
 			</div>
 		</div>

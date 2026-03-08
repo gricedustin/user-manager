@@ -13,7 +13,9 @@ class User_Manager_Tab_Tools {
 		bool $show_utility_cards = true,
 		bool $show_blog_importer_card = true,
 		bool $show_blog_idea_generator_card = true,
-		bool $wrap_blog_idea_card = true
+		bool $wrap_blog_idea_card = true,
+		bool $wrap_blog_importer_card = true,
+		bool $wrap_grid = true
 	): void {
 		$blog_categories = [];
 		$um_blog_spread_first = current_time('Y-m-d');
@@ -27,7 +29,9 @@ class User_Manager_Tab_Tools {
 			$um_has_chatgpt_key = !empty(trim((string) ($um_settings['openai_api_key'] ?? '')));
 		}
 		?>
+		<?php if ($wrap_grid) : ?>
 		<div class="um-admin-grid um-admin-grid-single">
+		<?php endif; ?>
 			<?php if ($show_utility_cards) : ?>
 			<div class="um-admin-card">
 				<div class="um-admin-card-header">
@@ -98,12 +102,16 @@ class User_Manager_Tab_Tools {
 
 			<?php endif; ?>
 			<?php if ($show_blog_importer_card) : ?>
+			<?php if ($wrap_blog_importer_card) : ?>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-edit-page"></span>
 					<h2><?php esc_html_e('Blog Post Importer', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+			<?php else : ?>
+			<div id="um-blog-importer-card">
+			<?php endif; ?>
 					<p><?php esc_html_e('Create multiple blog posts at once. Add one or more posts below; optional settings when saving can apply a random featured image and spread post dates evenly between a first and last date.', 'user-manager'); ?></p>
 					<?php
 					$um_default_editor_tinymce = function () { return 'tinymce'; };
@@ -551,8 +559,12 @@ class User_Manager_Tab_Tools {
 					})();
 					</script>
 					<?php endif; ?>
+			<?php if ($wrap_blog_importer_card) : ?>
 				</div>
 			</div>
+			<?php else : ?>
+			</div>
+			<?php endif; ?>
 
 			<?php endif; ?>
 
@@ -687,7 +699,9 @@ class User_Manager_Tab_Tools {
 			</script>
 			<?php endif; ?>
 			<?php endif; ?>
+		<?php if ($wrap_grid) : ?>
 		</div>
+		<?php endif; ?>
 		<?php
 	}
 

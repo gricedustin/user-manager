@@ -28,7 +28,7 @@ class User_Manager_Addon_Blog_Post_Idea_Generator {
 					<p class="description" style="margin-top:0;">
 						<?php esc_html_e('Enable or disable Post Idea Generator tools in Add-ons.', 'user-manager'); ?>
 					</p>
-					<?php User_Manager_Tab_Tools::render(false, false, true, false); ?>
+					<?php User_Manager_Tab_Tools::render(false, false, true, false, true, false); ?>
 				</div>
 			</div>
 		</div>
