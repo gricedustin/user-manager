@@ -58,8 +58,11 @@ class User_Manager_Tab_Addons {
 			</div>
 		</form>
 
-		<div id="um-openai-blog-tools-area" style="<?php echo empty($settings['openai_content_generator_enabled']) ? 'display:none;' : ''; ?>">
+		<div id="um-openai-blog-tools-area" class="um-addon-linked-panel" data-um-panel-for="um-addon-card-api" style="display:none;">
 			<?php User_Manager_Tab_Tools::render(false, true, false); ?>
+		</div>
+		<div id="um-openai-blog-idea-generator-area" class="um-addon-linked-panel" data-um-panel-for="um-addon-card-blog-post-idea-generator" style="display:none;">
+			<?php User_Manager_Tab_Tools::render(false, false, true); ?>
 		</div>
 
 		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template(); ?>
@@ -148,6 +151,9 @@ class User_Manager_Tab_Addons {
 		.um-settings-two-column label {
 			display: inline-block;
 			margin-bottom: 6px;
+		}
+		.um-addon-linked-panel {
+			margin-top: 12px;
 		}
 		@media (max-width: 600px) {
 			.um-checkbox-grid {
@@ -254,6 +260,26 @@ class User_Manager_Tab_Addons {
 				setAddonCardActiveState($card, isActive);
 			}
 
+			function syncLinkedAddonPanel($card) {
+				var cardId = $card.attr('id') || '';
+				if (!cardId) {
+					return;
+				}
+				var $panel = $('.um-addon-linked-panel[data-um-panel-for="' + cardId + '"]');
+				if (!$panel.length) {
+					return;
+				}
+
+				var shouldShow = false;
+				if (cardId === 'um-addon-card-api') {
+					shouldShow = $('#um-openai-content-generator-enabled').is(':checked');
+				} else if (cardId === 'um-addon-card-blog-post-idea-generator') {
+					shouldShow = $('#um-openai-blog-post-idea-generator-enabled').is(':checked');
+				}
+
+				$panel.toggle(shouldShow);
+			}
+
 			function initAddonCollapsibleCards() {
 				$('.um-addon-collapsible').each(function() {
 					var $card = $(this);
@@ -279,6 +305,7 @@ class User_Manager_Tab_Addons {
 					// Keep all add-on cards collapsed by default.
 					setAddonCardCollapsed($card, true, true);
 					refreshAddonCardAutoState($card);
+					syncLinkedAddonPanel($card);
 				});
 			}
 
@@ -404,11 +431,10 @@ class User_Manager_Tab_Addons {
 			function toggleOpenAiAddonFields() {
 				if ($('#um-openai-content-generator-enabled').is(':checked')) {
 					$('#um-openai-content-generator-fields').show();
-					$('#um-openai-blog-tools-area').show();
 				} else {
 					$('#um-openai-content-generator-fields').hide();
-					$('#um-openai-blog-tools-area').hide();
 				}
+				syncLinkedAddonPanel($('#um-addon-card-api'));
 			}
 			$('#um-openai-content-generator-enabled').on('change', function() {
 				toggleOpenAiAddonFields();
@@ -417,10 +443,15 @@ class User_Manager_Tab_Addons {
 			$('#um-openai-page-meta-box').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-api'));
 			});
+			function toggleOpenAiIdeaAddonFields() {
+				syncLinkedAddonPanel($('#um-addon-card-blog-post-idea-generator'));
+			}
 			$('#um-openai-blog-post-idea-generator-enabled').on('change', function() {
+				toggleOpenAiIdeaAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-blog-post-idea-generator'));
 			});
 			toggleOpenAiAddonFields();
+			toggleOpenAiIdeaAddonFields();
 			$('#um-role-switching-enabled').on('change', function() {
 				toggleRoleSwitchingFields();
 				refreshAddonCardAutoState($('#um-addon-card-role-switching'));
