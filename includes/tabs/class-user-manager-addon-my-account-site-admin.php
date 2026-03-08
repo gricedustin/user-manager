@@ -10,13 +10,28 @@ if (!defined('ABSPATH')) {
 class User_Manager_Addon_My_Account_Site_Admin {
 
 	public static function render(array $settings): void {
+		$is_enabled = array_key_exists('my_account_site_admin_enabled', $settings)
+			? !empty($settings['my_account_site_admin_enabled'])
+			: (
+				!empty($settings['my_account_admin_order_viewer_enabled'])
+				|| !empty($settings['my_account_admin_product_viewer_enabled'])
+				|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
+				|| !empty($settings['my_account_admin_user_viewer_enabled'])
+			);
 		?>
-		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-my-account" data-um-active-selectors="#um-my-account-admin-order-viewer-enabled,#um-my-account-admin-product-viewer-enabled,#um-my-account-admin-coupon-viewer-enabled,#um-my-account-admin-user-viewer-enabled">
+		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-my-account" data-um-active-selectors="#um-my-account-site-admin-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-admin-site"></span>
 				<h2><?php esc_html_e('My Account Site Admin', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
+				<div class="um-form-field">
+					<label>
+						<input type="checkbox" name="my_account_site_admin_enabled" id="um-my-account-site-admin-enabled" value="1" <?php checked($is_enabled); ?> />
+						<?php esc_html_e('Activate My Account Site Admin', 'user-manager'); ?>
+					</label>
+				</div>
+				<div id="um-my-account-site-admin-fields" style="<?php echo $is_enabled ? '' : 'display:none;'; ?>">
 				<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Add admin-style viewer pages inside WooCommerce My Account for selected users. Enter comma-separated usernames (user_login values) allowed to access each area.', 'user-manager'); ?></p>
 
 				<div class="um-form-field">
@@ -97,6 +112,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<input type="checkbox" name="my_account_admin_user_viewer_show_meta" id="um-my-account-admin-user-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_user_viewer_show_meta'] ?? false); ?> />
 						<?php esc_html_e('Show Meta Data area for User details', 'user-manager'); ?>
 					</label>
+				</div>
 				</div>
 			</div>
 		</div>

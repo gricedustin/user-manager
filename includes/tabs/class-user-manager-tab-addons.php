@@ -353,6 +353,11 @@ class User_Manager_Tab_Addons {
 			}
 
 			function toggleMyAccountAdminViewerFields() {
+				var addonEnabled = $('#um-my-account-site-admin-enabled').is(':checked');
+				$('#um-my-account-site-admin-fields').toggle(addonEnabled);
+				if (!addonEnabled) {
+					return;
+				}
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-viewer-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-approver-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-default-pending-field');
@@ -365,9 +370,21 @@ class User_Manager_Tab_Addons {
 				toggleMyAccountAdminViewerField('#um-my-account-admin-user-viewer-enabled', '#um-my-account-admin-user-meta-field');
 			}
 
-			$('#um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
+			function toggleCustomAdminNotificationsFields() {
+				$('#um-custom-admin-notifications-fields').toggle($('#um-custom-admin-notifications-enabled').is(':checked'));
+			}
+
+			function toggleAdminBarMenuItemsFields() {
+				$('#um-admin-bar-menu-items-fields').toggle($('#um-admin-bar-menu-items-enabled').is(':checked'));
+			}
+
+			function toggleWpAdminCssFields() {
+				$('#um-wp-admin-css-fields').toggle($('#um-wp-admin-css-enabled').is(':checked'));
+			}
+
+			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
 			toggleMyAccountAdminViewerFields();
-			$('#um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', function() {
+			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-my-account'));
 			});
 			$("input[name='bulk_add_to_cart_enabled']").on('change', function() {
@@ -414,6 +431,21 @@ class User_Manager_Tab_Addons {
 			$('#um-coupon-remainder-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
 			});
+			$('#um-custom-admin-notifications-enabled').on('change', function() {
+				toggleCustomAdminNotificationsFields();
+				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
+			});
+			$('#um-admin-bar-menu-items-enabled').on('change', function() {
+				toggleAdminBarMenuItemsFields();
+				refreshAddonCardAutoState($('#um-addon-card-admin-bar-menu'));
+			});
+			$('#um-wp-admin-css-enabled').on('change', function() {
+				toggleWpAdminCssFields();
+				refreshAddonCardAutoState($('#um-addon-card-admin-css'));
+			});
+			toggleCustomAdminNotificationsFields();
+			toggleAdminBarMenuItemsFields();
+			toggleWpAdminCssFields();
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;

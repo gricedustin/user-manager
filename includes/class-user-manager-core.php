@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.34';
+	const VERSION = '2.2.35';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1134,6 +1134,9 @@ final class User_Manager_Core {
 			return;
 		}
 		$settings = get_option(self::OPTION_KEY, []);
+		if (!self::is_wp_admin_css_addon_enabled($settings)) {
+			return;
+		}
 		$user = wp_get_current_user();
 		if (!$user->ID) {
 			return;
@@ -1200,6 +1203,29 @@ final class User_Manager_Core {
 	}
 
 	/**
+	 * Determine whether WP-Admin CSS add-on is enabled.
+	 * Falls back to legacy behavior when no explicit toggle is stored.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return bool
+	 */
+	private static function is_wp_admin_css_addon_enabled(array $settings): bool {
+		if (array_key_exists('wp_admin_css_enabled', $settings)) {
+			return !empty($settings['wp_admin_css_enabled']);
+		}
+
+		$roles_css = isset($settings['wp_admin_css_roles']) && is_array($settings['wp_admin_css_roles']) ? $settings['wp_admin_css_roles'] : [];
+		foreach ($roles_css as $css) {
+			if (trim((string) $css) !== '') {
+				return true;
+			}
+		}
+
+		return trim((string) ($settings['wp_admin_css_all'] ?? '')) !== ''
+			|| trim((string) ($settings['wp_admin_css_users_css'] ?? '')) !== '';
+	}
+
+	/**
 	 * Add "User Manager" link to the wp-admin top bar (links to plugin Settings tab).
 	 *
 	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
@@ -1227,6 +1253,9 @@ final class User_Manager_Core {
 	 */
 	public static function add_custom_admin_bar_menu_items($wp_admin_bar): void {
 		$settings   = get_option(self::OPTION_KEY, []);
+		if (!self::is_admin_bar_menu_items_addon_enabled($settings)) {
+			return;
+		}
 		$menu_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
 		if (empty($menu_items)) {
 			return;
@@ -1290,6 +1319,33 @@ final class User_Manager_Core {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Determine whether WP-Admin Bar Menu Items add-on is enabled.
+	 * Falls back to legacy behavior when no explicit toggle is stored.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return bool
+	 */
+	private static function is_admin_bar_menu_items_addon_enabled(array $settings): bool {
+		if (array_key_exists('admin_bar_menu_items_enabled', $settings)) {
+			return !empty($settings['admin_bar_menu_items_enabled']);
+		}
+
+		$menu_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
+		foreach ($menu_items as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+			$title = trim((string) ($item['title'] ?? ''));
+			$shortcuts = trim((string) ($item['shortcuts'] ?? ''));
+			if ($title !== '' || $shortcuts !== '') {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -5956,6 +6012,9 @@ final class User_Manager_Core {
 			return;
 		}
 		$settings = get_option(self::OPTION_KEY, []);
+		if (!self::is_custom_admin_notifications_addon_enabled($settings)) {
+			return;
+		}
 		$notifications = isset($settings['custom_admin_notifications']) && is_array($settings['custom_admin_notifications']) ? $settings['custom_admin_notifications'] : [];
 		if (empty($notifications)) {
 			return;
@@ -5987,6 +6046,33 @@ final class User_Manager_Core {
 			</div>
 			<?php
 		}
+	}
+
+	/**
+	 * Determine whether WP-Admin Notifications add-on is enabled.
+	 * Falls back to legacy behavior when no explicit toggle is stored.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return bool
+	 */
+	private static function is_custom_admin_notifications_addon_enabled(array $settings): bool {
+		if (array_key_exists('custom_admin_notifications_enabled', $settings)) {
+			return !empty($settings['custom_admin_notifications_enabled']);
+		}
+
+		$notifications = isset($settings['custom_admin_notifications']) && is_array($settings['custom_admin_notifications']) ? $settings['custom_admin_notifications'] : [];
+		foreach ($notifications as $notification) {
+			if (!is_array($notification)) {
+				continue;
+			}
+			$title = trim((string) ($notification['title'] ?? ''));
+			$body  = trim((string) ($notification['body'] ?? ''));
+			if ($title !== '' || $body !== '') {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

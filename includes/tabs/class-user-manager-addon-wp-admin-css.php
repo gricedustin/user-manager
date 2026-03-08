@@ -10,13 +10,36 @@ if (!defined('ABSPATH')) {
 class User_Manager_Addon_WP_Admin_CSS {
 
 	public static function render(array $settings): void {
+		$is_enabled = array_key_exists('wp_admin_css_enabled', $settings)
+			? !empty($settings['wp_admin_css_enabled'])
+			: false;
+		if (!array_key_exists('wp_admin_css_enabled', $settings)) {
+			$roles_css = isset($settings['wp_admin_css_roles']) && is_array($settings['wp_admin_css_roles']) ? $settings['wp_admin_css_roles'] : [];
+			$has_role_css = false;
+			foreach ($roles_css as $css_value) {
+				if (trim((string) $css_value) !== '') {
+					$has_role_css = true;
+					break;
+				}
+			}
+			$is_enabled = trim((string) ($settings['wp_admin_css_all'] ?? '')) !== ''
+				|| trim((string) ($settings['wp_admin_css_users_css'] ?? '')) !== ''
+				|| $has_role_css;
+		}
 		?>
-		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-admin-css">
+		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-admin-css" data-um-active-selectors="#um-wp-admin-css-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-art"></span>
 				<h2><?php esc_html_e('WP-Admin CSS', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
+				<div class="um-form-field">
+					<label>
+						<input type="checkbox" name="wp_admin_css_enabled" id="um-wp-admin-css-enabled" value="1" <?php checked($is_enabled); ?> />
+						<?php esc_html_e('Activate WP-Admin CSS', 'user-manager'); ?>
+					</label>
+				</div>
+				<div id="um-wp-admin-css-fields" style="<?php echo $is_enabled ? '' : 'display:none;'; ?>">
 				<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Apply custom CSS only in the WordPress admin (wp-admin). You can target all roles, exclude specific roles from the global CSS, apply CSS to specific users (by login, email, or ID), and/or add per-role CSS.', 'user-manager'); ?></p>
 
 				<div id="um-wp-admin-css-list">
@@ -62,6 +85,7 @@ class User_Manager_Addon_WP_Admin_CSS {
 						</div>
 					</div>
 					<?php endforeach; ?>
+				</div>
 				</div>
 			</div>
 		</div>

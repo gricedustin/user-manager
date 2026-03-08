@@ -1727,6 +1727,7 @@ class User_Manager_Actions {
 					isset($_POST['my_account_admin_user_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_user_viewer_usernames']) : ''
 				);
 				$settings['my_account_admin_user_viewer_show_meta'] = isset($_POST['my_account_admin_user_viewer_show_meta']) && $_POST['my_account_admin_user_viewer_show_meta'] === '1';
+				$settings['my_account_site_admin_enabled'] = isset($_POST['my_account_site_admin_enabled']) && $_POST['my_account_site_admin_enabled'] === '1';
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
@@ -1781,6 +1782,7 @@ class User_Manager_Actions {
 				}
 
 				// Custom WP-Admin Notifications (indices may be 0,1,2 or 0,2 after a remove; we normalize to sequential)
+				$settings['custom_admin_notifications_enabled'] = isset($_POST['custom_admin_notifications_enabled']) && $_POST['custom_admin_notifications_enabled'] === '1';
 				$settings['custom_admin_notifications'] = [];
 				if (!empty($_POST['custom_admin_notification']) && is_array($_POST['custom_admin_notification'])) {
 					$keys = array_keys($_POST['custom_admin_notification']);
@@ -1804,6 +1806,7 @@ class User_Manager_Actions {
 				}
 
 				// WP-Admin Bar Menu Items (custom shortcut menus in the admin bar)
+				$settings['admin_bar_menu_items_enabled'] = isset($_POST['admin_bar_menu_items_enabled']) && $_POST['admin_bar_menu_items_enabled'] === '1';
 				$settings['admin_bar_menu_items'] = [];
 				if (!empty($_POST['admin_bar_menu_item']) && is_array($_POST['admin_bar_menu_item'])) {
 					$keys = array_keys($_POST['admin_bar_menu_item']);
@@ -1825,6 +1828,7 @@ class User_Manager_Actions {
 				}
 
 				// WP-Admin CSS
+				$settings['wp_admin_css_enabled'] = isset($_POST['wp_admin_css_enabled']) && $_POST['wp_admin_css_enabled'] === '1';
 				$settings['wp_admin_css_all'] = isset($_POST['wp_admin_css_all']) ? sanitize_textarea_field(wp_unslash($_POST['wp_admin_css_all'])) : '';
 				$exclude_roles = isset($_POST['wp_admin_css_exclude_roles']) ? sanitize_text_field(wp_unslash($_POST['wp_admin_css_exclude_roles'])) : '';
 				$settings['wp_admin_css_exclude_roles'] = array_filter(array_map('trim', explode(',', $exclude_roles)));

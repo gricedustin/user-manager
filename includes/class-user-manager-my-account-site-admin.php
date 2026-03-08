@@ -1038,11 +1038,13 @@ final class User_Manager_My_Account_Site_Admin {
 		if (!is_user_logged_in()) {
 			return false;
 		}
+		$settings = User_Manager_Core::get_settings();
+		if (!self::is_addon_enabled($settings)) {
+			return false;
+		}
 		if (current_user_can('manage_options')) {
 			return true;
 		}
-
-		$settings = User_Manager_Core::get_settings();
 		$allowed  = self::parse_username_list((string) ($settings['my_account_admin_order_approval_usernames'] ?? ''));
 		if (empty($allowed)) {
 			return false;
@@ -1115,7 +1117,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 */
 	private static function is_default_new_orders_pending_enabled(): bool {
 		$settings = User_Manager_Core::get_settings();
-		return !empty($settings['my_account_admin_order_default_pending_enabled']);
+		return self::is_addon_enabled($settings) && !empty($settings['my_account_admin_order_default_pending_enabled']);
 	}
 
 	/**
@@ -1579,6 +1581,9 @@ final class User_Manager_My_Account_Site_Admin {
 	 */
 	private static function current_user_can_access_area(array $config): bool {
 		$settings = User_Manager_Core::get_settings();
+		if (!self::is_addon_enabled($settings)) {
+			return false;
+		}
 		$enabled_key = $config['enabled_key'];
 		$list_key    = $config['usernames_key'];
 
@@ -1606,6 +1611,24 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return in_array($login, $allowed, true);
+	}
+
+	/**
+	 * Determine whether the My Account Site Admin add-on is enabled.
+	 * Falls back to legacy behavior when no explicit toggle is stored.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return bool
+	 */
+	private static function is_addon_enabled(array $settings): bool {
+		if (array_key_exists('my_account_site_admin_enabled', $settings)) {
+			return !empty($settings['my_account_site_admin_enabled']);
+		}
+
+		return !empty($settings['my_account_admin_order_viewer_enabled'])
+			|| !empty($settings['my_account_admin_product_viewer_enabled'])
+			|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
+			|| !empty($settings['my_account_admin_user_viewer_enabled']);
 	}
 
 	/**

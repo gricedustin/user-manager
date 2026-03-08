@@ -11,16 +11,39 @@ class User_Manager_Addon_Custom_Admin_Notifications {
 
 	public static function render(array $settings): void {
 		$admin_notifications = isset($settings['custom_admin_notifications']) && is_array($settings['custom_admin_notifications']) ? $settings['custom_admin_notifications'] : [];
+		$is_enabled = array_key_exists('custom_admin_notifications_enabled', $settings)
+			? !empty($settings['custom_admin_notifications_enabled'])
+			: false;
+		if (!array_key_exists('custom_admin_notifications_enabled', $settings)) {
+			foreach ($admin_notifications as $row) {
+				if (!is_array($row)) {
+					continue;
+				}
+				$title = trim((string) ($row['title'] ?? ''));
+				$body  = trim((string) ($row['body'] ?? ''));
+				if ($title !== '' || $body !== '') {
+					$is_enabled = true;
+					break;
+				}
+			}
+		}
 		if (empty($admin_notifications)) {
 			$admin_notifications = [['title' => '', 'body' => '', 'background_color' => '', 'url_string_match' => '']];
 		}
 		?>
-		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-custom-notifications">
+		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-custom-notifications" data-um-active-selectors="#um-custom-admin-notifications-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-megaphone"></span>
 				<h2><?php esc_html_e('WP-Admin Notifications', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
+				<div class="um-form-field">
+					<label>
+						<input type="checkbox" name="custom_admin_notifications_enabled" id="um-custom-admin-notifications-enabled" value="1" <?php checked($is_enabled); ?> />
+						<?php esc_html_e('Activate WP-Admin Notifications', 'user-manager'); ?>
+					</label>
+				</div>
+				<div id="um-custom-admin-notifications-fields" style="<?php echo $is_enabled ? '' : 'display:none;'; ?>">
 				<p class="description" style="margin-bottom: 16px;"><?php esc_html_e('Add custom admin notices at the top of WP-Admin screens. Each notification can be limited to URLs that contain a specific string (e.g. shop_coupon for coupon edit screens), or shown on all admin screens if URL match is blank.', 'user-manager'); ?></p>
 				<div id="um-custom-admin-notifications-list">
 					<?php foreach ($admin_notifications as $idx => $n) : ?>
@@ -51,6 +74,7 @@ class User_Manager_Addon_Custom_Admin_Notifications {
 				<p>
 					<button type="button" class="button" id="um-add-admin-notification"><?php esc_html_e('Add notification', 'user-manager'); ?></button>
 				</p>
+				</div>
 			</div>
 		</div>
 		<?php
