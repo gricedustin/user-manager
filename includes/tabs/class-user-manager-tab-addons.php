@@ -27,8 +27,9 @@ class User_Manager_Tab_Addons {
 	public static function render(): void {
 		$settings      = User_Manager_Core::get_settings();
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
+		$settings_form_id = 'um-addons-settings-form';
 		?>
-		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="<?php echo esc_attr($settings_form_id); ?>">
 			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="addons" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
@@ -40,29 +41,24 @@ class User_Manager_Tab_Addons {
 				<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
 				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
-				<?php User_Manager_Addon_API::render($settings); ?>
-				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings); ?>
 				<?php User_Manager_Addon_Role_Switching::render(); ?>
 				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings); ?>
 				<?php User_Manager_Addon_Quick_Search::render($settings); ?>
 				<?php User_Manager_Addon_WP_Admin_CSS::render($settings); ?>
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings); ?>
 
-				<div class="um-admin-card um-admin-card-full">
-					<div class="um-admin-card-body">
-						<p style="margin:0;">
-							<?php submit_button(__('Save Add-ons', 'user-manager'), 'primary', 'submit', false); ?>
-						</p>
-					</div>
-				</div>
 			</div>
 		</form>
-
-		<div id="um-openai-blog-tools-area" class="um-addon-linked-panel" data-um-panel-for="um-addon-card-api" style="display:none;">
-			<?php User_Manager_Tab_Tools::render(false, true, false); ?>
-		</div>
-		<div id="um-openai-blog-idea-generator-area" class="um-addon-linked-panel" data-um-panel-for="um-addon-card-blog-post-idea-generator" style="display:none;">
-			<?php User_Manager_Tab_Tools::render(false, false, true); ?>
+		<div class="um-admin-grid um-admin-grid-single">
+			<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
+			<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings, $settings_form_id); ?>
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-body">
+					<p style="margin:0;">
+						<?php submit_button(__('Save Add-ons', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
+					</p>
+				</div>
+			</div>
 		</div>
 
 		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template(); ?>
@@ -151,9 +147,6 @@ class User_Manager_Tab_Addons {
 		.um-settings-two-column label {
 			display: inline-block;
 			margin-bottom: 6px;
-		}
-		.um-addon-linked-panel {
-			margin-top: 12px;
 		}
 		@media (max-width: 600px) {
 			.um-checkbox-grid {
@@ -260,26 +253,6 @@ class User_Manager_Tab_Addons {
 				setAddonCardActiveState($card, isActive);
 			}
 
-			function syncLinkedAddonPanel($card) {
-				var cardId = $card.attr('id') || '';
-				if (!cardId) {
-					return;
-				}
-				var $panel = $('.um-addon-linked-panel[data-um-panel-for="' + cardId + '"]');
-				if (!$panel.length) {
-					return;
-				}
-
-				var shouldShow = false;
-				if (cardId === 'um-addon-card-api') {
-					shouldShow = $('#um-openai-content-generator-enabled').is(':checked');
-				} else if (cardId === 'um-addon-card-blog-post-idea-generator') {
-					shouldShow = $('#um-openai-blog-post-idea-generator-enabled').is(':checked');
-				}
-
-				$panel.toggle(shouldShow);
-			}
-
 			function initAddonCollapsibleCards() {
 				$('.um-addon-collapsible').each(function() {
 					var $card = $(this);
@@ -305,7 +278,6 @@ class User_Manager_Tab_Addons {
 					// Keep all add-on cards collapsed by default.
 					setAddonCardCollapsed($card, true, true);
 					refreshAddonCardAutoState($card);
-					syncLinkedAddonPanel($card);
 				});
 			}
 
@@ -434,7 +406,6 @@ class User_Manager_Tab_Addons {
 				} else {
 					$('#um-openai-content-generator-fields').hide();
 				}
-				syncLinkedAddonPanel($('#um-addon-card-api'));
 			}
 			$('#um-openai-content-generator-enabled').on('change', function() {
 				toggleOpenAiAddonFields();
@@ -444,7 +415,7 @@ class User_Manager_Tab_Addons {
 				refreshAddonCardAutoState($('#um-addon-card-api'));
 			});
 			function toggleOpenAiIdeaAddonFields() {
-				syncLinkedAddonPanel($('#um-addon-card-blog-post-idea-generator'));
+				$('#um-openai-blog-post-idea-generator-fields').toggle($('#um-openai-blog-post-idea-generator-enabled').is(':checked'));
 			}
 			$('#um-openai-blog-post-idea-generator-enabled').on('change', function() {
 				toggleOpenAiIdeaAddonFields();

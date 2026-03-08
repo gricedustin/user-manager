@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.48
+ * Version: 2.2.49
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.49 - March 8, 2026
+ * - Add-ons UI: moved Blog Post Importer and Post Idea Generator functionality into their respective cards (Post Content Generator / Post Idea Generator) instead of separate bottom panels.
+ * - Add-ons save flow: API and Post Idea activation/settings fields now remain savable from their in-card placement.
+ *
  * 2.2.48 - March 8, 2026
  * - Updated coupon remainder notice setting labels from "if Coupon is Applied" wording to "Code Used".
  *
