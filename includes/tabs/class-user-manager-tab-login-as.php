@@ -86,9 +86,11 @@ class User_Manager_Tab_Login_As {
 										placeholder="<?php esc_attr_e('Search by username or email', 'user-manager'); ?>"
 										autocomplete="off"
 										data-um-login-as-search-nonce="<?php echo esc_attr(wp_create_nonce('user_manager_login_as_search')); ?>"
+										data-um-login-as-search-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
 									/>
 									<input type="hidden" name="um_login_as_user" id="um-login-as-user-id" value="" />
 									<datalist id="um-login-as-user-search-datalist"></datalist>
+									<div id="um-login-as-user-search-results" style="display:none;max-width:420px;border:1px solid #c3c4c7;border-radius:4px;background:#fff;margin-top:6px;max-height:220px;overflow:auto;"></div>
 									<p class="description">
 										<?php esc_html_e('Start typing a username or email address to search users. This avoids loading all users on large sites.', 'user-manager'); ?>
 									</p>
@@ -300,41 +302,83 @@ class User_Manager_Tab_Login_As {
 			var searchInput = document.getElementById('um-login-as-user-search');
 			var hiddenInput = document.getElementById('um-login-as-user-id');
 			var datalist    = document.getElementById('um-login-as-user-search-datalist');
-			if (!searchInput || !hiddenInput || !datalist || typeof window.ajaxurl === 'undefined') {
+			var resultsBox  = document.getElementById('um-login-as-user-search-results');
+			if (!searchInput || !hiddenInput || !datalist) {
 				return;
 			}
 
 			var searchNonce = searchInput.getAttribute('data-um-login-as-search-nonce') || '';
+			var searchUrl   = searchInput.getAttribute('data-um-login-as-search-url') || (typeof window.ajaxurl !== 'undefined' ? window.ajaxurl : '');
+			if (!searchUrl) {
+				return;
+			}
 			var searchMap   = {};
 			var timer       = null;
 
 			function setHiddenFromInputValue() {
 				var value = (searchInput.value || '').trim();
-				hiddenInput.value = searchMap[value] ? String(searchMap[value]) : '';
+				if (!value) {
+					hiddenInput.value = '';
+					return;
+				}
+				hiddenInput.value = searchMap[value] ? String(searchMap[value]) : (searchMap[value.toLowerCase()] ? String(searchMap[value.toLowerCase()]) : '');
+			}
+
+			function hideResults() {
+				if (!resultsBox) {
+					return;
+				}
+				resultsBox.style.display = 'none';
 			}
 
 			function renderSearchResults(results) {
 				searchMap = {};
 				datalist.innerHTML = '';
+				if (resultsBox) {
+					resultsBox.innerHTML = '';
+				}
+
 				if (!Array.isArray(results)) {
+					hideResults();
 					return;
 				}
+				var html = '';
+				var hasResults = false;
 				results.forEach(function(item) {
 					if (!item || !item.id || !item.label) {
 						return;
 					}
+					hasResults = true;
 					var option = document.createElement('option');
 					option.value = item.label;
 					datalist.appendChild(option);
 
 					searchMap[item.label] = item.id;
+					searchMap[item.label.toLowerCase()] = item.id;
 					if (item.login) {
 						searchMap[item.login] = item.id;
+						searchMap[item.login.toLowerCase()] = item.id;
 					}
 					if (item.email) {
 						searchMap[item.email] = item.id;
+						searchMap[item.email.toLowerCase()] = item.id;
+					}
+
+					if (resultsBox) {
+						html += '<button type="button" class="button-link" data-user-id="' + String(item.id).replace(/"/g, '&quot;') + '" data-user-label="' + String(item.label).replace(/"/g, '&quot;') + '" style="display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:#fff;cursor:pointer;">'
+							+ String(item.label).replace(/</g, '&lt;').replace(/>/g, '&gt;')
+							+ '</button>';
 					}
 				});
+
+				if (resultsBox) {
+					if (!hasResults) {
+						resultsBox.innerHTML = '<div style="padding:8px 10px;color:#646970;">' + '<?php echo esc_js(__('No users found.', 'user-manager')); ?>' + '</div>';
+					} else {
+						resultsBox.innerHTML = html;
+					}
+					resultsBox.style.display = 'block';
+				}
 			}
 
 			function runSearch() {
@@ -342,21 +386,21 @@ class User_Manager_Tab_Login_As {
 				if (query.length < 2) {
 					renderSearchResults([]);
 					setHiddenFromInputValue();
+					hideResults();
 					return;
 				}
 
-				var url = window.ajaxurl + '?action=user_manager_search_users_for_login_as'
-					+ '&nonce=' + encodeURIComponent(searchNonce)
-					+ '&q=' + encodeURIComponent(query);
-
-				window.fetch(url, { credentials: 'same-origin' })
-					.then(function(response) {
-						if (!response.ok) {
-							throw new Error('Search request failed');
-						}
-						return response.json();
-					})
-					.then(function(payload) {
+				jQuery.ajax({
+					url: searchUrl,
+					method: 'GET',
+					dataType: 'json',
+					data: {
+						action: 'user_manager_search_users_for_login_as',
+						nonce: searchNonce,
+						q: query
+					}
+				})
+					.done(function(payload) {
 						if (!payload || !payload.success || !payload.data) {
 							renderSearchResults([]);
 							return;
@@ -364,8 +408,9 @@ class User_Manager_Tab_Login_As {
 						renderSearchResults(payload.data.results || []);
 						setHiddenFromInputValue();
 					})
-					.catch(function() {
+					.fail(function() {
 						renderSearchResults([]);
+						hideResults();
 					});
 			}
 
@@ -378,6 +423,28 @@ class User_Manager_Tab_Login_As {
 			});
 			searchInput.addEventListener('change', setHiddenFromInputValue);
 			searchInput.addEventListener('blur', setHiddenFromInputValue);
+			searchInput.addEventListener('focus', function() {
+				if (resultsBox && resultsBox.innerHTML !== '' && (searchInput.value || '').trim().length >= 2) {
+					resultsBox.style.display = 'block';
+				}
+			});
+			searchInput.addEventListener('blur', function() {
+				window.setTimeout(hideResults, 150);
+			});
+
+			if (resultsBox) {
+				resultsBox.addEventListener('click', function(e) {
+					var button = e.target && e.target.closest ? e.target.closest('button[data-user-id]') : null;
+					if (!button) {
+						return;
+					}
+					var selectedId = button.getAttribute('data-user-id') || '';
+					var selectedLabel = button.getAttribute('data-user-label') || '';
+					hiddenInput.value = selectedId;
+					searchInput.value = selectedLabel;
+					hideResults();
+				});
+			}
 		})();
 		</script>
 		<?php
@@ -449,11 +516,6 @@ class User_Manager_Tab_Login_As {
 
 		$target = get_userdata($target_id);
 		if (!$target) {
-			return;
-		}
-
-		// Do not allow logging in as another administrator unless explicitly desired.
-		if (in_array('administrator', (array) $target->roles, true) && $admin_id !== $target_id) {
 			return;
 		}
 
