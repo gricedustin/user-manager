@@ -2,12 +2,18 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.41
+ * Version: 2.2.42
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.42 - March 8, 2026
+ * - Refactor: split large Core activity-log/detail methods into a dedicated module trait file for cleaner organization.
+ * - Refactor: split large Reports tracking numbers/notes render+export methods into a dedicated reports module trait file.
+ * - Refactor: split Content Generator / Blog Importer action handlers into a dedicated actions module trait file.
+ * - Refactor: split My Account Site Admin endpoint renderer/list/detail methods into a dedicated renderer module trait file.
+ *
  * 2.2.41 - March 8, 2026
  * - Admin Log "View Details" now includes an "All Logged Form Data" section that recursively displays all stored entry fields.
  * - Added nested key rendering for activity detail payloads so values from arrays/objects are visible with full key paths.
