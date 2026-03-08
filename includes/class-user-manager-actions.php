@@ -1710,8 +1710,14 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_viewer_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_order_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_order_viewer_usernames']) : ''
 				);
+				$settings['my_account_admin_order_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_order_viewer_roles']) ? wp_unslash($_POST['my_account_admin_order_viewer_roles']) : []
+				);
 				$settings['my_account_admin_order_approval_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_order_approval_usernames']) ? wp_unslash($_POST['my_account_admin_order_approval_usernames']) : ''
+				);
+				$settings['my_account_admin_order_approval_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_order_approval_roles']) ? wp_unslash($_POST['my_account_admin_order_approval_roles']) : []
 				);
 				$settings['my_account_admin_order_default_pending_enabled'] = isset($_POST['my_account_admin_order_default_pending_enabled']) && $_POST['my_account_admin_order_default_pending_enabled'] === '1';
 				$settings['my_account_admin_order_viewer_show_meta'] = isset($_POST['my_account_admin_order_viewer_show_meta']) && $_POST['my_account_admin_order_viewer_show_meta'] === '1';
@@ -1719,15 +1725,24 @@ class User_Manager_Actions {
 				$settings['my_account_admin_product_viewer_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_product_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_product_viewer_usernames']) : ''
 				);
+				$settings['my_account_admin_product_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_product_viewer_roles']) ? wp_unslash($_POST['my_account_admin_product_viewer_roles']) : []
+				);
 				$settings['my_account_admin_product_viewer_show_meta'] = isset($_POST['my_account_admin_product_viewer_show_meta']) && $_POST['my_account_admin_product_viewer_show_meta'] === '1';
 				$settings['my_account_admin_coupon_viewer_enabled'] = isset($_POST['my_account_admin_coupon_viewer_enabled']) && $_POST['my_account_admin_coupon_viewer_enabled'] === '1';
 				$settings['my_account_admin_coupon_viewer_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_coupon_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_coupon_viewer_usernames']) : ''
 				);
+				$settings['my_account_admin_coupon_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_coupon_viewer_roles']) ? wp_unslash($_POST['my_account_admin_coupon_viewer_roles']) : []
+				);
 				$settings['my_account_admin_coupon_viewer_show_meta'] = isset($_POST['my_account_admin_coupon_viewer_show_meta']) && $_POST['my_account_admin_coupon_viewer_show_meta'] === '1';
 				$settings['my_account_admin_user_viewer_enabled'] = isset($_POST['my_account_admin_user_viewer_enabled']) && $_POST['my_account_admin_user_viewer_enabled'] === '1';
 				$settings['my_account_admin_user_viewer_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_user_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_user_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_user_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_user_viewer_roles']) ? wp_unslash($_POST['my_account_admin_user_viewer_roles']) : []
 				);
 				$settings['my_account_admin_user_viewer_show_meta'] = isset($_POST['my_account_admin_user_viewer_show_meta']) && $_POST['my_account_admin_user_viewer_show_meta'] === '1';
 				$settings['my_account_site_admin_enabled'] = isset($_POST['my_account_site_admin_enabled']) && $_POST['my_account_site_admin_enabled'] === '1';
@@ -3464,6 +3479,34 @@ class User_Manager_Actions {
 
 		$usernames = array_values(array_unique($usernames));
 		return implode(', ', $usernames);
+	}
+
+	/**
+	 * Sanitize posted role keys and keep only real WP roles.
+	 *
+	 * @param mixed $raw Raw posted roles.
+	 * @return array<int,string>
+	 */
+	private static function sanitize_role_keys_array($raw): array {
+		$parts = is_array($raw) ? $raw : [];
+		$roles = [];
+		foreach ($parts as $part) {
+			$key = sanitize_key((string) $part);
+			if ($key === '') {
+				continue;
+			}
+			$roles[] = $key;
+		}
+		$roles = array_values(array_unique($roles));
+
+		if (function_exists('wp_roles')) {
+			$wp_roles = wp_roles();
+			if ($wp_roles && isset($wp_roles->roles) && is_array($wp_roles->roles)) {
+				$roles = array_values(array_intersect($roles, array_keys($wp_roles->roles)));
+			}
+		}
+
+		return $roles;
 	}
 }
 

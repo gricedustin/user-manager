@@ -107,6 +107,7 @@ final class User_Manager_My_Account_Site_Admin {
 		foreach ($configs as $key => $config) {
 			$enabled_key = $config['enabled_key'];
 			$list_key    = $config['usernames_key'];
+			$roles_key   = $config['roles_key'] ?? '';
 			$raw_list    = (string) ($settings[ $list_key ] ?? '');
 
 			$areas[ $key ] = [
@@ -114,6 +115,8 @@ final class User_Manager_My_Account_Site_Admin {
 				'enabled'                 => !empty($settings[ $enabled_key ]),
 				'allowed_usernames_raw'   => $raw_list,
 				'allowed_usernames_parsed'=> self::parse_username_list($raw_list),
+				'allowed_roles_raw'       => $roles_key !== '' ? ($settings[ $roles_key ] ?? []) : [],
+				'allowed_roles_parsed'    => $roles_key !== '' ? self::parse_role_list($settings[ $roles_key ] ?? []) : [],
 				'current_user_has_access' => self::current_user_can_access_area($config),
 				'query_var_value'         => get_query_var($config['endpoint'], ''),
 			];
@@ -146,6 +149,8 @@ final class User_Manager_My_Account_Site_Admin {
 			'order_approval'       => [
 				'allowed_usernames_raw'    => (string) ($settings['my_account_admin_order_approval_usernames'] ?? ''),
 				'allowed_usernames_parsed' => self::parse_username_list((string) ($settings['my_account_admin_order_approval_usernames'] ?? '')),
+				'allowed_roles_raw'        => $settings['my_account_admin_order_approval_roles'] ?? [],
+				'allowed_roles_parsed'     => self::parse_role_list($settings['my_account_admin_order_approval_roles'] ?? []),
 				'current_user_can_approve' => self::current_user_can_approve_orders(),
 				'default_new_orders_pending_enabled' => !empty($settings['my_account_admin_order_default_pending_enabled']),
 			],
@@ -367,17 +372,20 @@ final class User_Manager_My_Account_Site_Admin {
 			return true;
 		}
 		$allowed  = self::parse_username_list((string) ($settings['my_account_admin_order_approval_usernames'] ?? ''));
-		if (empty($allowed)) {
-			return false;
-		}
+		$role_allow = self::parse_role_list($settings['my_account_admin_order_approval_roles'] ?? []);
 
 		$current = wp_get_current_user();
 		$login   = strtolower((string) ($current->user_login ?? ''));
-		if ($login === '') {
+		if ($login !== '' && in_array($login, $allowed, true)) {
+			return true;
+		}
+
+		if (empty($role_allow)) {
 			return false;
 		}
 
-		return in_array($login, $allowed, true);
+		$current_roles = is_array($current->roles) ? array_map('sanitize_key', $current->roles) : [];
+		return !empty(array_intersect($role_allow, $current_roles));
 	}
 
 	/**
@@ -907,6 +915,7 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 		$enabled_key = $config['enabled_key'];
 		$list_key    = $config['usernames_key'];
+		$roles_key   = $config['roles_key'] ?? '';
 
 		if (empty($settings[ $enabled_key ])) {
 			return false;
@@ -920,18 +929,24 @@ final class User_Manager_My_Account_Site_Admin {
 			return true;
 		}
 
-		$allowed = self::parse_username_list((string) ($settings[ $list_key ] ?? ''));
-		if (empty($allowed)) {
+		$allowed_usernames = self::parse_username_list((string) ($settings[ $list_key ] ?? ''));
+		$allowed_roles     = $roles_key !== '' ? self::parse_role_list($settings[ $roles_key ] ?? []) : [];
+		if (empty($allowed_usernames) && empty($allowed_roles)) {
 			return false;
 		}
 
 		$current = wp_get_current_user();
 		$login   = strtolower((string) ($current->user_login ?? ''));
-		if ($login === '') {
+		if ($login !== '' && in_array($login, $allowed_usernames, true)) {
+			return true;
+		}
+
+		if (empty($allowed_roles)) {
 			return false;
 		}
 
-		return in_array($login, $allowed, true);
+		$current_roles = is_array($current->roles) ? array_map('sanitize_key', $current->roles) : [];
+		return !empty(array_intersect($allowed_roles, $current_roles));
 	}
 
 	/**
@@ -986,6 +1001,41 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Parse selected roles from array or comma/space/newline string.
+	 *
+	 * @param mixed $raw Raw roles value.
+	 * @return array<int,string>
+	 */
+	private static function parse_role_list($raw): array {
+		$parts = [];
+		if (is_array($raw)) {
+			$parts = $raw;
+		} elseif (is_string($raw) && trim($raw) !== '') {
+			$split = preg_split('/[\s,]+/', $raw);
+			$parts = is_array($split) ? $split : [];
+		}
+
+		$roles = [];
+		foreach ($parts as $part) {
+			$role = sanitize_key((string) $part);
+			if ($role === '') {
+				continue;
+			}
+			$roles[] = $role;
+		}
+		$roles = array_values(array_unique($roles));
+
+		if (function_exists('wp_roles')) {
+			$wp_roles = wp_roles();
+			if ($wp_roles && isset($wp_roles->roles) && is_array($wp_roles->roles)) {
+				$roles = array_values(array_intersect($roles, array_keys($wp_roles->roles)));
+			}
+		}
+
+		return $roles;
+	}
+
+	/**
 	 * Area configuration map.
 	 *
 	 * @return array<string,array<string,string>>
@@ -997,6 +1047,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'menu_label'    => __('Admin: Orders', 'user-manager'),
 				'enabled_key'   => 'my_account_admin_order_viewer_enabled',
 				'usernames_key' => 'my_account_admin_order_viewer_usernames',
+				'roles_key'     => 'my_account_admin_order_viewer_roles',
 				'show_meta_key' => 'my_account_admin_order_viewer_show_meta',
 			],
 			'products' => [
@@ -1004,6 +1055,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'menu_label'    => __('Admin: Products', 'user-manager'),
 				'enabled_key'   => 'my_account_admin_product_viewer_enabled',
 				'usernames_key' => 'my_account_admin_product_viewer_usernames',
+				'roles_key'     => 'my_account_admin_product_viewer_roles',
 				'show_meta_key' => 'my_account_admin_product_viewer_show_meta',
 			],
 			'coupons' => [
@@ -1011,6 +1063,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'menu_label'    => __('Admin: Coupons', 'user-manager'),
 				'enabled_key'   => 'my_account_admin_coupon_viewer_enabled',
 				'usernames_key' => 'my_account_admin_coupon_viewer_usernames',
+				'roles_key'     => 'my_account_admin_coupon_viewer_roles',
 				'show_meta_key' => 'my_account_admin_coupon_viewer_show_meta',
 			],
 			'users' => [
@@ -1018,6 +1071,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'menu_label'    => __('Admin: Users', 'user-manager'),
 				'enabled_key'   => 'my_account_admin_user_viewer_enabled',
 				'usernames_key' => 'my_account_admin_user_viewer_usernames',
+				'roles_key'     => 'my_account_admin_user_viewer_roles',
 				'show_meta_key' => 'my_account_admin_user_viewer_show_meta',
 			],
 		];
