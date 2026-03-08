@@ -24,7 +24,7 @@ class User_Manager_Addon_Blog_Post_Idea_Generator {
 					</label>
 				</div>
 				<p class="description" style="margin-top:0;">
-					<?php esc_html_e('Shows a dedicated Post Idea Generator area in Add-ons for brainstorming topics and headlines with ChatGPT.', 'user-manager'); ?>
+					<?php esc_html_e('Enable or disable Post Idea Generator tools in Add-ons.', 'user-manager'); ?>
 				</p>
 			</div>
 		</div>

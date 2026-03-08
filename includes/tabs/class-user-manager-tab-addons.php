@@ -61,9 +61,6 @@ class User_Manager_Tab_Addons {
 		<div id="um-openai-blog-tools-area" style="<?php echo empty($settings['openai_content_generator_enabled']) ? 'display:none;' : ''; ?>">
 			<?php User_Manager_Tab_Tools::render(false, true, false); ?>
 		</div>
-		<div id="um-openai-blog-idea-generator-area" style="<?php echo empty($settings['openai_blog_post_idea_generator_enabled']) ? 'display:none;' : ''; ?>">
-			<?php User_Manager_Tab_Tools::render(false, false, true); ?>
-		</div>
 
 		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template(); ?>
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template(); ?>
@@ -405,9 +402,6 @@ class User_Manager_Tab_Addons {
 					$('#um-openai-blog-tools-area').hide();
 				}
 			}
-			function toggleOpenAiIdeaAddonFields() {
-				$('#um-openai-blog-idea-generator-area').toggle($('#um-openai-blog-post-idea-generator-enabled').is(':checked'));
-			}
 			$('#um-openai-content-generator-enabled').on('change', function() {
 				toggleOpenAiAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-api'));
@@ -416,11 +410,9 @@ class User_Manager_Tab_Addons {
 				refreshAddonCardAutoState($('#um-addon-card-api'));
 			});
 			$('#um-openai-blog-post-idea-generator-enabled').on('change', function() {
-				toggleOpenAiIdeaAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-blog-post-idea-generator'));
 			});
 			toggleOpenAiAddonFields();
-			toggleOpenAiIdeaAddonFields();
 			$('#um-role-switching-enabled').on('change', function() {
 				toggleRoleSwitchingFields();
 				refreshAddonCardAutoState($('#um-addon-card-role-switching'));

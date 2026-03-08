@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.44 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons: removed duplicate Post Idea Generator section rendering on the Add-ons page.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed the "Bulk Coupons is currently disabled in Add-ons..." notice message.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.43 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons: ensured Post Content Generator and Post Idea Generator migrated sections are always mounted and toggle reliably from their activation checkboxes.', 'user-manager'); ?></li>

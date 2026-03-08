@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.43';
+	const VERSION = '2.2.44';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -6660,10 +6660,6 @@ final class User_Manager_Core {
 				break;
 			case 'migration_no_selection':
 				$content = __('Please select at least one coupon to migrate.', 'user-manager');
-				$type = 'warning';
-				break;
-			case 'bulk_coupons_disabled':
-				$content = __('Bulk Coupons is currently disabled in Add-ons. Enable it first to create bulk coupon codes.', 'user-manager');
 				$type = 'warning';
 				break;
 			case 'activity_log_cleared':
