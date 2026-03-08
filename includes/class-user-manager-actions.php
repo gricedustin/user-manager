@@ -1735,6 +1735,22 @@ class User_Manager_Actions {
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
 				$settings['bulk_coupons_enabled'] = isset($_POST['bulk_coupons_enabled']) && $_POST['bulk_coupons_enabled'] === '1';
+				$settings['bulk_coupons_template_code'] = isset($_POST['bulk_coupons_template_code']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_template_code'])) : '';
+				$settings['bulk_coupons_total'] = isset($_POST['bulk_coupons_total']) ? max(0, absint($_POST['bulk_coupons_total'])) : 0;
+				$settings['bulk_coupons_emails'] = isset($_POST['bulk_coupons_emails']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_coupons_emails'])) : '';
+				$bulk_coupons_amount_raw = isset($_POST['bulk_coupons_amount']) ? wp_unslash($_POST['bulk_coupons_amount']) : '';
+				if ($bulk_coupons_amount_raw !== '' && function_exists('wc_format_decimal')) {
+					$settings['bulk_coupons_amount'] = (string) wc_format_decimal($bulk_coupons_amount_raw);
+				} else {
+					$settings['bulk_coupons_amount'] = sanitize_text_field($bulk_coupons_amount_raw);
+				}
+				$settings['bulk_coupons_prefix'] = isset($_POST['bulk_coupons_prefix']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_prefix'])) : '';
+				$settings['bulk_coupons_suffix'] = isset($_POST['bulk_coupons_suffix']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_suffix'])) : '';
+				$settings['bulk_coupons_length'] = isset($_POST['bulk_coupons_length']) ? max(4, min(64, absint($_POST['bulk_coupons_length']))) : 8;
+				$settings['bulk_coupons_expiration_date'] = isset($_POST['bulk_coupons_expiration_date']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_expiration_date'])) : '';
+				$settings['bulk_coupons_expiration_days'] = isset($_POST['bulk_coupons_expiration_days']) ? max(0, absint($_POST['bulk_coupons_expiration_days'])) : 0;
+				$settings['bulk_coupons_send_email'] = isset($_POST['send_email']) && $_POST['send_email'] === '1';
+				$settings['bulk_coupons_email_template'] = isset($_POST['email_template']) ? sanitize_key($_POST['email_template']) : '';
 
 				$bulk_settings = [
 					'redirect_to_cart'   => isset($_POST['bulk_add_to_cart_redirect_to_cart']) && $_POST['bulk_add_to_cart_redirect_to_cart'] === '1' ? '1' : '0',
