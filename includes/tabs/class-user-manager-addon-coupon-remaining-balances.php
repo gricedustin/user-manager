@@ -88,7 +88,7 @@ promo"><?php echo esc_textarea($settings['coupon_remainder_source_contains'] ?? 
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="coupon_remainder_checkout_notice" value="1" <?php checked(!empty($settings['coupon_remainder_checkout_notice'])); ?> />
-						<?php esc_html_e('Enable Checkout Page Remaining Balance Notice if Coupon is Applied', 'user-manager'); ?>
+						<?php esc_html_e('Enable Checkout Page Remaining Balance Notice - Code Used', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Displays a notice above the Place Order button informing customers that they will receive a remaining balance coupon code after placing their order. (Classic Checkout)', 'user-manager'); ?></p>
 				</div>
@@ -96,7 +96,7 @@ promo"><?php echo esc_textarea($settings['coupon_remainder_source_contains'] ?? 
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="coupon_remainder_checkout_notice_block" value="1" <?php checked(!empty($settings['coupon_remainder_checkout_notice_block'])); ?> />
-						<?php esc_html_e('Enable Block Checkout Page Remaining Balance Notice if Coupon is Applied', 'user-manager'); ?>
+						<?php esc_html_e('Enable Block Checkout Page Remaining Balance Notice - Code Used', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Displays a notice above the Place Order button informing customers that they will receive a remaining balance coupon code after placing their order. (Block Checkout)', 'user-manager'); ?></p>
 				</div>
