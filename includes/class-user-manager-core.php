@@ -13,7 +13,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.9';
+	const VERSION = '2.2.10';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -214,6 +214,8 @@ final class User_Manager_Core {
 		
 		// Lazy datalist options endpoint (loads list options on first focus/click).
 		add_action('wp_ajax_user_manager_get_datalist_options', [__CLASS__, 'ajax_get_datalist_options']);
+		// Login As user search endpoint (username/email lookup).
+		add_action('wp_ajax_user_manager_search_users_for_login_as', [__CLASS__, 'ajax_search_users_for_login_as']);
 		
 		// Register action handlers
 		User_Manager_Actions::init();
@@ -7084,6 +7086,59 @@ final class User_Manager_Core {
 		}
 		
 		wp_send_json_error(['message' => __('Unsupported datalist source.', 'user-manager')], 400);
+	}
+
+	/**
+	 * AJAX handler for Login As user search (username/email).
+	 */
+	public static function ajax_search_users_for_login_as(): void {
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(['message' => __('Unauthorized', 'user-manager')], 403);
+		}
+
+		check_ajax_referer('user_manager_login_as_search', 'nonce');
+
+		$query = isset($_GET['q']) ? sanitize_text_field(wp_unslash($_GET['q'])) : '';
+		$query = trim($query);
+		if (strlen($query) < 2) {
+			wp_send_json_success(['results' => []]);
+		}
+
+		$user_query = new WP_User_Query([
+			'number'         => 20,
+			'search'         => '*' . $query . '*',
+			'search_columns' => ['user_login', 'user_email'],
+			'orderby'        => 'user_login',
+			'order'          => 'ASC',
+			'fields'         => ['ID', 'user_login', 'user_email'],
+		]);
+
+		$results = [];
+		$seen    = [];
+		foreach ($user_query->get_results() as $user) {
+			if (!($user instanceof WP_User)) {
+				continue;
+			}
+			$user_id = (int) $user->ID;
+			if ($user_id <= 0 || isset($seen[$user_id])) {
+				continue;
+			}
+			$seen[$user_id] = true;
+
+			$label = (string) $user->user_login;
+			if (!empty($user->user_email)) {
+				$label .= ' (' . $user->user_email . ')';
+			}
+
+			$results[] = [
+				'id'    => $user_id,
+				'label' => $label,
+				'login' => (string) $user->user_login,
+				'email' => (string) $user->user_email,
+			];
+		}
+
+		wp_send_json_success(['results' => $results]);
 	}
 	
 	/**

@@ -35,6 +35,10 @@ class User_Manager_Tab_Login_As {
 
 			if ($action === 'start') {
 				$target_id = isset($_POST['um_login_as_user']) ? absint($_POST['um_login_as_user']) : 0;
+				if ($target_id <= 0 && !empty($_POST['um_login_as_user_search'])) {
+					$target_identifier = sanitize_text_field(wp_unslash($_POST['um_login_as_user_search']));
+					$target_id         = self::resolve_target_user_id($target_identifier);
+				}
 				self::handle_start_session($current_admin_id, $target_id);
 				// Reload to show updated session state and avoid resubmission.
 				wp_safe_redirect(User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS));
@@ -70,28 +74,23 @@ class User_Manager_Tab_Login_As {
 						<table class="form-table">
 							<tr>
 								<th scope="row">
-									<label for="um-login-as-user"><?php esc_html_e('Select User', 'user-manager'); ?></label>
+									<label for="um-login-as-user-search"><?php esc_html_e('Select User', 'user-manager'); ?></label>
 								</th>
 								<td>
-									<?php
-									// Fetch all users and sort by email address (A–Z), then render a basic select.
-									$users = get_users([
-										'orderby' => 'user_email',
-										'order'   => 'ASC',
-										'fields'  => ['ID', 'user_email'],
-									]);
-									?>
-									<select name="um_login_as_user" id="um-login-as-user" class="regular-text">
-										<option value=""><?php esc_html_e('— Select a user —', 'user-manager'); ?></option>
-										<?php foreach ($users as $user) : ?>
-											<?php if (empty($user->user_email)) { continue; } ?>
-											<option value="<?php echo (int) $user->ID; ?>">
-												<?php echo esc_html(strtolower($user->user_email)); ?>
-											</option>
-										<?php endforeach; ?>
-									</select>
+									<input
+										type="text"
+										id="um-login-as-user-search"
+										name="um_login_as_user_search"
+										class="regular-text"
+										list="um-login-as-user-search-datalist"
+										placeholder="<?php esc_attr_e('Search by username or email', 'user-manager'); ?>"
+										autocomplete="off"
+										data-um-login-as-search-nonce="<?php echo esc_attr(wp_create_nonce('user_manager_login_as_search')); ?>"
+									/>
+									<input type="hidden" name="um_login_as_user" id="um-login-as-user-id" value="" />
+									<datalist id="um-login-as-user-search-datalist"></datalist>
 									<p class="description">
-										<?php esc_html_e('We recommend testing with a user account that matches the role(s) you want to preview.', 'user-manager'); ?>
+										<?php esc_html_e('Start typing a username or email address to search users. This avoids loading all users on large sites.', 'user-manager'); ?>
 									</p>
 								</td>
 							</tr>
@@ -297,9 +296,144 @@ class User_Manager_Tab_Login_As {
 					}
 				}
 			});
+
+			var searchInput = document.getElementById('um-login-as-user-search');
+			var hiddenInput = document.getElementById('um-login-as-user-id');
+			var datalist    = document.getElementById('um-login-as-user-search-datalist');
+			if (!searchInput || !hiddenInput || !datalist || typeof window.ajaxurl === 'undefined') {
+				return;
+			}
+
+			var searchNonce = searchInput.getAttribute('data-um-login-as-search-nonce') || '';
+			var searchMap   = {};
+			var timer       = null;
+
+			function setHiddenFromInputValue() {
+				var value = (searchInput.value || '').trim();
+				hiddenInput.value = searchMap[value] ? String(searchMap[value]) : '';
+			}
+
+			function renderSearchResults(results) {
+				searchMap = {};
+				datalist.innerHTML = '';
+				if (!Array.isArray(results)) {
+					return;
+				}
+				results.forEach(function(item) {
+					if (!item || !item.id || !item.label) {
+						return;
+					}
+					var option = document.createElement('option');
+					option.value = item.label;
+					datalist.appendChild(option);
+
+					searchMap[item.label] = item.id;
+					if (item.login) {
+						searchMap[item.login] = item.id;
+					}
+					if (item.email) {
+						searchMap[item.email] = item.id;
+					}
+				});
+			}
+
+			function runSearch() {
+				var query = (searchInput.value || '').trim();
+				if (query.length < 2) {
+					renderSearchResults([]);
+					setHiddenFromInputValue();
+					return;
+				}
+
+				var url = window.ajaxurl + '?action=user_manager_search_users_for_login_as'
+					+ '&nonce=' + encodeURIComponent(searchNonce)
+					+ '&q=' + encodeURIComponent(query);
+
+				window.fetch(url, { credentials: 'same-origin' })
+					.then(function(response) {
+						if (!response.ok) {
+							throw new Error('Search request failed');
+						}
+						return response.json();
+					})
+					.then(function(payload) {
+						if (!payload || !payload.success || !payload.data) {
+							renderSearchResults([]);
+							return;
+						}
+						renderSearchResults(payload.data.results || []);
+						setHiddenFromInputValue();
+					})
+					.catch(function() {
+						renderSearchResults([]);
+					});
+			}
+
+			searchInput.addEventListener('input', function() {
+				setHiddenFromInputValue();
+				if (timer) {
+					window.clearTimeout(timer);
+				}
+				timer = window.setTimeout(runSearch, 220);
+			});
+			searchInput.addEventListener('change', setHiddenFromInputValue);
+			searchInput.addEventListener('blur', setHiddenFromInputValue);
 		})();
 		</script>
 		<?php
+	}
+
+	/**
+	 * Resolve a submitted username/email string into a user ID.
+	 */
+	private static function resolve_target_user_id(string $identifier): int {
+		$identifier = trim($identifier);
+		if ($identifier === '') {
+			return 0;
+		}
+
+		if (is_numeric($identifier)) {
+			$user_id = absint($identifier);
+			return get_userdata($user_id) ? $user_id : 0;
+		}
+
+		// Accept labels like "username (email@example.com)" from search suggestions.
+		if (preg_match('/^(.*?)\s*\(([^()]+)\)\s*$/', $identifier, $matches)) {
+			$possible_login = trim((string) ($matches[1] ?? ''));
+			$possible_email = sanitize_email((string) ($matches[2] ?? ''));
+
+			if ($possible_email !== '') {
+				$user = get_user_by('email', $possible_email);
+				if ($user) {
+					return (int) $user->ID;
+				}
+			}
+
+			if ($possible_login !== '') {
+				$user = get_user_by('login', sanitize_user($possible_login, false));
+				if ($user) {
+					return (int) $user->ID;
+				}
+			}
+		}
+
+		$as_email = sanitize_email($identifier);
+		if ($as_email !== '' && strcasecmp($as_email, $identifier) === 0) {
+			$user = get_user_by('email', $as_email);
+			if ($user) {
+				return (int) $user->ID;
+			}
+		}
+
+		$as_login = sanitize_user($identifier, false);
+		if ($as_login !== '') {
+			$user = get_user_by('login', $as_login);
+			if ($user) {
+				return (int) $user->ID;
+			}
+		}
+
+		return 0;
 	}
 
 	/**

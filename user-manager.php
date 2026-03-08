@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.9
+ * Version: 2.2.10
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.10 - February 22, 2026
+ * - Login As: replaced the large Select User dropdown with an AJAX search field that searches by username or email address.
+ * - Login As: user search now loads matches on demand for better performance on large sites (e.g., 10,000+ users) instead of preloading all users.
+ * - Login As: start-session handler now accepts typed username/email values and resolves them server-side when no hidden user ID is selected.
+ *
  * 2.2.9 - February 22, 2026
  * - Added a new top-level "Add-ons" tab in User Manager navigation next to Settings.
  * - Moved these cards out of Settings and into Add-ons: My Account Site Admin, Bulk Add to Cart, Checkout Pre-Defined Addresses, Custom WP-Admin Notifications, WP-Admin Bar Menu Items, WP-Admin CSS, and API.

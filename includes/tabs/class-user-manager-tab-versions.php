@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.10 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login As: replaced the large "Select User" dropdown with an AJAX search field that searches by username or email address.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login As: user search now loads matches on demand (instead of preloading all users), improving performance on large sites.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login As: start-session handling now resolves typed username/email values server-side when no hidden user ID is selected.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.9 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new top-level "Add-ons" tab in the User Manager navigation next to Settings.', 'user-manager'); ?></li>
