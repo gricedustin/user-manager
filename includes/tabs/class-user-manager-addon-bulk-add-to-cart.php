@@ -14,7 +14,7 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-bulk-add-to-cart" data-um-active-selectors="input[name='bulk_add_to_cart_enabled']">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-cart"></span>
-				<h2><?php esc_html_e('Bulk Add to Cart', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Add to Cart Bulk Import', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">

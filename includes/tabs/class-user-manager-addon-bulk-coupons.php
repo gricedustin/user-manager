@@ -55,7 +55,7 @@ class User_Manager_Addon_Bulk_Coupons {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-bulk-coupons" data-um-active-selectors="#um-bulk-coupons-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-tickets-alt"></span>
-				<h2><?php esc_html_e('Coupon Bulk Creator', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Coupon Creator', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
