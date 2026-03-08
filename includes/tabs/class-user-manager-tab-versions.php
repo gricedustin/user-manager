@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.33 <span>(February 22, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > General Settings: moved coupon-related options out of User Experience into a new "Coupons" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Settings > General Settings: moved post-meta-related options into a new "Post Meta" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('User Experience card now focuses on UX/search behavior while coupon and post meta controls are grouped in dedicated cards.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.32 <span>(February 22, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved the "Display Quick Search Bar" control from Settings into Add-ons as a dedicated "Quick Search Bar" card.', 'user-manager'); ?></li>

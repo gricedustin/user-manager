@@ -240,6 +240,23 @@ if (!defined('ABSPATH')) {
 						</div>
 						<div class="um-form-field">
 							<label>
+								<input type="checkbox" name="search_redirect_by_sku" value="1" <?php checked(!isset($settings['search_redirect_by_sku']) || !empty($settings['search_redirect_by_sku'])); ?> />
+								<?php esc_html_e('Allow WooCommerce front-end product search to include SKUs', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('When a search term (?s=) exactly matches a product or variation SKU, redirect directly to that product page instead of showing search results.', 'user-manager'); ?></p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Coupons -->
+				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="coupons" data-title="<?php echo esc_attr__('Coupons', 'user-manager'); ?>">
+					<div class="um-admin-card-header">
+						<span class="dashicons dashicons-tickets-alt"></span>
+						<h2><?php esc_html_e('Coupons', 'user-manager'); ?></h2>
+					</div>
+					<div class="um-admin-card-body">
+						<div class="um-form-field">
+							<label>
 								<input type="checkbox" name="coupon_email_converter" value="1" <?php checked($settings['coupon_email_converter'] ?? false); ?> />
 								<?php esc_html_e('Enable Coupon Email List Converter meta box', 'user-manager'); ?>
 							</label>
@@ -254,13 +271,6 @@ if (!defined('ABSPATH')) {
 						</div>
 						<div class="um-form-field">
 							<label>
-								<input type="checkbox" name="search_redirect_by_sku" value="1" <?php checked(!isset($settings['search_redirect_by_sku']) || !empty($settings['search_redirect_by_sku'])); ?> />
-								<?php esc_html_e('Allow WooCommerce front-end product search to include SKUs', 'user-manager'); ?>
-							</label>
-							<p class="description"><?php esc_html_e('When a search term (?s=) exactly matches a product or variation SKU, redirect directly to that product page instead of showing search results.', 'user-manager'); ?></p>
-						</div>
-						<div class="um-form-field">
-							<label>
 								<input type="checkbox" name="coupon_code_url_param_enabled" value="1" <?php checked($settings['coupon_code_url_param_enabled'] ?? false); ?> />
 								<?php esc_html_e('Apply Coupon Code via URL Parameter', 'user-manager'); ?>
 							</label>
@@ -271,6 +281,16 @@ if (!defined('ABSPATH')) {
 							<input type="text" name="coupon_code_url_param_name" id="um-coupon-code-url-param" class="regular-text" value="<?php echo esc_attr($settings['coupon_code_url_param_name'] ?? 'coupon-code'); ?>" placeholder="coupon-code" />
 							<p class="description"><?php esc_html_e('Default is coupon-code. Use only letters, numbers, hyphens, and underscores. Example: ?coupon-code=SAVE10', 'user-manager'); ?></p>
 						</div>
+					</div>
+				</div>
+
+				<!-- Post Meta -->
+				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="post-meta" data-title="<?php echo esc_attr__('Post Meta', 'user-manager'); ?>">
+					<div class="um-admin-card-header">
+						<span class="dashicons dashicons-editor-code"></span>
+						<h2><?php esc_html_e('Post Meta', 'user-manager'); ?></h2>
+					</div>
+					<div class="um-admin-card-body">
 						<div class="um-form-field">
 							<label>
 								<input type="checkbox" name="display_post_meta_meta_box" value="1" <?php checked($settings['display_post_meta_meta_box'] ?? false); ?> />

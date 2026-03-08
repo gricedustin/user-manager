@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.32
+ * Version: 2.2.33
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.33 - February 22, 2026
+ * - Settings > General Settings: moved coupon-related options out of User Experience into a new "Coupons" card.
+ * - Settings > General Settings: moved post-meta-related options into a new "Post Meta" card.
+ * - User Experience card now focuses on UX/search behavior while coupon and post meta controls are grouped in dedicated cards.
+ *
  * 2.2.32 - February 22, 2026
  * - Moved the "Display Quick Search Bar" control from Settings into Add-ons as a dedicated "Quick Search Bar" card.
  * - Add-ons now saves the Quick Search Bar toggle, and General Settings saves no longer overwrite this add-on setting.
