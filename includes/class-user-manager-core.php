@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.62';
+	const VERSION = '2.2.63';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1832,6 +1832,8 @@ final class User_Manager_Core {
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
 		$force_debug       = self::is_bulk_add_to_cart_debug_requested();
 		$debug_enabled     = (isset($options['debug_mode']) && (string) $options['debug_mode'] === '1') || $force_debug;
+		$sample_csv        = $identifier_column . ',' . $quantity_column . "\n" . '123,1' . "\n" . '456,2' . "\n";
+		$sample_csv_url    = 'data:text/csv;charset=utf-8,' . rawurlencode($sample_csv);
 
 		$output = '<div class="bulk-add-to-cart-form" style="max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
 
@@ -1924,7 +1926,6 @@ final class User_Manager_Core {
 			$label
 		) . '</li>';
 		$output .= '<li>' . esc_html__('Upload your CSV file and click "Add to Cart"', 'user-manager') . '</li>';
-		$output .= '<li>' . esc_html__('Optional debugging: append ?um_bulk_add_to_cart_debug=1 to this page URL to force verbose diagnostics.', 'user-manager') . '</li>';
 		$output .= '</ol>';
 		$output .= '</div>';
 
@@ -1934,6 +1935,9 @@ final class User_Manager_Core {
 		$output .= '<label for="csv_file" style="display: block; margin-bottom: 10px; font-weight: bold;">' . esc_html__('Select CSV File:', 'user-manager') . '</label>';
 		$output .= '<input type="file" name="csv_file" id="csv_file" accept=".csv" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">';
 		$output .= '</div>';
+		$output .= '<p style="margin: 0 0 15px 0;">';
+		$output .= '<a class="button" href="' . esc_url($sample_csv_url) . '" download="bulk-add-to-cart-sample.csv">' . esc_html__('Download Sample CSV', 'user-manager') . '</a>';
+		$output .= '</p>';
 		$output .= '<button type="submit" name="bulk_add_to_cart_submit" class="button button-primary" style="padding: 10px 20px;">' . esc_html__('Add to Cart', 'user-manager') . '</button>';
 		$output .= '</form>';
 		$output .= '</div>';
