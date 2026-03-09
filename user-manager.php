@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.67
+ * Version: 2.2.68
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.68 - March 8, 2026
+ * - Add-ons UI: retitled "Coupon Automatically Created for New User" to "Coupon for New User".
+ * - Add-ons tab: re-sorted cards A→Z after the title update.
+ *
  * 2.2.67 - March 8, 2026
  * - Bulk Add to Cart uploads now add a User Activity log entry with a direct URL link to the uploaded CSV file (visible under Reports → User Activity).
  *

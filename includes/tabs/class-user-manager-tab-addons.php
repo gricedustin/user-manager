@@ -36,8 +36,8 @@ class User_Manager_Tab_Addons {
 			<div class="um-admin-grid um-admin-grid-single">
 				<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
 				<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
-				<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
 				<?php User_Manager_Addon_Bulk_Coupons::render($settings); ?>
+				<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
 				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
