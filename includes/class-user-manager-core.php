@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.61';
+	const VERSION = '2.2.62';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -178,10 +178,11 @@ final class User_Manager_Core {
 			add_action('woocommerce_cart_loaded_from_session', [__CLASS__, 'maybe_apply_coupon_from_url_param'], 20, 1);
 		}
 
-		// Bulk Add to Cart integration (migrated from standalone plugin) – only when
-		// enabled in settings, WooCommerce is available, and the standalone plugin
-		// is not already providing the same shortcode/handlers.
-		if (!empty($settings['bulk_add_to_cart_enabled']) && class_exists('WooCommerce')) {
+		// Bulk Add to Cart integration (migrated from standalone plugin).
+		// Register shortcode/hooks when enabled, regardless of immediate WC class
+		// availability, because plugin load order can initialize this plugin before
+		// WooCommerce classes are declared.
+		if (!empty($settings['bulk_add_to_cart_enabled'])) {
 			if (!shortcode_exists('bulk_add_to_cart')) {
 				add_shortcode('bulk_add_to_cart', [__CLASS__, 'bulk_add_to_cart_shortcode']);
 			}
@@ -1818,6 +1819,9 @@ final class User_Manager_Core {
 	 * Renders the CSV upload form and optional debug block.
 	 */
 	public static function bulk_add_to_cart_shortcode(): string {
+		if (!class_exists('WooCommerce')) {
+			return '<p>' . esc_html__('WooCommerce is required to use the bulk add to cart feature.', 'user-manager') . '</p>';
+		}
 		if (!is_user_logged_in()) {
 			return '<p>' . esc_html__('Please log in to use the bulk add to cart feature.', 'user-manager') . '</p>';
 		}

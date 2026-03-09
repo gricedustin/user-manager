@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.62 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart: fixed front-end shortcode registration so [bulk_add_to_cart] registers reliably even when WooCommerce loads after User Manager.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart shortcode now displays a clear WooCommerce-required message when WooCommerce is unavailable.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.61 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings tab: cards now sort A–Z on load, with API Keys always kept as the final card.', 'user-manager'); ?></li>

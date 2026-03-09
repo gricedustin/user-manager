@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.61
+ * Version: 2.2.62
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.62 - March 8, 2026
+ * - Bulk Add to Cart: fixed front-end shortcode registration so [bulk_add_to_cart] still registers when WooCommerce loads after User Manager.
+ * - Bulk Add to Cart shortcode now shows a clear WooCommerce-required message if WooCommerce is unavailable.
+ *
  * 2.2.61 - March 8, 2026
  * - Settings tab: cards are now sorted alphabetically (A–Z) on load, while keeping API Keys pinned as the final card.
  *
