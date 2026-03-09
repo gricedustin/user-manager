@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.66';
+	const VERSION = '2.2.67';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2089,6 +2089,8 @@ final class User_Manager_Core {
 		if ($debug_enabled) {
 			wc_add_notice('Upload saved to: ' . $upload_path, 'notice');
 		}
+		$uploaded_file_url = content_url('bulk-add-to-cart-import-files/' . rawurlencode($new_name));
+		self::add_user_activity((int) get_current_user_id(), __('Bulk Add to Cart CSV Upload', 'user-manager'), $uploaded_file_url);
 
 		$handle = fopen($upload_path, 'r');
 		if (!$handle) {
