@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.59';
+	const VERSION = '2.2.60';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5558,7 +5558,6 @@ final class User_Manager_Core {
 			border: 1px solid #c3c4c7;
 			border-radius: 4px;
 			box-shadow: 0 1px 1px rgba(0,0,0,.04);
-			max-height: 750px;
 			display: flex;
 			flex-direction: column;
 		}
