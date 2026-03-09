@@ -385,6 +385,35 @@ if (!defined('ABSPATH')) {
 		</style>
 		<script>
 		jQuery(document).ready(function($) {
+			function sortSettingsCards() {
+				var $grid = $('.um-admin-grid.um-admin-grid-single').first();
+				if (!$grid.length) {
+					return;
+				}
+				var $saveCard = $grid.children('.um-settings-save-card').first();
+				if (!$saveCard.length) {
+					return;
+				}
+
+				var $apiCard = $grid.children('.um-settings-filter-card[data-card="api-keys"]').first();
+				var sortableCards = $grid.children('.um-settings-filter-card').not($apiCard).get();
+
+				sortableCards.sort(function(a, b) {
+					var aTitle = (($(a).data('title') || '') + '').toLowerCase();
+					var bTitle = (($(b).data('title') || '') + '').toLowerCase();
+					return aTitle.localeCompare(bTitle);
+				});
+
+				$(sortableCards).each(function() {
+					$(this).insertBefore($saveCard);
+				});
+
+				if ($apiCard.length) {
+					$apiCard.insertBefore($saveCard);
+				}
+			}
+			sortSettingsCards();
+
 			// Toggle throttle emails count field
 			function toggleThrottleEmailsCount() {
 				if ($('#um-throttle-emails-enabled').is(':checked')) {
