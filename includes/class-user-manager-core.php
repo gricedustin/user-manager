@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.65';
+	const VERSION = '2.2.66';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1836,8 +1836,17 @@ final class User_Manager_Core {
 		$sample_csv        = $identifier_column . ',' . $quantity_column . "\n" . '123,1' . "\n" . '456,2' . "\n";
 		$sample_csv_url    = 'data:text/csv;charset=utf-8,' . rawurlencode($sample_csv);
 		$sample_with_data_url = add_query_arg('um_bulk_add_to_cart_sample_data', '1', remove_query_arg('um_bulk_add_to_cart_sample_data'));
+		$form_action_url   = esc_url($_SERVER['REQUEST_URI'] ?? '');
 
 		$output = '<div class="bulk-add-to-cart-form" style="max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		if (function_exists('wc_get_notices') && function_exists('wc_print_notices')) {
+			$pending_notices = wc_get_notices();
+			if (!empty($pending_notices)) {
+				ob_start();
+				wc_print_notices();
+				$output .= (string) ob_get_clean();
+			}
+		}
 
 		if (isset($_POST['bulk_add_to_cart_submit']) && $debug_enabled) {
 			$output .= '<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #dc3545;">';
@@ -1867,6 +1876,18 @@ final class User_Manager_Core {
 			$output .= '<p><strong>' . esc_html__('WooCommerce Cart:', 'user-manager') . '</strong> ';
 			$output .= (function_exists('WC') && WC()->cart) ? esc_html__('Initialized', 'user-manager') : esc_html__('Not initialized', 'user-manager');
 			$output .= '</p>';
+			$output .= '<p><strong>' . esc_html__('Request Method:', 'user-manager') . '</strong> ' . esc_html(isset($_SERVER['REQUEST_METHOD']) ? (string) $_SERVER['REQUEST_METHOD'] : '') . '</p>';
+			$output .= '<p><strong>' . esc_html__('Form Action URL:', 'user-manager') . '</strong> <code>' . esc_html($form_action_url) . '</code></p>';
+			$output .= '<p><strong>' . esc_html__('URL Debug Flag:', 'user-manager') . '</strong> ' . ($force_debug ? esc_html__('Enabled', 'user-manager') : esc_html__('Disabled', 'user-manager')) . '</p>';
+
+			if (isset($_FILES['csv_file']) && is_array($_FILES['csv_file'])) {
+				$file_size = isset($_FILES['csv_file']['size']) ? (int) $_FILES['csv_file']['size'] : 0;
+				$file_type = isset($_FILES['csv_file']['type']) ? (string) $_FILES['csv_file']['type'] : '';
+				$tmp_name  = isset($_FILES['csv_file']['tmp_name']) ? (string) $_FILES['csv_file']['tmp_name'] : '';
+				$output .= '<p><strong>' . esc_html__('File Size (bytes):', 'user-manager') . '</strong> ' . esc_html((string) $file_size) . '</p>';
+				$output .= '<p><strong>' . esc_html__('File MIME Type:', 'user-manager') . '</strong> ' . esc_html($file_type !== '' ? $file_type : '—') . '</p>';
+				$output .= '<p><strong>' . esc_html__('Temp File Exists:', 'user-manager') . '</strong> ' . (is_file($tmp_name) ? esc_html__('Yes', 'user-manager') : esc_html__('No', 'user-manager')) . '</p>';
+			}
 
 			$output .= '<p><strong>' . esc_html__('Current Settings:', 'user-manager') . '</strong></p>';
 			$output .= '<ul>';
@@ -1927,11 +1948,12 @@ final class User_Manager_Core {
 			esc_html__('For variations, use the variation %s', 'user-manager'),
 			$label
 		) . '</li>';
+		$output .= '<li>' . esc_html__('Rows with blank or 0 quantity are ignored.', 'user-manager') . '</li>';
 		$output .= '<li>' . esc_html__('Upload your CSV file and click "Add to Cart"', 'user-manager') . '</li>';
 		$output .= '</ol>';
 		$output .= '</div>';
 
-		$output .= '<form method="post" enctype="multipart/form-data" action="' . esc_url($_SERVER['REQUEST_URI'] ?? '') . '">';
+		$output .= '<form method="post" enctype="multipart/form-data" action="' . $form_action_url . '">';
 		$output .= wp_nonce_field('bulk_add_to_cart_upload', 'bulk_add_to_cart_nonce', true, false);
 		$output .= '<div style="margin-bottom: 20px;">';
 		$output .= '<label for="csv_file" style="display: block; margin-bottom: 10px; font-weight: bold;">' . esc_html__('Select CSV File:', 'user-manager') . '</label>';
@@ -2021,6 +2043,13 @@ final class User_Manager_Core {
 			return;
 		}
 
+		$options          = get_option('bulk_add_to_cart_settings', []);
+		$identifier_col   = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
+		$identifier_type  = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
+		$quantity_col     = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
+		$debug_mode       = isset($options['debug_mode']) ? (string) $options['debug_mode'] : '0';
+		$debug_enabled    = $debug_mode === '1' || self::is_bulk_add_to_cart_debug_requested();
+
 		if (function_exists('wc_load_cart')) {
 			wc_load_cart();
 		}
@@ -2036,14 +2065,29 @@ final class User_Manager_Core {
 
 		$file       = $_FILES['csv_file'];
 		$filename   = isset($file['name']) ? sanitize_file_name(wp_unslash($file['name'])) : 'upload.csv';
+		$file_size  = isset($file['size']) ? (int) $file['size'] : 0;
+		$file_type  = isset($file['type']) ? (string) $file['type'] : '';
+		$tmp_name   = isset($file['tmp_name']) ? (string) $file['tmp_name'] : '';
 		$timestamp  = current_time('timestamp');
 		$new_name   = $timestamp . '-' . $filename;
 		$upload_dir = self::get_bulk_add_to_cart_upload_dir();
 		$upload_path = $upload_dir . $new_name;
+		if ($debug_enabled) {
+			wc_add_notice(
+				'Upload metadata - Name: ' . $filename .
+				', Size(bytes): ' . $file_size .
+				', MIME: ' . ($file_type !== '' ? $file_type : 'unknown') .
+				', Temp exists: ' . (is_file($tmp_name) ? 'yes' : 'no'),
+				'notice'
+			);
+		}
 
 		if (!move_uploaded_file($file['tmp_name'], $upload_path)) {
 			wc_add_notice(esc_html__('Error saving file. Please try again.', 'user-manager'), 'error');
 			return;
+		}
+		if ($debug_enabled) {
+			wc_add_notice('Upload saved to: ' . $upload_path, 'notice');
 		}
 
 		$handle = fopen($upload_path, 'r');
@@ -2053,8 +2097,10 @@ final class User_Manager_Core {
 		}
 
 		$headers = false;
+		$leading_blank_rows = 0;
 		while (($header_row = fgetcsv($handle)) !== false) {
 			if (!self::bulk_add_to_cart_row_has_data($header_row)) {
+				$leading_blank_rows++;
 				continue;
 			}
 			$headers = $header_row;
@@ -2065,13 +2111,6 @@ final class User_Manager_Core {
 			wc_add_notice(esc_html__('Invalid CSV format. Please check the file structure.', 'user-manager'), 'error');
 			return;
 		}
-
-		$options          = get_option('bulk_add_to_cart_settings', []);
-		$identifier_col   = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
-		$identifier_type  = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
-		$quantity_col     = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
-		$debug_mode       = isset($options['debug_mode']) ? (string) $options['debug_mode'] : '0';
-		$debug_enabled    = $debug_mode === '1' || self::is_bulk_add_to_cart_debug_requested();
 
 		$normalized_headers = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], $headers);
 		$normalized_lookup  = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], [$identifier_col, $quantity_col]);
@@ -2087,6 +2126,7 @@ final class User_Manager_Core {
 				', Quantity Column: ' . $quantity_col,
 				'notice'
 			);
+			wc_add_notice('Leading blank rows skipped before header: ' . $leading_blank_rows, 'notice');
 		}
 
 		$identifier_index = array_search($identifier_lookup, $normalized_headers, true);
@@ -2118,9 +2158,14 @@ final class User_Manager_Core {
 		$errors               = [];
 		$successful_additions = [];
 		$row_number           = 1;
+		$blank_rows_skipped   = 0;
+		$zero_qty_skipped     = 0;
+		$data_rows_seen       = 0;
 
 		while (($row = fgetcsv($handle)) !== false) {
+			$data_rows_seen++;
 			if (!self::bulk_add_to_cart_row_has_data($row)) {
+				$blank_rows_skipped++;
 				continue;
 			}
 			$row_number++;
@@ -2132,12 +2177,15 @@ final class User_Manager_Core {
 				wc_add_notice('Processing row ' . $row_number . ' - Identifier: ' . $identifier . ', Quantity: ' . $quantity, 'notice');
 			}
 
-			if ($identifier === '' || $quantity <= 0) {
+			if ($quantity <= 0) {
+				$zero_qty_skipped++;
+				continue;
+			}
+			if ($identifier === '') {
 				$error_count++;
 				$errors[] = sprintf(
-					esc_html__('Row %1$d: Invalid identifier or quantity (Identifier: "%2$s", Quantity: "%3$s")', 'user-manager'),
+					esc_html__('Row %1$d: Missing identifier (Quantity: "%2$s")', 'user-manager'),
 					$row_number,
-					esc_html($identifier),
 					esc_html($quantity_raw)
 				);
 				continue;
@@ -2244,10 +2292,37 @@ final class User_Manager_Core {
 			);
 
 			if (!empty($errors)) {
+				$max_error_notices = 50;
+				$shown = 0;
 				foreach ($errors as $msg) {
+					if ($shown >= $max_error_notices) {
+						break;
+					}
 					wc_add_notice($msg, 'error');
+					$shown++;
+				}
+				$remaining = count($errors) - $shown;
+				if ($remaining > 0) {
+					wc_add_notice(
+						sprintf(
+							/* translators: %d: number of hidden errors */
+							esc_html__('%d additional row errors were hidden to keep the notice list manageable.', 'user-manager'),
+							$remaining
+						),
+						'error'
+					);
 				}
 			}
+		}
+		if ($debug_enabled) {
+			wc_add_notice(
+				'Processing summary - Rows seen: ' . $data_rows_seen .
+				', Blank rows skipped: ' . $blank_rows_skipped .
+				', Zero/blank quantity rows skipped: ' . $zero_qty_skipped .
+				', Added: ' . $success_count .
+				', Errors: ' . $error_count,
+				'notice'
+			);
 		}
 
 		$current_user = wp_get_current_user();
