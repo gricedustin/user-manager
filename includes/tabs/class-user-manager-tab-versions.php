@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.64 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart shortcode UI: added "Download Sample CSV with Product Data" to export all product + variation IDs with quantity defaulted to 0, plus informational product title and variation columns.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart uploader compatibility: product title / variation columns remain informational and are ignored during upload because only identifier and quantity columns are parsed.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.63 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Bulk Add to Cart shortcode UI: removed the optional debug URL bullet from the "How to Use" list.', 'user-manager'); ?></li>
