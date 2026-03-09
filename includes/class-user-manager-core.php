@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.58';
+	const VERSION = '2.2.59';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -5585,7 +5585,6 @@ final class User_Manager_Core {
 		}
 		.um-admin-card-body {
 			padding: 16px;
-			overflow-y: auto;
 			flex: 1;
 			min-height: 0;
 		}

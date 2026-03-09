@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.59 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Admin card styling: removed global overflow-y:auto from .um-admin-card-body so cards no longer force internal vertical scrolling.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.58 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Site Admin: removed redundant helper description line under the activation area.', 'user-manager'); ?></li>
