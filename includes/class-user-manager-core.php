@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.64';
+	const VERSION = '2.2.65';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2052,7 +2052,14 @@ final class User_Manager_Core {
 			return;
 		}
 
-		$headers = fgetcsv($handle);
+		$headers = false;
+		while (($header_row = fgetcsv($handle)) !== false) {
+			if (!self::bulk_add_to_cart_row_has_data($header_row)) {
+				continue;
+			}
+			$headers = $header_row;
+			break;
+		}
 		if (!$headers) {
 			fclose($handle);
 			wc_add_notice(esc_html__('Invalid CSV format. Please check the file structure.', 'user-manager'), 'error');
@@ -2113,6 +2120,9 @@ final class User_Manager_Core {
 		$row_number           = 1;
 
 		while (($row = fgetcsv($handle)) !== false) {
+			if (!self::bulk_add_to_cart_row_has_data($row)) {
+				continue;
+			}
 			$row_number++;
 			$identifier = isset($row[$identifier_index]) ? trim((string) $row[$identifier_index]) : '';
 			$quantity_raw = isset($row[$quantity_index]) ? (string) $row[$quantity_index] : '';
@@ -2368,6 +2378,23 @@ final class User_Manager_Core {
 		$raw = strtolower(trim($raw));
 
 		return $raw !== '' && $raw !== '0' && $raw !== 'false' && $raw !== 'no';
+	}
+
+	/**
+	 * Check whether a parsed CSV row contains any non-empty cell value.
+	 *
+	 * @param mixed $row CSV row from fgetcsv().
+	 */
+	private static function bulk_add_to_cart_row_has_data($row): bool {
+		if (!is_array($row) || empty($row)) {
+			return false;
+		}
+		foreach ($row as $cell) {
+			if (trim((string) $cell) !== '') {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
