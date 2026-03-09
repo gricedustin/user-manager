@@ -203,7 +203,7 @@ if (!defined('ABSPATH')) {
 						<div id="um-role-change-alert-fields" style="<?php echo empty($settings['role_change_alert_enabled']) ? 'display:none;' : ''; ?>">
 							<div class="um-form-field">
 								<label class="um-label-block"><?php esc_html_e('Monitor these roles (alert when a user with one of these roles changes to any other role)', 'user-manager'); ?></label>
-								<div class="um-checkbox-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #c3c4c7; padding: 10px 12px; background: #fff; border-radius: 4px;">
+								<div class="um-checkbox-list" style="border: 1px solid #c3c4c7; padding: 10px 12px; background: #fff; border-radius: 4px;">
 									<?php
 									$alert_roles = isset($settings['role_change_alert_roles']) && is_array($settings['role_change_alert_roles']) ? $settings['role_change_alert_roles'] : [];
 									foreach (User_Manager_Core::get_user_roles() as $role_key => $role_name) :

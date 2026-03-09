@@ -233,10 +233,6 @@ class User_Manager_Tab_Email_Templates {
 				grid-template-columns: 1fr;
 			}
 		}
-		.um-email-templates-list .um-admin-card-body {
-			max-height: calc(100vh - 250px);
-			overflow-y: auto;
-		}
 		.um-template-card {
 			background: #f9f9f9;
 			border: 1px solid #dcdcde;
@@ -305,8 +301,6 @@ class User_Manager_Tab_Email_Templates {
 			border-radius: 4px;
 			padding: 12px;
 			font-size: 13px;
-			max-height: 150px;
-			overflow-y: auto;
 		}
 		.um-template-body-content p {
 			margin: 0 0 4px;

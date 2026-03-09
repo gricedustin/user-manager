@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.56';
+	const VERSION = '2.2.57';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -7296,7 +7296,7 @@ final class User_Manager_Core {
 			</table>
 			
 			<h4><?php esc_html_e('Detailed Log', 'user-manager'); ?></h4>
-			<div style="max-height: 400px; overflow-y: auto;">
+			<div>
 				<table class="widefat striped">
 					<thead>
 						<tr>
@@ -8231,7 +8231,7 @@ final class User_Manager_Core {
 					<?php if (empty($logins)) : ?>
 						<em><?php esc_html_e('No login records found for this user on this site.', 'user-manager'); ?></em>
 					<?php else : ?>
-						<div style="max-height:260px; overflow:auto; border:1px solid #dcdcde; border-radius:4px; background:#fff;">
+						<div style="border:1px solid #dcdcde; border-radius:4px; background:#fff;">
 							<table class="widefat striped" style="margin:0;">
 								<thead>
 									<tr>

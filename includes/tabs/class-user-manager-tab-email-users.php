@@ -337,8 +337,6 @@ class User_Manager_Tab_Email_Users {
 			}
 		}
 		.um-role-selector {
-			max-height: 200px;
-			overflow-y: auto;
 			border: 1px solid #ddd;
 			border-radius: 4px;
 			padding: 10px;
@@ -407,10 +405,6 @@ class User_Manager_Tab_Email_Users {
 			color: #646970;
 			font-style: italic;
 			margin: 0;
-		}
-		.um-create-user-recent .um-admin-card-body {
-			max-height: 500px;
-			overflow-y: auto;
 		}
 		</style>
 		

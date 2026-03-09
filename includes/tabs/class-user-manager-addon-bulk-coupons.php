@@ -177,7 +177,7 @@ class User_Manager_Addon_Bulk_Coupons {
 
 					<hr style="margin:18px 0;" />
 					<h3 style="margin:0 0 8px;"><?php esc_html_e('Recent Bulk Creates', 'user-manager'); ?></h3>
-					<div style="max-height:320px;overflow-y:auto;">
+					<div>
 						<?php if (empty($recent_bulk)) : ?>
 							<p class="um-empty-message"><?php esc_html_e('No bulk coupon runs recorded yet.', 'user-manager'); ?></p>
 						<?php else : ?>

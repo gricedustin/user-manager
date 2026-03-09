@@ -224,10 +224,6 @@ class User_Manager_Tab_Create_User {
 			font-style: italic;
 			margin: 0;
 		}
-		.um-create-user-recent .um-admin-card-body {
-			max-height: 500px;
-			overflow-y: auto;
-		}
 		</style>
 		
 		<!-- Email Preview Modal -->

@@ -326,7 +326,7 @@ admin@example.com,Admin,User,administrator,admin.user,Initech,555-0102,WELCOME10
 					<span class="dashicons dashicons-clock"></span>
 					<h2><?php esc_html_e('Recent Bulk Creates', 'user-manager'); ?></h2>
 				</div>
-				<div class="um-admin-card-body" style="max-height: 300px; overflow-y: auto;">
+				<div class="um-admin-card-body">
 					<?php if (empty($recent_bulk)) : ?>
 						<p class="um-empty-message"><?php esc_html_e('No bulk creates yet.', 'user-manager'); ?></p>
 					<?php else : ?>

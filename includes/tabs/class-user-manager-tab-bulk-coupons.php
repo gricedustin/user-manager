@@ -229,7 +229,7 @@ class User_Manager_Tab_Bulk_Coupons {
 					<span class="dashicons dashicons-clock"></span>
 					<h2><?php esc_html_e('Recent Bulk Creates', 'user-manager'); ?></h2>
 				</div>
-				<div class="um-admin-card-body" style="max-height: 320px; overflow-y: auto;">
+				<div class="um-admin-card-body">
 					<?php if (empty($recent_bulk)) : ?>
 						<p class="um-empty-message"><?php esc_html_e('No bulk coupon runs recorded yet.', 'user-manager'); ?></p>
 					<?php else : ?>
