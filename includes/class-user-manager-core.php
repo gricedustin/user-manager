@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.87';
+	const VERSION = '2.2.88';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2518,25 +2518,29 @@ final class User_Manager_Core {
 
 		fclose($handle);
 
+		$history_confirmation_messages = [];
+		$line_notice_messages = [];
+
 		if ($total_items_added > 0) {
-			$summary_message = sprintf(
+			$summary_message_plain = sprintf(
 				/* translators: %d: total quantity of items added */
 				_n('%d item total was added to cart.', '%d items total were added to cart.', $total_items_added, 'user-manager'),
 				$total_items_added
 			);
+			$summary_message = $summary_message_plain;
 			$summary_message .= ' <a href="' . esc_url(wc_get_cart_url()) . '" class="button wc-forward">' . esc_html__('View cart', 'user-manager') . '</a>';
 			wc_add_notice($summary_message, 'success', ['um_bulk_add_to_cart_keep_visible' => 1]);
+			$history_confirmation_messages[] = $summary_message_plain;
 		}
 
 		if ($error_count > 0) {
-			wc_add_notice(
-				sprintf(
-					/* translators: %d: number of products */
-					_n('%d product could not be added.', '%d products could not be added.', $error_count, 'user-manager'),
-					$error_count
-				),
-				'error'
+			$error_summary_message = sprintf(
+				/* translators: %d: number of products */
+				_n('%d product could not be added.', '%d products could not be added.', $error_count, 'user-manager'),
+				$error_count
 			);
+			wc_add_notice($error_summary_message, 'error');
+			$history_confirmation_messages[] = $error_summary_message;
 		}
 
 		if (!empty($line_item_results)) {
@@ -2560,6 +2564,7 @@ final class User_Manager_Core {
 						(string) $entry['note']
 					);
 				}
+				$line_notice_messages[] = $line_text;
 				$line_notice .= '<li>' . esc_html($line_text) . '</li>';
 			}
 			$line_notice .= '</ul>';
@@ -2589,6 +2594,16 @@ final class User_Manager_Core {
 		if (!is_array($history)) {
 			$history = [];
 		}
+		$media_info            = self::$bulk_add_to_cart_media_upload_info;
+		$media_attachment_id   = !empty($media_info['attachment_id']) ? (int) $media_info['attachment_id'] : 0;
+		$media_attachment_url  = !empty($media_info['attachment_url']) ? (string) $media_info['attachment_url'] : '';
+		$history_file_url      = $media_attachment_url;
+		if ($history_file_url === '' && !empty($media_info['activity_url'])) {
+			$history_file_url = (string) $media_info['activity_url'];
+		}
+		if ($history_file_url === '') {
+			$history_file_url = content_url('bulk-add-to-cart-import-files/' . rawurlencode($new_name));
+		}
 
 		array_unshift(
 			$history,
@@ -2596,11 +2611,19 @@ final class User_Manager_Core {
 				'timestamp'      => current_time('mysql'),
 				'user_id'        => $current_user->ID,
 				'username'       => $current_user->user_login,
+				'user_email'     => (string) ($current_user->user_email ?? ''),
 				'filename'       => $new_name,
 				'success_count'  => $success_count,
+				'total_items_added' => $total_items_added,
 				'error_count'    => $error_count,
 				'errors'         => $errors,
 				'successes'      => $successful_additions,
+				'line_item_results' => $line_item_results,
+				'confirmation_messages' => $history_confirmation_messages,
+				'detail_messages' => $line_notice_messages,
+				'media_attachment_id' => $media_attachment_id,
+				'media_attachment_url' => $media_attachment_url,
+				'file_url' => $history_file_url,
 			]
 		);
 		$history = array_slice($history, 0, 100);
