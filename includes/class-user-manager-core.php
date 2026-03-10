@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.69';
+	const VERSION = '2.2.70';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2012,10 +2012,10 @@ final class User_Manager_Core {
 		$output .= '<input type="file" name="csv_file" id="csv_file" accept=".csv" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">';
 		$output .= '</div>';
 		$output .= '<p style="margin: 0 0 15px 0;">';
-		$output .= '<a class="button" href="' . esc_url($sample_csv_url) . '" download="bulk-add-to-cart-sample.csv">' . esc_html__('Download Sample CSV', 'user-manager') . '</a>';
+		$output .= '<a class="button" href="' . esc_url($sample_csv_url, ['http', 'https', 'data']) . '" download="bulk-add-to-cart-sample.csv">' . esc_html__('Download Sample CSV', 'user-manager') . '</a>';
 		$output .= ' <a class="button" href="' . esc_url($sample_with_data_url) . '">' . esc_html__('Download Sample CSV with Product Data', 'user-manager') . '</a>';
 		$output .= '</p>';
-		$output .= '<button type="submit" name="bulk_add_to_cart_submit" class="button button-primary" style="padding: 10px 20px;">' . esc_html__('Add to Cart', 'user-manager') . '</button>';
+		$output .= '<button type="submit" name="bulk_add_to_cart_submit" value="1" class="button button-primary" style="padding: 10px 20px;">' . esc_html__('Add to Cart', 'user-manager') . '</button>';
 		$output .= '</form>';
 		$output .= '</div>';
 
@@ -2081,7 +2081,7 @@ final class User_Manager_Core {
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 			return;
 		}
-		if (empty($_POST['bulk_add_to_cart_submit'])) {
+		if (!isset($_POST['bulk_add_to_cart_submit'])) {
 			return;
 		}
 
