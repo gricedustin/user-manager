@@ -14,6 +14,13 @@ class User_Manager_Addon_WP_Admin_CSS {
 		$is_enabled = array_key_exists('wp_admin_css_enabled', $settings)
 			? !empty($settings['wp_admin_css_enabled'])
 			: false;
+		$hide_chrome_enabled = !empty($settings['wp_admin_css_hide_admin_chrome_enabled']);
+		$hide_chrome_users = isset($settings['wp_admin_css_hide_admin_chrome_users_include']) && is_array($settings['wp_admin_css_hide_admin_chrome_users_include'])
+			? implode(', ', $settings['wp_admin_css_hide_admin_chrome_users_include'])
+			: (string) ($settings['wp_admin_css_hide_admin_chrome_users_include'] ?? '');
+		$hide_chrome_roles = isset($settings['wp_admin_css_hide_admin_chrome_roles']) && is_array($settings['wp_admin_css_hide_admin_chrome_roles'])
+			? $settings['wp_admin_css_hide_admin_chrome_roles']
+			: [];
 		if (!array_key_exists('wp_admin_css_enabled', $settings)) {
 			$roles_css = isset($settings['wp_admin_css_roles']) && is_array($settings['wp_admin_css_roles']) ? $settings['wp_admin_css_roles'] : [];
 			$has_role_css = false;
@@ -87,6 +94,34 @@ class User_Manager_Addon_WP_Admin_CSS {
 						</div>
 					</div>
 					<?php endforeach; ?>
+
+					<div class="um-wp-admin-css-block" style="margin-bottom: 24px; padding: 16px; border: 1px solid #c3c4c7; border-radius: 4px; background: #f6f7f7;">
+						<h3 class="um-settings-subsection" style="margin-top: 0;"><?php esc_html_e('Apply CSS to Hide WP-Admin Side Bar and All Items in Top Bar EXCEPT Howdy & logout area profile area and WP-Admin Bar Menu Items', 'user-manager'); ?></h3>
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="wp_admin_css_hide_admin_chrome_enabled" id="um-wp-admin-css-hide-admin-chrome-enabled" value="1" <?php checked($hide_chrome_enabled); ?><?php echo $form_attr; ?> />
+								<?php esc_html_e('Activate', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('Hides wp-admin sidebar and most top-bar items, while preserving the profile/logout (Howdy) area and custom WP-Admin Bar Menu Items.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label for="um-wp-admin-css-hide-admin-chrome-users"><?php esc_html_e('Usernames or emails who receive the CSS above', 'user-manager'); ?></label>
+							<input type="text" name="wp_admin_css_hide_admin_chrome_users_include" id="um-wp-admin-css-hide-admin-chrome-users" class="large-text" value="<?php echo esc_attr($hide_chrome_users); ?>" placeholder="admin@example.com, jane"<?php echo $form_attr; ?> />
+							<p class="description"><?php esc_html_e('Comma-separated usernames or email addresses. Combined with roles below using OR logic.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label><?php esc_html_e('Roles who receive the CSS above', 'user-manager'); ?></label>
+							<div class="um-checkbox-grid">
+								<?php foreach (User_Manager_Core::get_user_roles() as $role_key => $role_name) : ?>
+									<label class="um-checkbox-chip">
+										<input type="checkbox" name="wp_admin_css_hide_admin_chrome_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $hide_chrome_roles, true)); ?><?php echo $form_attr; ?> />
+										<span><?php echo esc_html($role_name); ?></span>
+									</label>
+								<?php endforeach; ?>
+							</div>
+							<p class="description"><?php esc_html_e('Select one or more roles. If both usernames/emails and roles are empty, no users receive this CSS preset.', 'user-manager'); ?></p>
+						</div>
+					</div>
 				</div>
 				</div>
 			</div>

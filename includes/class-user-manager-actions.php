@@ -1887,6 +1887,20 @@ class User_Manager_Actions {
 						}
 					}
 				}
+				$settings['wp_admin_css_hide_admin_chrome_enabled'] = isset($_POST['wp_admin_css_hide_admin_chrome_enabled']) && $_POST['wp_admin_css_hide_admin_chrome_enabled'] === '1';
+				$hide_admin_chrome_users = isset($_POST['wp_admin_css_hide_admin_chrome_users_include']) ? sanitize_text_field(wp_unslash($_POST['wp_admin_css_hide_admin_chrome_users_include'])) : '';
+				$settings['wp_admin_css_hide_admin_chrome_users_include'] = array_filter(array_map('trim', explode(',', $hide_admin_chrome_users)));
+				$settings['wp_admin_css_hide_admin_chrome_roles'] = [];
+				if (!empty($_POST['wp_admin_css_hide_admin_chrome_roles']) && is_array($_POST['wp_admin_css_hide_admin_chrome_roles'])) {
+					$roles = User_Manager_Core::get_user_roles();
+					foreach ((array) wp_unslash($_POST['wp_admin_css_hide_admin_chrome_roles']) as $role_key) {
+						$role_key = sanitize_key((string) $role_key);
+						if (isset($roles[$role_key])) {
+							$settings['wp_admin_css_hide_admin_chrome_roles'][] = $role_key;
+						}
+					}
+					$settings['wp_admin_css_hide_admin_chrome_roles'] = array_values(array_unique($settings['wp_admin_css_hide_admin_chrome_roles']));
+				}
 				break;
 		}
 

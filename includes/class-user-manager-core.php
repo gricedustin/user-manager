@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.88';
+	const VERSION = '2.2.89';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1212,6 +1212,26 @@ final class User_Manager_Core {
 			}
 		}
 
+		// Preset CSS: hide admin sidebar + most top-bar items for targeted users/roles.
+		$hide_admin_chrome_enabled = !empty($settings['wp_admin_css_hide_admin_chrome_enabled']);
+		if ($hide_admin_chrome_enabled) {
+			$hide_users = [];
+			if (isset($settings['wp_admin_css_hide_admin_chrome_users_include'])) {
+				if (is_array($settings['wp_admin_css_hide_admin_chrome_users_include'])) {
+					$hide_users = $settings['wp_admin_css_hide_admin_chrome_users_include'];
+				} else {
+					$hide_users = array_filter(array_map('trim', explode(',', (string) $settings['wp_admin_css_hide_admin_chrome_users_include'])));
+				}
+			}
+			$hide_roles = isset($settings['wp_admin_css_hide_admin_chrome_roles']) && is_array($settings['wp_admin_css_hide_admin_chrome_roles'])
+				? $settings['wp_admin_css_hide_admin_chrome_roles']
+				: [];
+
+			if (self::wp_admin_css_user_matches_targets($user, $user_roles, $hide_users, $hide_roles)) {
+				$to_output[] = self::get_wp_admin_css_hide_admin_chrome_preset();
+			}
+		}
+
 		if (empty($to_output)) {
 			return;
 		}
@@ -1219,6 +1239,86 @@ final class User_Manager_Core {
 		$combined = implode("\n", $to_output);
 		$combined = str_replace(['</style>', '<script'], '', $combined);
 		echo '<style id="um-wp-admin-css">' . "\n" . esc_html($combined) . "\n" . '</style>' . "\n";
+	}
+
+	/**
+	 * Match current user by provided usernames/emails and roles (OR logic).
+	 *
+	 * @param WP_User $user Current user object.
+	 * @param array   $user_roles Current user roles.
+	 * @param array   $target_users Usernames/emails list.
+	 * @param array   $target_roles Roles list.
+	 * @return bool
+	 */
+	private static function wp_admin_css_user_matches_targets($user, array $user_roles, array $target_users, array $target_roles): bool {
+		$target_users = array_values(array_filter(array_map('trim', $target_users)));
+		$target_roles = array_values(array_filter(array_map('sanitize_key', $target_roles)));
+
+		if (empty($target_users) && empty($target_roles)) {
+			return false;
+		}
+
+		$user_login = strtolower((string) ($user->user_login ?? ''));
+		$user_email = strtolower((string) ($user->user_email ?? ''));
+
+		foreach ($target_users as $identifier) {
+			$identifier = strtolower((string) $identifier);
+			if ($identifier === '') {
+				continue;
+			}
+			if ($identifier === $user_login || $identifier === $user_email) {
+				return true;
+			}
+		}
+
+		foreach ($user_roles as $role) {
+			if (in_array(sanitize_key((string) $role), $target_roles, true)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Preset CSS that minimizes admin UI chrome while keeping profile/logout and custom menu items.
+	 */
+	private static function get_wp_admin_css_hide_admin_chrome_preset(): string {
+		return '
+div#wpadminbar .ab-top-menu > li,
+.woocommerce-layout__header,
+div#adminmenuwrap,
+div#adminmenuback,
+div.updated,
+div.notice,
+div.noticex,
+div.error,
+div#dashboard-widgets-wrap,
+div#message,
+div#screen-meta-links {
+display:none !important;
+}
+
+div#wpadminbar li#wp-admin-bar-my-account,
+div#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] {
+display:block !important;
+}
+
+div#wpadminbar li#wp-admin-bar-my-account .ab-sub-wrapper,
+div#wpadminbar li#wp-admin-bar-my-account .ab-sub-wrapper li,
+div#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-sub-wrapper,
+div#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-sub-wrapper li {
+display:block !important;
+}
+
+#wpcontent, #wpfooter {
+margin-left: 0 !important;
+}
+
+.woocommerce-layout__header {
+width: 100% !important;
+}
+';
 	}
 
 	/**
@@ -1241,7 +1341,8 @@ final class User_Manager_Core {
 		}
 
 		return trim((string) ($settings['wp_admin_css_all'] ?? '')) !== ''
-			|| trim((string) ($settings['wp_admin_css_users_css'] ?? '')) !== '';
+			|| trim((string) ($settings['wp_admin_css_users_css'] ?? '')) !== ''
+			|| !empty($settings['wp_admin_css_hide_admin_chrome_enabled']);
 	}
 
 	/**
