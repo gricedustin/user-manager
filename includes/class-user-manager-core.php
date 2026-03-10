@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.0';
+	const VERSION = '2.3.1';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2880,9 +2880,13 @@ html body .woocommerce-layout__header {
 
 		$options           = get_option('bulk_add_to_cart_settings', []);
 		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
+		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
 		if ($identifier_column === '') {
 			$identifier_column = 'product_id';
+		}
+		if ($identifier_type === '') {
+			$identifier_type = 'product_id';
 		}
 		if ($quantity_column === '') {
 			$quantity_column = 'quantity';
@@ -2899,8 +2903,65 @@ html body .woocommerce-layout__header {
 
 		fputcsv($out, [$identifier_column, $quantity_column, 'product_title', 'product_variation']);
 		fwrite($out, "\r\n");
-		fputcsv($out, ['123', '1', 'Sample Product', '']);
-		fputcsv($out, ['456', '2', 'Sample Variation Product', 'Size: M | Color: Blue']);
+
+		$rows = [];
+		$ids  = get_posts([
+			'post_type'              => ['product', 'product_variation'],
+			'post_status'            => ['publish', 'private'],
+			'posts_per_page'         => 2,
+			'orderby'                => 'ID',
+			'order'                  => 'ASC',
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		]);
+		foreach ($ids as $product_id) {
+			$product_id = absint($product_id);
+			if ($product_id <= 0) {
+				continue;
+			}
+			$identifier_value = self::bulk_add_to_cart_get_identifier_value_for_product($product_id, $identifier_type, $options);
+			if ($identifier_value === '') {
+				continue;
+			}
+			$rows[] = [
+				$identifier_value,
+				'0',
+				(string) get_the_title($product_id),
+				self::bulk_add_to_cart_get_variation_summary_for_product($product_id),
+			];
+		}
+
+		if (empty($rows)) {
+			$meta_field_name = isset($options['meta_field_name']) ? trim((string) $options['meta_field_name']) : '';
+			$sample_one      = '123';
+			$sample_two      = '456';
+			switch ($identifier_type) {
+				case 'product_sku':
+					$sample_one = 'SAMPLE-SKU-001';
+					$sample_two = 'SAMPLE-SKU-002';
+					break;
+				case 'product_slug':
+					$sample_one = 'sample-product-1';
+					$sample_two = 'sample-product-2';
+					break;
+				case 'product_title':
+					$sample_one = 'Sample Product 1';
+					$sample_two = 'Sample Product 2';
+					break;
+				case 'meta_field':
+					$sample_one = ($meta_field_name !== '' ? $meta_field_name : 'meta_value') . '_001';
+					$sample_two = ($meta_field_name !== '' ? $meta_field_name : 'meta_value') . '_002';
+					break;
+			}
+			$rows[] = [$sample_one, '1', 'Sample Product', ''];
+			$rows[] = [$sample_two, '2', 'Sample Variation Product', 'Size: M | Color: Blue'];
+		}
+
+		foreach ($rows as $row) {
+			fputcsv($out, $row);
+		}
 		fclose($out);
 		exit;
 	}
@@ -2927,9 +2988,13 @@ html body .woocommerce-layout__header {
 
 		$options           = get_option('bulk_add_to_cart_settings', []);
 		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
+		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
 		if ($identifier_column === '') {
 			$identifier_column = 'product_id';
+		}
+		if ($identifier_type === '') {
+			$identifier_type = 'product_id';
 		}
 		if ($quantity_column === '') {
 			$quantity_column = 'quantity';
@@ -2963,33 +3028,90 @@ html body .woocommerce-layout__header {
 				continue;
 			}
 
-			$title = (string) get_the_title($product_id);
-			$type  = get_post_type($product_id);
-			$variation_summary = '';
-			if ($type === 'product_variation') {
-				$variation_product = wc_get_product($product_id);
-				if ($variation_product && method_exists($variation_product, 'get_variation_attributes')) {
-					$pairs = [];
-					foreach ((array) $variation_product->get_variation_attributes() as $attr_key => $attr_value) {
-						$clean_key = str_replace('attribute_', '', (string) $attr_key);
-						$label     = function_exists('wc_attribute_label') ? wc_attribute_label($clean_key) : $clean_key;
-						$value     = (string) $attr_value;
-						if ($value === '' || $value === '0') {
-							continue;
-						}
-						$pairs[] = $label . ': ' . $value;
-					}
-					if (!empty($pairs)) {
-						$variation_summary = implode(' | ', $pairs);
-					}
-				}
+			$identifier_value = self::bulk_add_to_cart_get_identifier_value_for_product($product_id, $identifier_type, $options);
+			if ($identifier_value === '') {
+				continue;
 			}
-
-			fputcsv($out, [(string) $product_id, '0', $title, $variation_summary]);
+			fputcsv(
+				$out,
+				[
+					$identifier_value,
+					'0',
+					(string) get_the_title($product_id),
+					self::bulk_add_to_cart_get_variation_summary_for_product($product_id),
+				]
+			);
 		}
 
 		fclose($out);
 		exit;
+	}
+
+	/**
+	 * Get identifier value for a product according to configured identifier type.
+	 */
+	private static function bulk_add_to_cart_get_identifier_value_for_product(int $product_id, string $identifier_type, array $options): string {
+		if ($product_id <= 0) {
+			return '';
+		}
+
+		switch ($identifier_type) {
+			case 'product_id':
+				return (string) $product_id;
+
+			case 'product_sku':
+				$product = wc_get_product($product_id);
+				if (!$product || !method_exists($product, 'get_sku')) {
+					return '';
+				}
+				return trim((string) $product->get_sku());
+
+			case 'product_slug':
+				return trim((string) get_post_field('post_name', $product_id));
+
+			case 'product_title':
+				return trim((string) get_the_title($product_id));
+
+			case 'meta_field':
+				$meta_field_name = isset($options['meta_field_name']) ? trim((string) $options['meta_field_name']) : '';
+				if ($meta_field_name === '') {
+					return '';
+				}
+				$raw_meta = get_post_meta($product_id, $meta_field_name, true);
+				if (!is_scalar($raw_meta)) {
+					return '';
+				}
+				return trim((string) $raw_meta);
+		}
+
+		return (string) $product_id;
+	}
+
+	/**
+	 * Build readable variation summary text for CSV informational column.
+	 */
+	private static function bulk_add_to_cart_get_variation_summary_for_product(int $product_id): string {
+		if (get_post_type($product_id) !== 'product_variation') {
+			return '';
+		}
+
+		$variation_product = wc_get_product($product_id);
+		if (!$variation_product || !method_exists($variation_product, 'get_variation_attributes')) {
+			return '';
+		}
+
+		$pairs = [];
+		foreach ((array) $variation_product->get_variation_attributes() as $attr_key => $attr_value) {
+			$clean_key = str_replace('attribute_', '', (string) $attr_key);
+			$label     = function_exists('wc_attribute_label') ? wc_attribute_label($clean_key) : $clean_key;
+			$value     = (string) $attr_value;
+			if ($value === '' || $value === '0') {
+				continue;
+			}
+			$pairs[] = $label . ': ' . $value;
+		}
+
+		return !empty($pairs) ? implode(' | ', $pairs) : '';
 	}
 
 	/**

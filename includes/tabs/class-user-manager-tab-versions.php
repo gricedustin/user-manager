@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.1 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart sample downloads now honor the active Identifier Type when generating identifier values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When Identifier Type is "Custom Meta Field Value", both sample CSV downloads now use the configured meta field value in the identifier column instead of product ID.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.0 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Release 2.3.0: bundles recent Add-ons, Bulk Add to Cart, My Account Admin, and WP-Admin CSS improvements from the 2.2.9x series.', 'user-manager'); ?></li>
