@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.68';
+	const VERSION = '2.2.69';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -24,6 +24,20 @@ final class User_Manager_Core {
 	 * @var array<int,array<int,string>>
 	 */
 	private static array $coupon_remainder_debug_messages = [];
+
+	/**
+	 * Per-request debug trace rows for bulk add to cart uploads.
+	 *
+	 * @var array<int,array{line:int,status:string,message:string}>
+	 */
+	private static array $bulk_add_to_cart_debug_trace = [];
+
+	/**
+	 * Per-request media upload info for the latest bulk add CSV upload.
+	 *
+	 * @var array<string,mixed>
+	 */
+	private static array $bulk_add_to_cart_media_upload_info = [];
 
 	// Tab constants
 	const TAB_CREATE_USER     = 'create-user';
@@ -1896,6 +1910,44 @@ final class User_Manager_Core {
 			$output .= '<li>' . esc_html__('Quantity Column:', 'user-manager') . ' ' . esc_html($quantity_column) . '</li>';
 			$output .= '</ul>';
 
+			if (!empty(self::$bulk_add_to_cart_media_upload_info)) {
+				$media_info = self::$bulk_add_to_cart_media_upload_info;
+				$output .= '<p><strong>' . esc_html__('Media Library Upload:', 'user-manager') . '</strong></p>';
+				$output .= '<ul>';
+				if (!empty($media_info['activity_url'])) {
+					$output .= '<li>' . esc_html__('User Activity File URL:', 'user-manager') . ' <a href="' . esc_url((string) $media_info['activity_url']) . '" target="_blank" rel="noopener noreferrer">' . esc_html((string) $media_info['activity_url']) . '</a></li>';
+				}
+				if (!empty($media_info['attachment_id'])) {
+					$output .= '<li>' . esc_html__('Attachment ID:', 'user-manager') . ' ' . esc_html((string) $media_info['attachment_id']) . '</li>';
+				}
+				if (!empty($media_info['attachment_url'])) {
+					$output .= '<li>' . esc_html__('Attachment URL:', 'user-manager') . ' <a href="' . esc_url((string) $media_info['attachment_url']) . '" target="_blank" rel="noopener noreferrer">' . esc_html((string) $media_info['attachment_url']) . '</a></li>';
+				}
+				if (!empty($media_info['error'])) {
+					$output .= '<li>' . esc_html__('Media Upload Error:', 'user-manager') . ' ' . esc_html((string) $media_info['error']) . '</li>';
+				}
+				$output .= '</ul>';
+			}
+
+			if (!empty(self::$bulk_add_to_cart_debug_trace)) {
+				$output .= '<p><strong>' . esc_html__('Line-by-line Processing Trace:', 'user-manager') . '</strong></p>';
+				$output .= '<div style="max-height:320px; overflow:auto; background:#fff; border:1px solid #dcdcde; border-radius:4px;">';
+				$output .= '<table class="widefat striped" style="margin:0;">';
+				$output .= '<thead><tr><th style="width:90px;">' . esc_html__('CSV Line', 'user-manager') . '</th><th style="width:160px;">' . esc_html__('Status', 'user-manager') . '</th><th>' . esc_html__('Details', 'user-manager') . '</th></tr></thead>';
+				$output .= '<tbody>';
+				foreach (self::$bulk_add_to_cart_debug_trace as $trace_row) {
+					$line_value = isset($trace_row['line']) ? (int) $trace_row['line'] : 0;
+					$status_value = isset($trace_row['status']) ? (string) $trace_row['status'] : '';
+					$message_value = isset($trace_row['message']) ? (string) $trace_row['message'] : '';
+					$output .= '<tr>';
+					$output .= '<td>' . ($line_value > 0 ? esc_html((string) $line_value) : '—') . '</td>';
+					$output .= '<td><code>' . esc_html($status_value) . '</code></td>';
+					$output .= '<td>' . esc_html($message_value) . '</td>';
+					$output .= '</tr>';
+				}
+				$output .= '</tbody></table></div>';
+			}
+
 			$output .= '</div>';
 		}
 
@@ -2033,15 +2085,8 @@ final class User_Manager_Core {
 			return;
 		}
 
-		if (empty($_POST['bulk_add_to_cart_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_nonce'])), 'bulk_add_to_cart_upload')) {
-			wc_add_notice(esc_html__('Security check failed. Please try again.', 'user-manager'), 'error');
-			return;
-		}
-
-		if (empty($_FILES['csv_file']) || !isset($_FILES['csv_file']['error']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
-			wc_add_notice(esc_html__('Error uploading file. Please try again.', 'user-manager'), 'error');
-			return;
-		}
+		self::$bulk_add_to_cart_debug_trace = [];
+		self::$bulk_add_to_cart_media_upload_info = [];
 
 		$options          = get_option('bulk_add_to_cart_settings', []);
 		$identifier_col   = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
@@ -2049,6 +2094,27 @@ final class User_Manager_Core {
 		$quantity_col     = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
 		$debug_mode       = isset($options['debug_mode']) ? (string) $options['debug_mode'] : '0';
 		$debug_enabled    = $debug_mode === '1' || self::is_bulk_add_to_cart_debug_requested();
+		$debug_trace      = [];
+
+		self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'request_start', 'Bulk Add to Cart upload request received.');
+
+		if (empty($_POST['bulk_add_to_cart_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_nonce'])), 'bulk_add_to_cart_upload')) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_nonce', 'Nonce verification failed.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
+			wc_add_notice(esc_html__('Security check failed. Please try again.', 'user-manager'), 'error');
+			return;
+		}
+
+		if (empty($_FILES['csv_file']) || !isset($_FILES['csv_file']['error']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_upload', 'Upload payload missing or upload error code was returned.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
+			wc_add_notice(esc_html__('Error uploading file. Please try again.', 'user-manager'), 'error');
+			return;
+		}
 
 		if (function_exists('wc_load_cart')) {
 			wc_load_cart();
@@ -2058,6 +2124,10 @@ final class User_Manager_Core {
 			if (function_exists('WC')) {
 				WC()->cart = new WC_Cart();
 			} else {
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_cart', 'WooCommerce cart could not be initialized.');
+				if ($debug_enabled) {
+					self::$bulk_add_to_cart_debug_trace = $debug_trace;
+				}
 				wc_add_notice(esc_html__('WooCommerce cart is not available.', 'user-manager'), 'error');
 				return;
 			}
@@ -2072,6 +2142,14 @@ final class User_Manager_Core {
 		$new_name   = $timestamp . '-' . $filename;
 		$upload_dir = self::get_bulk_add_to_cart_upload_dir();
 		$upload_path = $upload_dir . $new_name;
+
+		self::bulk_add_to_cart_append_debug_trace(
+			$debug_trace,
+			0,
+			'upload_meta',
+			'File "' . $filename . '" (' . $file_size . ' bytes, MIME: ' . ($file_type !== '' ? $file_type : 'unknown') . ').'
+		);
+
 		if ($debug_enabled) {
 			wc_add_notice(
 				'Upload metadata - Name: ' . $filename .
@@ -2083,33 +2161,72 @@ final class User_Manager_Core {
 		}
 
 		if (!move_uploaded_file($file['tmp_name'], $upload_path)) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_move_uploaded_file', 'move_uploaded_file() failed.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(esc_html__('Error saving file. Please try again.', 'user-manager'), 'error');
 			return;
 		}
+
 		if ($debug_enabled) {
 			wc_add_notice('Upload saved to: ' . $upload_path, 'notice');
 		}
+		self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'upload_saved', 'CSV file saved to plugin upload directory.');
+
 		$uploaded_file_url = content_url('bulk-add-to-cart-import-files/' . rawurlencode($new_name));
-		self::add_user_activity((int) get_current_user_id(), __('Bulk Add to Cart CSV Upload', 'user-manager'), $uploaded_file_url);
+		$request_url = self::bulk_add_to_cart_get_current_request_url();
+		$media_info = self::bulk_add_to_cart_upload_file_to_media_library($upload_path, $new_name, $request_url);
+		$activity_url = !empty($media_info['attachment_url']) ? (string) $media_info['attachment_url'] : $uploaded_file_url;
+		$media_info['activity_url'] = $activity_url;
+		$media_info['raw_upload_url'] = $uploaded_file_url;
+		self::$bulk_add_to_cart_media_upload_info = $media_info;
+		self::add_user_activity((int) get_current_user_id(), __('Bulk Add to Cart CSV Upload', 'user-manager'), $activity_url);
+
+		if (!empty($media_info['attachment_id'])) {
+			self::bulk_add_to_cart_append_debug_trace(
+				$debug_trace,
+				0,
+				'media_uploaded',
+				'Stored in Media Library as attachment #' . (int) $media_info['attachment_id'] . '.'
+			);
+		} elseif (!empty($media_info['error'])) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'media_upload_error', (string) $media_info['error']);
+			if ($debug_enabled) {
+				wc_add_notice('Media Library upload error: ' . (string) $media_info['error'], 'notice');
+			}
+		}
 
 		$handle = fopen($upload_path, 'r');
 		if (!$handle) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_fopen', 'Could not open saved CSV file for reading.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(esc_html__('Error reading file. Please try again.', 'user-manager'), 'error');
 			return;
 		}
 
 		$headers = false;
 		$leading_blank_rows = 0;
+		$csv_line_number = 0;
 		while (($header_row = fgetcsv($handle)) !== false) {
+			$csv_line_number++;
 			if (!self::bulk_add_to_cart_row_has_data($header_row)) {
 				$leading_blank_rows++;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'skip_blank_before_header', 'Blank row skipped before header detection.');
 				continue;
 			}
 			$headers = $header_row;
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'header_detected', 'Header row detected: ' . implode(', ', array_map('trim', $header_row)));
 			break;
 		}
 		if (!$headers) {
 			fclose($handle);
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_header_missing', 'No non-empty header row found.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(esc_html__('Invalid CSV format. Please check the file structure.', 'user-manager'), 'error');
 			return;
 		}
@@ -2134,6 +2251,13 @@ final class User_Manager_Core {
 		$identifier_index = array_search($identifier_lookup, $normalized_headers, true);
 		$quantity_index   = array_search($quantity_lookup, $normalized_headers, true);
 
+		self::bulk_add_to_cart_append_debug_trace(
+			$debug_trace,
+			0,
+			'column_lookup',
+			'Identifier column index: ' . ($identifier_index !== false ? (string) $identifier_index : 'not found') . '; Quantity column index: ' . ($quantity_index !== false ? (string) $quantity_index : 'not found') . '.'
+		);
+
 		if ($debug_enabled) {
 			wc_add_notice(
 				'Column indices - Identifier: ' . ($identifier_index !== false ? $identifier_index : 'not found') .
@@ -2144,6 +2268,10 @@ final class User_Manager_Core {
 
 		if ($identifier_index === false || $quantity_index === false) {
 			fclose($handle);
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_missing_columns', 'Required columns were not found in header.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(
 				sprintf(
 					esc_html__('Required columns not found. Looking for "%1$s" and "%2$s".', 'user-manager'),
@@ -2165,9 +2293,11 @@ final class User_Manager_Core {
 		$data_rows_seen       = 0;
 
 		while (($row = fgetcsv($handle)) !== false) {
+			$csv_line_number++;
 			$data_rows_seen++;
 			if (!self::bulk_add_to_cart_row_has_data($row)) {
 				$blank_rows_skipped++;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'skip_blank_row', 'Blank data row skipped.');
 				continue;
 			}
 			$row_number++;
@@ -2175,64 +2305,66 @@ final class User_Manager_Core {
 			$quantity_raw = isset($row[$quantity_index]) ? (string) $row[$quantity_index] : '';
 			$quantity   = self::bulk_add_to_cart_parse_quantity($quantity_raw);
 
-			if ($debug_enabled) {
-				wc_add_notice('Processing row ' . $row_number . ' - Identifier: ' . $identifier . ', Quantity: ' . $quantity, 'notice');
-			}
-
 			if ($quantity <= 0) {
 				$zero_qty_skipped++;
+				self::bulk_add_to_cart_append_debug_trace(
+					$debug_trace,
+					$csv_line_number,
+					'skip_zero_or_blank_quantity',
+					'Identifier "' . ($identifier !== '' ? $identifier : '(empty)') . '" skipped because quantity "' . $quantity_raw . '" parses to 0.'
+				);
 				continue;
 			}
 			if ($identifier === '') {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Missing identifier (Quantity: "%2$s")', 'user-manager'),
 					$row_number,
 					esc_html($quantity_raw)
 				);
+				$errors[] = $message;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_missing_identifier', wp_strip_all_tags($message));
 				continue;
 			}
 
 			$product = self::bulk_add_to_cart_find_product($identifier, $identifier_type, $options);
-
-			if ($debug_enabled) {
-				wc_add_notice(
-					'Product lookup for ' . $identifier . ': ' . ($product ? 'Found' : 'Not found'),
-					'notice'
-				);
-			}
-
 			if (!$product) {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Product not found: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
 					esc_html((string) $quantity)
 				);
+				$errors[] = $message;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_product_not_found', wp_strip_all_tags($message));
 				continue;
 			}
 
 			if (!$product->is_purchasable()) {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Product not purchasable: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
 					esc_html((string) $quantity)
 				);
+				$errors[] = $message;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_not_purchasable', wp_strip_all_tags($message));
 				continue;
 			}
 
 			if ($product->managing_stock() && !$product->has_enough_stock($quantity)) {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Insufficient stock for: %2$s (Requested: %3$s, Available: %4$s)', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
 					esc_html((string) $quantity),
 					esc_html((string) $product->get_stock_quantity())
 				);
+				$errors[] = $message;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_insufficient_stock', wp_strip_all_tags($message));
 				continue;
 			}
 
@@ -2244,20 +2376,22 @@ final class User_Manager_Core {
 					$successful_additions[$name] = 0;
 				}
 				$successful_additions[$name] += $quantity;
-				if ($debug_enabled) {
-					wc_add_notice('Successfully added product ' . $identifier . ' to cart', 'success');
-				}
+				self::bulk_add_to_cart_append_debug_trace(
+					$debug_trace,
+					$csv_line_number,
+					'added_to_cart',
+					'Added "' . $identifier . '" (qty ' . $quantity . ') to cart.'
+				);
 			} else {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Failed to add to cart: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
 					esc_html((string) $quantity)
 				);
-				if ($debug_enabled) {
-					wc_add_notice('Failed to add product ' . $identifier . ' to cart', 'error');
-				}
+				$errors[] = $message;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_add_to_cart_failed', wp_strip_all_tags($message));
 			}
 		}
 
@@ -2316,6 +2450,12 @@ final class User_Manager_Core {
 				}
 			}
 		}
+		self::bulk_add_to_cart_append_debug_trace(
+			$debug_trace,
+			0,
+			'summary',
+			'Rows seen: ' . $data_rows_seen . '; blank rows skipped: ' . $blank_rows_skipped . '; zero/blank quantity rows skipped: ' . $zero_qty_skipped . '; added: ' . $success_count . '; errors: ' . $error_count . '.'
+		);
 		if ($debug_enabled) {
 			wc_add_notice(
 				'Processing summary - Rows seen: ' . $data_rows_seen .
@@ -2325,6 +2465,7 @@ final class User_Manager_Core {
 				', Errors: ' . $error_count,
 				'notice'
 			);
+			self::$bulk_add_to_cart_debug_trace = $debug_trace;
 		}
 
 		$current_user = wp_get_current_user();
@@ -2349,8 +2490,7 @@ final class User_Manager_Core {
 		$history = array_slice($history, 0, 100);
 		update_option('bulk_add_to_cart_history', $history);
 
-		$options = get_option('bulk_add_to_cart_settings', []);
-		if (isset($options['redirect_to_cart']) && $options['redirect_to_cart'] === '1') {
+		if (isset($options['redirect_to_cart']) && $options['redirect_to_cart'] === '1' && !$debug_enabled) {
 			wp_safe_redirect(wc_get_cart_url());
 			exit;
 		}
@@ -2472,6 +2612,113 @@ final class User_Manager_Core {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Append one debug trace row for CSV upload troubleshooting.
+	 *
+	 * @param array<int,array{line:int,status:string,message:string}> $trace
+	 */
+	private static function bulk_add_to_cart_append_debug_trace(array &$trace, int $line, string $status, string $message): void {
+		$trace[] = [
+			'line'    => $line,
+			'status'  => $status,
+			'message' => $message,
+		];
+	}
+
+	/**
+	 * Build current request URL for logging/attachment descriptions.
+	 */
+	private static function bulk_add_to_cart_get_current_request_url(): string {
+		$scheme = (is_ssl() || (isset($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) === 'on')) ? 'https://' : 'http://';
+		$host   = isset($_SERVER['HTTP_HOST']) ? (string) $_SERVER['HTTP_HOST'] : (string) parse_url(home_url(), PHP_URL_HOST);
+		$uri    = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/';
+		return esc_url_raw($scheme . $host . $uri);
+	}
+
+	/**
+	 * Copy uploaded CSV into Media Library with uploader/source metadata.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function bulk_add_to_cart_upload_file_to_media_library(string $source_path, string $filename, string $source_url): array {
+		$result = [
+			'attachment_id'  => 0,
+			'attachment_url' => '',
+			'error'          => '',
+		];
+
+		if (!is_file($source_path)) {
+			$result['error'] = 'Source CSV does not exist.';
+			return $result;
+		}
+
+		$uploads = wp_upload_dir();
+		if (!empty($uploads['error'])) {
+			$result['error'] = 'wp_upload_dir error: ' . (string) $uploads['error'];
+			return $result;
+		}
+
+		$target_dir = trailingslashit((string) ($uploads['path'] ?? ''));
+		if ($target_dir === '') {
+			$result['error'] = 'Uploads path is empty.';
+			return $result;
+		}
+		wp_mkdir_p($target_dir);
+
+		$target_name = wp_unique_filename($target_dir, $filename);
+		$target_path = $target_dir . $target_name;
+		if (!copy($source_path, $target_path)) {
+			$result['error'] = 'Failed to copy CSV into uploads directory.';
+			return $result;
+		}
+
+		$filetype = wp_check_filetype($target_name, null);
+		$mime     = !empty($filetype['type']) ? (string) $filetype['type'] : 'text/csv';
+
+		$user = wp_get_current_user();
+		$user_login = (string) ($user->user_login ?? '');
+		$user_email = (string) ($user->user_email ?? '');
+		$user_id    = (int) ($user->ID ?? 0);
+		$uploaded_at = current_time('mysql');
+		$description = sprintf(
+			/* translators: 1: username, 2: user ID, 3: user email, 4: datetime, 5: source URL */
+			__('Bulk Add to Cart CSV uploaded by %1$s (ID: %2$d, email: %3$s) on %4$s from URL: %5$s', 'user-manager'),
+			$user_login !== '' ? $user_login : 'unknown',
+			$user_id,
+			$user_email !== '' ? $user_email : 'unknown',
+			$uploaded_at,
+			$source_url
+		);
+
+		$attachment = [
+			'post_mime_type' => $mime,
+			'post_title'     => sanitize_text_field((string) pathinfo($target_name, PATHINFO_FILENAME)),
+			'post_content'   => $description,
+			'post_status'    => 'inherit',
+		];
+
+		$attachment_id = wp_insert_attachment($attachment, $target_path);
+		if (is_wp_error($attachment_id) || !$attachment_id) {
+			$result['error'] = is_wp_error($attachment_id) ? $attachment_id->get_error_message() : 'wp_insert_attachment failed.';
+			return $result;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$attachment_meta = wp_generate_attachment_metadata((int) $attachment_id, $target_path);
+		if (is_array($attachment_meta)) {
+			wp_update_attachment_metadata((int) $attachment_id, $attachment_meta);
+		}
+
+		update_post_meta((int) $attachment_id, '_um_bulk_add_to_cart_uploaded_by_user_id', $user_id);
+		update_post_meta((int) $attachment_id, '_um_bulk_add_to_cart_uploaded_at', $uploaded_at);
+		update_post_meta((int) $attachment_id, '_um_bulk_add_to_cart_source_url', esc_url_raw($source_url));
+		update_post_meta((int) $attachment_id, '_um_bulk_add_to_cart_original_filename', $filename);
+
+		$result['attachment_id'] = (int) $attachment_id;
+		$result['attachment_url'] = (string) wp_get_attachment_url((int) $attachment_id);
+		return $result;
 	}
 
 	/**
