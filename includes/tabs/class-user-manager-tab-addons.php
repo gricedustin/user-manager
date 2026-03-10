@@ -30,19 +30,14 @@ class User_Manager_Tab_Addons {
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		$settings_form_id = 'um-addons-settings-form';
 		$addon_sections = self::get_addon_sections($settings);
-		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : 'all';
+		$default_addon_section = !empty($addon_sections) ? (string) key($addon_sections) : 'all';
+		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : $default_addon_section;
 		if ($current_addon_section !== 'all' && !isset($addon_sections[$current_addon_section])) {
-			$current_addon_section = 'all';
+			$current_addon_section = $default_addon_section;
 		}
 		$addons_base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
 		?>
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
-			<li>
-				<a href="<?php echo esc_url(add_query_arg('addon_section', 'all', $addons_base_url)); ?>" class="<?php echo $current_addon_section === 'all' ? 'current' : ''; ?>">
-					<?php esc_html_e('All Add-ons', 'user-manager'); ?>
-				</a>
-				<?php if (!empty($addon_sections)) : ?> |<?php endif; ?>
-			</li>
 			<?php $addon_total = count($addon_sections); $addon_index = 0; ?>
 			<?php foreach ($addon_sections as $section_key => $section_meta) : $addon_index++; ?>
 				<li>
@@ -54,6 +49,7 @@ class User_Manager_Tab_Addons {
 				</li>
 			<?php endforeach; ?>
 		</ul>
+		<br class="clear" />
 
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="<?php echo esc_attr($settings_form_id); ?>">
 			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
