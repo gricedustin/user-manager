@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.73';
+	const VERSION = '2.2.74';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1859,10 +1859,49 @@ final class User_Manager_Core {
 			$submitted = isset($_POST['bulk_add_to_cart_submit']);
 			if (!empty($pending_notices)) {
 				if ($submitted && $debug_enabled) {
-					$debug_notice_lines = self::bulk_add_to_cart_flatten_notices_for_debug($pending_notices);
+					$notices_for_display = [];
+					$notices_for_debug   = [];
+					foreach ($pending_notices as $type => $bucket) {
+						if (!is_array($bucket)) {
+							continue;
+						}
+						foreach ($bucket as $notice) {
+							if (!is_array($notice)) {
+								continue;
+							}
+							if (self::bulk_add_to_cart_notice_should_remain_visible($notice)) {
+								if (!isset($notices_for_display[$type]) || !is_array($notices_for_display[$type])) {
+									$notices_for_display[$type] = [];
+								}
+								$notices_for_display[$type][] = $notice;
+							} else {
+								if (!isset($notices_for_debug[$type]) || !is_array($notices_for_debug[$type])) {
+									$notices_for_debug[$type] = [];
+								}
+								$notices_for_debug[$type][] = $notice;
+							}
+						}
+					}
+					$debug_notice_lines = self::bulk_add_to_cart_flatten_notices_for_debug($notices_for_debug);
 					if (function_exists('wc_clear_notices')) {
 						wc_clear_notices();
 					}
+					foreach ($notices_for_display as $type => $bucket) {
+						if (!is_array($bucket)) {
+							continue;
+						}
+						foreach ($bucket as $notice) {
+							$message = isset($notice['notice']) ? (string) $notice['notice'] : '';
+							if ($message === '') {
+								continue;
+							}
+							$data = isset($notice['data']) && is_array($notice['data']) ? $notice['data'] : [];
+							wc_add_notice($message, (string) $type, $data);
+						}
+					}
+					ob_start();
+					wc_print_notices();
+					$output .= (string) ob_get_clean();
 				} else {
 					ob_start();
 					wc_print_notices();
@@ -2486,7 +2525,7 @@ final class User_Manager_Core {
 				$total_items_added
 			);
 			$summary_message .= ' <a href="' . esc_url(wc_get_cart_url()) . '" class="button wc-forward">' . esc_html__('View cart', 'user-manager') . '</a>';
-			wc_add_notice($summary_message, 'success');
+			wc_add_notice($summary_message, 'success', ['um_bulk_add_to_cart_keep_visible' => 1]);
 		}
 
 		if ($error_count > 0) {
@@ -2519,7 +2558,7 @@ final class User_Manager_Core {
 				) . '</li>';
 			}
 			$line_notice .= '</ul>';
-			wc_add_notice($line_notice, 'notice');
+			wc_add_notice($line_notice, 'notice', ['um_bulk_add_to_cart_keep_visible' => 1]);
 		}
 		self::bulk_add_to_cart_append_debug_trace(
 			$debug_trace,
@@ -2823,6 +2862,16 @@ final class User_Manager_Core {
 
 		$title = method_exists($product, 'get_name') ? (string) $product->get_name() : '';
 		return [$title, ''];
+	}
+
+	/**
+	 * Keep only explicitly marked notices visible during debug mode.
+	 *
+	 * @param array<string,mixed> $notice
+	 */
+	private static function bulk_add_to_cart_notice_should_remain_visible(array $notice): bool {
+		$data = isset($notice['data']) && is_array($notice['data']) ? $notice['data'] : [];
+		return !empty($data['um_bulk_add_to_cart_keep_visible']);
 	}
 
 	/**
