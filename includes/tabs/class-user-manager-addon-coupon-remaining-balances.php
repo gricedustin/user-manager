@@ -14,7 +14,7 @@ class User_Manager_Addon_Coupon_Remaining_Balances {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-coupon-remainder" data-um-active-selectors="#um-coupon-remainder-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-admin-network"></span>
-				<h2><?php esc_html_e('Coupon Remaining Balances (Simple Gift Card & Store Credit Functionality)', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Coupon Remaining Balances', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">

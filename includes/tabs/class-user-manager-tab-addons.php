@@ -659,7 +659,7 @@ class User_Manager_Tab_Addons {
 				'active' => !empty($settings['user_coupon_notifications_enabled']),
 			],
 			'coupon-remaining-balances' => [
-				'label'  => __('Coupon Remaining Balances (Simple Gift Card & Store Credit Functionality)', 'user-manager'),
+				'label'  => __('Coupon Remaining Balances', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
 			],
 			'my-account-coupon-screen' => [
