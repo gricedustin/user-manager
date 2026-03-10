@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.92 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('WP-Admin CSS hide preset dropdown fix: allowed top-bar submenu wrappers are now hidden by default and shown only on hover/focus.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('WP-Admin CSS JS fallback now preserves collapsed submenu state and toggles visibility only during interaction.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.91 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('WP-Admin CSS hide preset fix: CSS output now renders as raw CSS (not HTML-escaped), so advanced selectors apply correctly.', 'user-manager'); ?></li>

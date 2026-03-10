@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.91';
+	const VERSION = '2.2.92';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1310,20 +1310,28 @@ html body #screen-options-link-wrap {
 }
 
 html body #wpadminbar li#wp-admin-bar-my-account,
-html body #wpadminbar li#wp-admin-bar-my-account *,
-html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"],
-html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] * {
-	display:block !important;
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] {
+	display:list-item !important;
 }
 
 html body #wpadminbar li#wp-admin-bar-my-account .ab-item,
 html body #wpadminbar li#wp-admin-bar-my-account .ab-label,
-html body #wpadminbar li#wp-admin-bar-my-account .ab-sub-wrapper,
-html body #wpadminbar li#wp-admin-bar-my-account .ab-sub-wrapper li,
 html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-item,
-html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-label,
-html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-sub-wrapper,
-html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-sub-wrapper li {
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-label {
+	display:block !important;
+}
+
+html body #wpadminbar li#wp-admin-bar-my-account > .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] > .ab-sub-wrapper {
+	display:none !important;
+}
+
+html body #wpadminbar li#wp-admin-bar-my-account:hover > .ab-sub-wrapper,
+html body #wpadminbar li#wp-admin-bar-my-account.hover > .ab-sub-wrapper,
+html body #wpadminbar li#wp-admin-bar-my-account:focus-within > .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"]:hover > .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"].hover > .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"]:focus-within > .ab-sub-wrapper {
 	display:block !important;
 }
 
@@ -1362,15 +1370,25 @@ html body .woocommerce-layout__header {
 		];
 		$show_selectors = [
 			'#wpadminbar li#wp-admin-bar-my-account',
-			'#wpadminbar li#wp-admin-bar-my-account *',
 			'#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"]',
-			'#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] *',
 		];
 		?>
 		<script id="um-wp-admin-css-hide-admin-chrome-fallback">
 		(function() {
 			var hideSelectors = <?php echo wp_json_encode($hide_selectors); ?>;
 			var showSelectors = <?php echo wp_json_encode($show_selectors); ?>;
+			function getDirectSubWrapper(node) {
+				if (!node || !node.children) {
+					return null;
+				}
+				for (var i = 0; i < node.children.length; i++) {
+					var child = node.children[i];
+					if (child && child.classList && child.classList.contains('ab-sub-wrapper')) {
+						return child;
+					}
+				}
+				return null;
+			}
 			function applyHidePreset() {
 				hideSelectors.forEach(function(selector) {
 					document.querySelectorAll(selector).forEach(function(node) {
@@ -1379,11 +1397,43 @@ html body .woocommerce-layout__header {
 				});
 				showSelectors.forEach(function(selector) {
 					document.querySelectorAll(selector).forEach(function(node) {
-						node.style.setProperty('display', 'block', 'important');
+						node.style.setProperty('display', 'list-item', 'important');
+						var sub = getDirectSubWrapper(node);
+						if (sub) {
+							sub.style.setProperty('display', 'none', 'important');
+						}
 					});
 				});
 				document.querySelectorAll('#wpcontent, #wpfooter, #wpbody-content').forEach(function(node) {
 					node.style.setProperty('margin-left', '0', 'important');
+				});
+
+				showSelectors.forEach(function(selector) {
+					document.querySelectorAll(selector).forEach(function(node) {
+						if (node.dataset.umHoverBind === '1') {
+							return;
+						}
+						node.dataset.umHoverBind = '1';
+						var sub = getDirectSubWrapper(node);
+						if (!sub) {
+							return;
+						}
+						node.addEventListener('mouseenter', function() {
+							sub.style.setProperty('display', 'block', 'important');
+						});
+						node.addEventListener('mouseleave', function() {
+							sub.style.setProperty('display', 'none', 'important');
+						});
+						node.addEventListener('focusin', function() {
+							sub.style.setProperty('display', 'block', 'important');
+						});
+						node.addEventListener('focusout', function() {
+							if (node.contains(document.activeElement)) {
+								return;
+							}
+							sub.style.setProperty('display', 'none', 'important');
+						});
+					});
 				});
 			}
 			document.addEventListener('DOMContentLoaded', function() {
