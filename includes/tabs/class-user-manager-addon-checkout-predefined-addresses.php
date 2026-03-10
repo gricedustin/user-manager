@@ -20,7 +20,7 @@ class User_Manager_Addon_Checkout_Predefined_Addresses {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="checkout_ship_to_predefined_enabled" id="um-checkout-ship-to-predefined" value="1" <?php checked($settings['checkout_ship_to_predefined_enabled'] ?? false); ?> />
-						<?php esc_html_e('Activate Ship To Pre-Defined Addresses', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Pre-load a dropdown of Ship To addresses on checkout so users can select an office or location. The selected address overwrites the shipping (and optionally billing) address. The field appears where the chosen hook runs (e.g. after order notes on the classic checkout form).', 'user-manager'); ?></p>
 				</div>

@@ -26,7 +26,7 @@ class User_Manager_Addon_Role_Switching {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="role_switching_enabled" id="um-role-switching-enabled" value="1" <?php checked($role_switch_enabled); ?><?php echo $form_attr; ?> />
-						<?php esc_html_e('Activate User Role Switching', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
 						<?php esc_html_e('Enable front-end role switcher and user profile permissions.', 'user-manager'); ?>

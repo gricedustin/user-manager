@@ -41,7 +41,7 @@ class User_Manager_Addon_WP_Admin_Bar_Menu_Items {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="admin_bar_menu_items_enabled" id="um-admin-bar-menu-items-enabled" value="1" <?php checked($is_enabled); ?><?php echo $form_attr; ?> />
-						<?php esc_html_e('Activate WP-Admin Bar Menu Items', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Add custom top-bar shortcut menus for quick navigation in WordPress admin and front-end.', 'user-manager'); ?></p>
 				</div>

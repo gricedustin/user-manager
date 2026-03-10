@@ -20,7 +20,7 @@ class User_Manager_Addon_Coupon_Remaining_Balances {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="coupon_remainder_enabled" id="um-coupon-remainder-enabled" value="1" <?php checked(!empty($settings['coupon_remainder_enabled'])); ?> />
-						<?php esc_html_e('Active', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
 						<?php esc_html_e('If parameters are met after checkout, the system creates a fresh fixed cart coupon covering the remaining balance, sets usage limit to 1, and restricts it to the shopper\'s email automatically.', 'user-manager'); ?>

@@ -21,7 +21,7 @@ class User_Manager_Addon_Quick_Search {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" id="um-quick-search-enabled" name="um_quick_search_enabled" value="1" <?php checked($settings['um_quick_search_enabled'] ?? true); ?><?php echo $form_attr; ?> />
-						<?php esc_html_e('Activate WP-Admin Bar Quick Search', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
 						<?php esc_html_e('Adds a "Search" icon to the WordPress admin bar that opens a quick search dropdown for posts, products, orders, users, product categories, and media.', 'user-manager'); ?>

@@ -20,7 +20,7 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="bulk_add_to_cart_enabled" value="1" <?php checked($settings['bulk_add_to_cart_enabled'] ?? false); ?> />
-						<?php esc_html_e('Activate Bulk Add to Cart Functionality', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
 						<?php esc_html_e('Enables the [bulk_add_to_cart] CSV upload form on the front-end and processes uploaded files to add multiple products to the WooCommerce cart.', 'user-manager'); ?>

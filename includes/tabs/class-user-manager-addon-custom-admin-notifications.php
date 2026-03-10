@@ -41,7 +41,7 @@ class User_Manager_Addon_Custom_Admin_Notifications {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="custom_admin_notifications_enabled" id="um-custom-admin-notifications-enabled" value="1" <?php checked($is_enabled); ?><?php echo $form_attr; ?> />
-						<?php esc_html_e('Activate WP-Admin Notifications', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Display custom notice banners across wp-admin, optionally filtered by URL match.', 'user-manager'); ?></p>
 				</div>

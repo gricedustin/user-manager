@@ -21,7 +21,7 @@ class User_Manager_Addon_Blog_Post_Idea_Generator {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" id="um-openai-blog-post-idea-generator-enabled" name="openai_blog_post_idea_generator_enabled" value="1" <?php checked(!empty($settings['openai_blog_post_idea_generator_enabled'])); ?><?php echo $form_attr; ?> />
-						<?php esc_html_e('Activate Post Idea Generator', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Generate fresh blog topic ideas from your existing content using AI.', 'user-manager'); ?></p>
 				</div>

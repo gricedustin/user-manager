@@ -37,7 +37,7 @@ class User_Manager_Addon_WP_Admin_CSS {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="wp_admin_css_enabled" id="um-wp-admin-css-enabled" value="1" <?php checked($is_enabled); ?><?php echo $form_attr; ?> />
-						<?php esc_html_e('Activate WP-Admin CSS', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Inject custom CSS into wp-admin globally, by role, or for specific users.', 'user-manager'); ?></p>
 				</div>

@@ -29,7 +29,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="my_account_site_admin_enabled" id="um-my-account-site-admin-enabled" value="1" <?php checked($is_enabled); ?> />
-						<?php esc_html_e('Activate My Account Site Admin', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Add admin-style Orders, Products, Coupons, and Users tools inside WooCommerce My Account.', 'user-manager'); ?></p>
 				</div>

@@ -21,7 +21,7 @@ class User_Manager_Addon_Coupons_For_New_Users {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="nuc_enabled" id="um-nuc-enabled" value="1" <?php checked($settings['nuc_enabled'] ?? false); ?> />
-						<?php esc_html_e('Enable New User Coupons', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Create a user-specific coupon cloned from a template and optionally email it to the user.', 'user-manager'); ?></p>
 					<p class="description"><?php esc_html_e('Coupons are not bulk generated; each user is evaluated when they log in and visit a page you enabled below.', 'user-manager'); ?></p>
