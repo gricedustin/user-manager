@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.89';
+	const VERSION = '2.2.90';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1285,38 +1285,51 @@ final class User_Manager_Core {
 	 */
 	private static function get_wp_admin_css_hide_admin_chrome_preset(): string {
 		return '
-div#wpadminbar .ab-top-menu > li,
-.woocommerce-layout__header,
-div#adminmenuwrap,
-div#adminmenuback,
-div.updated,
-div.notice,
-div.noticex,
-div.error,
-div#dashboard-widgets-wrap,
-div#message,
-div#screen-meta-links {
-display:none !important;
+html body #wpadminbar .ab-top-menu > li,
+html body .woocommerce-layout__header,
+html body #adminmenu,
+html body #adminmenumain,
+html body #adminmenuwrap,
+html body #adminmenuback,
+html body .updated,
+html body .notice,
+html body .noticex,
+html body .error,
+html body #dashboard-widgets-wrap,
+html body #message,
+html body #screen-meta-links,
+html body #screen-meta,
+html body #contextual-help-link-wrap,
+html body #screen-options-link-wrap {
+	display:none !important;
 }
 
-div#wpadminbar li#wp-admin-bar-my-account,
-div#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] {
-display:block !important;
+html body #wpadminbar li#wp-admin-bar-my-account,
+html body #wpadminbar li#wp-admin-bar-my-account *,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"],
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] * {
+	display:block !important;
 }
 
-div#wpadminbar li#wp-admin-bar-my-account .ab-sub-wrapper,
-div#wpadminbar li#wp-admin-bar-my-account .ab-sub-wrapper li,
-div#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-sub-wrapper,
-div#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-sub-wrapper li {
-display:block !important;
+html body #wpadminbar li#wp-admin-bar-my-account .ab-item,
+html body #wpadminbar li#wp-admin-bar-my-account .ab-label,
+html body #wpadminbar li#wp-admin-bar-my-account .ab-sub-wrapper,
+html body #wpadminbar li#wp-admin-bar-my-account .ab-sub-wrapper li,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-item,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-label,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-sub-wrapper li {
+	display:block !important;
 }
 
-#wpcontent, #wpfooter {
-margin-left: 0 !important;
+html body #wpcontent,
+html body #wpfooter,
+html body #wpbody-content {
+	margin-left: 0 !important;
 }
 
-.woocommerce-layout__header {
-width: 100% !important;
+html body .woocommerce-layout__header {
+	width: 100% !important;
 }
 ';
 	}

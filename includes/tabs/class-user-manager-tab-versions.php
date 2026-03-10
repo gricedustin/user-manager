@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.90 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('WP-Admin CSS preset hardening: increased selector coverage/specificity and reinforced !important rules so the admin sidebar/top-bar hide preset applies more consistently across wp-admin screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.89 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('WP-Admin CSS add-on: added a new preset card to hide wp-admin sidebar/top-bar chrome while preserving profile/logout and custom top-bar menu items.', 'user-manager'); ?></li>
