@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.94 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart shortcode UI: changed sample download controls to text links and moved them above the "Select CSV File" upload field.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.93 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin add-on UI: indented sub-settings for Product Viewer, Coupon Viewer, and User Viewer to match the Order Viewer layout.', 'user-manager'); ?></li>
