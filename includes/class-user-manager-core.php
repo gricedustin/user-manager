@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.70';
+	const VERSION = '2.2.71';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1853,12 +1853,21 @@ final class User_Manager_Core {
 		$form_action_url   = esc_url($_SERVER['REQUEST_URI'] ?? '');
 
 		$output = '<div class="bulk-add-to-cart-form" style="max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		$debug_notice_lines = [];
 		if (function_exists('wc_get_notices') && function_exists('wc_print_notices')) {
 			$pending_notices = wc_get_notices();
+			$submitted = isset($_POST['bulk_add_to_cart_submit']);
 			if (!empty($pending_notices)) {
-				ob_start();
-				wc_print_notices();
-				$output .= (string) ob_get_clean();
+				if ($submitted && $debug_enabled) {
+					$debug_notice_lines = self::bulk_add_to_cart_flatten_notices_for_debug($pending_notices);
+					if (function_exists('wc_clear_notices')) {
+						wc_clear_notices();
+					}
+				} else {
+					ob_start();
+					wc_print_notices();
+					$output .= (string) ob_get_clean();
+				}
 			}
 		}
 
@@ -1925,6 +1934,15 @@ final class User_Manager_Core {
 				}
 				if (!empty($media_info['error'])) {
 					$output .= '<li>' . esc_html__('Media Upload Error:', 'user-manager') . ' ' . esc_html((string) $media_info['error']) . '</li>';
+				}
+				$output .= '</ul>';
+			}
+
+			if (!empty($debug_notice_lines)) {
+				$output .= '<p><strong>' . esc_html__('Upload/Processing Messages:', 'user-manager') . '</strong></p>';
+				$output .= '<ul>';
+				foreach ($debug_notice_lines as $line) {
+					$output .= '<li>' . esc_html($line) . '</li>';
 				}
 				$output .= '</ul>';
 			}
@@ -2719,6 +2737,47 @@ final class User_Manager_Core {
 		$result['attachment_id'] = (int) $attachment_id;
 		$result['attachment_url'] = (string) wp_get_attachment_url((int) $attachment_id);
 		return $result;
+	}
+
+	/**
+	 * Flatten WooCommerce notices into plain-text debug lines.
+	 *
+	 * @param array<string,array<int,array<string,mixed>>> $notices
+	 * @return array<int,string>
+	 */
+	private static function bulk_add_to_cart_flatten_notices_for_debug(array $notices): array {
+		$lines = [];
+		foreach ($notices as $type => $bucket) {
+			if (!is_array($bucket)) {
+				continue;
+			}
+			foreach ($bucket as $notice) {
+				$message = isset($notice['notice']) ? (string) $notice['notice'] : '';
+				if ($message === '') {
+					continue;
+				}
+				$message = str_replace(["\r\n", "\r"], "\n", $message);
+				$message = preg_replace('/<\s*br\s*\/?>/i', "\n", $message);
+				$message = str_ireplace('</li>', "\n", $message);
+				$message = str_ireplace('<li>', '- ', $message);
+				$plain = trim(wp_strip_all_tags((string) $message));
+				if ($plain === '') {
+					continue;
+				}
+				$parts = preg_split('/\n+/', $plain);
+				if (!is_array($parts)) {
+					$parts = [$plain];
+				}
+				foreach ($parts as $part) {
+					$part = trim((string) $part);
+					if ($part === '') {
+						continue;
+					}
+					$lines[] = $part;
+				}
+			}
+		}
+		return $lines;
 	}
 
 	/**
