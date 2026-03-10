@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.74
+ * Version: 2.2.75
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.75 - March 8, 2026
+ * - Email Templates layout: default view now shows Saved Templates + Add New Template (empty form) in two columns.
+ * - Email Templates layout: edit view now shows Live Preview + Edit Template in two columns and hides Saved Templates while editing.
+ *
  * 2.2.74 - March 8, 2026
  * - Bulk Add to Cart: debug notice routing now preserves only the two primary user-facing Woo notices (total items + line-by-line summary) while redirecting all other processing/debug notices into the Debug Information panel.
  *

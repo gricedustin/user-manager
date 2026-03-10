@@ -29,87 +29,131 @@ class User_Manager_Tab_Email_Templates {
 		$editing = ($edit_id && isset($templates[$edit_id])) ? $templates[$edit_id] : null;
 		?>
 		<div class="um-email-templates-layout<?php echo $editing ? ' um-email-templates-layout-editing' : ''; ?>">
-			<!-- Left Column: Saved Templates -->
-			<div class="um-email-templates-list">
-				<div class="um-admin-card">
-					<div class="um-admin-card-header">
-						<span class="dashicons dashicons-email"></span>
-						<h2><?php esc_html_e('Saved Templates', 'user-manager'); ?></h2>
-					</div>
-					<div class="um-admin-card-body">
-						<?php if (empty($templates)) : ?>
-							<div class="um-empty-state">
-								<span class="dashicons dashicons-email-alt"></span>
-								<p><?php esc_html_e('No templates yet. Create your first template using the form.', 'user-manager'); ?></p>
+			<?php if ($editing) : ?>
+				<!-- Left Column (editing): Live Preview -->
+				<?php
+				// Build demo preview using current (editing) template values and demo data.
+				$demo_email = 'demo.user@example.com';
+				$demo_username = 'demo.user';
+				$demo_first = 'Demo';
+				$demo_last = 'User';
+				$demo_login_url = '/my-account/';
+				$demo_password = '••••••••••••';
+				$demo_password_reset_url = home_url('/my-account/lost-password/');
+
+				$replacements = [
+					'%SITEURL%' => home_url(),
+					'%LOGINURL%' => $demo_login_url,
+					'%USERNAME%' => $demo_username,
+					'%PASSWORD%' => $demo_password,
+					'%EMAIL%' => $demo_email,
+					'%FIRSTNAME%' => $demo_first,
+					'%LASTNAME%' => $demo_last,
+					'%PASSWORDRESETURL%' => $demo_password_reset_url,
+				];
+
+				$preview_heading = isset($editing['heading']) ? str_replace(array_keys($replacements), array_values($replacements), (string) $editing['heading']) : 'Preview';
+				$preview_body = isset($editing['body']) ? str_replace(array_keys($replacements), array_values($replacements), (string) $editing['body']) : self::get_default_email_body();
+
+				$preview_html = User_Manager_Email::get_preview_html($preview_body, $preview_heading);
+				?>
+				<div class="um-email-templates-preview">
+					<div class="um-admin-card um-live-preview-card">
+						<div class="um-admin-card-header">
+							<span class="dashicons dashicons-visibility"></span>
+							<h2><?php esc_html_e('Live Preview (Demo Data)', 'user-manager'); ?></h2>
+						</div>
+						<div class="um-admin-card-body">
+							<p class="description" style="margin-top:0;"><?php esc_html_e('Preview uses demo data and the current template fields. Save the template to persist changes.', 'user-manager'); ?></p>
+							<div style="border:1px solid #dcdcde; border-radius:4px; overflow:hidden; background:#f7f7f7;">
+								<iframe style="width:100%; height:520px; border:0; display:block;" srcdoc="<?php echo esc_attr($preview_html); ?>"></iframe>
 							</div>
-						<?php else : ?>
-							<?php foreach ($templates as $id => $template) : ?>
-								<div class="um-template-card <?php echo $edit_id === $id ? 'um-template-card-active' : ''; ?>">
-									<div class="um-template-card-header">
-										<div>
-											<h4 class="um-template-card-title"><?php echo esc_html($template['title']); ?></h4>
-											<?php if (!empty($template['description'])) : ?>
-												<p class="um-template-card-desc"><?php echo esc_html($template['description']); ?></p>
-											<?php endif; ?>
-										</div>
-										<div class="um-template-actions">
-											<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
-												<input type="hidden" name="action" value="user_manager_move_template" />
-												<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
-												<input type="hidden" name="direction" value="up" />
-												<?php wp_nonce_field('user_manager_move_template'); ?>
-												<button type="submit" class="button button-small" title="<?php esc_attr_e('Move Up', 'user-manager'); ?>">&#9650;</button>
-											</form>
-											<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
-												<input type="hidden" name="action" value="user_manager_move_template" />
-												<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
-												<input type="hidden" name="direction" value="down" />
-												<?php wp_nonce_field('user_manager_move_template'); ?>
-												<button type="submit" class="button button-small" title="<?php esc_attr_e('Move Down', 'user-manager'); ?>">&#9660;</button>
-											</form>
-											<a href="<?php echo esc_url(add_query_arg('edit_template', $id, User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES))); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
-											<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
-												<input type="hidden" name="action" value="user_manager_duplicate_template" />
-												<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
-												<?php wp_nonce_field('user_manager_duplicate_template'); ?>
-												<button type="submit" class="button button-small" title="<?php esc_attr_e('Duplicate', 'user-manager'); ?>">
-													<?php esc_html_e('Duplicate', 'user-manager'); ?>
-												</button>
-											</form>
-											<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php echo esc_js(__('Delete this template?', 'user-manager')); ?>');">
-												<input type="hidden" name="action" value="user_manager_delete_template" />
-												<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
-												<?php wp_nonce_field('user_manager_delete_template'); ?>
-												<button type="submit" class="button button-small button-link-delete"><?php esc_html_e('Delete', 'user-manager'); ?></button>
-											</form>
-										</div>
-									</div>
-									<div class="um-template-details">
-										<div class="um-template-detail-row">
-											<strong><?php esc_html_e('Subject:', 'user-manager'); ?></strong>
-											<span><?php echo esc_html($template['subject']); ?></span>
-										</div>
-										<div class="um-template-detail-row">
-											<strong><?php esc_html_e('Heading:', 'user-manager'); ?></strong>
-											<span><?php echo esc_html($template['heading']); ?></span>
-										</div>
-										<?php if (!empty($template['bcc'])) : ?>
-										<div class="um-template-detail-row">
-											<strong><?php esc_html_e('BCC:', 'user-manager'); ?></strong>
-											<span><?php echo esc_html($template['bcc']); ?></span>
-										</div>
-										<?php endif; ?>
-										<div class="um-template-body-preview">
-											<strong><?php esc_html_e('Body:', 'user-manager'); ?></strong>
-											<div class="um-template-body-content"><?php echo wp_kses_post($template['body']); ?></div>
-										</div>
-									</div>
-								</div>
-							<?php endforeach; ?>
-						<?php endif; ?>
+						</div>
 					</div>
 				</div>
-			</div>
+			<?php else : ?>
+				<!-- Left Column (default): Saved Templates -->
+				<div class="um-email-templates-list">
+					<div class="um-admin-card">
+						<div class="um-admin-card-header">
+							<span class="dashicons dashicons-email"></span>
+							<h2><?php esc_html_e('Saved Templates', 'user-manager'); ?></h2>
+						</div>
+						<div class="um-admin-card-body">
+							<?php if (empty($templates)) : ?>
+								<div class="um-empty-state">
+									<span class="dashicons dashicons-email-alt"></span>
+									<p><?php esc_html_e('No templates yet. Create your first template using the form.', 'user-manager'); ?></p>
+								</div>
+							<?php else : ?>
+								<?php foreach ($templates as $id => $template) : ?>
+									<div class="um-template-card <?php echo $edit_id === $id ? 'um-template-card-active' : ''; ?>">
+										<div class="um-template-card-header">
+											<div>
+												<h4 class="um-template-card-title"><?php echo esc_html($template['title']); ?></h4>
+												<?php if (!empty($template['description'])) : ?>
+													<p class="um-template-card-desc"><?php echo esc_html($template['description']); ?></p>
+												<?php endif; ?>
+											</div>
+											<div class="um-template-actions">
+												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+													<input type="hidden" name="action" value="user_manager_move_template" />
+													<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
+													<input type="hidden" name="direction" value="up" />
+													<?php wp_nonce_field('user_manager_move_template'); ?>
+													<button type="submit" class="button button-small" title="<?php esc_attr_e('Move Up', 'user-manager'); ?>">&#9650;</button>
+												</form>
+												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+													<input type="hidden" name="action" value="user_manager_move_template" />
+													<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
+													<input type="hidden" name="direction" value="down" />
+													<?php wp_nonce_field('user_manager_move_template'); ?>
+													<button type="submit" class="button button-small" title="<?php esc_attr_e('Move Down', 'user-manager'); ?>">&#9660;</button>
+												</form>
+												<a href="<?php echo esc_url(add_query_arg('edit_template', $id, User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES))); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
+												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+													<input type="hidden" name="action" value="user_manager_duplicate_template" />
+													<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
+													<?php wp_nonce_field('user_manager_duplicate_template'); ?>
+													<button type="submit" class="button button-small" title="<?php esc_attr_e('Duplicate', 'user-manager'); ?>">
+														<?php esc_html_e('Duplicate', 'user-manager'); ?>
+													</button>
+												</form>
+												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php echo esc_js(__('Delete this template?', 'user-manager')); ?>');">
+													<input type="hidden" name="action" value="user_manager_delete_template" />
+													<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
+													<?php wp_nonce_field('user_manager_delete_template'); ?>
+													<button type="submit" class="button button-small button-link-delete"><?php esc_html_e('Delete', 'user-manager'); ?></button>
+												</form>
+											</div>
+										</div>
+										<div class="um-template-details">
+											<div class="um-template-detail-row">
+												<strong><?php esc_html_e('Subject:', 'user-manager'); ?></strong>
+												<span><?php echo esc_html($template['subject']); ?></span>
+											</div>
+											<div class="um-template-detail-row">
+												<strong><?php esc_html_e('Heading:', 'user-manager'); ?></strong>
+												<span><?php echo esc_html($template['heading']); ?></span>
+											</div>
+											<?php if (!empty($template['bcc'])) : ?>
+											<div class="um-template-detail-row">
+												<strong><?php esc_html_e('BCC:', 'user-manager'); ?></strong>
+												<span><?php echo esc_html($template['bcc']); ?></span>
+											</div>
+											<?php endif; ?>
+											<div class="um-template-body-preview">
+												<strong><?php esc_html_e('Body:', 'user-manager'); ?></strong>
+												<div class="um-template-body-content"><?php echo wp_kses_post($template['body']); ?></div>
+											</div>
+										</div>
+									</div>
+								<?php endforeach; ?>
+							<?php endif; ?>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
 			
 			<!-- Right Column: Add/Edit Form -->
 			<div class="um-email-templates-form">
@@ -177,47 +221,6 @@ class User_Manager_Tab_Email_Templates {
 						</form>
 					</div>
 				</div>
-				
-				<?php if ($editing) : ?>
-				<?php
-				// Build demo preview using current (editing) template values and demo data
-				$demo_email = 'demo.user@example.com';
-				$demo_username = 'demo.user';
-				$demo_first = 'Demo';
-				$demo_last = 'User';
-				$demo_login_url = '/my-account/';
-				$demo_password = '••••••••••••';
-				$demo_password_reset_url = home_url('/my-account/lost-password/');
-				
-				$replacements = [
-					'%SITEURL%' => home_url(),
-					'%LOGINURL%' => $demo_login_url,
-					'%USERNAME%' => $demo_username,
-					'%PASSWORD%' => $demo_password,
-					'%EMAIL%' => $demo_email,
-					'%FIRSTNAME%' => $demo_first,
-					'%LASTNAME%' => $demo_last,
-					'%PASSWORDRESETURL%' => $demo_password_reset_url,
-				];
-				
-				$preview_heading = isset($editing['heading']) ? str_replace(array_keys($replacements), array_values($replacements), (string) $editing['heading']) : 'Preview';
-				$preview_body = isset($editing['body']) ? str_replace(array_keys($replacements), array_values($replacements), (string) $editing['body']) : self::get_default_email_body();
-				
-				$preview_html = User_Manager_Email::get_preview_html($preview_body, $preview_heading);
-				?>
-				<div class="um-admin-card um-live-preview-card">
-					<div class="um-admin-card-header">
-						<span class="dashicons dashicons-visibility"></span>
-						<h2><?php esc_html_e('Live Preview (Demo Data)', 'user-manager'); ?></h2>
-					</div>
-					<div class="um-admin-card-body">
-						<p class="description" style="margin-top:0;"><?php esc_html_e('Preview uses demo data and the current template fields. Save the template to persist changes.', 'user-manager'); ?></p>
-						<div style="border:1px solid #dcdcde; border-radius:4px; overflow:hidden; background:#f7f7f7;">
-							<iframe style="width:100%; height:520px; border:0; display:block;" srcdoc="<?php echo esc_attr($preview_html); ?>"></iframe>
-						</div>
-					</div>
-				</div>
-				<?php endif; ?>
 			</div>
 		</div>
 		
@@ -233,17 +236,10 @@ class User_Manager_Tab_Email_Templates {
 			flex-direction: column;
 			gap: 20px;
 		}
-		.um-email-templates-layout.um-email-templates-layout-editing .um-email-templates-form {
-			order: -1;
-		}
-		.um-email-templates-form .um-live-preview-card {
-			order: -1;
-			margin-top: 0;
-		}
-		@media (max-width: 1200px) {
-			.um-email-templates-layout {
-				grid-template-columns: 1fr;
-			}
+		.um-email-templates-preview {
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
 		}
 		.um-template-card {
 			background: #f9f9f9;

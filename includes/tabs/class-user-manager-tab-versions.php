@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.75 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Email Templates layout: default view now shows Saved Templates + Add New Template (empty form) in two columns.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Email Templates layout: edit view now shows Live Preview + Edit Template in two columns and hides Saved Templates while editing.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.74 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Bulk Add to Cart: debug notice routing now preserves only the two primary user-facing Woo notices (total items + line-by-line summary) while redirecting all other processing/debug notices into the Debug Information panel.', 'user-manager'); ?></li>
