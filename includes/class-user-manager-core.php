@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.95';
+	const VERSION = '2.2.96';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -201,6 +201,7 @@ final class User_Manager_Core {
 				add_shortcode('bulk_add_to_cart', [__CLASS__, 'bulk_add_to_cart_shortcode']);
 			}
 			add_filter('woocommerce_get_notices', [__CLASS__, 'bulk_add_to_cart_reorder_notices'], 20, 1);
+			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_maybe_download_sample_csv']);
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_maybe_download_sample_with_product_data']);
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_process_upload']);
 		}
@@ -2073,11 +2074,8 @@ html body .woocommerce-layout__header {
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
 		$force_debug       = self::is_bulk_add_to_cart_debug_requested();
 		$debug_enabled     = (isset($options['debug_mode']) && (string) $options['debug_mode'] === '1') || $force_debug;
-		$sample_csv        = $identifier_column . ',' . $quantity_column . ',product_title,product_variation' . "\n"
-			. '123,1,Sample Product,' . "\n"
-			. '456,2,Sample Variation Product,Size: M | Color: Blue' . "\n";
-		$sample_csv_url    = 'data:text/csv;charset=utf-8,' . rawurlencode($sample_csv);
-		$sample_with_data_url = add_query_arg('um_bulk_add_to_cart_sample_data', '1', remove_query_arg('um_bulk_add_to_cart_sample_data'));
+		$sample_csv_url    = add_query_arg('um_bulk_add_to_cart_sample', '1', remove_query_arg(['um_bulk_add_to_cart_sample', 'um_bulk_add_to_cart_sample_data']));
+		$sample_with_data_url = add_query_arg('um_bulk_add_to_cart_sample_data', '1', remove_query_arg(['um_bulk_add_to_cart_sample', 'um_bulk_add_to_cart_sample_data']));
 		$form_action_url   = esc_url($_SERVER['REQUEST_URI'] ?? '');
 
 		$output = '<div class="bulk-add-to-cart-form" style="max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
@@ -2293,7 +2291,7 @@ html body .woocommerce-layout__header {
 		$output .= '<form method="post" enctype="multipart/form-data" action="' . $form_action_url . '">';
 		$output .= wp_nonce_field('bulk_add_to_cart_upload', 'bulk_add_to_cart_nonce', true, false);
 		$output .= '<p style="margin: 0 0 12px 0;">';
-		$output .= '<a href="' . esc_url($sample_csv_url, ['http', 'https', 'data']) . '" download="bulk-add-to-cart-sample.csv">' . esc_html__('Download Sample CSV', 'user-manager') . '</a>';
+		$output .= '<a href="' . esc_url($sample_csv_url) . '">' . esc_html__('Download Sample CSV', 'user-manager') . '</a>';
 		$output .= ' | <a href="' . esc_url($sample_with_data_url) . '">' . esc_html__('Download Sample CSV with Product Data', 'user-manager') . '</a>';
 		$output .= '</p>';
 		$output .= '<div style="margin-bottom: 20px;">';
@@ -2861,6 +2859,50 @@ html body .woocommerce-layout__header {
 			wp_safe_redirect(wc_get_cart_url());
 			exit;
 		}
+	}
+
+	/**
+	 * Download a basic sample CSV for Bulk Add to Cart.
+	 */
+	public static function bulk_add_to_cart_maybe_download_sample_csv(): void {
+		if (is_admin()) {
+			return;
+		}
+		if (!isset($_GET['um_bulk_add_to_cart_sample'])) {
+			return;
+		}
+		if (!class_exists('WooCommerce')) {
+			wp_die(esc_html__('WooCommerce is required to download this CSV.', 'user-manager'));
+		}
+		if (!is_user_logged_in()) {
+			wp_die(esc_html__('Please log in to download this CSV.', 'user-manager'));
+		}
+
+		$options           = get_option('bulk_add_to_cart_settings', []);
+		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
+		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
+		if ($identifier_column === '') {
+			$identifier_column = 'product_id';
+		}
+		if ($quantity_column === '') {
+			$quantity_column = 'quantity';
+		}
+
+		nocache_headers();
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename=bulk-add-to-cart-sample.csv');
+
+		$out = fopen('php://output', 'w');
+		if (!$out) {
+			exit;
+		}
+
+		fputcsv($out, [$identifier_column, $quantity_column, 'product_title', 'product_variation']);
+		fwrite($out, "\r\n");
+		fputcsv($out, ['123', '1', 'Sample Product', '']);
+		fputcsv($out, ['456', '2', 'Sample Variation Product', 'Size: M | Color: Blue']);
+		fclose($out);
+		exit;
 	}
 
 	/**

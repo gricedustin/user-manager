@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.96 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart shortcode: switched "Download Sample CSV" to a direct CSV download endpoint so line breaks are preserved reliably.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart sample CSV now includes a blank line after the header row and keeps the same headers as the product-data sample.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.95 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Bulk Add to Cart shortcode: "Download Sample CSV" now uses the same header columns as "Download Sample CSV with Product Data" (identifier, quantity, product_title, product_variation).', 'user-manager'); ?></li>
