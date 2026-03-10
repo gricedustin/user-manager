@@ -26,17 +26,6 @@ class User_Manager_Tab_Login_As {
 		}
 
 		$active_session = $sessions[$current_admin_id] ?? null;
-		$notice_code    = isset($_GET['um_login_as_notice']) ? sanitize_key(wp_unslash($_GET['um_login_as_notice'])) : '';
-
-		$notice_messages = [
-			'start_success'         => ['success', __('Temporary password generated successfully. Use the credentials below in a private/incognito window.', 'user-manager')],
-			'restored_success'      => ['success', __('Original password restored successfully.', 'user-manager')],
-			'select_user_required'  => ['error', __('Please select a valid user email before generating a temporary password.', 'user-manager')],
-			'user_not_found'        => ['error', __('The selected user could not be found.', 'user-manager')],
-			'password_hash_missing' => ['error', __('Could not read the selected user password hash. No changes were made.', 'user-manager')],
-			'password_set_failed'   => ['error', __('Could not set the temporary password. Please try again.', 'user-manager')],
-			'restore_failed'        => ['error', __('Could not restore the original password for this session.', 'user-manager')],
-		];
 
 		// Handle form submissions.
 		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['um_login_as_action'])) {
@@ -46,20 +35,17 @@ class User_Manager_Tab_Login_As {
 
 			if ($action === 'start') {
 				$target_id = isset($_POST['um_login_as_user']) ? absint($_POST['um_login_as_user']) : 0;
-				$target_email = isset($_POST['um_login_as_user_email']) ? sanitize_email(wp_unslash($_POST['um_login_as_user_email'])) : '';
-				if ($target_id <= 0 && $target_email !== '') {
-					$target_user = get_user_by('email', $target_email);
-					if ($target_user && isset($target_user->ID)) {
-						$target_id = (int) $target_user->ID;
-					}
+				if ($target_id <= 0 && !empty($_POST['um_login_as_user_search'])) {
+					$target_identifier = sanitize_text_field(wp_unslash($_POST['um_login_as_user_search']));
+					$target_id         = self::resolve_target_user_id($target_identifier);
 				}
-				$result_code = self::handle_start_session($current_admin_id, $target_id);
+				self::handle_start_session($current_admin_id, $target_id);
 				// Reload to show updated session state and avoid resubmission.
-				wp_safe_redirect(add_query_arg('um_login_as_notice', $result_code, User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS)));
+				wp_safe_redirect(User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS));
 				exit;
 			} elseif ($action === 'restore' && $active_session) {
-				$result_code = self::handle_restore_session($current_admin_id, $active_session);
-				wp_safe_redirect(add_query_arg('um_login_as_notice', $result_code, User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS)));
+				self::handle_restore_session($current_admin_id, $active_session);
+				wp_safe_redirect(User_Manager_Core::get_page_url(User_Manager_Core::TAB_LOGIN_AS));
 				exit;
 			}
 		}
@@ -80,43 +66,33 @@ class User_Manager_Tab_Login_As {
 						<?php esc_html_e('Use this tool to temporarily set a random password for a user so you can log in as them in an incognito/private window. When finished, restore their original password.', 'user-manager'); ?>
 					</p>
 
-					<?php if ($notice_code !== '' && isset($notice_messages[$notice_code]) && is_array($notice_messages[$notice_code])) : ?>
-						<?php
-						$notice_type = $notice_messages[$notice_code][0] === 'success' ? 'notice-success' : 'notice-error';
-						$notice_text = (string) $notice_messages[$notice_code][1];
-						?>
-						<div class="notice <?php echo esc_attr($notice_type); ?> is-dismissible" style="margin: 12px 0 16px;">
-							<p><?php echo esc_html($notice_text); ?></p>
-						</div>
-					<?php endif; ?>
-
 					<h3><?php esc_html_e('Step 1: Choose a user and generate a temporary password', 'user-manager'); ?></h3>
-					<form method="post" action="" id="um-login-as-start-form">
+					<form method="post" action="">
 						<?php wp_nonce_field('um_login_as_action'); ?>
 						<input type="hidden" name="um_login_as_action" value="start" />
 
 						<table class="form-table">
 							<tr>
 								<th scope="row">
-									<label for="um-login-as-user-email"><?php esc_html_e('User Email', 'user-manager'); ?></label>
+									<label for="um-login-as-user-search"><?php esc_html_e('Select User', 'user-manager'); ?></label>
 								</th>
 								<td>
-									<input type="hidden" name="um_login_as_user" id="um-login-as-user-id" value="" />
 									<input
 										type="text"
-										name="um_login_as_user_email"
-										id="um-login-as-user-email"
+										id="um-login-as-user-search"
+										name="um_login_as_user_search"
 										class="regular-text"
-										list="um-login-as-user-datalist"
-										data-um-lazy-datalist-source="user_emails"
-										placeholder="<?php esc_attr_e('Type to search by email', 'user-manager'); ?>"
-										value=""
-										required
+										list="um-login-as-user-search-datalist"
+										placeholder="<?php esc_attr_e('Search by username or email', 'user-manager'); ?>"
 										autocomplete="off"
+										data-um-login-as-search-nonce="<?php echo esc_attr(wp_create_nonce('user_manager_login_as_search')); ?>"
+										data-um-login-as-search-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
 									/>
-									<datalist id="um-login-as-user-datalist"></datalist>
+									<input type="hidden" name="um_login_as_user" id="um-login-as-user-id" value="" />
+									<datalist id="um-login-as-user-search-datalist"></datalist>
+									<div id="um-login-as-user-search-results" style="display:none;max-width:420px;border:1px solid #c3c4c7;border-radius:4px;background:#fff;margin-top:6px;max-height:220px;overflow:auto;"></div>
 									<p class="description">
-										<?php esc_html_e('Start typing an email address, then choose a suggestion. This list loads on first focus to keep the page fast.', 'user-manager'); ?>
+										<?php esc_html_e('Start typing a username or email address to search users. This avoids loading all users on large sites.', 'user-manager'); ?>
 									</p>
 								</td>
 							</tr>
@@ -154,30 +130,6 @@ class User_Manager_Tab_Login_As {
 								<div style="display:flex; flex-direction:column; gap:10px; max-width:480px;">
 									<div>
 										<div style="font-weight:600; margin-bottom:4px;">
-											<?php esc_html_e('Login URL:', 'user-manager'); ?>
-										</div>
-										<input
-											type="text"
-											class="regular-text um-login-as-copy"
-											data-label="<?php esc_attr_e('Login URL', 'user-manager'); ?>"
-											value="<?php echo esc_attr($login_url); ?>"
-											readonly
-										/>
-									</div>
-									<div>
-										<div style="font-weight:600; margin-bottom:4px;">
-											<?php esc_html_e('SSO Bypass Login URL:', 'user-manager'); ?>
-										</div>
-										<input
-											type="text"
-											class="regular-text um-login-as-copy"
-											data-label="<?php esc_attr_e('SSO Bypass Login URL', 'user-manager'); ?>"
-											value="<?php echo esc_attr($sso_bypass_url); ?>"
-											readonly
-										/>
-									</div>
-									<div>
-										<div style="font-weight:600; margin-bottom:4px;">
 											<?php esc_html_e('Username:', 'user-manager'); ?>
 										</div>
 										<input
@@ -197,6 +149,30 @@ class User_Manager_Tab_Login_As {
 											class="regular-text um-login-as-copy"
 											data-label="<?php esc_attr_e('Temporary Password', 'user-manager'); ?>"
 											value="<?php echo esc_attr($active_session['temp_password']); ?>"
+											readonly
+										/>
+									</div>
+									<div>
+										<div style="font-weight:600; margin-bottom:4px;">
+											<?php esc_html_e('Login URL:', 'user-manager'); ?>
+										</div>
+										<input
+											type="text"
+											class="regular-text um-login-as-copy"
+											data-label="<?php esc_attr_e('Login URL', 'user-manager'); ?>"
+											value="<?php echo esc_attr($login_url); ?>"
+											readonly
+										/>
+									</div>
+									<div>
+										<div style="font-weight:600; margin-bottom:4px;">
+											<?php esc_html_e('SSO Bypass Login URL:', 'user-manager'); ?>
+										</div>
+										<input
+											type="text"
+											class="regular-text um-login-as-copy"
+											data-label="<?php esc_attr_e('SSO Bypass Login URL', 'user-manager'); ?>"
+											value="<?php echo esc_attr($sso_bypass_url); ?>"
 											readonly
 										/>
 									</div>
@@ -310,43 +286,6 @@ class User_Manager_Tab_Login_As {
 		</div>
 		<script>
 		(function() {
-			function updateLoginAsHiddenUserId() {
-				var emailInput = document.getElementById('um-login-as-user-email');
-				var hiddenInput = document.getElementById('um-login-as-user-id');
-				if (!emailInput || !hiddenInput) {
-					return;
-				}
-				var listId = emailInput.getAttribute('list');
-				var datalist = listId ? document.getElementById(listId) : null;
-				var typed = (emailInput.value || '').trim().toLowerCase();
-				hiddenInput.value = '';
-				if (!typed || !datalist || !datalist.options) {
-					return;
-				}
-				for (var i = 0; i < datalist.options.length; i++) {
-					var option = datalist.options[i];
-					if (!option) {
-						continue;
-					}
-					var optionValue = (option.value || '').trim().toLowerCase();
-					if (optionValue !== typed) {
-						continue;
-					}
-					var userId = option.getAttribute('data-um-user-id');
-					if (userId) {
-						hiddenInput.value = userId;
-					}
-					return;
-				}
-			}
-
-			var startForm = document.getElementById('um-login-as-start-form');
-			if (startForm) {
-				startForm.addEventListener('submit', function() {
-					updateLoginAsHiddenUserId();
-				});
-			}
-
 			document.addEventListener('click', function(e) {
 				var target = e.target;
 				if (target.classList && target.classList.contains('um-login-as-copy')) {
@@ -360,19 +299,208 @@ class User_Manager_Tab_Login_As {
 				}
 			});
 
-			document.addEventListener('input', function(e) {
-				if (e.target && e.target.id === 'um-login-as-user-email') {
-					updateLoginAsHiddenUserId();
+			var searchInput = document.getElementById('um-login-as-user-search');
+			var hiddenInput = document.getElementById('um-login-as-user-id');
+			var datalist    = document.getElementById('um-login-as-user-search-datalist');
+			var resultsBox  = document.getElementById('um-login-as-user-search-results');
+			if (!searchInput || !hiddenInput || !datalist) {
+				return;
+			}
+
+			var searchNonce = searchInput.getAttribute('data-um-login-as-search-nonce') || '';
+			var searchUrl   = searchInput.getAttribute('data-um-login-as-search-url') || (typeof window.ajaxurl !== 'undefined' ? window.ajaxurl : '');
+			if (!searchUrl) {
+				return;
+			}
+			var searchMap   = {};
+			var timer       = null;
+
+			function setHiddenFromInputValue() {
+				var value = (searchInput.value || '').trim();
+				if (!value) {
+					hiddenInput.value = '';
+					return;
+				}
+				hiddenInput.value = searchMap[value] ? String(searchMap[value]) : (searchMap[value.toLowerCase()] ? String(searchMap[value.toLowerCase()]) : '');
+			}
+
+			function hideResults() {
+				if (!resultsBox) {
+					return;
+				}
+				resultsBox.style.display = 'none';
+			}
+
+			function renderSearchResults(results) {
+				searchMap = {};
+				datalist.innerHTML = '';
+				if (resultsBox) {
+					resultsBox.innerHTML = '';
+				}
+
+				if (!Array.isArray(results)) {
+					hideResults();
+					return;
+				}
+				var html = '';
+				var hasResults = false;
+				results.forEach(function(item) {
+					if (!item || !item.id || !item.label) {
+						return;
+					}
+					hasResults = true;
+					var option = document.createElement('option');
+					option.value = item.label;
+					datalist.appendChild(option);
+
+					searchMap[item.label] = item.id;
+					searchMap[item.label.toLowerCase()] = item.id;
+					if (item.login) {
+						searchMap[item.login] = item.id;
+						searchMap[item.login.toLowerCase()] = item.id;
+					}
+					if (item.email) {
+						searchMap[item.email] = item.id;
+						searchMap[item.email.toLowerCase()] = item.id;
+					}
+
+					if (resultsBox) {
+						html += '<button type="button" class="button-link" data-user-id="' + String(item.id).replace(/"/g, '&quot;') + '" data-user-label="' + String(item.label).replace(/"/g, '&quot;') + '" style="display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:#fff;cursor:pointer;">'
+							+ String(item.label).replace(/</g, '&lt;').replace(/>/g, '&gt;')
+							+ '</button>';
+					}
+				});
+
+				if (resultsBox) {
+					if (!hasResults) {
+						resultsBox.innerHTML = '<div style="padding:8px 10px;color:#646970;">' + '<?php echo esc_js(__('No users found.', 'user-manager')); ?>' + '</div>';
+					} else {
+						resultsBox.innerHTML = html;
+					}
+					resultsBox.style.display = 'block';
+				}
+			}
+
+			function runSearch() {
+				var query = (searchInput.value || '').trim();
+				if (query.length < 2) {
+					renderSearchResults([]);
+					setHiddenFromInputValue();
+					hideResults();
+					return;
+				}
+
+				jQuery.ajax({
+					url: searchUrl,
+					method: 'GET',
+					dataType: 'json',
+					data: {
+						action: 'user_manager_search_users_for_login_as',
+						nonce: searchNonce,
+						q: query
+					}
+				})
+					.done(function(payload) {
+						if (!payload || !payload.success || !payload.data) {
+							renderSearchResults([]);
+							return;
+						}
+						renderSearchResults(payload.data.results || []);
+						setHiddenFromInputValue();
+					})
+					.fail(function() {
+						renderSearchResults([]);
+						hideResults();
+					});
+			}
+
+			searchInput.addEventListener('input', function() {
+				setHiddenFromInputValue();
+				if (timer) {
+					window.clearTimeout(timer);
+				}
+				timer = window.setTimeout(runSearch, 220);
+			});
+			searchInput.addEventListener('change', setHiddenFromInputValue);
+			searchInput.addEventListener('blur', setHiddenFromInputValue);
+			searchInput.addEventListener('focus', function() {
+				if (resultsBox && resultsBox.innerHTML !== '' && (searchInput.value || '').trim().length >= 2) {
+					resultsBox.style.display = 'block';
 				}
 			});
-			document.addEventListener('change', function(e) {
-				if (e.target && e.target.id === 'um-login-as-user-email') {
-					updateLoginAsHiddenUserId();
-				}
+			searchInput.addEventListener('blur', function() {
+				window.setTimeout(hideResults, 150);
 			});
+
+			if (resultsBox) {
+				resultsBox.addEventListener('click', function(e) {
+					var button = e.target && e.target.closest ? e.target.closest('button[data-user-id]') : null;
+					if (!button) {
+						return;
+					}
+					var selectedId = button.getAttribute('data-user-id') || '';
+					var selectedLabel = button.getAttribute('data-user-label') || '';
+					hiddenInput.value = selectedId;
+					searchInput.value = selectedLabel;
+					hideResults();
+				});
+			}
 		})();
 		</script>
 		<?php
+	}
+
+	/**
+	 * Resolve a submitted username/email string into a user ID.
+	 */
+	private static function resolve_target_user_id(string $identifier): int {
+		$identifier = trim($identifier);
+		if ($identifier === '') {
+			return 0;
+		}
+
+		if (is_numeric($identifier)) {
+			$user_id = absint($identifier);
+			return get_userdata($user_id) ? $user_id : 0;
+		}
+
+		// Accept labels like "username (email@example.com)" from search suggestions.
+		if (preg_match('/^(.*?)\s*\(([^()]+)\)\s*$/', $identifier, $matches)) {
+			$possible_login = trim((string) ($matches[1] ?? ''));
+			$possible_email = sanitize_email((string) ($matches[2] ?? ''));
+
+			if ($possible_email !== '') {
+				$user = get_user_by('email', $possible_email);
+				if ($user) {
+					return (int) $user->ID;
+				}
+			}
+
+			if ($possible_login !== '') {
+				$user = get_user_by('login', sanitize_user($possible_login, false));
+				if ($user) {
+					return (int) $user->ID;
+				}
+			}
+		}
+
+		$as_email = sanitize_email($identifier);
+		if ($as_email !== '' && strcasecmp($as_email, $identifier) === 0) {
+			$user = get_user_by('email', $as_email);
+			if ($user) {
+				return (int) $user->ID;
+			}
+		}
+
+		$as_login = sanitize_user($identifier, false);
+		if ($as_login !== '') {
+			$user = get_user_by('login', $as_login);
+			if ($user) {
+				return (int) $user->ID;
+			}
+		}
+
+		return 0;
 	}
 
 	/**
@@ -380,16 +508,15 @@ class User_Manager_Tab_Login_As {
 	 *
 	 * @param int $admin_id  Admin user ID.
 	 * @param int $target_id Target user ID.
-	 * @return string Result code for admin notice.
 	 */
-	private static function handle_start_session(int $admin_id, int $target_id): string {
+	private static function handle_start_session(int $admin_id, int $target_id): void {
 		if ($target_id <= 0 || $admin_id <= 0) {
-			return 'select_user_required';
+			return;
 		}
 
 		$target = get_userdata($target_id);
 		if (!$target) {
-			return 'user_not_found';
+			return;
 		}
 
 		// Generate a secure random password.
@@ -407,21 +534,11 @@ class User_Manager_Tab_Login_As {
 		);
 
 		if (empty($hash)) {
-			return 'password_hash_missing';
+			return;
 		}
 
 		// Update the user's password to the temporary value using wp_set_password.
 		wp_set_password($temp_password, $target_id);
-
-		$updated_hash = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT user_pass FROM {$table} WHERE ID = %d",
-				$target_id
-			)
-		);
-		if (empty($updated_hash) || !wp_check_password($temp_password, (string) $updated_hash, $target_id)) {
-			return 'password_set_failed';
-		}
 
 		// Store session metadata keyed by current admin.
 		$sessions = get_option(self::OPTION_KEY, []);
@@ -449,8 +566,6 @@ class User_Manager_Tab_Login_As {
 				'target_user_email' => $target->user_email,
 			]
 		);
-
-		return 'start_success';
 	}
 
 	/**
@@ -458,11 +573,10 @@ class User_Manager_Tab_Login_As {
 	 *
 	 * @param int   $admin_id Admin user ID.
 	 * @param array $session  Session data.
-	 * @return string Result code for admin notice.
 	 */
-	private static function handle_restore_session(int $admin_id, array $session): string {
+	private static function handle_restore_session(int $admin_id, array $session): void {
 		if (empty($session['user_id']) || empty($session['original_hash'])) {
-			return 'restore_failed';
+			return;
 		}
 
 		$user_id       = (int) $session['user_id'];
@@ -472,7 +586,7 @@ class User_Manager_Tab_Login_As {
 		$table = $wpdb->users;
 
 		// Restore the original password hash directly.
-		$updated = $wpdb->update(
+		$wpdb->update(
 			$table,
 			[
 				'user_pass' => $original_hash,
@@ -487,9 +601,6 @@ class User_Manager_Tab_Login_As {
 				'%d',
 			]
 		);
-		if ($updated === false) {
-			return 'restore_failed';
-		}
 
 		// Clear the session for this admin.
 		$sessions = get_option(self::OPTION_KEY, []);
@@ -507,8 +618,6 @@ class User_Manager_Tab_Login_As {
 				'target_user_id' => $user_id,
 			]
 		);
-
-		return 'restored_success';
 	}
 }
 

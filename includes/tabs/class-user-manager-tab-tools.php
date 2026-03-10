@@ -9,163 +9,30 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Tab_Tools {
 
-	public static function render(): void {
-		// Optional coupon lookup by email (GET parameter).
-		$lookup_email_raw = isset($_GET['coupon_lookup_email']) ? wp_unslash($_GET['coupon_lookup_email']) : '';
-		$lookup_email     = $lookup_email_raw !== '' ? sanitize_email($lookup_email_raw) : '';
-		$lookup_results   = [];
-		$lookup_ran       = false;
-
-		if ($lookup_email !== '' && class_exists('WC_Coupon')) {
-			$lookup_ran = true;
-			$now_ts     = current_time('timestamp');
-
-			// First, find candidate coupons via meta_query so we match how coupon
-			// notifications locate coupons (works with serialized arrays, etc.).
-			$query = new WP_Query([
-				'post_type'      => 'shop_coupon',
-				'post_status'    => 'any',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-				'meta_query'     => [
-					'relation' => 'OR',
-					[
-						'key'     => 'customer_email',
-						'value'   => $lookup_email,
-						'compare' => 'LIKE',
-					],
-					[
-						'key'     => '_um_user_coupon_user_email',
-						'value'   => $lookup_email,
-						'compare' => 'LIKE',
-					],
-				],
-			]);
-
-			$coupon_ids = $query instanceof WP_Query ? (array) $query->posts : [];
-
-			foreach ($coupon_ids as $coupon_id) {
-				$coupon_id = (int) $coupon_id;
-				if ($coupon_id <= 0) {
-					continue;
-				}
-
-				$coupon = new WC_Coupon($coupon_id);
-				if (!$coupon || !$coupon->get_id()) {
-					continue;
-				}
-
-				$emails = [];
-
-				// customer_email meta (array or comma-separated string).
-				$customer_email = get_post_meta($coupon_id, 'customer_email', true);
-				if (!empty($customer_email)) {
-					if (is_array($customer_email)) {
-						$emails = array_merge($emails, $customer_email);
-					} elseif (is_string($customer_email)) {
-						$emails = array_merge($emails, array_map('trim', preg_split('/[\r\n,]+/', $customer_email)));
-					}
-				}
-
-				// WooCommerce email restrictions.
-				if (method_exists($coupon, 'get_email_restrictions')) {
-					$restrictions = $coupon->get_email_restrictions('edit');
-					if (!empty($restrictions) && is_array($restrictions)) {
-						$emails = array_merge($emails, $restrictions);
-					}
-				}
-
-				// User Manager coupon email meta.
-				$um_email = get_post_meta($coupon_id, '_um_user_coupon_user_email', true);
-				if (!empty($um_email)) {
-					$emails[] = $um_email;
-				}
-
-				$emails = array_values(array_unique(array_filter(array_map('trim', $emails))));
-
-				// Core coupon details.
-				$discount_type = (string) $coupon->get_discount_type();
-				$amount        = (float) $coupon->get_amount();
-				$amount_label  = function_exists('wc_price') ? wp_kses_post(wc_price($amount)) : (string) $amount;
-
-				$usage_count = (int) $coupon->get_usage_count();
-				$usage_limit = $coupon->get_usage_limit();
-				$usage_label = $usage_limit
-					? sprintf('%1$d / %2$d', $usage_count, (int) $usage_limit)
-					: sprintf('%1$d / %2$s', $usage_count, __('Unlimited', 'user-manager'));
-
-				$date_expires = $coupon->get_date_expires();
-				$expiry_ts    = $date_expires ? $date_expires->getTimestamp() : null;
-				if ($expiry_ts) {
-					$expiry_label = date_i18n(get_option('date_format'), $expiry_ts);
-				} else {
-					$expiry_label = __('No expiration', 'user-manager');
-				}
-
-				$date_created = $coupon->get_date_created();
-				$created_ts   = $date_created ? $date_created->getTimestamp() : null;
-				if ($created_ts) {
-					$created_label = date_i18n(get_option('date_format'), $created_ts);
-				} else {
-					$created_label = '';
-				}
-
-				$post_status = get_post_status($coupon_id);
-
-				// Determine human-readable status.
-				if ($post_status !== 'publish') {
-					$status_label = sprintf(
-						/* translators: %s: post status slug */
-						__('Inactive (%s)', 'user-manager'),
-						$post_status
-					);
-				} elseif ($expiry_ts && $expiry_ts < $now_ts) {
-					$status_label = __('Expired', 'user-manager');
-				} elseif ($usage_limit && $usage_count >= $usage_limit) {
-					$status_label = __('Fully Used', 'user-manager');
-				} elseif ($usage_count > 0) {
-					$status_label = __('Active – Used', 'user-manager');
-				} else {
-					$status_label = __('Active – Unused', 'user-manager');
-				}
-
-				$lookup_results[] = [
-					'id'            => $coupon_id,
-					'code'          => $coupon->get_code(),
-					'emails'        => $emails,
-					'edit'          => get_edit_post_link($coupon_id, ''),
-					'type'          => $discount_type,
-					'type_label'    => ucwords(str_replace('_', ' ', $discount_type)),
-					'amount'        => $amount_label,
-					'amount_raw'    => $amount,
-					'usage'         => $usage_label,
-					'usage_count'   => $usage_count,
-					'usage_limit'   => $usage_limit,
-					'created'       => $created_label,
-					'created_ts'    => $created_ts,
-					'expiry'        => $expiry_label,
-					'expiry_ts'     => $expiry_ts,
-					'status'        => $status_label,
-				];
-			}
-		}
-
-		// Log Coupon Lookup by Email to Admin Log when a search was performed.
-		if ($lookup_ran && $lookup_email !== '' && is_email($lookup_email)) {
-			User_Manager_Core::add_activity_log('coupon_lookup', 0, 'Tools', [
-				'email'        => $lookup_email,
-				'result_count' => count($lookup_results),
-			]);
-		}
-
-		$blog_categories = get_categories(['taxonomy' => 'category', 'hide_empty' => false]);
-		$last_published = get_posts(['post_type' => 'post', 'post_status' => 'publish', 'numberposts' => 1, 'orderby' => 'date', 'order' => 'DESC']);
-		$um_blog_spread_first = !empty($last_published) ? get_the_date('Y-m-d', $last_published[0]) : current_time('Y-m-d');
+	public static function render(
+		bool $show_utility_cards = true,
+		bool $show_blog_importer_card = true,
+		bool $show_blog_idea_generator_card = true,
+		bool $wrap_blog_idea_card = true,
+		bool $wrap_blog_importer_card = true,
+		bool $wrap_grid = true
+	): void {
+		$blog_categories = [];
+		$um_blog_spread_first = current_time('Y-m-d');
 		$um_blog_spread_last  = current_time('Y-m-d');
-		$um_settings = User_Manager_Core::get_settings();
-		$um_has_chatgpt_key = !empty(trim((string) ($um_settings['openai_api_key'] ?? '')));
+		$um_has_chatgpt_key = false;
+		if ($show_blog_importer_card || $show_blog_idea_generator_card) {
+			$blog_categories = get_categories(['taxonomy' => 'category', 'hide_empty' => false]);
+			$last_published = get_posts(['post_type' => 'post', 'post_status' => 'publish', 'numberposts' => 1, 'orderby' => 'date', 'order' => 'DESC']);
+			$um_blog_spread_first = !empty($last_published) ? get_the_date('Y-m-d', $last_published[0]) : current_time('Y-m-d');
+			$um_settings = User_Manager_Core::get_settings();
+			$um_has_chatgpt_key = !empty(trim((string) ($um_settings['openai_api_key'] ?? '')));
+		}
 		?>
+		<?php if ($wrap_grid) : ?>
 		<div class="um-admin-grid um-admin-grid-single">
+		<?php endif; ?>
+			<?php if ($show_utility_cards) : ?>
 			<div class="um-admin-card">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-download"></span>
@@ -232,161 +99,19 @@ class User_Manager_Tab_Tools {
 					</div>
 				</div>
 			</div>
-			
-			<div class="um-admin-card">
-				<div class="um-admin-card-header">
-					<span class="dashicons dashicons-search"></span>
-					<h2><?php esc_html_e('Coupon Lookup by Email', 'user-manager'); ?></h2>
-				</div>
-				<div class="um-admin-card-body">
-					<p><?php esc_html_e('Search for coupons where a specific email address appears in the Allowed Emails / email restrictions.', 'user-manager'); ?></p>
-					<form method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>" style="margin-bottom:15px; max-width:480px;">
-						<input type="hidden" name="page" value="<?php echo esc_attr(User_Manager_Core::SETTINGS_PAGE_SLUG); ?>" />
-						<input type="hidden" name="tab" value="<?php echo esc_attr(User_Manager_Core::TAB_TOOLS); ?>" />
-						<label for="um-coupon-lookup-email" style="display:block;margin-bottom:6px;">
-							<?php esc_html_e('Email Address', 'user-manager'); ?>
-						</label>
-						<input type="email" name="coupon_lookup_email" id="um-coupon-lookup-email" class="regular-text" style="max-width:320px;" value="<?php echo esc_attr($lookup_email_raw); ?>" />
-						<?php submit_button(__('Search Coupons', 'user-manager'), 'secondary', 'submit', false, ['style' => 'margin-left:8px;']); ?>
-						<p class="description" style="margin-top:8px;">
-							<?php esc_html_e('Matches coupons where this exact email is present in WooCommerce email restrictions, the customer_email meta, or the User Manager coupon email meta.', 'user-manager'); ?>
-						</p>
-					</form>
 
-					<?php if ($lookup_ran) : ?>
-						<?php if ($lookup_email === '' || !is_email($lookup_email)) : ?>
-							<p style="color:#d63638;"><?php esc_html_e('Please enter a valid email address.', 'user-manager'); ?></p>
-						<?php elseif (empty($lookup_results)) : ?>
-							<p><?php esc_html_e('No coupons found for this email address.', 'user-manager'); ?></p>
-						<?php else : ?>
-							<table class="widefat striped">
-								<thead>
-									<tr>
-										<th><?php esc_html_e('Coupon Code', 'user-manager'); ?></th>
-										<th><?php esc_html_e('Coupon ID', 'user-manager'); ?></th>
-										<th><?php esc_html_e('Type', 'user-manager'); ?></th>
-										<th><?php esc_html_e('Value', 'user-manager'); ?></th>
-										<th><?php esc_html_e('Usage', 'user-manager'); ?></th>
-										<th><?php esc_html_e('Created', 'user-manager'); ?></th>
-										<th><?php esc_html_e('Expires', 'user-manager'); ?></th>
-										<th><?php esc_html_e('Status', 'user-manager'); ?></th>
-										<th><?php esc_html_e('Allowed Emails', 'user-manager'); ?></th>
-									</tr>
-								</thead>
-								<tbody>
-									<?php foreach ($lookup_results as $row) : ?>
-										<tr>
-											<td>
-												<?php if (!empty($row['edit'])) : ?>
-													<a href="<?php echo esc_url($row['edit']); ?>"><?php echo esc_html(strtoupper($row['code'])); ?></a>
-												<?php else : ?>
-													<?php echo esc_html(strtoupper($row['code'])); ?>
-												<?php endif; ?>
-											</td>
-											<td><?php echo (int) $row['id']; ?></td>
-											<td><?php echo esc_html($row['type_label']); ?></td>
-											<td><?php echo is_string($row['amount']) ? wp_kses_post($row['amount']) : esc_html((string) $row['amount']); ?></td>
-											<td><?php echo esc_html($row['usage']); ?></td>
-											<td><?php echo esc_html($row['created']); ?></td>
-											<td><?php echo esc_html($row['expiry']); ?></td>
-											<td><?php echo esc_html($row['status']); ?></td>
-											<td><?php echo esc_html(implode(', ', $row['emails'])); ?></td>
-										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
-
-							<?php
-							// Build a human-readable summary list for easy copy/paste.
-							$summary_lines = [];
-							foreach ($lookup_results as $row) {
-								// Skip drafted/trashed or otherwise non-published coupons in the summary;
-								// they are still visible in the table above, but we only narrate live coupons.
-								$post_status = get_post_status((int) ($row['id'] ?? 0));
-								if ($post_status !== 'publish') {
-									continue;
-								}
-
-								$code       = strtoupper($row['code']);
-								$amount_raw = (float) ($row['amount_raw'] ?? 0);
-								$status     = $row['status'] ?? '';
-								$expiry_ts  = $row['expiry_ts'] ?? null;
-								$created_ts = $row['created_ts'] ?? null;
-
-								// Base formatted amount.
-								if (function_exists('wc_price')) {
-									$amount_text = html_entity_decode(wp_strip_all_tags(wc_price($amount_raw)));
-								} else {
-									$amount_text = '$' . number_format($amount_raw, 2, '.', ',');
-								}
-
-								// Determine sentence based on status and expiry.
-								if (stripos($status, 'Fully Used') !== false) {
-									// For fully used coupons, mention original value and created date when available.
-									if ($created_ts) {
-										$created_text = date_i18n(get_option('date_format'), $created_ts);
-										$line         = sprintf(
-											/* translators: 1: coupon code, 2: created date, 3: amount text */
-											__('Coupon code %1$s (created on %2$s) had a value of %3$s, and was fully used.', 'user-manager'),
-											$code,
-											$created_text,
-											$amount_text
-										);
-									} else {
-										$line = sprintf(
-											/* translators: 1: coupon code, 2: amount text */
-											__('Coupon code %1$s had a value of %2$s, and was fully used.', 'user-manager'),
-											$code,
-											$amount_text
-										);
-									}
-								} else {
-									// Still usable (active/unused or active/used with remaining uses).
-									if ($expiry_ts) {
-										$expiry_text = date_i18n(get_option('date_format'), $expiry_ts);
-										$line        = sprintf(
-											/* translators: 1: coupon code, 2: amount text, 3: expiry date */
-											__('Coupon code %1$s has a value of %2$s, can still be used, and expires on %3$s.', 'user-manager'),
-											$code,
-											$amount_text,
-											$expiry_text
-										);
-									} else {
-										$line = sprintf(
-											/* translators: 1: coupon code, 2: amount text */
-											__('Coupon code %1$s has a value of %2$s, can still be used, and does not expire.', 'user-manager'),
-											$code,
-											$amount_text
-										);
-									}
-								}
-
-								$summary_lines[] = $line;
-							}
-
-							if (!empty($summary_lines)) :
-								?>
-								<div style="margin-top:20px;">
-									<label for="um-coupon-lookup-summary" style="display:block;margin-bottom:4px;font-weight:600;">
-										<?php esc_html_e('Copyable coupon summary', 'user-manager'); ?>
-									</label>
-									<textarea id="um-coupon-lookup-summary" class="large-text code" rows="4" readonly><?php echo esc_textarea(implode("\n", $summary_lines)); ?></textarea>
-									<p class="description" style="margin-top:4px;">
-										<?php esc_html_e('Use this summary in emails or notes when explaining which coupons are available or have already been used for this email address.', 'user-manager'); ?>
-									</p>
-								</div>
-							<?php endif; ?>
-						<?php endif; ?>
-					<?php endif; ?>
-				</div>
-			</div>
-
+			<?php endif; ?>
+			<?php if ($show_blog_importer_card) : ?>
+			<?php if ($wrap_blog_importer_card) : ?>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-edit-page"></span>
 					<h2><?php esc_html_e('Blog Post Importer', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+			<?php else : ?>
+			<div id="um-blog-importer-card">
+			<?php endif; ?>
 					<p><?php esc_html_e('Create multiple blog posts at once. Add one or more posts below; optional settings when saving can apply a random featured image and spread post dates evenly between a first and last date.', 'user-manager'); ?></p>
 					<?php
 					$um_default_editor_tinymce = function () { return 'tinymce'; };
@@ -834,20 +559,32 @@ class User_Manager_Tab_Tools {
 					})();
 					</script>
 					<?php endif; ?>
+			<?php if ($wrap_blog_importer_card) : ?>
 				</div>
 			</div>
+			<?php else : ?>
+			</div>
+			<?php endif; ?>
 
+			<?php endif; ?>
+
+			<?php if ($show_blog_idea_generator_card) : ?>
 			<?php
 			$um_idea_posts = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'future'], 'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 500, 'no_found_rows' => true]);
 			$um_idea_titles = array_map('get_the_title', $um_idea_posts);
 			$um_idea_prompt = __('Here are all of our blog post titles, what are some other topics and/or headlines you might recommend?', 'user-manager') . "\n\n" . implode("\n", $um_idea_titles);
+			$um_idea_nonce  = wp_create_nonce('user_manager_blog_ideas');
 			?>
-			<div class="um-admin-card um-admin-card-full" id="um-blog-idea-generator-card" data-ideas-nonce="<?php echo esc_attr(wp_create_nonce('user_manager_blog_ideas')); ?>">
+			<?php if ($wrap_blog_idea_card) : ?>
+			<div class="um-admin-card um-admin-card-full" id="um-blog-idea-generator-card" data-ideas-nonce="<?php echo esc_attr($um_idea_nonce); ?>">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-lightbulb"></span>
-					<h2><?php esc_html_e('Blog Post Idea Generator', 'user-manager'); ?></h2>
+					<h2><?php esc_html_e('Post Idea Generator', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+			<?php else : ?>
+			<div id="um-blog-idea-generator-card" data-ideas-nonce="<?php echo esc_attr($um_idea_nonce); ?>">
+			<?php endif; ?>
 					<?php if ($um_has_chatgpt_key) : ?>
 						<p style="margin-top: 0;">
 							<label for="um-blog-idea-topic-focus" style="display:block; font-weight: 600; margin-bottom: 6px;"><?php esc_html_e('Optional topic focus', 'user-manager'); ?></label>
@@ -862,8 +599,12 @@ class User_Manager_Tab_Tools {
 					<label for="um-blog-idea-prompt" style="display:block; font-weight: 600; margin-bottom: 6px; margin-top: 16px;"><?php esc_html_e('AI Prompt Support', 'user-manager'); ?></label>
 					<textarea id="um-blog-idea-prompt" class="large-text code" rows="12" readonly style="width: 100%; box-sizing: border-box; cursor: text;" onclick="this.select();"><?php echo esc_textarea($um_idea_prompt); ?></textarea>
 					<p class="description"><?php esc_html_e('Copy this prompt to use with an AI assistant. It includes all your blog post titles (newest to oldest) so the AI can suggest related topics or headlines.', 'user-manager'); ?></p>
+			<?php if ($wrap_blog_idea_card) : ?>
 				</div>
 			</div>
+			<?php else : ?>
+			</div>
+			<?php endif; ?>
 			<?php if ($um_has_chatgpt_key) : ?>
 			<script>
 			(function(){
@@ -957,8 +698,307 @@ class User_Manager_Tab_Tools {
 			})();
 			</script>
 			<?php endif; ?>
+			<?php endif; ?>
+		<?php if ($wrap_grid) : ?>
+		</div>
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * Render Coupon Lookup by Email in any tab context.
+	 *
+	 * @param string              $tab                Tab slug for form submissions.
+	 * @param array<string,mixed> $hidden_query_args  Extra hidden GET fields to preserve.
+	 * @param string              $activity_tool      Tool label used in activity log.
+	 */
+	public static function render_coupon_lookup_by_email_card(
+		string $tab = User_Manager_Core::TAB_REPORTS,
+		array $hidden_query_args = [],
+		string $activity_tool = 'Reports'
+	): void {
+		$lookup_email_raw = isset($_GET['coupon_lookup_email']) ? wp_unslash($_GET['coupon_lookup_email']) : '';
+		$lookup_email     = $lookup_email_raw !== '' ? sanitize_email($lookup_email_raw) : '';
+		$lookup_ran       = ($lookup_email !== '' && class_exists('WC_Coupon'));
+		$lookup_results   = $lookup_ran ? self::get_coupon_lookup_results($lookup_email) : [];
+
+		if ($lookup_ran && is_email($lookup_email)) {
+			User_Manager_Core::add_activity_log('coupon_lookup', 0, $activity_tool, [
+				'email'        => $lookup_email,
+				'result_count' => count($lookup_results),
+			]);
+		}
+		?>
+		<div class="um-admin-grid">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-search"></span>
+					<h2><?php esc_html_e('Coupon Lookup by Email', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p><?php esc_html_e('Search for coupons where a specific email address appears in the Allowed Emails / email restrictions.', 'user-manager'); ?></p>
+					<form method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>" style="margin-bottom:15px; max-width:480px;">
+						<input type="hidden" name="page" value="<?php echo esc_attr(User_Manager_Core::SETTINGS_PAGE_SLUG); ?>" />
+						<input type="hidden" name="tab" value="<?php echo esc_attr($tab); ?>" />
+						<?php foreach ($hidden_query_args as $field_name => $field_value) : ?>
+							<?php if (is_scalar($field_value) && (string) $field_value !== '') : ?>
+								<input type="hidden" name="<?php echo esc_attr((string) $field_name); ?>" value="<?php echo esc_attr((string) $field_value); ?>" />
+							<?php endif; ?>
+						<?php endforeach; ?>
+						<label for="um-coupon-lookup-email" style="display:block;margin-bottom:6px;">
+							<?php esc_html_e('Email Address', 'user-manager'); ?>
+						</label>
+						<input type="email" name="coupon_lookup_email" id="um-coupon-lookup-email" class="regular-text" style="max-width:320px;" value="<?php echo esc_attr($lookup_email_raw); ?>" />
+						<?php submit_button(__('Search Coupons', 'user-manager'), 'secondary', 'submit', false, ['style' => 'margin-left:8px;']); ?>
+						<p class="description" style="margin-top:8px;">
+							<?php esc_html_e('Matches coupons where this exact email is present in WooCommerce email restrictions, the customer_email meta, or the User Manager coupon email meta.', 'user-manager'); ?>
+						</p>
+					</form>
+
+					<?php if ($lookup_ran) : ?>
+						<?php if ($lookup_email === '' || !is_email($lookup_email)) : ?>
+							<p style="color:#d63638;"><?php esc_html_e('Please enter a valid email address.', 'user-manager'); ?></p>
+						<?php elseif (empty($lookup_results)) : ?>
+							<p><?php esc_html_e('No coupons found for this email address.', 'user-manager'); ?></p>
+						<?php else : ?>
+							<table class="widefat striped">
+								<thead>
+									<tr>
+										<th><?php esc_html_e('Coupon Code', 'user-manager'); ?></th>
+										<th><?php esc_html_e('Coupon ID', 'user-manager'); ?></th>
+										<th><?php esc_html_e('Type', 'user-manager'); ?></th>
+										<th><?php esc_html_e('Value', 'user-manager'); ?></th>
+										<th><?php esc_html_e('Usage', 'user-manager'); ?></th>
+										<th><?php esc_html_e('Created', 'user-manager'); ?></th>
+										<th><?php esc_html_e('Expires', 'user-manager'); ?></th>
+										<th><?php esc_html_e('Status', 'user-manager'); ?></th>
+										<th><?php esc_html_e('Allowed Emails', 'user-manager'); ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ($lookup_results as $row) : ?>
+										<tr>
+											<td>
+												<?php if (!empty($row['edit'])) : ?>
+													<a href="<?php echo esc_url($row['edit']); ?>"><?php echo esc_html(strtoupper((string) $row['code'])); ?></a>
+												<?php else : ?>
+													<?php echo esc_html(strtoupper((string) $row['code'])); ?>
+												<?php endif; ?>
+											</td>
+											<td><?php echo (int) $row['id']; ?></td>
+											<td><?php echo esc_html((string) $row['type_label']); ?></td>
+											<td><?php echo is_string($row['amount']) ? wp_kses_post($row['amount']) : esc_html((string) $row['amount']); ?></td>
+											<td><?php echo esc_html((string) $row['usage']); ?></td>
+											<td><?php echo esc_html((string) $row['created']); ?></td>
+											<td><?php echo esc_html((string) $row['expiry']); ?></td>
+											<td><?php echo esc_html((string) $row['status']); ?></td>
+											<td><?php echo esc_html(implode(', ', (array) ($row['emails'] ?? []))); ?></td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+
+							<?php
+							$summary_lines = [];
+							foreach ($lookup_results as $row) {
+								$post_status = get_post_status((int) ($row['id'] ?? 0));
+								if ($post_status !== 'publish') {
+									continue;
+								}
+
+								$code       = strtoupper((string) ($row['code'] ?? ''));
+								$amount_raw = (float) ($row['amount_raw'] ?? 0);
+								$status     = (string) ($row['status'] ?? '');
+								$expiry_ts  = $row['expiry_ts'] ?? null;
+								$created_ts = $row['created_ts'] ?? null;
+
+								if (function_exists('wc_price')) {
+									$amount_text = html_entity_decode(wp_strip_all_tags(wc_price($amount_raw)));
+								} else {
+									$amount_text = '$' . number_format($amount_raw, 2, '.', ',');
+								}
+
+								if (stripos($status, 'Fully Used') !== false) {
+									if ($created_ts) {
+										$created_text = date_i18n(get_option('date_format'), (int) $created_ts);
+										$line         = sprintf(
+											/* translators: 1: coupon code, 2: created date, 3: amount text */
+											__('Coupon code %1$s (created on %2$s) had a value of %3$s, and was fully used.', 'user-manager'),
+											$code,
+											$created_text,
+											$amount_text
+										);
+									} else {
+										$line = sprintf(
+											/* translators: 1: coupon code, 2: amount text */
+											__('Coupon code %1$s had a value of %2$s, and was fully used.', 'user-manager'),
+											$code,
+											$amount_text
+										);
+									}
+								} else {
+									if ($expiry_ts) {
+										$expiry_text = date_i18n(get_option('date_format'), (int) $expiry_ts);
+										$line        = sprintf(
+											/* translators: 1: coupon code, 2: amount text, 3: expiry date */
+											__('Coupon code %1$s has a value of %2$s, can still be used, and expires on %3$s.', 'user-manager'),
+											$code,
+											$amount_text,
+											$expiry_text
+										);
+									} else {
+										$line = sprintf(
+											/* translators: 1: coupon code, 2: amount text */
+											__('Coupon code %1$s has a value of %2$s, can still be used, and does not expire.', 'user-manager'),
+											$code,
+											$amount_text
+										);
+									}
+								}
+
+								$summary_lines[] = $line;
+							}
+
+							if (!empty($summary_lines)) :
+								?>
+								<div style="margin-top:20px;">
+									<label for="um-coupon-lookup-summary" style="display:block;margin-bottom:4px;font-weight:600;">
+										<?php esc_html_e('Copyable coupon summary', 'user-manager'); ?>
+									</label>
+									<textarea id="um-coupon-lookup-summary" class="large-text code" rows="4" readonly><?php echo esc_textarea(implode("\n", $summary_lines)); ?></textarea>
+									<p class="description" style="margin-top:4px;">
+										<?php esc_html_e('Use this summary in emails or notes when explaining which coupons are available or have already been used for this email address.', 'user-manager'); ?>
+									</p>
+								</div>
+							<?php endif; ?>
+						<?php endif; ?>
+					<?php endif; ?>
+				</div>
+			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Build coupon lookup result rows for a single email.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function get_coupon_lookup_results(string $lookup_email): array {
+		if ($lookup_email === '' || !class_exists('WC_Coupon')) {
+			return [];
+		}
+
+		$results = [];
+		$now_ts  = current_time('timestamp');
+		$query   = new WP_Query([
+			'post_type'      => 'shop_coupon',
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'meta_query'     => [
+				'relation' => 'OR',
+				[
+					'key'     => 'customer_email',
+					'value'   => $lookup_email,
+					'compare' => 'LIKE',
+				],
+				[
+					'key'     => '_um_user_coupon_user_email',
+					'value'   => $lookup_email,
+					'compare' => 'LIKE',
+				],
+			],
+		]);
+		$coupon_ids = $query instanceof WP_Query ? (array) $query->posts : [];
+
+		foreach ($coupon_ids as $coupon_id) {
+			$coupon_id = (int) $coupon_id;
+			if ($coupon_id <= 0) {
+				continue;
+			}
+
+			$coupon = new WC_Coupon($coupon_id);
+			if (!$coupon || !$coupon->get_id()) {
+				continue;
+			}
+
+			$emails = [];
+			$customer_email = get_post_meta($coupon_id, 'customer_email', true);
+			if (!empty($customer_email)) {
+				if (is_array($customer_email)) {
+					$emails = array_merge($emails, $customer_email);
+				} elseif (is_string($customer_email)) {
+					$emails = array_merge($emails, array_map('trim', preg_split('/[\r\n,]+/', $customer_email)));
+				}
+			}
+			if (method_exists($coupon, 'get_email_restrictions')) {
+				$restrictions = $coupon->get_email_restrictions('edit');
+				if (!empty($restrictions) && is_array($restrictions)) {
+					$emails = array_merge($emails, $restrictions);
+				}
+			}
+			$um_email = get_post_meta($coupon_id, '_um_user_coupon_user_email', true);
+			if (!empty($um_email)) {
+				$emails[] = $um_email;
+			}
+			$emails = array_values(array_unique(array_filter(array_map('trim', $emails))));
+
+			$discount_type = (string) $coupon->get_discount_type();
+			$amount        = (float) $coupon->get_amount();
+			$amount_label  = function_exists('wc_price') ? wp_kses_post(wc_price($amount)) : (string) $amount;
+			$usage_count   = (int) $coupon->get_usage_count();
+			$usage_limit   = $coupon->get_usage_limit();
+			$usage_label   = $usage_limit
+				? sprintf('%1$d / %2$d', $usage_count, (int) $usage_limit)
+				: sprintf('%1$d / %2$s', $usage_count, __('Unlimited', 'user-manager'));
+
+			$date_expires = $coupon->get_date_expires();
+			$expiry_ts    = $date_expires ? $date_expires->getTimestamp() : null;
+			$expiry_label = $expiry_ts ? date_i18n(get_option('date_format'), $expiry_ts) : __('No expiration', 'user-manager');
+
+			$date_created = $coupon->get_date_created();
+			$created_ts   = $date_created ? $date_created->getTimestamp() : null;
+			$created_label = $created_ts ? date_i18n(get_option('date_format'), $created_ts) : '';
+
+			$post_status = get_post_status($coupon_id);
+			if ($post_status !== 'publish') {
+				$status_label = sprintf(
+					/* translators: %s: post status slug */
+					__('Inactive (%s)', 'user-manager'),
+					$post_status
+				);
+			} elseif ($expiry_ts && $expiry_ts < $now_ts) {
+				$status_label = __('Expired', 'user-manager');
+			} elseif ($usage_limit && $usage_count >= $usage_limit) {
+				$status_label = __('Fully Used', 'user-manager');
+			} elseif ($usage_count > 0) {
+				$status_label = __('Active – Used', 'user-manager');
+			} else {
+				$status_label = __('Active – Unused', 'user-manager');
+			}
+
+			$results[] = [
+				'id'          => $coupon_id,
+				'code'        => $coupon->get_code(),
+				'emails'      => $emails,
+				'edit'        => get_edit_post_link($coupon_id, ''),
+				'type'        => $discount_type,
+				'type_label'  => ucwords(str_replace('_', ' ', $discount_type)),
+				'amount'      => $amount_label,
+				'amount_raw'  => $amount,
+				'usage'       => $usage_label,
+				'usage_count' => $usage_count,
+				'usage_limit' => $usage_limit,
+				'created'     => $created_label,
+				'created_ts'  => $created_ts,
+				'expiry'      => $expiry_label,
+				'expiry_ts'   => $expiry_ts,
+				'status'      => $status_label,
+			];
+		}
+
+		return $results;
 	}
 }
 

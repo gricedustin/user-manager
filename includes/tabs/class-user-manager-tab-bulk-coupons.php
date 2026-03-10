@@ -66,7 +66,7 @@ class User_Manager_Tab_Bulk_Coupons {
 					</p>
 					<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 						<input type="hidden" name="action" value="user_manager_bulk_coupons" />
-						<?php wp_nonce_field('user_manager_bulk_coupons'); ?>
+						<?php wp_nonce_field('user_manager_bulk_coupons', 'user_manager_bulk_coupons_nonce'); ?>
 
 						<div class="um-form-field">
 							<label for="um-bulk-coupons-template">
@@ -88,7 +88,7 @@ class User_Manager_Tab_Bulk_Coupons {
 								</p>
 								<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top:8px;">
 									<input type="hidden" name="action" value="user_manager_create_basic_coupon_template" />
-									<?php wp_nonce_field('user_manager_create_basic_coupon_template'); ?>
+									<?php wp_nonce_field('user_manager_create_basic_coupon_template', 'user_manager_create_basic_coupon_template_nonce'); ?>
 									<?php submit_button(__('Create Quick Coupon Template', 'user-manager'), 'secondary', 'submit', false); ?>
 								</form>
 							</div>
@@ -229,7 +229,7 @@ class User_Manager_Tab_Bulk_Coupons {
 					<span class="dashicons dashicons-clock"></span>
 					<h2><?php esc_html_e('Recent Bulk Creates', 'user-manager'); ?></h2>
 				</div>
-				<div class="um-admin-card-body" style="max-height: 320px; overflow-y: auto;">
+				<div class="um-admin-card-body">
 					<?php if (empty($recent_bulk)) : ?>
 						<p class="um-empty-message"><?php esc_html_e('No bulk coupon runs recorded yet.', 'user-manager'); ?></p>
 					<?php else : ?>

@@ -7,7 +7,10 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+
+require_once __DIR__ . '/actions/trait-user-manager-actions-content-generator.php';
 class User_Manager_Actions {
+	use User_Manager_Actions_Content_Generator_Trait;
 
 	/**
 	 * Initialize action hooks.
@@ -95,11 +98,18 @@ class User_Manager_Actions {
 			wp_die(__('You do not have permission to access this page.', 'user-manager'));
 		}
 
-		check_admin_referer('user_manager_bulk_coupons');
+		check_admin_referer('user_manager_bulk_coupons', 'user_manager_bulk_coupons_nonce');
+		$redirect_tab = User_Manager_Core::TAB_ADDONS;
+
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['bulk_coupons_enabled'])) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'bulk_coupons_disabled'));
+			exit;
+		}
 
 		// Ensure WooCommerce coupon API is available.
 		if (!class_exists('WC_Coupon')) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -136,7 +146,6 @@ class User_Manager_Actions {
 		}
 
 		// Persist last-used form values into settings.
-		$settings = User_Manager_Core::get_settings();
 		$settings['bulk_coupons_template_code']      = $template_code;
 		$settings['bulk_coupons_total']              = $total_to_create;
 		$settings['bulk_coupons_emails']             = $emails_raw;
@@ -151,13 +160,13 @@ class User_Manager_Actions {
 		update_option(User_Manager_Core::OPTION_KEY, $settings);
 
 		if (empty($template_code)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
 		$template_coupon = new WC_Coupon($template_code);
 		if (!$template_coupon || !$template_coupon->get_id()) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -181,7 +190,7 @@ class User_Manager_Actions {
 		}
 
 		if ($total_to_create <= 0) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -340,14 +349,14 @@ class User_Manager_Actions {
 		}
 
 		if ($created <= 0) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
 		$redirect = add_query_arg(
 			'count',
 			$created,
-			User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'bulk_coupons_created')
+			User_Manager_Core::get_redirect_with_message($redirect_tab, 'bulk_coupons_created')
 		);
 
 		if (!empty($created_coupons)) {
@@ -1500,7 +1509,7 @@ class User_Manager_Actions {
 
 		switch ($section) {
 			case 'new_user_coupons':
-				$redirect_tab = User_Manager_Core::TAB_COUPONS;
+				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['nuc_enabled'] = isset($_POST['nuc_enabled']) && $_POST['nuc_enabled'] === '1';
 				$settings['nuc_when'] = isset($_POST['nuc_when']) ? sanitize_text_field(wp_unslash($_POST['nuc_when'])) : 'after_registration';
 				$settings['nuc_template_code'] = isset($_POST['nuc_template_code']) ? sanitize_text_field(wp_unslash($_POST['nuc_template_code'])) : '';
@@ -1526,7 +1535,7 @@ class User_Manager_Actions {
 				break;
 			
 			case 'coupon_notifications':
-				$redirect_tab = User_Manager_Core::TAB_COUPONS;
+				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['user_coupon_notifications_enabled'] = isset($_POST['user_coupon_notifications_enabled']) && $_POST['user_coupon_notifications_enabled'] === '1';
 				$settings['coupon_notifications_show_on_cart'] = isset($_POST['coupon_notifications_show_on_cart']) && $_POST['coupon_notifications_show_on_cart'] === '1';
 				$settings['coupon_notifications_show_on_checkout'] = isset($_POST['coupon_notifications_show_on_checkout']) && $_POST['coupon_notifications_show_on_checkout'] === '1';
@@ -1551,7 +1560,7 @@ class User_Manager_Actions {
 				break;
 
 			case 'coupon_remainder':
-				$redirect_tab = User_Manager_Core::TAB_COUPONS;
+				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['coupon_remainder_enabled'] = isset($_POST['coupon_remainder_enabled']) && $_POST['coupon_remainder_enabled'] === '1';
 				$settings['coupon_remainder_min_amount'] = isset($_POST['coupon_remainder_min_amount']) ? (float) $_POST['coupon_remainder_min_amount'] : 0;
 				$settings['coupon_remainder_source_prefixes'] = isset($_POST['coupon_remainder_source_prefixes']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_remainder_source_prefixes'])) : '';
@@ -1584,7 +1593,6 @@ class User_Manager_Actions {
 				$settings['enable_view_reports'] = isset($_POST['enable_view_reports']) && $_POST['enable_view_reports'] === '1';
 				$settings['update_existing_users'] = isset($_POST['update_existing_users']) && $_POST['update_existing_users'] === '1';
 				$settings['rebrand_reset_password_copy'] = isset($_POST['rebrand_reset_password_copy']) && $_POST['rebrand_reset_password_copy'] === '1';
-				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
 				$settings['coupon_email_converter'] = isset($_POST['coupon_email_converter']) && $_POST['coupon_email_converter'] === '1';
 				$settings['coupon_show_email_column'] = isset($_POST['coupon_show_email_column']) && $_POST['coupon_show_email_column'] === '1';
 				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
@@ -1594,14 +1602,83 @@ class User_Manager_Actions {
 				$settings['display_post_meta_meta_box'] = isset($_POST['display_post_meta_meta_box']) && $_POST['display_post_meta_meta_box'] === '1';
 				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 				$settings['sftp_directories'] = isset($_POST['sftp_directories']) ? sanitize_textarea_field(wp_unslash($_POST['sftp_directories'])) : '';
+				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';
 				$settings['send_from_email'] = isset($_POST['send_from_email']) ? sanitize_email(wp_unslash($_POST['send_from_email'])) : '';
 				$settings['reply_to_email'] = isset($_POST['reply_to_email']) ? sanitize_email(wp_unslash($_POST['reply_to_email'])) : '';
 				$settings['throttle_emails_enabled'] = isset($_POST['throttle_emails_enabled']) && $_POST['throttle_emails_enabled'] === '1';
 				$settings['throttle_emails_count'] = isset($_POST['throttle_emails_count']) ? max(1, absint($_POST['throttle_emails_count'])) : 50;
-				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
+				break;
+
+			case 'addons':
+				$redirect_tab = User_Manager_Core::TAB_ADDONS;
+				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
+				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
+				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
+
+				// Coupons for New Users.
+				$settings['nuc_enabled'] = isset($_POST['nuc_enabled']) && $_POST['nuc_enabled'] === '1';
+				$settings['nuc_when'] = isset($_POST['nuc_when']) ? sanitize_text_field(wp_unslash($_POST['nuc_when'])) : 'after_registration';
+				$settings['nuc_template_code'] = isset($_POST['nuc_template_code']) ? sanitize_text_field(wp_unslash($_POST['nuc_template_code'])) : '';
+				$settings['nuc_amount_override'] = isset($_POST['nuc_amount_override']) ? sanitize_text_field(wp_unslash($_POST['nuc_amount_override'])) : '';
+				$settings['nuc_code_length'] = isset($_POST['nuc_code_length']) ? absint($_POST['nuc_code_length']) : 8;
+				$settings['nuc_prefix'] = isset($_POST['nuc_prefix']) ? sanitize_text_field(wp_unslash($_POST['nuc_prefix'])) : '';
+				$settings['nuc_postfix'] = isset($_POST['nuc_postfix']) ? sanitize_text_field(wp_unslash($_POST['nuc_postfix'])) : '';
+				$settings['nuc_after_date'] = isset($_POST['nuc_after_date']) ? sanitize_text_field(wp_unslash($_POST['nuc_after_date'])) : '';
+				$settings['nuc_email_contains'] = isset($_POST['nuc_email_contains']) ? sanitize_text_field(wp_unslash($_POST['nuc_email_contains'])) : '';
+				$settings['nuc_email_exclude'] = isset($_POST['nuc_email_exclude']) ? sanitize_text_field(wp_unslash($_POST['nuc_email_exclude'])) : '';
+				$settings['nuc_exp_days'] = isset($_POST['nuc_exp_days']) ? absint($_POST['nuc_exp_days']) : 0;
+				$settings['nuc_send_email'] = isset($_POST['nuc_send_email']) && $_POST['nuc_send_email'] === '1';
+				$settings['nuc_email_template'] = isset($_POST['nuc_email_template']) ? sanitize_key($_POST['nuc_email_template']) : '';
+				$settings['nuc_auto_draft_duplicates'] = isset($_POST['nuc_auto_draft_duplicates']) && $_POST['nuc_auto_draft_duplicates'] === '1';
+				$settings['nuc_debug_mode'] = isset($_POST['nuc_debug_mode']) && $_POST['nuc_debug_mode'] === '1';
+				$settings['nuc_run_everywhere'] = isset($_POST['nuc_run_everywhere']) && $_POST['nuc_run_everywhere'] === '1';
+				$settings['nuc_run_my_account'] = isset($_POST['nuc_run_my_account']) && $_POST['nuc_run_my_account'] === '1';
+				$settings['nuc_run_cart'] = isset($_POST['nuc_run_cart']) && $_POST['nuc_run_cart'] === '1';
+				$settings['nuc_run_checkout'] = isset($_POST['nuc_run_checkout']) && $_POST['nuc_run_checkout'] === '1';
+				$settings['nuc_run_product'] = isset($_POST['nuc_run_product']) && $_POST['nuc_run_product'] === '1';
+				$settings['nuc_run_shop'] = isset($_POST['nuc_run_shop']) && $_POST['nuc_run_shop'] === '1';
+				$settings['nuc_run_home'] = isset($_POST['nuc_run_home']) && $_POST['nuc_run_home'] === '1';
+
+				// Coupon Notifications for Users with Coupons.
+				$settings['user_coupon_notifications_enabled'] = isset($_POST['user_coupon_notifications_enabled']) && $_POST['user_coupon_notifications_enabled'] === '1';
+				$settings['coupon_notifications_show_on_cart'] = isset($_POST['coupon_notifications_show_on_cart']) && $_POST['coupon_notifications_show_on_cart'] === '1';
+				$settings['coupon_notifications_show_on_checkout'] = isset($_POST['coupon_notifications_show_on_checkout']) && $_POST['coupon_notifications_show_on_checkout'] === '1';
+				$settings['coupon_notifications_show_on_my_account'] = isset($_POST['coupon_notifications_show_on_my_account']) && $_POST['coupon_notifications_show_on_my_account'] === '1';
+				$settings['coupon_notifications_show_on_home'] = isset($_POST['coupon_notifications_show_on_home']) && $_POST['coupon_notifications_show_on_home'] === '1';
+				$settings['coupon_notifications_show_on_product'] = isset($_POST['coupon_notifications_show_on_product']) && $_POST['coupon_notifications_show_on_product'] === '1';
+				$settings['coupon_notifications_show_on_archives'] = isset($_POST['coupon_notifications_show_on_archives']) && $_POST['coupon_notifications_show_on_archives'] === '1';
+				$settings['coupon_notifications_show_on_posts'] = isset($_POST['coupon_notifications_show_on_posts']) && $_POST['coupon_notifications_show_on_posts'] === '1';
+				$settings['coupon_notifications_show_on_pages'] = isset($_POST['coupon_notifications_show_on_pages']) && $_POST['coupon_notifications_show_on_pages'] === '1';
+				$settings['coupon_notifications_collapse_threshold'] = isset($_POST['coupon_notifications_collapse_threshold'])
+					? max(0, absint($_POST['coupon_notifications_collapse_threshold']))
+					: 1;
+				$settings['coupon_notifications_clear_coupons_when_cart_empty'] = isset($_POST['coupon_notifications_clear_coupons_when_cart_empty']) && $_POST['coupon_notifications_clear_coupons_when_cart_empty'] === '1';
+				$settings['coupon_notifications_debug'] = isset($_POST['coupon_notifications_debug']) && $_POST['coupon_notifications_debug'] === '1';
+				$settings['coupon_notifications_hide_store_credit'] = isset($_POST['coupon_notifications_hide_store_credit']) && $_POST['coupon_notifications_hide_store_credit'] === '1';
+				$settings['coupon_notifications_block_support'] = isset($_POST['coupon_notifications_block_support']) && $_POST['coupon_notifications_block_support'] === '1';
+				$settings['coupon_notifications_sort_by_expiration'] = isset($_POST['coupon_notifications_sort_by_expiration']) && $_POST['coupon_notifications_sort_by_expiration'] === '1';
+				$settings['coupon_notifications_block_checkout_shipping_notice'] = isset($_POST['coupon_notifications_block_checkout_shipping_notice']) && $_POST['coupon_notifications_block_checkout_shipping_notice'] === '1';
+				$settings['coupon_notifications_classic_checkout_shipping_notice'] = isset($_POST['coupon_notifications_classic_checkout_shipping_notice']) && $_POST['coupon_notifications_classic_checkout_shipping_notice'] === '1';
+				$settings['coupon_notifications_shipping_notice_title'] = isset($_POST['coupon_notifications_shipping_notice_title']) ? sanitize_text_field(wp_unslash($_POST['coupon_notifications_shipping_notice_title'])) : 'Coupon Notice';
+				$settings['coupon_notifications_shipping_notice_description'] = isset($_POST['coupon_notifications_shipping_notice_description']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_notifications_shipping_notice_description'])) : 'Coupons and store credits apply to product prices only, and do not cover shipping costs. Shipping is calculated separately from our shipping carriers.';
+
+				// Coupon Remaining Balances.
+				$settings['coupon_remainder_enabled'] = isset($_POST['coupon_remainder_enabled']) && $_POST['coupon_remainder_enabled'] === '1';
+				$settings['coupon_remainder_min_amount'] = isset($_POST['coupon_remainder_min_amount']) ? (float) $_POST['coupon_remainder_min_amount'] : 0;
+				$settings['coupon_remainder_source_prefixes'] = isset($_POST['coupon_remainder_source_prefixes']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_remainder_source_prefixes'])) : '';
+				$settings['coupon_remainder_source_contains'] = isset($_POST['coupon_remainder_source_contains']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_remainder_source_contains'])) : '';
+				$settings['coupon_remainder_source_suffixes'] = isset($_POST['coupon_remainder_source_suffixes']) ? sanitize_textarea_field(wp_unslash($_POST['coupon_remainder_source_suffixes'])) : '';
+				$settings['coupon_remainder_generated_prefix'] = isset($_POST['coupon_remainder_generated_prefix']) ? sanitize_text_field(wp_unslash($_POST['coupon_remainder_generated_prefix'])) : '';
+				$settings['coupon_remainder_debug'] = isset($_POST['coupon_remainder_debug']) && $_POST['coupon_remainder_debug'] === '1';
+				$settings['coupon_remainder_checkout_debug'] = isset($_POST['coupon_remainder_checkout_debug']) && $_POST['coupon_remainder_checkout_debug'] === '1';
+				$settings['coupon_remainder_checkout_notice'] = isset($_POST['coupon_remainder_checkout_notice']) && $_POST['coupon_remainder_checkout_notice'] === '1';
+				$settings['coupon_remainder_checkout_notice_block'] = isset($_POST['coupon_remainder_checkout_notice_block']) && $_POST['coupon_remainder_checkout_notice_block'] === '1';
+				$settings['coupon_remainder_order_received_notice'] = isset($_POST['coupon_remainder_order_received_notice']) && $_POST['coupon_remainder_order_received_notice'] === '1';
+				$settings['coupon_remainder_copy_expiration'] = isset($_POST['coupon_remainder_copy_expiration']) && $_POST['coupon_remainder_copy_expiration'] === '1';
+				$settings['coupon_remainder_free_shipping'] = isset($_POST['coupon_remainder_free_shipping']) && $_POST['coupon_remainder_free_shipping'] === '1';
 
 				// Checkout: Ship To Pre-Defined Addresses
 				$settings['checkout_ship_to_predefined_enabled'] = isset($_POST['checkout_ship_to_predefined_enabled']) && $_POST['checkout_ship_to_predefined_enabled'] === '1';
@@ -1628,8 +1705,73 @@ class User_Manager_Actions {
 				$settings['checkout_ship_to_hide_coupon'] = isset($_POST['checkout_ship_to_hide_coupon']) && $_POST['checkout_ship_to_hide_coupon'] === '1';
 				$settings['checkout_ship_to_show_debug'] = isset($_POST['checkout_ship_to_show_debug']) && $_POST['checkout_ship_to_show_debug'] === '1';
 
+				// My Account Site Admin viewer controls.
+				$settings['my_account_admin_order_viewer_enabled'] = isset($_POST['my_account_admin_order_viewer_enabled']) && $_POST['my_account_admin_order_viewer_enabled'] === '1';
+				$settings['my_account_admin_order_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_order_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_order_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_order_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_order_viewer_roles']) ? wp_unslash($_POST['my_account_admin_order_viewer_roles']) : []
+				);
+				$settings['my_account_admin_order_approval_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_order_approval_usernames']) ? wp_unslash($_POST['my_account_admin_order_approval_usernames']) : ''
+				);
+				$settings['my_account_admin_order_approval_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_order_approval_roles']) ? wp_unslash($_POST['my_account_admin_order_approval_roles']) : []
+				);
+				$settings['my_account_admin_order_default_pending_enabled'] = isset($_POST['my_account_admin_order_default_pending_enabled']) && $_POST['my_account_admin_order_default_pending_enabled'] === '1';
+				$settings['my_account_admin_order_viewer_show_meta'] = isset($_POST['my_account_admin_order_viewer_show_meta']) && $_POST['my_account_admin_order_viewer_show_meta'] === '1';
+				$settings['my_account_admin_product_viewer_enabled'] = isset($_POST['my_account_admin_product_viewer_enabled']) && $_POST['my_account_admin_product_viewer_enabled'] === '1';
+				$settings['my_account_admin_product_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_product_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_product_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_product_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_product_viewer_roles']) ? wp_unslash($_POST['my_account_admin_product_viewer_roles']) : []
+				);
+				$settings['my_account_admin_product_viewer_show_meta'] = isset($_POST['my_account_admin_product_viewer_show_meta']) && $_POST['my_account_admin_product_viewer_show_meta'] === '1';
+				$settings['my_account_admin_coupon_viewer_enabled'] = isset($_POST['my_account_admin_coupon_viewer_enabled']) && $_POST['my_account_admin_coupon_viewer_enabled'] === '1';
+				$settings['my_account_admin_coupon_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_coupon_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_coupon_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_coupon_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_coupon_viewer_roles']) ? wp_unslash($_POST['my_account_admin_coupon_viewer_roles']) : []
+				);
+				$settings['my_account_admin_coupon_viewer_show_meta'] = isset($_POST['my_account_admin_coupon_viewer_show_meta']) && $_POST['my_account_admin_coupon_viewer_show_meta'] === '1';
+				$settings['my_account_admin_user_viewer_enabled'] = isset($_POST['my_account_admin_user_viewer_enabled']) && $_POST['my_account_admin_user_viewer_enabled'] === '1';
+				$settings['my_account_admin_user_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_user_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_user_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_user_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_user_viewer_roles']) ? wp_unslash($_POST['my_account_admin_user_viewer_roles']) : []
+				);
+				$settings['my_account_admin_user_viewer_show_meta'] = isset($_POST['my_account_admin_user_viewer_show_meta']) && $_POST['my_account_admin_user_viewer_show_meta'] === '1';
+				$settings['my_account_site_admin_enabled'] = isset($_POST['my_account_site_admin_enabled']) && $_POST['my_account_site_admin_enabled'] === '1';
+				$settings['my_account_coupon_screen_enabled'] = isset($_POST['my_account_coupon_screen_enabled']) && $_POST['my_account_coupon_screen_enabled'] === '1';
+				$menu_title = isset($_POST['my_account_coupon_screen_menu_title']) ? sanitize_text_field(wp_unslash($_POST['my_account_coupon_screen_menu_title'])) : 'Coupons';
+				$page_title = isset($_POST['my_account_coupon_screen_page_title']) ? sanitize_text_field(wp_unslash($_POST['my_account_coupon_screen_page_title'])) : 'Coupons';
+				$settings['my_account_coupon_screen_menu_title'] = $menu_title !== '' ? $menu_title : 'Coupons';
+				$settings['my_account_coupon_screen_page_title'] = $page_title !== '' ? $page_title : 'Coupons';
+				$settings['my_account_coupon_screen_page_description'] = isset($_POST['my_account_coupon_screen_page_description']) ? sanitize_textarea_field(wp_unslash($_POST['my_account_coupon_screen_page_description'])) : '';
+
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
+				$settings['bulk_coupons_enabled'] = isset($_POST['bulk_coupons_enabled']) && $_POST['bulk_coupons_enabled'] === '1';
+				$settings['bulk_coupons_template_code'] = isset($_POST['bulk_coupons_template_code']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_template_code'])) : '';
+				$settings['bulk_coupons_total'] = isset($_POST['bulk_coupons_total']) ? max(0, absint($_POST['bulk_coupons_total'])) : 0;
+				$settings['bulk_coupons_emails'] = isset($_POST['bulk_coupons_emails']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_coupons_emails'])) : '';
+				$bulk_coupons_amount_raw = isset($_POST['bulk_coupons_amount']) ? wp_unslash($_POST['bulk_coupons_amount']) : '';
+				if ($bulk_coupons_amount_raw !== '' && function_exists('wc_format_decimal')) {
+					$settings['bulk_coupons_amount'] = (string) wc_format_decimal($bulk_coupons_amount_raw);
+				} else {
+					$settings['bulk_coupons_amount'] = sanitize_text_field($bulk_coupons_amount_raw);
+				}
+				$settings['bulk_coupons_prefix'] = isset($_POST['bulk_coupons_prefix']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_prefix'])) : '';
+				$settings['bulk_coupons_suffix'] = isset($_POST['bulk_coupons_suffix']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_suffix'])) : '';
+				$settings['bulk_coupons_length'] = isset($_POST['bulk_coupons_length']) ? max(4, min(64, absint($_POST['bulk_coupons_length']))) : 8;
+				$settings['bulk_coupons_expiration_date'] = isset($_POST['bulk_coupons_expiration_date']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_expiration_date'])) : '';
+				$settings['bulk_coupons_expiration_days'] = isset($_POST['bulk_coupons_expiration_days']) ? max(0, absint($_POST['bulk_coupons_expiration_days'])) : 0;
+				$settings['bulk_coupons_send_email'] = isset($_POST['send_email']) && $_POST['send_email'] === '1';
+				$settings['bulk_coupons_email_template'] = isset($_POST['email_template']) ? sanitize_key($_POST['email_template']) : '';
 
 				$bulk_settings = [
 					'redirect_to_cart'   => isset($_POST['bulk_add_to_cart_redirect_to_cart']) && $_POST['bulk_add_to_cart_redirect_to_cart'] === '1' ? '1' : '0',
@@ -1641,7 +1783,46 @@ class User_Manager_Actions {
 				];
 				update_option('bulk_add_to_cart_settings', $bulk_settings);
 
+				// Role Switching settings.
+				$role_switch_settings    = get_option('view_website_by_role_settings', []);
+				$old_role_switch_enabled = !empty($role_switch_settings['enabled']);
+				$old_hidden_roles        = isset($role_switch_settings['hidden_roles']) && is_array($role_switch_settings['hidden_roles']) ? $role_switch_settings['hidden_roles'] : [];
+				$old_allow_reset         = !empty($role_switch_settings['allow_reset']);
+
+				$new_role_switch_enabled = isset($_POST['role_switching_enabled']) && $_POST['role_switching_enabled'] === '1';
+				$new_hidden_roles        = isset($_POST['hidden_roles']) ? array_map('sanitize_text_field', (array) wp_unslash($_POST['hidden_roles'])) : [];
+				$new_allow_reset         = isset($_POST['allow_reset']) && $_POST['allow_reset'] === '1';
+
+				update_option(
+					'view_website_by_role_settings',
+					[
+						'enabled'      => $new_role_switch_enabled,
+						'hidden_roles' => $new_hidden_roles,
+						'allow_reset'  => $new_allow_reset,
+					]
+				);
+
+				$role_switch_changes = [];
+				if ($old_role_switch_enabled !== $new_role_switch_enabled) {
+					$role_switch_changes[] = $new_role_switch_enabled ? 'Enabled Role Switching' : 'Disabled Role Switching';
+				}
+				$added_roles   = array_diff($new_hidden_roles, $old_hidden_roles);
+				$removed_roles = array_diff($old_hidden_roles, $new_hidden_roles);
+				if (!empty($added_roles)) {
+					$role_switch_changes[] = 'Hidden roles: ' . implode(', ', $added_roles);
+				}
+				if (!empty($removed_roles)) {
+					$role_switch_changes[] = 'Unhidden roles: ' . implode(', ', $removed_roles);
+				}
+				if ($old_allow_reset !== $new_allow_reset) {
+					$role_switch_changes[] = $new_allow_reset ? 'Enabled Reset Default Roles' : 'Disabled Reset Default Roles';
+				}
+				if (!empty($role_switch_changes)) {
+					User_Manager_Core::add_role_switch_history('Settings Update', implode(' | ', $role_switch_changes));
+				}
+
 				// Custom WP-Admin Notifications (indices may be 0,1,2 or 0,2 after a remove; we normalize to sequential)
+				$settings['custom_admin_notifications_enabled'] = isset($_POST['custom_admin_notifications_enabled']) && $_POST['custom_admin_notifications_enabled'] === '1';
 				$settings['custom_admin_notifications'] = [];
 				if (!empty($_POST['custom_admin_notification']) && is_array($_POST['custom_admin_notification'])) {
 					$keys = array_keys($_POST['custom_admin_notification']);
@@ -1664,18 +1845,8 @@ class User_Manager_Actions {
 					}
 				}
 
-				// Custom WP-Admin Top Bar Menus & Links (custom shortcut menus in the top admin bar)
+				// WP-Admin Bar Menu Items (custom shortcut menus in the admin bar)
 				$settings['admin_bar_menu_items_enabled'] = isset($_POST['admin_bar_menu_items_enabled']) && $_POST['admin_bar_menu_items_enabled'] === '1';
-				$visibility = isset($_POST['admin_bar_menu_visibility']) ? sanitize_key(wp_unslash($_POST['admin_bar_menu_visibility'])) : 'all_toolbar_users';
-				$settings['admin_bar_menu_visibility'] = in_array($visibility, ['all_toolbar_users', 'manage_options_only'], true)
-					? $visibility
-					: 'all_toolbar_users';
-				$menu_parent = isset($_POST['admin_bar_menu_parent']) ? sanitize_key(wp_unslash($_POST['admin_bar_menu_parent'])) : 'top-secondary';
-				$settings['admin_bar_menu_parent'] = in_array($menu_parent, ['root-default', 'top-secondary'], true)
-					? $menu_parent
-					: 'top-secondary';
-				$settings['admin_bar_menu_force_first_left'] = isset($_POST['admin_bar_menu_force_first_left']) && $_POST['admin_bar_menu_force_first_left'] === '1';
-
 				$settings['admin_bar_menu_items'] = [];
 				if (!empty($_POST['admin_bar_menu_item']) && is_array($_POST['admin_bar_menu_item'])) {
 					$keys = array_keys($_POST['admin_bar_menu_item']);
@@ -1686,18 +1857,21 @@ class User_Manager_Actions {
 							continue;
 						}
 						$menu_title = isset($row['title']) ? sanitize_text_field(wp_unslash($row['title'])) : '';
-						$shortcuts_raw = isset($row['shortcuts']) ? sanitize_textarea_field(wp_unslash($row['shortcuts'])) : '';
-						$shortcuts = User_Manager_Core::normalize_admin_bar_shortcuts_for_storage($shortcuts_raw);
+						$shortcuts  = isset($row['shortcuts']) ? sanitize_textarea_field(wp_unslash($row['shortcuts'])) : '';
 						$icon       = isset($row['icon']) ? sanitize_text_field(wp_unslash($row['icon'])) : '';
+						$side       = isset($row['side']) ? sanitize_key(wp_unslash($row['side'])) : 'right';
+						$side       = $side === 'left' ? 'left' : 'right';
 						$settings['admin_bar_menu_items'][] = [
-							'title'    => $menu_title,
-							'icon'     => $icon,
+							'title'     => $menu_title,
+							'icon'      => $icon,
+							'side'      => $side,
 							'shortcuts' => $shortcuts,
 						];
 					}
 				}
 
 				// WP-Admin CSS
+				$settings['wp_admin_css_enabled'] = isset($_POST['wp_admin_css_enabled']) && $_POST['wp_admin_css_enabled'] === '1';
 				$settings['wp_admin_css_all'] = isset($_POST['wp_admin_css_all']) ? sanitize_textarea_field(wp_unslash($_POST['wp_admin_css_all'])) : '';
 				$exclude_roles = isset($_POST['wp_admin_css_exclude_roles']) ? sanitize_text_field(wp_unslash($_POST['wp_admin_css_exclude_roles'])) : '';
 				$settings['wp_admin_css_exclude_roles'] = array_filter(array_map('trim', explode(',', $exclude_roles)));
@@ -1713,13 +1887,35 @@ class User_Manager_Actions {
 						}
 					}
 				}
+				$settings['wp_admin_css_hide_admin_chrome_enabled'] = isset($_POST['wp_admin_css_hide_admin_chrome_enabled']) && $_POST['wp_admin_css_hide_admin_chrome_enabled'] === '1';
+				$hide_admin_chrome_users = isset($_POST['wp_admin_css_hide_admin_chrome_users_include']) ? sanitize_text_field(wp_unslash($_POST['wp_admin_css_hide_admin_chrome_users_include'])) : '';
+				$settings['wp_admin_css_hide_admin_chrome_users_include'] = array_filter(array_map('trim', explode(',', $hide_admin_chrome_users)));
+				$settings['wp_admin_css_hide_admin_chrome_roles'] = [];
+				if (!empty($_POST['wp_admin_css_hide_admin_chrome_roles']) && is_array($_POST['wp_admin_css_hide_admin_chrome_roles'])) {
+					$roles = User_Manager_Core::get_user_roles();
+					foreach ((array) wp_unslash($_POST['wp_admin_css_hide_admin_chrome_roles']) as $role_key) {
+						$role_key = sanitize_key((string) $role_key);
+						if (isset($roles[$role_key])) {
+							$settings['wp_admin_css_hide_admin_chrome_roles'][] = $role_key;
+						}
+					}
+					$settings['wp_admin_css_hide_admin_chrome_roles'] = array_values(array_unique($settings['wp_admin_css_hide_admin_chrome_roles']));
+				}
 				break;
 		}
 
 		update_option(User_Manager_Core::OPTION_KEY, $settings);
 		User_Manager_Core::sync_coupon_notification_settings($settings);
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'settings_saved'));
+		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, 'settings_saved');
+		if ($redirect_tab === User_Manager_Core::TAB_ADDONS && isset($_POST['addon_section'])) {
+			$addon_section = sanitize_key(wp_unslash($_POST['addon_section']));
+			if ($addon_section !== '') {
+				$redirect_url = add_query_arg('addon_section', $addon_section, $redirect_url);
+			}
+		}
+
+		wp_safe_redirect($redirect_url);
 		exit;
 	}
 
@@ -2709,454 +2905,13 @@ class User_Manager_Actions {
 	}
 
 	/**
-	 * Handle Blog Post Importer: create multiple posts, optional random featured image and spread dates.
-	 */
-	public static function handle_blog_post_importer(): void {
-		if (!current_user_can('edit_posts')) {
-			wp_die(__('You do not have permission to access this page.', 'user-manager'));
-		}
-
-		check_admin_referer('user_manager_blog_post_importer');
-
-		$raw_posts = isset($_POST['blog_importer_posts']) && is_array($_POST['blog_importer_posts']) ? $_POST['blog_importer_posts'] : [];
-		$posts = [];
-		foreach ($raw_posts as $row) {
-			$title = isset($row['title']) ? sanitize_text_field(wp_unslash($row['title'])) : '';
-			if ($title === '') {
-				continue;
-			}
-			$raw_body = isset($row['raw_body']) ? trim((string) wp_unslash($row['raw_body'])) : '';
-			$description = $raw_body !== '' ? wp_kses_post($raw_body) : (isset($row['description']) ? wp_kses_post(wp_unslash($row['description'])) : '');
-			$categories = [];
-			if (!empty($row['categories']) && is_array($row['categories'])) {
-				$categories = array_map('absint', $row['categories']);
-				$categories = array_filter($categories);
-			}
-			$date = isset($row['date']) ? sanitize_text_field(wp_unslash($row['date'])) : '';
-			$tags_raw = isset($row['tags']) ? sanitize_text_field(wp_unslash($row['tags'])) : '';
-			$tags = array_filter(array_map('trim', explode(',', $tags_raw)));
-			$posts[] = [
-				'title'       => $title,
-				'description' => $description,
-				'categories'  => $categories,
-				'date'        => $date,
-				'tags'        => $tags,
-			];
-		}
-
-		if (empty($posts)) {
-			wp_safe_redirect(add_query_arg(['tab' => User_Manager_Core::TAB_TOOLS, 'um_msg' => 'blog_importer_no_posts'], admin_url('admin.php?page=' . User_Manager_Core::SETTINGS_PAGE_SLUG)));
-			exit;
-		}
-
-		$apply_random_image = !empty($_POST['blog_importer_apply_random_image']) && $_POST['blog_importer_apply_random_image'] === '1';
-		$single_plus_25 = !empty($_POST['blog_importer_single_plus_25']) && $_POST['blog_importer_single_plus_25'] === '1';
-		$single_plus_days = $single_plus_25 && isset($_POST['blog_importer_single_plus_days']) ? max(1, min(365, (int) $_POST['blog_importer_single_plus_days'])) : 25;
-		update_option('um_blog_importer_plus_days', $single_plus_days);
-		$apply_spread = !empty($_POST['blog_importer_apply_spread']) && $_POST['blog_importer_apply_spread'] === '1';
-		$spread_first = isset($_POST['blog_importer_spread_first']) ? sanitize_text_field(wp_unslash($_POST['blog_importer_spread_first'])) : '';
-		$spread_last = isset($_POST['blog_importer_spread_last']) ? sanitize_text_field(wp_unslash($_POST['blog_importer_spread_last'])) : '';
-		$use_spread = $apply_spread && $spread_first !== '' && $spread_last !== '';
-		$spread_dates = [];
-		if ($use_spread && count($posts) > 0) {
-			$t1 = strtotime($spread_first);
-			$t2 = strtotime($spread_last);
-			if ($t1 !== false && $t2 !== false) {
-				$n = count($posts);
-				$step = ($n > 1) ? ($t2 - $t1) / ($n - 1) : 0;
-				for ($i = 0; $i < $n; $i++) {
-					$ts = $n > 1 ? (int) round($t1 + $i * $step) : $t1;
-					$spread_dates[] = gmdate('Y-m-d H:i:s', $ts);
-				}
-			}
-		}
-
-		$last_post_ts_for_plus_days = null;
-		if ($single_plus_25) {
-			$last_published = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'future'], 'numberposts' => 1, 'orderby' => 'date', 'order' => 'DESC']);
-			if (!empty($last_published)) {
-				$last_ts = get_post_time('U', true, $last_published[0]);
-				if ($last_ts !== false) {
-					$last_post_ts_for_plus_days = $last_ts;
-				}
-			}
-		}
-		$undated_offset = 0;
-
-		$pool_attachment_ids = [];
-		if ($apply_random_image) {
-			global $wpdb;
-			$used = $wpdb->get_col("SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_thumbnail_id' AND meta_value != ''");
-			$used = array_map('absint', array_filter($used));
-			$args = [
-				'post_type'      => 'attachment',
-				'post_status'   => 'inherit',
-				'posts_per_page'=> -1,
-				'fields'        => 'ids',
-				'meta_query'    => [['key' => '_wp_attachment_metadata', 'compare' => 'EXISTS']],
-			];
-			$all = get_posts($args);
-			foreach ($all as $aid) {
-				$mime = get_post_mime_type($aid);
-				if ($mime && strpos($mime, 'image/') === 0 && !in_array($aid, $used, true)) {
-					$pool_attachment_ids[] = $aid;
-				}
-			}
-			shuffle($pool_attachment_ids);
-		}
-
-		$blog_categories_for_auto = get_categories(['taxonomy' => 'category', 'hide_empty' => false]);
-		$created = [];
-		$current_user_id = get_current_user_id();
-		foreach ($posts as $i => $p) {
-			$post_date = '';
-			if ($use_spread && isset($spread_dates[$i])) {
-				$post_date = $spread_dates[$i];
-			} elseif ($p['date'] !== '') {
-				$post_date = $p['date'] . ' 12:00:00';
-			} elseif ($last_post_ts_for_plus_days !== null && $single_plus_25) {
-				$undated_offset++;
-				$post_date = gmdate('Y-m-d H:i:s', $last_post_ts_for_plus_days + ($single_plus_days * DAY_IN_SECONDS * $undated_offset));
-			}
-			if ($post_date === '') {
-				$post_date = current_time('mysql');
-			}
-
-			$categories = array_values(array_unique(array_map('absint', $p['categories'])));
-			$body_text = wp_strip_all_tags($p['description']);
-			$title_and_body = $p['title'] . ' ' . $body_text;
-			foreach ($blog_categories_for_auto as $cat) {
-				if (in_array($cat->term_id, $categories, true)) {
-					continue;
-				}
-				if ($cat->name !== '' && stripos($title_and_body, $cat->name) !== false) {
-					$categories[] = $cat->term_id;
-				} elseif ($cat->slug !== '' && stripos($title_and_body, $cat->slug) !== false) {
-					$categories[] = $cat->term_id;
-				}
-			}
-			$categories = array_values(array_unique($categories));
-
-			$post_content = self::html_to_paragraph_blocks($p['description']);
-			$post_data = [
-				'post_title'   => $p['title'],
-				'post_content' => $post_content,
-				'post_status'  => 'publish',
-				'post_author'  => $current_user_id ?: 1,
-				'post_type'    => 'post',
-				'post_date'    => $post_date,
-			];
-			$post_id = wp_insert_post($post_data);
-			if (is_wp_error($post_id) || !$post_id) {
-				continue;
-			}
-			if (!empty($categories)) {
-				wp_set_post_terms($post_id, $categories, 'category');
-			}
-			if (!empty($p['tags'])) {
-				wp_set_post_terms($post_id, $p['tags'], 'post_tag');
-			}
-			if ($apply_random_image && !empty($pool_attachment_ids)) {
-				$attach_id = array_shift($pool_attachment_ids);
-				set_post_thumbnail($post_id, $attach_id);
-			}
-			$created[] = ['id' => $post_id, 'title' => $p['title']];
-		}
-
-		User_Manager_Core::add_activity_log('blog_post_import', $current_user_id, 'Tools', [
-			'created_count'       => count($created),
-			'apply_random_image'  => $apply_random_image,
-			'spread_dates_used'   => $use_spread,
-			'post_titles'         => array_column($created, 'title'),
-			'post_ids'            => array_column($created, 'id'),
-		]);
-
-		set_transient('um_blog_importer_created_' . $current_user_id, $created, 60);
-
-		wp_safe_redirect(add_query_arg([
-			'tab'    => User_Manager_Core::TAB_TOOLS,
-			'um_msg' => 'blog_importer_ok',
-			'count'  => count($created),
-		], admin_url('admin.php?page=' . User_Manager_Core::SETTINGS_PAGE_SLUG)));
-		exit;
-	}
-
-	/**
-	 * AJAX: Call ChatGPT/OpenAI to generate blog post titles and body from topic idea.
-	 */
-	public static function ajax_blog_chatgpt(): void {
-		$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-		if (!wp_verify_nonce($nonce, 'user_manager_blog_chatgpt')) {
-			wp_send_json_error([
-				'message' => __('Verification failed. Please refresh the page and try again.', 'user-manager'),
-				'debug'   => ['code' => 'invalid_nonce'],
-			]);
-		}
-		if (!current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => __('You do not have permission to do this.', 'user-manager'), 'debug' => ['code' => 'permission_denied']]);
-		}
-		$settings = User_Manager_Core::get_settings();
-		$api_key = isset($settings['openai_api_key']) ? trim((string) $settings['openai_api_key']) : '';
-		if ($api_key === '') {
-			wp_send_json_error(['message' => __('OpenAI API key is not configured in Settings.', 'user-manager'), 'debug' => ['code' => 'no_api_key']]);
-		}
-		$topic_idea = isset($_POST['topic_idea']) ? sanitize_textarea_field(wp_unslash($_POST['topic_idea'])) : '';
-		$prompt_base = isset($_POST['prompt_base']) ? wp_kses_post(wp_unslash($_POST['prompt_base'])) : '';
-		$user_message = '';
-		if ($topic_idea !== '') {
-			$user_message .= "Topic idea: " . $topic_idea . "\n\n";
-		}
-		$user_message .= $prompt_base !== '' ? $prompt_base : __('Please write a blog post about 5 paragraphs long (4-8 sentences each), with 3-5 SEO-friendly titles.', 'user-manager');
-		$prompt_append = isset($settings['openai_prompt_append']) ? trim((string) $settings['openai_prompt_append']) : '';
-		if ($prompt_append !== '') {
-			$user_message .= "\n\n" . $prompt_append;
-		}
-		$system_message = 'You are a blog post writer. You must respond with valid JSON only, no other text or markdown. Use this exact format: {"titles":["Title 1","Title 2","Title 3"],"body":"<p>First paragraph HTML</p><p>Second paragraph</p>...","tags":"tag1, tag2, tag3"}. Generate 3 to 5 SEO-friendly titles in the "titles" array. Generate the post body in the "body" string as HTML using <p> tags for paragraphs. The body should be about 5 paragraphs. Also include a "tags" string with 3 to 5 relevant blog tags, comma-separated (e.g. "health, fitness, wellness, tips, lifestyle").';
-		$response = wp_remote_post(
-			'https://api.openai.com/v1/chat/completions',
-			[
-				'timeout' => 60,
-				'headers' => [
-					'Authorization' => 'Bearer ' . $api_key,
-					'Content-Type'  => 'application/json',
-				],
-				'body' => wp_json_encode([
-					'model' => 'gpt-4o-mini',
-					'messages' => [
-						['role' => 'system', 'content' => $system_message],
-						['role' => 'user', 'content' => $user_message],
-					],
-					'temperature' => 0.7,
-				]),
-			]
-		);
-		if (is_wp_error($response)) {
-			wp_send_json_error([
-				'message' => $response->get_error_message(),
-				'debug'   => ['error_code' => $response->get_error_code()],
-			]);
-		}
-		$code = wp_remote_retrieve_response_code($response);
-		$body = wp_remote_retrieve_body($response);
-		if ($code !== 200) {
-			$decoded = json_decode($body, true);
-			$err = isset($decoded['error']['message']) ? $decoded['error']['message'] : $body;
-			$debug = [
-				'http_code' => $code,
-				'response_preview' => mb_substr($body, 0, 500),
-			];
-			if (isset($decoded['error']['code'])) {
-				$debug['api_error_code'] = $decoded['error']['code'];
-			}
-			wp_send_json_error(['message' => $err, 'debug' => $debug]);
-		}
-		$data = json_decode($body, true);
-		$content = isset($data['choices'][0]['message']['content']) ? trim($data['choices'][0]['message']['content']) : '';
-		if ($content === '') {
-			wp_send_json_error([
-				'message' => __('No content in API response.', 'user-manager'),
-				'debug'   => ['response_keys' => $data ? array_keys($data) : [], 'body_preview' => mb_substr($body, 0, 300)],
-			]);
-		}
-		$content = preg_replace('/^```\w*\s*|\s*```$/','', $content);
-		$parsed = json_decode($content, true);
-		if (!is_array($parsed) || !isset($parsed['titles']) || !isset($parsed['body'])) {
-			wp_send_json_error([
-				'message' => __('Could not parse API response. Expected JSON with titles and body.', 'user-manager'),
-				'debug'   => ['content_preview' => mb_substr($content, 0, 400), 'json_error' => json_last_error_msg()],
-			]);
-		}
-		$titles = is_array($parsed['titles']) ? array_values($parsed['titles']) : [];
-		$body_html = is_string($parsed['body']) ? $parsed['body'] : '';
-		$titles = array_slice(array_filter(array_map('sanitize_text_field', $titles)), 0, 10);
-		$tags_string = '';
-		if (isset($parsed['tags'])) {
-			if (is_string($parsed['tags'])) {
-				$tags_string = sanitize_text_field($parsed['tags']);
-			} elseif (is_array($parsed['tags'])) {
-				$tags_string = implode(', ', array_filter(array_map('sanitize_text_field', $parsed['tags'])));
-			}
-		}
-		wp_send_json_success(['titles' => $titles, 'body' => $body_html, 'tags' => $tags_string]);
-	}
-
-	/**
-	 * AJAX: Set post featured image (thumbnail) from media library selection.
-	 */
-	public static function ajax_set_post_thumbnail(): void {
-		$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-		if (!wp_verify_nonce($nonce, 'user_manager_set_post_thumbnail')) {
-			wp_send_json_error(['message' => __('Verification failed.', 'user-manager')]);
-		}
-		if (!current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => __('You do not have permission to edit this post.', 'user-manager')]);
-		}
-		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
-		$attachment_id = isset($_POST['attachment_id']) ? absint($_POST['attachment_id']) : 0;
-		if (!$post_id || get_post_type($post_id) !== 'post') {
-			wp_send_json_error(['message' => __('Invalid post.', 'user-manager')]);
-		}
-		if (!$attachment_id) {
-			delete_post_thumbnail($post_id);
-			$thumb_url = '';
-		} else {
-			if (get_post_type($attachment_id) !== 'attachment' || !wp_attachment_is_image($attachment_id)) {
-				wp_send_json_error(['message' => __('Invalid image.', 'user-manager')]);
-			}
-			set_post_thumbnail($post_id, $attachment_id);
-			$thumb_url = wp_get_attachment_image_url($attachment_id, 'thumbnail');
-		}
-		$view_url = get_permalink($post_id);
-		wp_send_json_success(['thumb_url' => $thumb_url ?: '', 'view_url' => $view_url ?: '']);
-	}
-
-	/**
-	 * AJAX: Set post date (publish/scheduled date).
-	 */
-	public static function ajax_set_post_date(): void {
-		$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-		if (!wp_verify_nonce($nonce, 'user_manager_set_post_date')) {
-			wp_send_json_error(['message' => __('Verification failed.', 'user-manager')]);
-		}
-		if (!current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => __('You do not have permission to edit this post.', 'user-manager')]);
-		}
-		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
-		$date = isset($_POST['date']) ? sanitize_text_field(wp_unslash($_POST['date'])) : '';
-		if (!$post_id || get_post_type($post_id) !== 'post') {
-			wp_send_json_error(['message' => __('Invalid post.', 'user-manager')]);
-		}
-		if ($date === '' || strtotime($date) === false) {
-			wp_send_json_error(['message' => __('Invalid date.', 'user-manager')]);
-		}
-		$datetime = $date . ' 12:00:00';
-		wp_update_post([
-			'ID'            => $post_id,
-			'post_date'     => $datetime,
-			'post_date_gmt' => get_gmt_from_date($datetime),
-		]);
-		$formatted = get_the_date('', $post_id);
-		wp_send_json_success(['formatted_date' => $formatted]);
-	}
-
-	/**
-	 * AJAX: Evenly spread all scheduled posts out to a target date.
-	 */
-	public static function ajax_spread_scheduled_posts(): void {
-		$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-		if (!wp_verify_nonce($nonce, 'user_manager_spread_scheduled_posts')) {
-			wp_send_json_error(['message' => __('Verification failed.', 'user-manager')]);
-		}
-		if (!current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => __('You do not have permission to edit posts.', 'user-manager')]);
-		}
-		$target_date = isset($_POST['target_date']) ? sanitize_text_field(wp_unslash($_POST['target_date'])) : '';
-		if ($target_date === '' || strtotime($target_date) === false) {
-			wp_send_json_error(['message' => __('Please choose a date.', 'user-manager')]);
-		}
-		$scheduled = get_posts([
-			'post_type'      => 'post',
-			'post_status'    => 'future',
-			'orderby'        => 'date',
-			'order'          => 'ASC',
-			'posts_per_page' => -1,
-			'no_found_rows'  => true,
-		]);
-		if (empty($scheduled)) {
-			wp_send_json_success(['message' => __('No scheduled posts to spread.', 'user-manager'), 'updated' => 0]);
-		}
-		$start_ts = (int) current_time('timestamp');
-		$end_ts = strtotime($target_date . ' 12:00:00');
-		if ($end_ts === false || $end_ts < $start_ts) {
-			$end_ts = $start_ts;
-		}
-		$n = count($scheduled);
-		$step = $n > 1 ? ($end_ts - $start_ts) / ($n - 1) : 0;
-		$updated = 0;
-		foreach ($scheduled as $i => $post) {
-			$post_ts = (int) round($start_ts + $step * $i);
-			$post_date = date('Y-m-d H:i:s', $post_ts);
-			$post_date_gmt = gmdate('Y-m-d H:i:s', $post_ts);
-			wp_update_post([
-				'ID'            => (int) $post->ID,
-				'post_date'     => $post_date,
-				'post_date_gmt' => $post_date_gmt,
-			]);
-			$updated++;
-		}
-		wp_send_json_success(['message' => sprintf(__('%d scheduled post(s) spread evenly to %s.', 'user-manager'), $updated, wp_date(get_option('date_format'), $end_ts)), 'updated' => $updated]);
-	}
-
-	/**
-	 * AJAX: Ask ChatGPT for blog post ideas based on existing titles.
-	 */
-	public static function ajax_blog_ideas(): void {
-		$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-		if (!wp_verify_nonce($nonce, 'user_manager_blog_ideas')) {
-			wp_send_json_error(['message' => __('Verification failed.', 'user-manager')]);
-		}
-		if (!current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => __('You do not have permission.', 'user-manager')]);
-		}
-		$settings = User_Manager_Core::get_settings();
-		$api_key = isset($settings['openai_api_key']) ? trim((string) $settings['openai_api_key']) : '';
-		if ($api_key === '') {
-			wp_send_json_error(['message' => __('OpenAI API key is not configured in Settings.', 'user-manager')]);
-		}
-		$idea_posts = get_posts(['post_type' => 'post', 'post_status' => ['publish', 'future'], 'orderby' => 'date', 'order' => 'DESC', 'posts_per_page' => 500, 'no_found_rows' => true]);
-		$titles = array_map('get_the_title', $idea_posts);
-		$topic_focus = isset($_POST['topic_focus']) ? sanitize_text_field(wp_unslash($_POST['topic_focus'])) : '';
-		$user_message = __('Here are all of our blog post titles, what are some other topics and/or headlines you might recommend?', 'user-manager');
-		if ($topic_focus !== '') {
-			$user_message .= "\n\n" . __('Optional topic focus:', 'user-manager') . ' ' . $topic_focus;
-		}
-		$user_message .= "\n\n" . implode("\n", $titles);
-		$prompt_append = isset($settings['openai_prompt_append']) ? trim((string) $settings['openai_prompt_append']) : '';
-		if ($prompt_append !== '') {
-			$user_message .= "\n\n" . $prompt_append;
-		}
-		$system_message = __('You are a blog content strategist. Based on the list of existing blog post titles below, suggest additional topics and headline ideas that would fit well. Respond in clear, readable format (e.g. bullet points or numbered list). Do not include JSON or code blocks.', 'user-manager');
-		$response = wp_remote_post(
-			'https://api.openai.com/v1/chat/completions',
-			[
-				'timeout' => 60,
-				'headers' => [
-					'Authorization' => 'Bearer ' . $api_key,
-					'Content-Type'  => 'application/json',
-				],
-				'body' => wp_json_encode([
-					'model' => 'gpt-4o-mini',
-					'messages' => [
-						['role' => 'system', 'content' => $system_message],
-						['role' => 'user', 'content' => $user_message],
-					],
-					'temperature' => 0.7,
-				]),
-			]
-		);
-		if (is_wp_error($response)) {
-			wp_send_json_error(['message' => $response->get_error_message()]);
-		}
-		$code = wp_remote_retrieve_response_code($response);
-		$body = wp_remote_retrieve_body($response);
-		if ($code !== 200) {
-			$decoded = json_decode($body, true);
-			$err = isset($decoded['error']['message']) ? $decoded['error']['message'] : $body;
-			wp_send_json_error(['message' => $err]);
-		}
-		$data = json_decode($body, true);
-		$content = isset($data['choices'][0]['message']['content']) ? trim($data['choices'][0]['message']['content']) : '';
-		if ($content === '') {
-			wp_send_json_error(['message' => __('No content in API response.', 'user-manager')]);
-		}
-		wp_send_json_success(['content' => $content]);
-	}
-
-	/**
 	 * Register the Page & Post ChatGPT meta box when the setting is enabled.
 	 */
 	public static function register_page_chatgpt_meta_box(): void {
 		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['openai_content_generator_enabled'])) {
+			return;
+		}
 		if (empty($settings['openai_page_meta_box'])) {
 			return;
 		}
@@ -3305,148 +3060,10 @@ class User_Manager_Actions {
 	/**
 	 * AJAX: Generate page content via ChatGPT (topic, num paragraphs, num sentences).
 	 */
-	public static function ajax_page_chatgpt_generate(): void {
-		$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-		if (!wp_verify_nonce($nonce, 'user_manager_page_chatgpt_generate')) {
-			wp_send_json_error(['message' => __('Verification failed.', 'user-manager')]);
-		}
-		if (!current_user_can('edit_pages')) {
-			wp_send_json_error(['message' => __('You do not have permission to edit pages.', 'user-manager')]);
-		}
-		$settings = User_Manager_Core::get_settings();
-		$api_key = isset($settings['openai_api_key']) ? trim((string) $settings['openai_api_key']) : '';
-		if ($api_key === '') {
-			wp_send_json_error(['message' => __('OpenAI API key is not configured in Settings.', 'user-manager')]);
-		}
-		$topic = isset($_POST['topic']) ? sanitize_textarea_field(wp_unslash($_POST['topic'])) : '';
-		if ($topic === '') {
-			wp_send_json_error(['message' => __('Please enter what should be written about.', 'user-manager')]);
-		}
-		$num_paragraphs = isset($_POST['num_paragraphs']) ? max(1, min(20, (int) $_POST['num_paragraphs'])) : 5;
-		$num_sentences = isset($_POST['num_sentences']) ? max(1, min(20, (int) $_POST['num_sentences'])) : 5;
-		$include_existing = !empty($_POST['include_existing_content']) && $_POST['include_existing_content'] === '1';
-		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
-		$prompt_append = isset($settings['openai_prompt_append']) ? trim((string) $settings['openai_prompt_append']) : '';
-		$user_message = sprintf(
-			__('Write about the following topic in exactly %1$d paragraph(s), each with approximately %2$d sentence(s). Use clear, professional language. Return only the content as HTML with <p> tags for each paragraph. No titles or headings.', 'user-manager'),
-			$num_paragraphs,
-			$num_sentences
-		) . "\n\nTopic: " . $topic;
-		if ($include_existing && $post_id && get_post_type($post_id) === 'page') {
-			$page = get_post($post_id);
-			if ($page && $page->post_content !== '') {
-				$raw_text = wp_strip_all_tags($page->post_content);
-				$raw_text = preg_replace('/\s+/', ' ', trim($raw_text));
-				if ($raw_text !== '') {
-					$user_message .= "\n\n" . __('Existing page content (for context):', 'user-manager') . "\n" . $raw_text;
-				}
-			}
-		}
-		if ($prompt_append !== '') {
-			$user_message .= "\n\n" . $prompt_append;
-		}
-		$system_message = __('You are a professional content writer. Respond with only the requested HTML content (paragraphs in <p> tags), no other text or explanation.', 'user-manager');
-		$response = wp_remote_post(
-			'https://api.openai.com/v1/chat/completions',
-			[
-				'timeout' => 60,
-				'headers' => [
-					'Authorization' => 'Bearer ' . $api_key,
-					'Content-Type'  => 'application/json',
-				],
-				'body' => wp_json_encode([
-					'model' => 'gpt-4o-mini',
-					'messages' => [
-						['role' => 'system', 'content' => $system_message],
-						['role' => 'user', 'content' => $user_message],
-					],
-					'temperature' => 0.7,
-				]),
-			]
-		);
-		if (is_wp_error($response)) {
-			wp_send_json_error(['message' => $response->get_error_message()]);
-		}
-		$code = wp_remote_retrieve_response_code($response);
-		$body = wp_remote_retrieve_body($response);
-		if ($code !== 200) {
-			$decoded = json_decode($body, true);
-			$err = isset($decoded['error']['message']) ? $decoded['error']['message'] : $body;
-			wp_send_json_error(['message' => $err]);
-		}
-		$data = json_decode($body, true);
-		$content = isset($data['choices'][0]['message']['content']) ? trim($data['choices'][0]['message']['content']) : '';
-		$content = preg_replace('/^```\w*\s*|\s*```$/','', $content);
-		if ($content === '') {
-			wp_send_json_error(['message' => __('No content in API response.', 'user-manager')]);
-		}
-		$preview = wp_kses_post($content);
-		wp_send_json_success(['content' => $content, 'preview' => $preview]);
-	}
-
-	/**
+/**
 	 * AJAX: Insert generated content at the bottom of the page (block format) and log admin activity.
 	 */
-	public static function ajax_page_chatgpt_insert(): void {
-		$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-		if (!wp_verify_nonce($nonce, 'user_manager_page_chatgpt_insert')) {
-			wp_send_json_error(['message' => __('Verification failed.', 'user-manager')]);
-		}
-		$post_id = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
-		$content = isset($_POST['content']) ? wp_kses_post(wp_unslash($_POST['content'])) : '';
-		if (!$post_id) {
-			wp_send_json_error(['message' => __('Invalid post.', 'user-manager')]);
-		}
-		$post = get_post($post_id);
-		if (!$post) {
-			wp_send_json_error(['message' => __('Post not found.', 'user-manager')]);
-		}
-		$post_type = get_post_type($post_id);
-		if (!in_array($post_type, ['page', 'post'], true)) {
-			wp_send_json_error(['message' => __('Invalid post.', 'user-manager')]);
-		}
-		if (!current_user_can('edit_post', $post_id)) {
-			wp_send_json_error(['message' => __('You do not have permission to edit this post.', 'user-manager')]);
-		}
-		if ($content === '') {
-			wp_send_json_error(['message' => __('No content to insert.', 'user-manager')]);
-		}
-		$position = isset($_POST['insert_position']) ? sanitize_key($_POST['insert_position']) : 'bottom';
-		if (!in_array($position, ['bottom', 'top', 'replace'], true)) {
-			$position = 'bottom';
-		}
-		$existing = $post->post_content ?: '';
-		$new_blocks = self::html_to_paragraph_blocks($content);
-		$sep = (strlen($existing) > 0 && substr($existing, -1) !== "\n" ? "\n\n" : '');
-		$entity = ($post_type === 'page') ? __('page', 'user-manager') : __('post', 'user-manager');
-		if ($position === 'bottom') {
-			$new_content = $existing . $sep . $new_blocks;
-			$message = sprintf(__('Content inserted at the bottom of the %s. You can save to keep changes.', 'user-manager'), $entity);
-		} elseif ($position === 'top') {
-			$new_content = $new_blocks . $sep . $existing;
-			$message = sprintf(__('Content inserted at the top of the %s. You can save to keep changes.', 'user-manager'), $entity);
-		} else {
-			$new_content = $new_blocks;
-			$message = sprintf(__('%s content replaced. You can save to keep changes.', 'user-manager'), ucfirst($entity));
-		}
-		wp_update_post([
-			'ID'           => $post_id,
-			'post_content' => $new_content,
-		]);
-		$settings = User_Manager_Core::get_settings();
-		$log_admin_activity = isset($settings['log_admin_activity']) ? !empty($settings['log_admin_activity']) : true;
-		if ($log_admin_activity) {
-			User_Manager_Core::add_activity_log('page_chatgpt_content_inserted', get_current_user_id(), 'ChatGPT Page Meta Box', [
-				'page_id'       => $post_id,
-				'page_title'    => get_the_title($post_id),
-				'topic_preview' => mb_substr(wp_strip_all_tags($content), 0, 100),
-				'insert_position' => $position,
-			]);
-		}
-		wp_send_json_success(['message' => $message, 'reload' => true]);
-	}
-
-	/**
+/**
 	 * Import demo templates (core logic, can be called directly).
 	 */
 	public static function import_demo_templates(): void {
@@ -3648,10 +3265,16 @@ class User_Manager_Actions {
 			wp_die(__('You do not have permission to access this page.', 'user-manager'));
 		}
 
-		check_admin_referer('user_manager_create_basic_coupon_template');
+		check_admin_referer('user_manager_create_basic_coupon_template', 'user_manager_create_basic_coupon_template_nonce');
+		$redirect_tab = User_Manager_Core::TAB_ADDONS;
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['bulk_coupons_enabled'])) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'bulk_coupons_disabled'));
+			exit;
+		}
 
 		if (!class_exists('WC_Coupon')) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -3661,7 +3284,7 @@ class User_Manager_Actions {
 		$existing_id = function_exists('wc_get_coupon_id_by_code') ? wc_get_coupon_id_by_code($code) : 0;
 
 		if ($existing_id) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'success'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'success'));
 			exit;
 		}
 
@@ -3674,7 +3297,7 @@ class User_Manager_Actions {
 		]);
 
 		if (is_wp_error($coupon_id) || !$coupon_id) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'error'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'error'));
 			exit;
 		}
 
@@ -3694,7 +3317,7 @@ class User_Manager_Actions {
 
 		$coupon->save();
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_BULK_COUPONS, 'success'));
+		wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'success'));
 		exit;
 	}
 
@@ -3746,7 +3369,7 @@ class User_Manager_Actions {
 		check_admin_referer('user_manager_migrate_store_credit_coupons');
 
 		if (!class_exists('WooCommerce')) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_COUPONS, 'migration_failed_no_wc'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, 'migration_failed_no_wc'));
 			exit;
 		}
 
@@ -3755,7 +3378,7 @@ class User_Manager_Actions {
 			: [];
 
 		if (empty($coupon_ids)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_COUPONS, 'migration_no_selection'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, 'migration_no_selection'));
 			exit;
 		}
 
@@ -3843,14 +3466,75 @@ class User_Manager_Actions {
 
 		if ($migrated_count > 0) {
 			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(
-				User_Manager_Core::TAB_COUPONS, 
+				User_Manager_Core::TAB_ADDONS,
 				'migration_success',
 				$extra_params
 			));
 		} else {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_COUPONS, 'migration_failed'));
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, 'migration_failed'));
 		}
 		exit;
+	}
+
+	/**
+	 * Normalize and sanitize a comma-separated username list.
+	 */
+	private static function sanitize_username_csv($raw): string {
+		$raw = is_string($raw) ? $raw : '';
+		if ($raw === '') {
+			return '';
+		}
+
+		$parts = preg_split('/[\s,]+/', $raw);
+		if (!is_array($parts)) {
+			return '';
+		}
+
+		$usernames = [];
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+
+			$username = sanitize_user($part, false);
+			if ($username === '') {
+				continue;
+			}
+
+			$usernames[] = strtolower($username);
+		}
+
+		$usernames = array_values(array_unique($usernames));
+		return implode(', ', $usernames);
+	}
+
+	/**
+	 * Sanitize posted role keys and keep only real WP roles.
+	 *
+	 * @param mixed $raw Raw posted roles.
+	 * @return array<int,string>
+	 */
+	private static function sanitize_role_keys_array($raw): array {
+		$parts = is_array($raw) ? $raw : [];
+		$roles = [];
+		foreach ($parts as $part) {
+			$key = sanitize_key((string) $part);
+			if ($key === '') {
+				continue;
+			}
+			$roles[] = $key;
+		}
+		$roles = array_values(array_unique($roles));
+
+		if (function_exists('wp_roles')) {
+			$wp_roles = wp_roles();
+			if ($wp_roles && isset($wp_roles->roles) && is_array($wp_roles->roles)) {
+				$roles = array_values(array_intersect($roles, array_keys($wp_roles->roles)));
+			}
+		}
+
+		return $roles;
 	}
 }
 

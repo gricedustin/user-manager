@@ -7,13 +7,16 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+
+require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
 final class User_Manager_Core {
+	use User_Manager_Core_Activity_Log_Trait;
 	const OPTION_KEY = 'user_manager_settings';
 	const ACTIVITY_LOG_KEY = 'user_manager_activity_log';
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.9';
+	const VERSION = '2.3.0';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -21,6 +24,20 @@ final class User_Manager_Core {
 	 * @var array<int,array<int,string>>
 	 */
 	private static array $coupon_remainder_debug_messages = [];
+
+	/**
+	 * Per-request debug trace rows for bulk add to cart uploads.
+	 *
+	 * @var array<int,array{line:int,status:string,message:string}>
+	 */
+	private static array $bulk_add_to_cart_debug_trace = [];
+
+	/**
+	 * Per-request media upload info for the latest bulk add CSV upload.
+	 *
+	 * @var array<string,mixed>
+	 */
+	private static array $bulk_add_to_cart_media_upload_info = [];
 
 	// Tab constants
 	const TAB_CREATE_USER     = 'create-user';
@@ -37,6 +54,7 @@ final class User_Manager_Core {
 	const TAB_COUPONS         = 'coupons';
 	const TAB_TOOLS           = 'tools';
 	const TAB_SETTINGS        = 'settings';
+	const TAB_ADDONS         = 'addons';
 	const TAB_REPORTS         = 'reports';
 	const TAB_DOCUMENTATION   = 'documentation';
 	const TAB_VERSIONS        = 'versions';
@@ -112,13 +130,12 @@ final class User_Manager_Core {
 			add_filter('manage_edit-shop_coupon_columns', [__CLASS__, 'add_coupon_email_column'], 99);
 			add_action('manage_shop_coupon_posts_custom_column', [__CLASS__, 'render_coupon_email_column'], 10, 2);
 		}
+		if (class_exists('User_Manager_My_Account_Site_Admin')) {
+			User_Manager_My_Account_Site_Admin::init();
+		}
 
 		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_admin_bar_link'], 98);
 		add_action('admin_bar_menu', [__CLASS__, 'add_custom_admin_bar_menu_items'], 99);
-		add_action('wp_enqueue_scripts', [__CLASS__, 'maybe_enqueue_custom_admin_bar_menu_dashicons']);
-		add_action('admin_enqueue_scripts', [__CLASS__, 'maybe_enqueue_custom_admin_bar_menu_dashicons']);
-		add_action('wp_head', [__CLASS__, 'maybe_render_custom_admin_bar_menu_css'], 999);
-		add_action('admin_head', [__CLASS__, 'maybe_render_custom_admin_bar_menu_css'], 999);
 		// Quick Search: default to enabled when setting is not yet saved.
 		$quick_search_enabled = !isset($settings['um_quick_search_enabled']) || !empty($settings['um_quick_search_enabled']);
 		if ($quick_search_enabled) {
@@ -175,14 +192,17 @@ final class User_Manager_Core {
 			add_action('woocommerce_cart_loaded_from_session', [__CLASS__, 'maybe_apply_coupon_from_url_param'], 20, 1);
 		}
 
-		// Bulk Add to Cart integration (migrated from standalone plugin) – only when
-		// enabled in settings, WooCommerce is available, and the standalone plugin
-		// is not already providing the same shortcode/handlers.
-		if (!empty($settings['bulk_add_to_cart_enabled']) && class_exists('WooCommerce')) {
+		// Bulk Add to Cart integration (migrated from standalone plugin).
+		// Register shortcode/hooks when enabled, regardless of immediate WC class
+		// availability, because plugin load order can initialize this plugin before
+		// WooCommerce classes are declared.
+		if (!empty($settings['bulk_add_to_cart_enabled'])) {
 			if (!shortcode_exists('bulk_add_to_cart')) {
 				add_shortcode('bulk_add_to_cart', [__CLASS__, 'bulk_add_to_cart_shortcode']);
 			}
 			add_filter('woocommerce_get_notices', [__CLASS__, 'bulk_add_to_cart_reorder_notices'], 20, 1);
+			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_maybe_download_sample_csv']);
+			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_maybe_download_sample_with_product_data']);
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_process_upload']);
 		}
 
@@ -214,6 +234,8 @@ final class User_Manager_Core {
 		
 		// Lazy datalist options endpoint (loads list options on first focus/click).
 		add_action('wp_ajax_user_manager_get_datalist_options', [__CLASS__, 'ajax_get_datalist_options']);
+		// Login As user search endpoint (username/email lookup).
+		add_action('wp_ajax_user_manager_search_users_for_login_as', [__CLASS__, 'ajax_search_users_for_login_as']);
 		
 		// Register action handlers
 		User_Manager_Actions::init();
@@ -254,7 +276,7 @@ final class User_Manager_Core {
 
 		$cart->calculate_totals();
 	}
-
+	
 	/**
 	 * Render Role Switching permissions on user profile screen.
 	 *
@@ -1132,6 +1154,9 @@ final class User_Manager_Core {
 			return;
 		}
 		$settings = get_option(self::OPTION_KEY, []);
+		if (!self::is_wp_admin_css_addon_enabled($settings)) {
+			return;
+		}
 		$user = wp_get_current_user();
 		if (!$user->ID) {
 			return;
@@ -1142,6 +1167,7 @@ final class User_Manager_Core {
 		$roles_css = isset($settings['wp_admin_css_roles']) && is_array($settings['wp_admin_css_roles']) ? $settings['wp_admin_css_roles'] : [];
 
 		$to_output = [];
+		$hide_admin_chrome_applied = false;
 
 		// All roles CSS (unless user's role is in exclude list)
 		$css_all = isset($settings['wp_admin_css_all']) ? trim((string) $settings['wp_admin_css_all']) : '';
@@ -1188,13 +1214,261 @@ final class User_Manager_Core {
 			}
 		}
 
+		// Preset CSS: hide admin sidebar + most top-bar items for targeted users/roles.
+		$hide_admin_chrome_enabled = !empty($settings['wp_admin_css_hide_admin_chrome_enabled']);
+		if ($hide_admin_chrome_enabled) {
+			$hide_users = [];
+			if (isset($settings['wp_admin_css_hide_admin_chrome_users_include'])) {
+				if (is_array($settings['wp_admin_css_hide_admin_chrome_users_include'])) {
+					$hide_users = $settings['wp_admin_css_hide_admin_chrome_users_include'];
+				} else {
+					$hide_users = array_filter(array_map('trim', explode(',', (string) $settings['wp_admin_css_hide_admin_chrome_users_include'])));
+				}
+			}
+			$hide_roles = isset($settings['wp_admin_css_hide_admin_chrome_roles']) && is_array($settings['wp_admin_css_hide_admin_chrome_roles'])
+				? $settings['wp_admin_css_hide_admin_chrome_roles']
+				: [];
+
+			if (self::wp_admin_css_user_matches_targets($user, $user_roles, $hide_users, $hide_roles)) {
+				$to_output[] = self::get_wp_admin_css_hide_admin_chrome_preset();
+				$hide_admin_chrome_applied = true;
+			}
+		}
+
 		if (empty($to_output)) {
 			return;
 		}
 
 		$combined = implode("\n", $to_output);
 		$combined = str_replace(['</style>', '<script'], '', $combined);
-		echo '<style id="um-wp-admin-css">' . "\n" . esc_html($combined) . "\n" . '</style>' . "\n";
+		echo '<style id="um-wp-admin-css">' . "\n" . $combined . "\n" . '</style>' . "\n";
+		if ($hide_admin_chrome_applied) {
+			self::render_wp_admin_css_hide_admin_chrome_script();
+		}
+	}
+
+	/**
+	 * Match current user by provided usernames/emails and roles (OR logic).
+	 *
+	 * @param WP_User $user Current user object.
+	 * @param array   $user_roles Current user roles.
+	 * @param array   $target_users Usernames/emails list.
+	 * @param array   $target_roles Roles list.
+	 * @return bool
+	 */
+	private static function wp_admin_css_user_matches_targets($user, array $user_roles, array $target_users, array $target_roles): bool {
+		$target_users = array_values(array_filter(array_map('trim', $target_users)));
+		$target_roles = array_values(array_filter(array_map('sanitize_key', $target_roles)));
+
+		if (empty($target_users) && empty($target_roles)) {
+			return false;
+		}
+
+		$user_login = strtolower((string) ($user->user_login ?? ''));
+		$user_email = strtolower((string) ($user->user_email ?? ''));
+
+		foreach ($target_users as $identifier) {
+			$identifier = strtolower((string) $identifier);
+			if ($identifier === '') {
+				continue;
+			}
+			if ($identifier === $user_login || $identifier === $user_email) {
+				return true;
+			}
+		}
+
+		foreach ($user_roles as $role) {
+			if (in_array(sanitize_key((string) $role), $target_roles, true)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Preset CSS that minimizes admin UI chrome while keeping profile/logout and custom menu items.
+	 */
+	private static function get_wp_admin_css_hide_admin_chrome_preset(): string {
+		return '
+html body #wpadminbar .ab-top-menu > li,
+html body .woocommerce-layout__header,
+html body #adminmenu,
+html body #adminmenumain,
+html body #adminmenuwrap,
+html body #adminmenuback,
+html body .updated,
+html body .notice,
+html body .noticex,
+html body .error,
+html body #dashboard-widgets-wrap,
+html body #message,
+html body #screen-meta-links,
+html body #screen-meta,
+html body #contextual-help-link-wrap,
+html body #screen-options-link-wrap {
+	display:none !important;
+}
+
+html body #wpadminbar li#wp-admin-bar-my-account,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] {
+	display:list-item !important;
+}
+
+html body #wpadminbar li#wp-admin-bar-my-account .ab-item,
+html body #wpadminbar li#wp-admin-bar-my-account .ab-label,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-item,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] .ab-label {
+	display:block !important;
+}
+
+html body #wpadminbar li#wp-admin-bar-my-account > .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] > .ab-sub-wrapper {
+	display:none !important;
+}
+
+html body #wpadminbar li#wp-admin-bar-my-account:hover > .ab-sub-wrapper,
+html body #wpadminbar li#wp-admin-bar-my-account.hover > .ab-sub-wrapper,
+html body #wpadminbar li#wp-admin-bar-my-account:focus-within > .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"]:hover > .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"].hover > .ab-sub-wrapper,
+html body #wpadminbar li[id^="wp-admin-bar-um-custom-bar-"]:focus-within > .ab-sub-wrapper {
+	display:block !important;
+}
+
+html body #wpcontent,
+html body #wpfooter,
+html body #wpbody-content {
+	margin-left: 0 !important;
+}
+
+html body .woocommerce-layout__header {
+	width: 100% !important;
+}
+';
+	}
+
+	/**
+	 * JavaScript fallback to hide admin chrome for dynamically rendered admin UI.
+	 */
+	private static function render_wp_admin_css_hide_admin_chrome_script(): void {
+		$hide_selectors = [
+			'#adminmenu',
+			'#adminmenumain',
+			'#adminmenuwrap',
+			'#adminmenuback',
+			'.woocommerce-layout__header',
+			'.updated',
+			'.notice',
+			'.noticex',
+			'.error',
+			'#dashboard-widgets-wrap',
+			'#message',
+			'#screen-meta-links',
+			'#screen-meta',
+			'#contextual-help-link-wrap',
+			'#screen-options-link-wrap',
+		];
+		$show_selectors = [
+			'#wpadminbar li#wp-admin-bar-my-account',
+			'#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"]',
+		];
+		?>
+		<script id="um-wp-admin-css-hide-admin-chrome-fallback">
+		(function() {
+			var hideSelectors = <?php echo wp_json_encode($hide_selectors); ?>;
+			var showSelectors = <?php echo wp_json_encode($show_selectors); ?>;
+			function getDirectSubWrapper(node) {
+				if (!node || !node.children) {
+					return null;
+				}
+				for (var i = 0; i < node.children.length; i++) {
+					var child = node.children[i];
+					if (child && child.classList && child.classList.contains('ab-sub-wrapper')) {
+						return child;
+					}
+				}
+				return null;
+			}
+			function applyHidePreset() {
+				hideSelectors.forEach(function(selector) {
+					document.querySelectorAll(selector).forEach(function(node) {
+						node.style.setProperty('display', 'none', 'important');
+					});
+				});
+				showSelectors.forEach(function(selector) {
+					document.querySelectorAll(selector).forEach(function(node) {
+						node.style.setProperty('display', 'list-item', 'important');
+						var sub = getDirectSubWrapper(node);
+						if (sub) {
+							sub.style.setProperty('display', 'none', 'important');
+						}
+					});
+				});
+				document.querySelectorAll('#wpcontent, #wpfooter, #wpbody-content').forEach(function(node) {
+					node.style.setProperty('margin-left', '0', 'important');
+				});
+
+				showSelectors.forEach(function(selector) {
+					document.querySelectorAll(selector).forEach(function(node) {
+						if (node.dataset.umHoverBind === '1') {
+							return;
+						}
+						node.dataset.umHoverBind = '1';
+						var sub = getDirectSubWrapper(node);
+						if (!sub) {
+							return;
+						}
+						node.addEventListener('mouseenter', function() {
+							sub.style.setProperty('display', 'block', 'important');
+						});
+						node.addEventListener('mouseleave', function() {
+							sub.style.setProperty('display', 'none', 'important');
+						});
+						node.addEventListener('focusin', function() {
+							sub.style.setProperty('display', 'block', 'important');
+						});
+						node.addEventListener('focusout', function() {
+							if (node.contains(document.activeElement)) {
+								return;
+							}
+							sub.style.setProperty('display', 'none', 'important');
+						});
+					});
+				});
+			}
+			document.addEventListener('DOMContentLoaded', function() {
+				applyHidePreset();
+				setTimeout(applyHidePreset, 150);
+				setTimeout(applyHidePreset, 800);
+			});
+		})();
+		</script>
+		<?php
+	}
+
+	/**
+	 * Determine whether WP-Admin CSS add-on is enabled.
+	 * Falls back to legacy behavior when no explicit toggle is stored.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return bool
+	 */
+	private static function is_wp_admin_css_addon_enabled(array $settings): bool {
+		if (array_key_exists('wp_admin_css_enabled', $settings)) {
+			return !empty($settings['wp_admin_css_enabled']);
+		}
+
+		$roles_css = isset($settings['wp_admin_css_roles']) && is_array($settings['wp_admin_css_roles']) ? $settings['wp_admin_css_roles'] : [];
+		foreach ($roles_css as $css) {
+			if (trim((string) $css) !== '') {
+				return true;
+			}
+		}
+
+		return trim((string) ($settings['wp_admin_css_all'] ?? '')) !== ''
+			|| trim((string) ($settings['wp_admin_css_users_css'] ?? '')) !== ''
+			|| !empty($settings['wp_admin_css_hide_admin_chrome_enabled']);
 	}
 
 	/**
@@ -1218,36 +1492,20 @@ final class User_Manager_Core {
 	}
 
 	/**
-	 * Add custom admin bar menu items from Settings > Custom WP-Admin Top Bar Menus & Links.
+	 * Add custom admin bar menu items from Settings > WP-Admin Bar Menu Items.
 	 * Each saved item is a dropdown; shortcuts are parsed from "Label|URL" or "Label|divider" per line.
 	 *
 	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
 	 */
 	public static function add_custom_admin_bar_menu_items($wp_admin_bar): void {
-		if (!is_user_logged_in() || !is_admin_bar_showing()) {
+		$settings   = get_option(self::OPTION_KEY, []);
+		if (!self::is_admin_bar_menu_items_addon_enabled($settings)) {
 			return;
 		}
-
-		$settings   = get_option(self::OPTION_KEY, []);
 		$menu_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
 		if (empty($menu_items)) {
 			return;
 		}
-
-		$enabled = !isset($settings['admin_bar_menu_items_enabled']) || !empty($settings['admin_bar_menu_items_enabled']);
-		if (!$enabled) {
-			return;
-		}
-
-		$visibility = isset($settings['admin_bar_menu_visibility']) ? (string) $settings['admin_bar_menu_visibility'] : 'all_toolbar_users';
-		if ($visibility === 'manage_options_only' && !current_user_can('manage_options')) {
-			return;
-		}
-
-		$parent_location = (isset($settings['admin_bar_menu_parent']) && $settings['admin_bar_menu_parent'] === 'root-default')
-			? 'root-default'
-			: 'top-secondary';
-		$force_first_left = !empty($settings['admin_bar_menu_force_first_left']) && $parent_location === 'root-default';
 
 		foreach ($menu_items as $i => $item) {
 			$menu_title = isset($item['title']) ? trim((string) $item['title']) : '';
@@ -1256,29 +1514,23 @@ final class User_Manager_Core {
 			}
 			$shortcuts = isset($item['shortcuts']) ? (string) $item['shortcuts'] : '';
 			$icon      = isset($item['icon']) ? trim((string) $item['icon']) : '';
+			$side      = isset($item['side']) && $item['side'] === 'left' ? 'left' : 'right';
+			$parent    = $side === 'left' ? 'root-default' : 'top-secondary';
 
 			$parent_id = 'um-custom-bar-' . $i;
-			$wp_admin_bar->remove_node($parent_id);
-
-			$title_markup = esc_html($menu_title);
-			$icon_class = self::normalize_custom_admin_bar_icon_class($icon);
-			if ($icon_class !== '') {
-				$title_markup = '<span class="ab-icon dashicons ' . esc_attr($icon_class) . '" style="margin-top:3px !important;"></span><span class="ab-label">' . esc_html($menu_title) . '</span>';
-			}
-
-			$root_classes = ['um-custom-bar-menu', 'menupop'];
-			if ($force_first_left) {
-				$root_classes[] = 'um-custom-bar-menu-root-first';
+			$title_markup = $menu_title;
+			if ($icon !== '' && strpos($icon, 'dashicons-') === 0) {
+				$title_markup = '<span class="ab-icon dashicons ' . esc_attr($icon) . '"></span><span class="ab-label">' . esc_html($menu_title) . '</span>';
 			}
 
 			$wp_admin_bar->add_node([
 				'id'     => $parent_id,
 				'title'  => $title_markup,
 				'href'   => '#',
-				'parent' => $parent_location,
+				'parent' => $parent,
 				'meta'   => [
 					'title' => $menu_title,
-					'class' => implode(' ', $root_classes),
+					'class' => 'um-custom-bar-menu menupop',
 				],
 			]);
 
@@ -1306,14 +1558,10 @@ final class User_Manager_Core {
 						'meta'   => ['class' => 'um-ab-group-header'],
 					]);
 				} else {
-					$resolved_url = self::normalize_custom_admin_bar_shortcut_url($url);
-					if ($resolved_url === '') {
-						continue;
-					}
 					$wp_admin_bar->add_node([
 						'id'     => $child_id,
 						'title'  => esc_html($label),
-						'href'   => esc_url($resolved_url),
+						'href'   => esc_url($url),
 						'parent' => $parent_id,
 					]);
 				}
@@ -1322,224 +1570,30 @@ final class User_Manager_Core {
 	}
 
 	/**
-	 * Normalize a custom admin bar icon class (dashicons only).
-	 */
-	private static function normalize_custom_admin_bar_icon_class(string $icon): string {
-		$icon = trim($icon);
-		if ($icon === '') {
-			return '';
-		}
-
-		$icon = preg_replace('/[^a-zA-Z0-9\-\_\s]/', '', $icon);
-		if (!is_string($icon) || $icon === '') {
-			return '';
-		}
-
-		$parts = preg_split('/\s+/', $icon);
-		if (!is_array($parts)) {
-			return '';
-		}
-		foreach ($parts as $part) {
-			if (strpos($part, 'dashicons-') === 0) {
-				return $part;
-			}
-		}
-
-		return '';
-	}
-
-	/**
-	 * Normalize shortcut URL for custom admin bar menus.
+	 * Determine whether WP-Admin Bar Menu Items add-on is enabled.
+	 * Falls back to legacy behavior when no explicit toggle is stored.
 	 *
-	 * Supports:
-	 * - Full URLs (https://example.com/path)
-	 * - admin:edit.php?post_type=shop_coupon
-	 * - edit.php?post_type=shop_coupon (treated as admin URL)
-	 * - /path (treated as site-relative URL)
+	 * @param array $settings Plugin settings.
+	 * @return bool
 	 */
-	private static function normalize_custom_admin_bar_shortcut_url(string $url): string {
-		$url = trim($url);
-		if ($url === '' || strtolower($url) === 'divider') {
-			return '';
-		}
-
-		if (strpos($url, 'admin:') === 0) {
-			$admin_path = ltrim(substr($url, 6), '/');
-			return admin_url($admin_path);
-		}
-
-		$has_scheme = (bool) preg_match('#^[a-zA-Z][a-zA-Z0-9+\-.]*:#', $url);
-		if ($has_scheme || strpos($url, '#') === 0) {
-			return $url;
-		}
-
-		if (strpos($url, '/wp-admin/') === 0) {
-			return admin_url(ltrim(substr($url, strlen('/wp-admin/')), '/'));
-		}
-
-		if (strpos($url, '/') === 0) {
-			return home_url($url);
-		}
-
-		return admin_url(ltrim($url, '/'));
-	}
-
-	/**
-	 * Normalize multiline admin bar shortcuts for storage.
-	 *
-	 * Converts absolute /wp-admin/ URLs into domain-less admin: paths so
-	 * environments can be moved between domains without editing each link.
-	 */
-	public static function normalize_admin_bar_shortcuts_for_storage(string $shortcuts): string {
-		$lines = preg_split('/\r\n|\r|\n/', $shortcuts);
-		if (!is_array($lines) || empty($lines)) {
-			return '';
-		}
-
-		$normalized_lines = [];
-		foreach ($lines as $line) {
-			$line = trim((string) $line);
-			if ($line === '') {
-				continue;
-			}
-			$pipe = strpos($line, '|');
-			if ($pipe === false) {
-				$normalized_lines[] = $line;
-				continue;
-			}
-			$label = trim(substr($line, 0, $pipe));
-			$url = trim(substr($line, $pipe + 1));
-			if ($label === '') {
-				continue;
-			}
-			$normalized_url = self::normalize_admin_bar_shortcut_value_for_storage($url);
-			if ($normalized_url === '') {
-				continue;
-			}
-			$normalized_lines[] = $label . '|' . $normalized_url;
-		}
-
-		return implode("\n", $normalized_lines);
-	}
-
-	/**
-	 * Normalize a single admin bar shortcut value for storage.
-	 *
-	 * Examples:
-	 * - https://example.com/wp-admin/edit.php?post_type=shop_coupon => admin:edit.php?post_type=shop_coupon
-	 * - /wp-admin/admin.php?page=wc-order-export => admin:admin.php?page=wc-order-export
-	 */
-	private static function normalize_admin_bar_shortcut_value_for_storage(string $url): string {
-		$url = trim($url);
-		if ($url === '') {
-			return '';
-		}
-
-		if (strtolower($url) === 'divider') {
-			return 'divider';
-		}
-
-		if (strpos($url, 'admin:') === 0) {
-			return 'admin:' . ltrim(substr($url, 6), '/');
-		}
-
-		if (strpos($url, '/wp-admin/') === 0) {
-			return 'admin:' . ltrim(substr($url, strlen('/wp-admin/')), '/');
-		}
-
-		$parts = wp_parse_url($url);
-		if (!is_array($parts)) {
-			return $url;
-		}
-
-		$path = isset($parts['path']) ? (string) $parts['path'] : '';
-		$query = isset($parts['query']) ? (string) $parts['query'] : '';
-		if ($path === '') {
-			return $url;
-		}
-
-		$path_lc = strtolower($path);
-		$admin_pos = strpos($path_lc, '/wp-admin/');
-		if ($admin_pos === false) {
-			return $url;
-		}
-
-		$admin_tail = ltrim(substr($path, $admin_pos + strlen('/wp-admin/')), '/');
-		if ($admin_tail === '' && $query === '') {
-			return 'admin:';
-		}
-
-		return 'admin:' . $admin_tail . ($query !== '' ? '?' . $query : '');
-	}
-
-	/**
-	 * Enqueue dashicons for custom top bar menus when needed.
-	 */
-	public static function maybe_enqueue_custom_admin_bar_menu_dashicons(): void {
-		if (!is_user_logged_in() || !is_admin_bar_showing()) {
-			return;
-		}
-
-		$settings = get_option(self::OPTION_KEY, []);
-		$enabled = !isset($settings['admin_bar_menu_items_enabled']) || !empty($settings['admin_bar_menu_items_enabled']);
-		if (!$enabled) {
-			return;
+	private static function is_admin_bar_menu_items_addon_enabled(array $settings): bool {
+		if (array_key_exists('admin_bar_menu_items_enabled', $settings)) {
+			return !empty($settings['admin_bar_menu_items_enabled']);
 		}
 
 		$menu_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
-		if (empty($menu_items)) {
-			return;
-		}
-
 		foreach ($menu_items as $item) {
-			$icon = isset($item['icon']) ? (string) $item['icon'] : '';
-			if (self::normalize_custom_admin_bar_icon_class($icon) !== '') {
-				wp_enqueue_style('dashicons');
-				return;
+			if (!is_array($item)) {
+				continue;
+			}
+			$title = trim((string) ($item['title'] ?? ''));
+			$shortcuts = trim((string) ($item['shortcuts'] ?? ''));
+			if ($title !== '' || $shortcuts !== '') {
+				return true;
 			}
 		}
-	}
 
-	/**
-	 * Optional inline CSS for custom top bar menu ordering and group labels.
-	 */
-	public static function maybe_render_custom_admin_bar_menu_css(): void {
-		if (!is_user_logged_in() || !is_admin_bar_showing()) {
-			return;
-		}
-
-		$settings = get_option(self::OPTION_KEY, []);
-		$enabled = !isset($settings['admin_bar_menu_items_enabled']) || !empty($settings['admin_bar_menu_items_enabled']);
-		if (!$enabled) {
-			return;
-		}
-
-		$menu_items = isset($settings['admin_bar_menu_items']) && is_array($settings['admin_bar_menu_items']) ? $settings['admin_bar_menu_items'] : [];
-		if (empty($menu_items)) {
-			return;
-		}
-
-		$parent_location = (isset($settings['admin_bar_menu_parent']) && $settings['admin_bar_menu_parent'] === 'root-default')
-			? 'root-default'
-			: 'top-secondary';
-		$force_first_left = !empty($settings['admin_bar_menu_force_first_left']) && $parent_location === 'root-default';
-		?>
-		<style id="um-custom-admin-bar-menu-css">
-			#wpadminbar .um-ab-group-header > .ab-item {
-				font-weight: 600;
-				opacity: 0.85;
-				pointer-events: none;
-			}
-			<?php if ($force_first_left) : ?>
-			#wp-toolbar > #wp-admin-bar-root-default {
-				display: flex;
-			}
-			#wp-admin-bar-root-default .um-custom-bar-menu-root-first {
-				order: -9999;
-			}
-			<?php endif; ?>
-		</style>
-		<?php
+		return false;
 	}
 
 	/**
@@ -2007,6 +2061,9 @@ final class User_Manager_Core {
 	 * Renders the CSV upload form and optional debug block.
 	 */
 	public static function bulk_add_to_cart_shortcode(): string {
+		if (!class_exists('WooCommerce')) {
+			return '<p>' . esc_html__('WooCommerce is required to use the bulk add to cart feature.', 'user-manager') . '</p>';
+		}
 		if (!is_user_logged_in()) {
 			return '<p>' . esc_html__('Please log in to use the bulk add to cart feature.', 'user-manager') . '</p>';
 		}
@@ -2015,10 +2072,71 @@ final class User_Manager_Core {
 		$identifier_column = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
+		$force_debug       = self::is_bulk_add_to_cart_debug_requested();
+		$debug_enabled     = (isset($options['debug_mode']) && (string) $options['debug_mode'] === '1') || $force_debug;
+		$sample_csv_url    = add_query_arg('um_bulk_add_to_cart_sample', '1', remove_query_arg(['um_bulk_add_to_cart_sample', 'um_bulk_add_to_cart_sample_data']));
+		$sample_with_data_url = add_query_arg('um_bulk_add_to_cart_sample_data', '1', remove_query_arg(['um_bulk_add_to_cart_sample', 'um_bulk_add_to_cart_sample_data']));
+		$form_action_url   = esc_url($_SERVER['REQUEST_URI'] ?? '');
 
 		$output = '<div class="bulk-add-to-cart-form" style="max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">';
+		$debug_notice_lines = [];
+		if (function_exists('wc_get_notices') && function_exists('wc_print_notices')) {
+			$pending_notices = wc_get_notices();
+			$submitted = isset($_POST['bulk_add_to_cart_submit']);
+			if (!empty($pending_notices)) {
+				if ($submitted && $debug_enabled) {
+					$notices_for_display = [];
+					$notices_for_debug   = [];
+					foreach ($pending_notices as $type => $bucket) {
+						if (!is_array($bucket)) {
+							continue;
+						}
+						foreach ($bucket as $notice) {
+							if (!is_array($notice)) {
+								continue;
+							}
+							if (self::bulk_add_to_cart_notice_should_remain_visible($notice)) {
+								if (!isset($notices_for_display[$type]) || !is_array($notices_for_display[$type])) {
+									$notices_for_display[$type] = [];
+								}
+								$notices_for_display[$type][] = $notice;
+							} else {
+								if (!isset($notices_for_debug[$type]) || !is_array($notices_for_debug[$type])) {
+									$notices_for_debug[$type] = [];
+								}
+								$notices_for_debug[$type][] = $notice;
+							}
+						}
+					}
+					$debug_notice_lines = self::bulk_add_to_cart_flatten_notices_for_debug($notices_for_debug);
+					if (function_exists('wc_clear_notices')) {
+						wc_clear_notices();
+					}
+					foreach ($notices_for_display as $type => $bucket) {
+						if (!is_array($bucket)) {
+							continue;
+						}
+						foreach ($bucket as $notice) {
+							$message = isset($notice['notice']) ? (string) $notice['notice'] : '';
+							if ($message === '') {
+								continue;
+							}
+							$data = isset($notice['data']) && is_array($notice['data']) ? $notice['data'] : [];
+							wc_add_notice($message, (string) $type, $data);
+						}
+					}
+					ob_start();
+					wc_print_notices();
+					$output .= (string) ob_get_clean();
+				} else {
+					ob_start();
+					wc_print_notices();
+					$output .= (string) ob_get_clean();
+				}
+			}
+		}
 
-		if (isset($_POST['bulk_add_to_cart_submit'])) {
+		if (isset($_POST['bulk_add_to_cart_submit']) && $debug_enabled) {
 			$output .= '<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #dc3545;">';
 			$output .= '<h3 style="margin-top: 0; color: #dc3545;">' . esc_html__('Debug Information', 'user-manager') . '</h3>';
 
@@ -2046,6 +2164,18 @@ final class User_Manager_Core {
 			$output .= '<p><strong>' . esc_html__('WooCommerce Cart:', 'user-manager') . '</strong> ';
 			$output .= (function_exists('WC') && WC()->cart) ? esc_html__('Initialized', 'user-manager') : esc_html__('Not initialized', 'user-manager');
 			$output .= '</p>';
+			$output .= '<p><strong>' . esc_html__('Request Method:', 'user-manager') . '</strong> ' . esc_html(isset($_SERVER['REQUEST_METHOD']) ? (string) $_SERVER['REQUEST_METHOD'] : '') . '</p>';
+			$output .= '<p><strong>' . esc_html__('Form Action URL:', 'user-manager') . '</strong> <code>' . esc_html($form_action_url) . '</code></p>';
+			$output .= '<p><strong>' . esc_html__('URL Debug Flag:', 'user-manager') . '</strong> ' . ($force_debug ? esc_html__('Enabled', 'user-manager') : esc_html__('Disabled', 'user-manager')) . '</p>';
+
+			if (isset($_FILES['csv_file']) && is_array($_FILES['csv_file'])) {
+				$file_size = isset($_FILES['csv_file']['size']) ? (int) $_FILES['csv_file']['size'] : 0;
+				$file_type = isset($_FILES['csv_file']['type']) ? (string) $_FILES['csv_file']['type'] : '';
+				$tmp_name  = isset($_FILES['csv_file']['tmp_name']) ? (string) $_FILES['csv_file']['tmp_name'] : '';
+				$output .= '<p><strong>' . esc_html__('File Size (bytes):', 'user-manager') . '</strong> ' . esc_html((string) $file_size) . '</p>';
+				$output .= '<p><strong>' . esc_html__('File MIME Type:', 'user-manager') . '</strong> ' . esc_html($file_type !== '' ? $file_type : '—') . '</p>';
+				$output .= '<p><strong>' . esc_html__('Temp File Exists:', 'user-manager') . '</strong> ' . (is_file($tmp_name) ? esc_html__('Yes', 'user-manager') : esc_html__('No', 'user-manager')) . '</p>';
+			}
 
 			$output .= '<p><strong>' . esc_html__('Current Settings:', 'user-manager') . '</strong></p>';
 			$output .= '<ul>';
@@ -2054,6 +2184,60 @@ final class User_Manager_Core {
 			$output .= '<li>' . esc_html__('Quantity Column:', 'user-manager') . ' ' . esc_html($quantity_column) . '</li>';
 			$output .= '</ul>';
 
+			if (!empty(self::$bulk_add_to_cart_media_upload_info)) {
+				$media_info = self::$bulk_add_to_cart_media_upload_info;
+				$output .= '<p><strong>' . esc_html__('Media Library Upload:', 'user-manager') . '</strong></p>';
+				$output .= '<ul>';
+				if (!empty($media_info['activity_url'])) {
+					$output .= '<li>' . esc_html__('User Activity File URL:', 'user-manager') . ' <a href="' . esc_url((string) $media_info['activity_url']) . '" target="_blank" rel="noopener noreferrer">' . esc_html((string) $media_info['activity_url']) . '</a></li>';
+				}
+				if (!empty($media_info['attachment_id'])) {
+					$output .= '<li>' . esc_html__('Attachment ID:', 'user-manager') . ' ' . esc_html((string) $media_info['attachment_id']) . '</li>';
+				}
+				if (!empty($media_info['attachment_url'])) {
+					$output .= '<li>' . esc_html__('Attachment URL:', 'user-manager') . ' <a href="' . esc_url((string) $media_info['attachment_url']) . '" target="_blank" rel="noopener noreferrer">' . esc_html((string) $media_info['attachment_url']) . '</a></li>';
+				}
+				if (!empty($media_info['error'])) {
+					$output .= '<li>' . esc_html__('Media Upload Error:', 'user-manager') . ' ' . esc_html((string) $media_info['error']) . '</li>';
+				}
+				$output .= '</ul>';
+			}
+
+			if (!empty($debug_notice_lines)) {
+				$output .= '<p><strong>' . esc_html__('Upload/Processing Messages:', 'user-manager') . '</strong></p>';
+				$output .= '<ul>';
+				foreach ($debug_notice_lines as $line) {
+					$output .= '<li>' . esc_html($line) . '</li>';
+				}
+				$output .= '</ul>';
+			}
+
+			if (!empty(self::$bulk_add_to_cart_debug_trace)) {
+				$output .= '<p><strong>' . esc_html__('Line-by-line Processing Trace:', 'user-manager') . '</strong></p>';
+				$output .= '<div style="max-height:320px; overflow:auto; background:#fff; border:1px solid #dcdcde; border-radius:4px;">';
+				$output .= '<table class="widefat striped" style="margin:0;">';
+				$output .= '<thead><tr><th style="width:90px;">' . esc_html__('CSV Line', 'user-manager') . '</th><th style="width:160px;">' . esc_html__('Status', 'user-manager') . '</th><th>' . esc_html__('Details', 'user-manager') . '</th></tr></thead>';
+				$output .= '<tbody>';
+				foreach (self::$bulk_add_to_cart_debug_trace as $trace_row) {
+					$line_value = isset($trace_row['line']) ? (int) $trace_row['line'] : 0;
+					$status_value = isset($trace_row['status']) ? (string) $trace_row['status'] : '';
+					$message_value = isset($trace_row['message']) ? (string) $trace_row['message'] : '';
+					$output .= '<tr>';
+					$output .= '<td>' . ($line_value > 0 ? esc_html((string) $line_value) : '—') . '</td>';
+					$output .= '<td><code>' . esc_html($status_value) . '</code></td>';
+					$output .= '<td>' . esc_html($message_value) . '</td>';
+					$output .= '</tr>';
+				}
+				$output .= '</tbody></table></div>';
+			}
+
+			$output .= '</div>';
+		}
+
+		if ($force_debug && !isset($_POST['bulk_add_to_cart_submit'])) {
+			$output .= '<div style="margin-bottom: 20px; padding: 12px 15px; background: #fff8e5; border-left: 4px solid #dba617;">';
+			$output .= '<strong>' . esc_html__('Bulk Add to Cart debug mode is active via URL parameter.', 'user-manager') . '</strong> ';
+			$output .= esc_html__('Submit a CSV to see verbose processing notices.', 'user-manager');
 			$output .= '</div>';
 		}
 
@@ -2099,17 +2283,22 @@ final class User_Manager_Core {
 			esc_html__('For variations, use the variation %s', 'user-manager'),
 			$label
 		) . '</li>';
+		$output .= '<li>' . esc_html__('Rows with blank or 0 quantity are ignored.', 'user-manager') . '</li>';
 		$output .= '<li>' . esc_html__('Upload your CSV file and click "Add to Cart"', 'user-manager') . '</li>';
 		$output .= '</ol>';
 		$output .= '</div>';
 
-		$output .= '<form method="post" enctype="multipart/form-data" action="' . esc_url($_SERVER['REQUEST_URI'] ?? '') . '">';
+		$output .= '<form method="post" enctype="multipart/form-data" action="' . $form_action_url . '">';
 		$output .= wp_nonce_field('bulk_add_to_cart_upload', 'bulk_add_to_cart_nonce', true, false);
+		$output .= '<p style="margin: 0 0 12px 0;">';
+		$output .= '<a href="' . esc_url($sample_csv_url) . '">' . esc_html__('Download Sample CSV', 'user-manager') . '</a>';
+		$output .= ' | <a href="' . esc_url($sample_with_data_url) . '">' . esc_html__('Download Sample CSV with Product Data', 'user-manager') . '</a>';
+		$output .= '</p>';
 		$output .= '<div style="margin-bottom: 20px;">';
 		$output .= '<label for="csv_file" style="display: block; margin-bottom: 10px; font-weight: bold;">' . esc_html__('Select CSV File:', 'user-manager') . '</label>';
 		$output .= '<input type="file" name="csv_file" id="csv_file" accept=".csv" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">';
 		$output .= '</div>';
-		$output .= '<button type="submit" name="bulk_add_to_cart_submit" class="button button-primary" style="padding: 10px 20px;">' . esc_html__('Add to Cart', 'user-manager') . '</button>';
+		$output .= '<button type="submit" name="bulk_add_to_cart_submit" value="1" class="button button-primary" style="padding: 10px 20px;">' . esc_html__('Add to Cart', 'user-manager') . '</button>';
 		$output .= '</form>';
 		$output .= '</div>';
 
@@ -2175,24 +2364,53 @@ final class User_Manager_Core {
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 			return;
 		}
-		if (empty($_POST['bulk_add_to_cart_submit'])) {
+		if (!isset($_POST['bulk_add_to_cart_submit'])) {
 			return;
 		}
 
+		self::$bulk_add_to_cart_debug_trace = [];
+		self::$bulk_add_to_cart_media_upload_info = [];
+
+		$options          = get_option('bulk_add_to_cart_settings', []);
+		$identifier_col   = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
+		$identifier_type  = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
+		$quantity_col     = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
+		$debug_mode       = isset($options['debug_mode']) ? (string) $options['debug_mode'] : '0';
+		$debug_enabled    = $debug_mode === '1' || self::is_bulk_add_to_cart_debug_requested();
+		$debug_trace      = [];
+
+		self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'request_start', 'Bulk Add to Cart upload request received.');
+
 		if (empty($_POST['bulk_add_to_cart_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_nonce'])), 'bulk_add_to_cart_upload')) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_nonce', 'Nonce verification failed.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(esc_html__('Security check failed. Please try again.', 'user-manager'), 'error');
 			return;
 		}
 
 		if (empty($_FILES['csv_file']) || !isset($_FILES['csv_file']['error']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_upload', 'Upload payload missing or upload error code was returned.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(esc_html__('Error uploading file. Please try again.', 'user-manager'), 'error');
 			return;
+		}
+
+		if (function_exists('wc_load_cart')) {
+			wc_load_cart();
 		}
 
 		if (!function_exists('WC') || !WC()->cart) {
 			if (function_exists('WC')) {
 				WC()->cart = new WC_Cart();
 			} else {
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_cart', 'WooCommerce cart could not be initialized.');
+				if ($debug_enabled) {
+					self::$bulk_add_to_cart_debug_trace = $debug_trace;
+				}
 				wc_add_notice(esc_html__('WooCommerce cart is not available.', 'user-manager'), 'error');
 				return;
 			}
@@ -2200,50 +2418,130 @@ final class User_Manager_Core {
 
 		$file       = $_FILES['csv_file'];
 		$filename   = isset($file['name']) ? sanitize_file_name(wp_unslash($file['name'])) : 'upload.csv';
+		$file_size  = isset($file['size']) ? (int) $file['size'] : 0;
+		$file_type  = isset($file['type']) ? (string) $file['type'] : '';
+		$tmp_name   = isset($file['tmp_name']) ? (string) $file['tmp_name'] : '';
 		$timestamp  = current_time('timestamp');
 		$new_name   = $timestamp . '-' . $filename;
 		$upload_dir = self::get_bulk_add_to_cart_upload_dir();
 		$upload_path = $upload_dir . $new_name;
 
+		self::bulk_add_to_cart_append_debug_trace(
+			$debug_trace,
+			0,
+			'upload_meta',
+			'File "' . $filename . '" (' . $file_size . ' bytes, MIME: ' . ($file_type !== '' ? $file_type : 'unknown') . ').'
+		);
+
+		if ($debug_enabled) {
+			wc_add_notice(
+				'Upload metadata - Name: ' . $filename .
+				', Size(bytes): ' . $file_size .
+				', MIME: ' . ($file_type !== '' ? $file_type : 'unknown') .
+				', Temp exists: ' . (is_file($tmp_name) ? 'yes' : 'no'),
+				'notice'
+			);
+		}
+
 		if (!move_uploaded_file($file['tmp_name'], $upload_path)) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_move_uploaded_file', 'move_uploaded_file() failed.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(esc_html__('Error saving file. Please try again.', 'user-manager'), 'error');
 			return;
 		}
 
+		if ($debug_enabled) {
+			wc_add_notice('Upload saved to: ' . $upload_path, 'notice');
+		}
+		self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'upload_saved', 'CSV file saved to plugin upload directory.');
+
+		$uploaded_file_url = content_url('bulk-add-to-cart-import-files/' . rawurlencode($new_name));
+		$request_url = self::bulk_add_to_cart_get_current_request_url();
+		$media_info = self::bulk_add_to_cart_upload_file_to_media_library($upload_path, $new_name, $request_url);
+		$activity_url = !empty($media_info['attachment_url']) ? (string) $media_info['attachment_url'] : $uploaded_file_url;
+		$media_info['activity_url'] = $activity_url;
+		$media_info['raw_upload_url'] = $uploaded_file_url;
+		self::$bulk_add_to_cart_media_upload_info = $media_info;
+		self::add_user_activity((int) get_current_user_id(), __('Bulk Add to Cart CSV Upload', 'user-manager'), $activity_url);
+
+		if (!empty($media_info['attachment_id'])) {
+			self::bulk_add_to_cart_append_debug_trace(
+				$debug_trace,
+				0,
+				'media_uploaded',
+				'Stored in Media Library as attachment #' . (int) $media_info['attachment_id'] . '.'
+			);
+		} elseif (!empty($media_info['error'])) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'media_upload_error', (string) $media_info['error']);
+			if ($debug_enabled) {
+				wc_add_notice('Media Library upload error: ' . (string) $media_info['error'], 'notice');
+			}
+		}
+
 		$handle = fopen($upload_path, 'r');
 		if (!$handle) {
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_fopen', 'Could not open saved CSV file for reading.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(esc_html__('Error reading file. Please try again.', 'user-manager'), 'error');
 			return;
 		}
 
-		$headers = fgetcsv($handle);
+		$headers = false;
+		$leading_blank_rows = 0;
+		$csv_line_number = 0;
+		while (($header_row = fgetcsv($handle)) !== false) {
+			$csv_line_number++;
+			if (!self::bulk_add_to_cart_row_has_data($header_row)) {
+				$leading_blank_rows++;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'skip_blank_before_header', 'Blank row skipped before header detection.');
+				continue;
+			}
+			$headers = $header_row;
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'header_detected', 'Header row detected: ' . implode(', ', array_map('trim', $header_row)));
+			break;
+		}
 		if (!$headers) {
 			fclose($handle);
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_header_missing', 'No non-empty header row found.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(esc_html__('Invalid CSV format. Please check the file structure.', 'user-manager'), 'error');
 			return;
 		}
 
-		$options          = get_option('bulk_add_to_cart_settings', []);
-		$identifier_col   = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
-		$identifier_type  = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
-		$quantity_col     = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
-		$debug_mode       = isset($options['debug_mode']) ? (string) $options['debug_mode'] : '0';
+		$normalized_headers = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], $headers);
+		$normalized_lookup  = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], [$identifier_col, $quantity_col]);
+		$identifier_lookup  = $normalized_lookup[0] ?? 'product_id';
+		$quantity_lookup    = $normalized_lookup[1] ?? 'quantity';
 
-		if ($debug_mode === '1') {
+		if ($debug_enabled) {
 			wc_add_notice('CSV Headers: ' . implode(', ', $headers), 'notice');
+			wc_add_notice('Normalized Headers: ' . implode(', ', $normalized_headers), 'notice');
 			wc_add_notice(
 				'Using settings - Identifier Column: ' . $identifier_col .
 				', Type: ' . $identifier_type .
 				', Quantity Column: ' . $quantity_col,
 				'notice'
 			);
+			wc_add_notice('Leading blank rows skipped before header: ' . $leading_blank_rows, 'notice');
 		}
 
-		$lower_headers    = array_map('strtolower', $headers);
-		$identifier_index = array_search(strtolower($identifier_col), $lower_headers, true);
-		$quantity_index   = array_search(strtolower($quantity_col), $lower_headers, true);
+		$identifier_index = array_search($identifier_lookup, $normalized_headers, true);
+		$quantity_index   = array_search($quantity_lookup, $normalized_headers, true);
 
-		if ($debug_mode === '1') {
+		self::bulk_add_to_cart_append_debug_trace(
+			$debug_trace,
+			0,
+			'column_lookup',
+			'Identifier column index: ' . ($identifier_index !== false ? (string) $identifier_index : 'not found') . '; Quantity column index: ' . ($quantity_index !== false ? (string) $quantity_index : 'not found') . '.'
+		);
+
+		if ($debug_enabled) {
 			wc_add_notice(
 				'Column indices - Identifier: ' . ($identifier_index !== false ? $identifier_index : 'not found') .
 				', Quantity: ' . ($quantity_index !== false ? $quantity_index : 'not found'),
@@ -2253,6 +2551,10 @@ final class User_Manager_Core {
 
 		if ($identifier_index === false || $quantity_index === false) {
 			fclose($handle);
+			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_missing_columns', 'Required columns were not found in header.');
+			if ($debug_enabled) {
+				self::$bulk_add_to_cart_debug_trace = $debug_trace;
+			}
 			wc_add_notice(
 				sprintf(
 					esc_html__('Required columns not found. Looking for "%1$s" and "%2$s".', 'user-manager'),
@@ -2268,178 +2570,265 @@ final class User_Manager_Core {
 		$error_count          = 0;
 		$errors               = [];
 		$successful_additions = [];
+		$total_items_added    = 0;
+		$line_item_results    = [];
 		$row_number           = 1;
+		$blank_rows_skipped   = 0;
+		$zero_qty_skipped     = 0;
+		$data_rows_seen       = 0;
 
 		while (($row = fgetcsv($handle)) !== false) {
+			$csv_line_number++;
+			$data_rows_seen++;
+			if (!self::bulk_add_to_cart_row_has_data($row)) {
+				$blank_rows_skipped++;
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'skip_blank_row', 'Blank data row skipped.');
+				continue;
+			}
 			$row_number++;
 			$identifier = isset($row[$identifier_index]) ? trim((string) $row[$identifier_index]) : '';
-			$quantity   = isset($row[$quantity_index]) ? (int) $row[$quantity_index] : 0;
+			$quantity_raw = isset($row[$quantity_index]) ? (string) $row[$quantity_index] : '';
+			$quantity   = self::bulk_add_to_cart_parse_quantity($quantity_raw);
 
-			if ($debug_mode === '1') {
-				wc_add_notice('Processing row ' . $row_number . ' - Identifier: ' . $identifier . ', Quantity: ' . $quantity, 'notice');
-			}
-
-			if ($identifier === '' || $quantity <= 0) {
-				$error_count++;
-				$errors[] = sprintf(
-					esc_html__('Row %1$d: Invalid identifier or quantity (Identifier: "%2$s", Quantity: "%3$s")', 'user-manager'),
-					$row_number,
-					esc_html($identifier),
-					isset($row[$quantity_index]) ? esc_html((string) $row[$quantity_index]) : ''
+			if ($quantity <= 0) {
+				$zero_qty_skipped++;
+				self::bulk_add_to_cart_append_debug_trace(
+					$debug_trace,
+					$csv_line_number,
+					'skip_zero_or_blank_quantity',
+					'Identifier "' . ($identifier !== '' ? $identifier : '(empty)') . '" skipped because quantity "' . $quantity_raw . '" parses to 0.'
 				);
 				continue;
 			}
-
-			$product = null;
-			switch ($identifier_type) {
-				case 'product_id':
-					$product = wc_get_product($identifier);
-					break;
-				case 'product_sku':
-					$product_id = wc_get_product_id_by_sku($identifier);
-					$product    = $product_id ? wc_get_product($product_id) : null;
-					break;
-				case 'product_slug':
-					if (function_exists('wc_get_product_id_by_slug')) {
-						$product_id = wc_get_product_id_by_slug($identifier);
-						$product    = $product_id ? wc_get_product($product_id) : null;
-					}
-					break;
-				case 'product_title':
-					global $wpdb;
-					$product_id = $wpdb->get_var(
-						$wpdb->prepare(
-							"SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type = 'product'",
-							$identifier
-						)
-					);
-					$product = $product_id ? wc_get_product($product_id) : null;
-					break;
-				case 'meta_field':
-					global $wpdb;
-					$meta_field_name = isset($options['meta_field_name']) ? (string) $options['meta_field_name'] : '';
-					if ($meta_field_name !== '') {
-						$product_id = $wpdb->get_var(
-							$wpdb->prepare(
-								"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value = %s",
-								$meta_field_name,
-								$identifier
-							)
-						);
-						$product = $product_id ? wc_get_product($product_id) : null;
-					}
-					break;
-			}
-
-			if ($debug_mode === '1') {
-				wc_add_notice(
-					'Product lookup for ' . $identifier . ': ' . ($product ? 'Found' : 'Not found'),
-					'notice'
+			if ($identifier === '') {
+				$error_count++;
+				$message = sprintf(
+					esc_html__('Row %1$d: Missing identifier (Quantity: "%2$s")', 'user-manager'),
+					$row_number,
+					esc_html($quantity_raw)
 				);
+				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => '',
+					'product_title' => '',
+					'variation'     => '',
+					'qty_added'     => 0,
+					'note'          => (string) __('Missing identifier; row not added.', 'user-manager'),
+				];
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_missing_identifier', wp_strip_all_tags($message));
+				continue;
 			}
 
+			$product = self::bulk_add_to_cart_find_product($identifier, $identifier_type, $options);
 			if (!$product) {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Product not found: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
 					esc_html((string) $quantity)
 				);
+				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => $identifier,
+					'product_title' => '',
+					'variation'     => '',
+					'qty_added'     => 0,
+					'note'          => (string) __('Product not found; row not added.', 'user-manager'),
+				];
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_product_not_found', wp_strip_all_tags($message));
 				continue;
 			}
+			[$product_title, $product_variation] = self::bulk_add_to_cart_get_product_title_and_variation($product);
+			$product_id_for_line = (string) $product->get_id();
 
 			if (!$product->is_purchasable()) {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Product not purchasable: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
 					esc_html((string) $quantity)
 				);
+				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => $product_id_for_line,
+					'product_title' => $product_title,
+					'variation'     => $product_variation,
+					'qty_added'     => 0,
+					'note'          => (string) __('Product is not purchasable; row not added.', 'user-manager'),
+				];
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_not_purchasable', wp_strip_all_tags($message));
 				continue;
 			}
 
 			if ($product->managing_stock() && !$product->has_enough_stock($quantity)) {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Insufficient stock for: %2$s (Requested: %3$s, Available: %4$s)', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
 					esc_html((string) $quantity),
 					esc_html((string) $product->get_stock_quantity())
 				);
+				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => $product_id_for_line,
+					'product_title' => $product_title,
+					'variation'     => $product_variation,
+					'qty_added'     => 0,
+					'note'          => sprintf(
+						/* translators: 1: requested qty, 2: available qty */
+						__('Insufficient stock (requested %1$s, available %2$s); row not added.', 'user-manager'),
+						(string) $quantity,
+						(string) $product->get_stock_quantity()
+					),
+				];
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_insufficient_stock', wp_strip_all_tags($message));
 				continue;
 			}
 
-			$cart_item_key = WC()->cart->add_to_cart($product->get_id(), $quantity);
+			$cart_item_key = self::bulk_add_to_cart_add_product_to_cart($product, $quantity);
 			if ($cart_item_key) {
 				$success_count++;
+				$total_items_added += $quantity;
 				$name = $product->get_name();
 				if (!isset($successful_additions[$name])) {
 					$successful_additions[$name] = 0;
 				}
 				$successful_additions[$name] += $quantity;
-				if ($debug_mode === '1') {
-					wc_add_notice('Successfully added product ' . $identifier . ' to cart', 'success');
-				}
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'success',
+					'product_id'    => $product_id_for_line,
+					'product_title' => $product_title,
+					'variation'     => $product_variation,
+					'qty_added'     => $quantity,
+					'note'          => (string) __('Added to cart.', 'user-manager'),
+				];
+				self::bulk_add_to_cart_append_debug_trace(
+					$debug_trace,
+					$csv_line_number,
+					'added_to_cart',
+					'Added "' . $identifier . '" (qty ' . $quantity . ') to cart.'
+				);
 			} else {
 				$error_count++;
-				$errors[] = sprintf(
+				$message = sprintf(
 					esc_html__('Row %1$d: Failed to add to cart: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
 					esc_html($identifier),
 					esc_html((string) $quantity)
 				);
-				if ($debug_mode === '1') {
-					wc_add_notice('Failed to add product ' . $identifier . ' to cart', 'error');
-				}
+				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => $product_id_for_line,
+					'product_title' => $product_title,
+					'variation'     => $product_variation,
+					'qty_added'     => 0,
+					'note'          => (string) __('Could not add to cart (WooCommerce rejected this row).', 'user-manager'),
+				];
+				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_add_to_cart_failed', wp_strip_all_tags($message));
 			}
 		}
 
 		fclose($handle);
 
-		if ($success_count > 0) {
-			wc_add_notice(
-				sprintf(
-					/* translators: %d: number of products */
-					_n('%d product added to cart.', '%d products added to cart.', $success_count, 'user-manager'),
-					$success_count
-				),
-				'success'
-			);
+		$history_confirmation_messages = [];
+		$line_notice_messages = [];
 
-			if (!empty($successful_additions)) {
-				$details = '<ul style="margin-left: 20px;">';
-				foreach ($successful_additions as $product_name => $qty) {
-					$details .= sprintf('<li>%s: %d</li>', esc_html($product_name), (int) $qty);
-				}
-				$details .= '</ul>';
-				wc_add_notice($details, 'success');
-			}
+		if ($total_items_added > 0) {
+			$summary_message_plain = sprintf(
+				/* translators: %d: total quantity of items added */
+				_n('%d item total was added to cart.', '%d items total were added to cart.', $total_items_added, 'user-manager'),
+				$total_items_added
+			);
+			$summary_message = $summary_message_plain;
+			$summary_message .= ' <a href="' . esc_url(wc_get_cart_url()) . '" class="button wc-forward">' . esc_html__('View cart', 'user-manager') . '</a>';
+			wc_add_notice($summary_message, 'success', ['um_bulk_add_to_cart_keep_visible' => 1]);
+			$history_confirmation_messages[] = $summary_message_plain;
 		}
 
 		if ($error_count > 0) {
-			wc_add_notice(
-				sprintf(
-					/* translators: %d: number of products */
-					_n('%d product could not be added.', '%d products could not be added.', $error_count, 'user-manager'),
-					$error_count
-				),
-				'error'
+			$error_summary_message = sprintf(
+				/* translators: %d: number of products */
+				_n('%d product could not be added.', '%d products could not be added.', $error_count, 'user-manager'),
+				$error_count
 			);
+			wc_add_notice($error_summary_message, 'error');
+			$history_confirmation_messages[] = $error_summary_message;
+		}
 
-			if (!empty($errors)) {
-				foreach ($errors as $msg) {
-					wc_add_notice($msg, 'error');
+		if (!empty($line_item_results)) {
+			$line_notice = '<strong>' . esc_html__('Details:', 'user-manager') . '</strong>';
+			$line_notice .= '<ul style="margin:8px 0 0 20px;">';
+			foreach ($line_item_results as $entry) {
+				$is_success = (($entry['status'] ?? '') === 'success');
+				$line_text = sprintf(
+					/* translators: 1: product ID, 2: product title, 3: variation label, 4: Added/Error, 5: qty added */
+					__('ID: %1$s %2$s %3$s %4$s (%5$s)', 'user-manager'),
+					(string) (!empty($entry['product_id']) ? $entry['product_id'] : '—'),
+					(string) (!empty($entry['product_title']) ? $entry['product_title'] : '—'),
+					(string) (!empty($entry['variation']) ? $entry['variation'] : '—'),
+					(string) ($is_success ? __('Added', 'user-manager') : __('Error', 'user-manager')),
+					(string) ($entry['qty_added'] ?? 0)
+				);
+				if (!$is_success && !empty($entry['note'])) {
+					$line_text .= ' ' . sprintf(
+						/* translators: %s: error note */
+						__('Note: %s', 'user-manager'),
+						(string) $entry['note']
+					);
 				}
+				$line_notice_messages[] = $line_text;
+				$line_notice .= '<li>' . esc_html($line_text) . '</li>';
 			}
+			$line_notice .= '</ul>';
+			wc_add_notice($line_notice, 'notice', ['um_bulk_add_to_cart_keep_visible' => 1]);
+		}
+		self::bulk_add_to_cart_append_debug_trace(
+			$debug_trace,
+			0,
+			'summary',
+			'Rows seen: ' . $data_rows_seen . '; blank rows skipped: ' . $blank_rows_skipped . '; zero/blank quantity rows skipped: ' . $zero_qty_skipped . '; rows added: ' . $success_count . '; total items added: ' . $total_items_added . '; errors: ' . $error_count . '.'
+		);
+		if ($debug_enabled) {
+			wc_add_notice(
+				'Processing summary - Rows seen: ' . $data_rows_seen .
+				', Blank rows skipped: ' . $blank_rows_skipped .
+				', Zero/blank quantity rows skipped: ' . $zero_qty_skipped .
+				', Rows added: ' . $success_count .
+				', Total items added: ' . $total_items_added .
+				', Errors: ' . $error_count,
+				'notice'
+			);
+			self::$bulk_add_to_cart_debug_trace = $debug_trace;
 		}
 
 		$current_user = wp_get_current_user();
 		$history      = get_option('bulk_add_to_cart_history', []);
 		if (!is_array($history)) {
 			$history = [];
+		}
+		$media_info            = self::$bulk_add_to_cart_media_upload_info;
+		$media_attachment_id   = !empty($media_info['attachment_id']) ? (int) $media_info['attachment_id'] : 0;
+		$media_attachment_url  = !empty($media_info['attachment_url']) ? (string) $media_info['attachment_url'] : '';
+		$history_file_url      = $media_attachment_url;
+		if ($history_file_url === '' && !empty($media_info['activity_url'])) {
+			$history_file_url = (string) $media_info['activity_url'];
+		}
+		if ($history_file_url === '') {
+			$history_file_url = content_url('bulk-add-to-cart-import-files/' . rawurlencode($new_name));
 		}
 
 		array_unshift(
@@ -2448,21 +2837,532 @@ final class User_Manager_Core {
 				'timestamp'      => current_time('mysql'),
 				'user_id'        => $current_user->ID,
 				'username'       => $current_user->user_login,
+				'user_email'     => (string) ($current_user->user_email ?? ''),
 				'filename'       => $new_name,
 				'success_count'  => $success_count,
+				'total_items_added' => $total_items_added,
 				'error_count'    => $error_count,
 				'errors'         => $errors,
 				'successes'      => $successful_additions,
+				'line_item_results' => $line_item_results,
+				'confirmation_messages' => $history_confirmation_messages,
+				'detail_messages' => $line_notice_messages,
+				'media_attachment_id' => $media_attachment_id,
+				'media_attachment_url' => $media_attachment_url,
+				'file_url' => $history_file_url,
 			]
 		);
 		$history = array_slice($history, 0, 100);
 		update_option('bulk_add_to_cart_history', $history);
 
-		$options = get_option('bulk_add_to_cart_settings', []);
-		if (isset($options['redirect_to_cart']) && $options['redirect_to_cart'] === '1') {
+		if (isset($options['redirect_to_cart']) && $options['redirect_to_cart'] === '1' && !$debug_enabled) {
 			wp_safe_redirect(wc_get_cart_url());
 			exit;
 		}
+	}
+
+	/**
+	 * Download a basic sample CSV for Bulk Add to Cart.
+	 */
+	public static function bulk_add_to_cart_maybe_download_sample_csv(): void {
+		if (is_admin()) {
+			return;
+		}
+		if (!isset($_GET['um_bulk_add_to_cart_sample'])) {
+			return;
+		}
+		if (!class_exists('WooCommerce')) {
+			wp_die(esc_html__('WooCommerce is required to download this CSV.', 'user-manager'));
+		}
+		if (!is_user_logged_in()) {
+			wp_die(esc_html__('Please log in to download this CSV.', 'user-manager'));
+		}
+
+		$options           = get_option('bulk_add_to_cart_settings', []);
+		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
+		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
+		if ($identifier_column === '') {
+			$identifier_column = 'product_id';
+		}
+		if ($quantity_column === '') {
+			$quantity_column = 'quantity';
+		}
+
+		nocache_headers();
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename=bulk-add-to-cart-sample.csv');
+
+		$out = fopen('php://output', 'w');
+		if (!$out) {
+			exit;
+		}
+
+		fputcsv($out, [$identifier_column, $quantity_column, 'product_title', 'product_variation']);
+		fwrite($out, "\r\n");
+		fputcsv($out, ['123', '1', 'Sample Product', '']);
+		fputcsv($out, ['456', '2', 'Sample Variation Product', 'Size: M | Color: Blue']);
+		fclose($out);
+		exit;
+	}
+
+	/**
+	 * Download a CSV prefilled with all products/variations and zero quantities.
+	 *
+	 * Extra columns (like product title / variation summary) are informational and
+	 * ignored by the uploader, which only reads the configured identifier + quantity columns.
+	 */
+	public static function bulk_add_to_cart_maybe_download_sample_with_product_data(): void {
+		if (is_admin()) {
+			return;
+		}
+		if (!isset($_GET['um_bulk_add_to_cart_sample_data'])) {
+			return;
+		}
+		if (!class_exists('WooCommerce')) {
+			wp_die(esc_html__('WooCommerce is required to download this CSV.', 'user-manager'));
+		}
+		if (!is_user_logged_in()) {
+			wp_die(esc_html__('Please log in to download this CSV.', 'user-manager'));
+		}
+
+		$options           = get_option('bulk_add_to_cart_settings', []);
+		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
+		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
+		if ($identifier_column === '') {
+			$identifier_column = 'product_id';
+		}
+		if ($quantity_column === '') {
+			$quantity_column = 'quantity';
+		}
+
+		$ids = get_posts([
+			'post_type'              => ['product', 'product_variation'],
+			'post_status'            => ['publish', 'private'],
+			'posts_per_page'         => -1,
+			'orderby'                => 'ID',
+			'order'                  => 'ASC',
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		]);
+
+		nocache_headers();
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename=bulk-add-to-cart-sample-with-product-data.csv');
+
+		$out = fopen('php://output', 'w');
+		if (!$out) {
+			exit;
+		}
+
+		fputcsv($out, [$identifier_column, $quantity_column, 'product_title', 'product_variation']);
+		foreach ($ids as $product_id) {
+			$product_id = absint($product_id);
+			if ($product_id <= 0) {
+				continue;
+			}
+
+			$title = (string) get_the_title($product_id);
+			$type  = get_post_type($product_id);
+			$variation_summary = '';
+			if ($type === 'product_variation') {
+				$variation_product = wc_get_product($product_id);
+				if ($variation_product && method_exists($variation_product, 'get_variation_attributes')) {
+					$pairs = [];
+					foreach ((array) $variation_product->get_variation_attributes() as $attr_key => $attr_value) {
+						$clean_key = str_replace('attribute_', '', (string) $attr_key);
+						$label     = function_exists('wc_attribute_label') ? wc_attribute_label($clean_key) : $clean_key;
+						$value     = (string) $attr_value;
+						if ($value === '' || $value === '0') {
+							continue;
+						}
+						$pairs[] = $label . ': ' . $value;
+					}
+					if (!empty($pairs)) {
+						$variation_summary = implode(' | ', $pairs);
+					}
+				}
+			}
+
+			fputcsv($out, [(string) $product_id, '0', $title, $variation_summary]);
+		}
+
+		fclose($out);
+		exit;
+	}
+
+	/**
+	 * URL debug flag for Bulk Add to Cart frontend.
+	 */
+	private static function is_bulk_add_to_cart_debug_requested(): bool {
+		if (!isset($_GET['um_bulk_add_to_cart_debug'])) {
+			return false;
+		}
+
+		$raw = sanitize_text_field(wp_unslash($_GET['um_bulk_add_to_cart_debug']));
+		$raw = strtolower(trim($raw));
+
+		return $raw !== '' && $raw !== '0' && $raw !== 'false' && $raw !== 'no';
+	}
+
+	/**
+	 * Check whether a parsed CSV row contains any non-empty cell value.
+	 *
+	 * @param mixed $row CSV row from fgetcsv().
+	 */
+	private static function bulk_add_to_cart_row_has_data($row): bool {
+		if (!is_array($row) || empty($row)) {
+			return false;
+		}
+		foreach ($row as $cell) {
+			if (trim((string) $cell) !== '') {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Append one debug trace row for CSV upload troubleshooting.
+	 *
+	 * @param array<int,array{line:int,status:string,message:string}> $trace
+	 */
+	private static function bulk_add_to_cart_append_debug_trace(array &$trace, int $line, string $status, string $message): void {
+		$trace[] = [
+			'line'    => $line,
+			'status'  => $status,
+			'message' => $message,
+		];
+	}
+
+	/**
+	 * Build current request URL for logging/attachment descriptions.
+	 */
+	private static function bulk_add_to_cart_get_current_request_url(): string {
+		$scheme = (is_ssl() || (isset($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) === 'on')) ? 'https://' : 'http://';
+		$host   = isset($_SERVER['HTTP_HOST']) ? (string) $_SERVER['HTTP_HOST'] : (string) parse_url(home_url(), PHP_URL_HOST);
+		$uri    = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/';
+		return esc_url_raw($scheme . $host . $uri);
+	}
+
+	/**
+	 * Copy uploaded CSV into Media Library with uploader/source metadata.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function bulk_add_to_cart_upload_file_to_media_library(string $source_path, string $filename, string $source_url): array {
+		$result = [
+			'attachment_id'  => 0,
+			'attachment_url' => '',
+			'error'          => '',
+		];
+
+		if (!is_file($source_path)) {
+			$result['error'] = 'Source CSV does not exist.';
+			return $result;
+		}
+
+		$uploads = wp_upload_dir();
+		if (!empty($uploads['error'])) {
+			$result['error'] = 'wp_upload_dir error: ' . (string) $uploads['error'];
+			return $result;
+		}
+
+		$target_dir = trailingslashit((string) ($uploads['path'] ?? ''));
+		if ($target_dir === '') {
+			$result['error'] = 'Uploads path is empty.';
+			return $result;
+		}
+		wp_mkdir_p($target_dir);
+
+		$target_name = wp_unique_filename($target_dir, $filename);
+		$target_path = $target_dir . $target_name;
+		if (!copy($source_path, $target_path)) {
+			$result['error'] = 'Failed to copy CSV into uploads directory.';
+			return $result;
+		}
+
+		$filetype = wp_check_filetype($target_name, null);
+		$mime     = !empty($filetype['type']) ? (string) $filetype['type'] : 'text/csv';
+
+		$user = wp_get_current_user();
+		$user_login = (string) ($user->user_login ?? '');
+		$user_email = (string) ($user->user_email ?? '');
+		$user_id    = (int) ($user->ID ?? 0);
+		$uploaded_at = current_time('mysql');
+		$description = sprintf(
+			/* translators: 1: username, 2: user ID, 3: user email, 4: datetime, 5: source URL */
+			__('Bulk Add to Cart CSV uploaded by %1$s (ID: %2$d, email: %3$s) on %4$s from URL: %5$s', 'user-manager'),
+			$user_login !== '' ? $user_login : 'unknown',
+			$user_id,
+			$user_email !== '' ? $user_email : 'unknown',
+			$uploaded_at,
+			$source_url
+		);
+
+		$attachment = [
+			'post_mime_type' => $mime,
+			'post_title'     => sanitize_text_field((string) pathinfo($target_name, PATHINFO_FILENAME)),
+			'post_content'   => $description,
+			'post_status'    => 'inherit',
+		];
+
+		$attachment_id = wp_insert_attachment($attachment, $target_path);
+		if (is_wp_error($attachment_id) || !$attachment_id) {
+			$result['error'] = is_wp_error($attachment_id) ? $attachment_id->get_error_message() : 'wp_insert_attachment failed.';
+			return $result;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$attachment_meta = wp_generate_attachment_metadata((int) $attachment_id, $target_path);
+		if (is_array($attachment_meta)) {
+			wp_update_attachment_metadata((int) $attachment_id, $attachment_meta);
+		}
+
+		update_post_meta((int) $attachment_id, '_um_bulk_add_to_cart_uploaded_by_user_id', $user_id);
+		update_post_meta((int) $attachment_id, '_um_bulk_add_to_cart_uploaded_at', $uploaded_at);
+		update_post_meta((int) $attachment_id, '_um_bulk_add_to_cart_source_url', esc_url_raw($source_url));
+		update_post_meta((int) $attachment_id, '_um_bulk_add_to_cart_original_filename', $filename);
+
+		$result['attachment_id'] = (int) $attachment_id;
+		$result['attachment_url'] = (string) wp_get_attachment_url((int) $attachment_id);
+		return $result;
+	}
+
+	/**
+	 * Return display-ready product title + variation text.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return array{0:string,1:string}
+	 */
+	private static function bulk_add_to_cart_get_product_title_and_variation($product): array {
+		if (!$product || !is_object($product) || !method_exists($product, 'is_type')) {
+			return ['', ''];
+		}
+
+		if ($product->is_type('variation')) {
+			$parent_title = '';
+			$parent_id = method_exists($product, 'get_parent_id') ? (int) $product->get_parent_id() : 0;
+			if ($parent_id > 0) {
+				$parent = wc_get_product($parent_id);
+				if ($parent && is_object($parent) && method_exists($parent, 'get_name')) {
+					$parent_title = (string) $parent->get_name();
+				}
+			}
+			$title = $parent_title !== '' ? $parent_title : (method_exists($product, 'get_name') ? (string) $product->get_name() : '');
+			$variation = '';
+			if (function_exists('wc_get_formatted_variation')) {
+				$variation = trim(wp_strip_all_tags((string) wc_get_formatted_variation($product, true, true, true)));
+			}
+			return [$title, $variation];
+		}
+
+		$title = method_exists($product, 'get_name') ? (string) $product->get_name() : '';
+		return [$title, ''];
+	}
+
+	/**
+	 * Keep only explicitly marked notices visible during debug mode.
+	 *
+	 * @param array<string,mixed> $notice
+	 */
+	private static function bulk_add_to_cart_notice_should_remain_visible(array $notice): bool {
+		$data = isset($notice['data']) && is_array($notice['data']) ? $notice['data'] : [];
+		return !empty($data['um_bulk_add_to_cart_keep_visible']);
+	}
+
+	/**
+	 * Flatten WooCommerce notices into plain-text debug lines.
+	 *
+	 * @param array<string,array<int,array<string,mixed>>> $notices
+	 * @return array<int,string>
+	 */
+	private static function bulk_add_to_cart_flatten_notices_for_debug(array $notices): array {
+		$lines = [];
+		foreach ($notices as $type => $bucket) {
+			if (!is_array($bucket)) {
+				continue;
+			}
+			foreach ($bucket as $notice) {
+				$message = isset($notice['notice']) ? (string) $notice['notice'] : '';
+				if ($message === '') {
+					continue;
+				}
+				$message = str_replace(["\r\n", "\r"], "\n", $message);
+				$message = preg_replace('/<\s*br\s*\/?>/i', "\n", $message);
+				$message = str_ireplace('</li>', "\n", $message);
+				$message = str_ireplace('<li>', '- ', $message);
+				$plain = trim(wp_strip_all_tags((string) $message));
+				if ($plain === '') {
+					continue;
+				}
+				$parts = preg_split('/\n+/', $plain);
+				if (!is_array($parts)) {
+					$parts = [$plain];
+				}
+				foreach ($parts as $part) {
+					$part = trim((string) $part);
+					if ($part === '') {
+						continue;
+					}
+					$lines[] = $part;
+				}
+			}
+		}
+		return $lines;
+	}
+
+	/**
+	 * Normalize CSV/header keys for robust matching.
+	 */
+	private static function bulk_add_to_cart_normalize_header(string $header): string {
+		$header = str_replace("\xEF\xBB\xBF", '', $header);
+		$header = trim($header);
+		$header = strtolower($header);
+		$header = preg_replace('/\s+/', '_', $header);
+		return (string) $header;
+	}
+
+	/**
+	 * Parse CSV quantity values safely.
+	 */
+	private static function bulk_add_to_cart_parse_quantity(string $raw): int {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return 0;
+		}
+
+		$normalized = str_replace(',', '', $raw);
+		$normalized = preg_replace('/[^0-9.\-]/', '', $normalized);
+		if ($normalized === '' || !is_numeric($normalized)) {
+			return 0;
+		}
+
+		$value = (float) $normalized;
+		return $value > 0 ? (int) floor($value) : 0;
+	}
+
+	/**
+	 * Resolve product by configured identifier.
+	 *
+	 * @param string $identifier Identifier value from CSV.
+	 * @param string $identifier_type Identifier type setting.
+	 * @param array  $options Bulk settings.
+	 * @return WC_Product|null
+	 */
+	private static function bulk_add_to_cart_find_product(string $identifier, string $identifier_type, array $options) {
+		switch ($identifier_type) {
+			case 'product_id':
+				return wc_get_product(absint($identifier));
+
+			case 'product_sku':
+				$product_id = wc_get_product_id_by_sku($identifier);
+				return $product_id ? wc_get_product($product_id) : null;
+
+			case 'product_slug':
+				return self::bulk_add_to_cart_find_product_by_slug($identifier);
+
+			case 'product_title':
+				return self::bulk_add_to_cart_find_product_by_title($identifier);
+
+			case 'meta_field':
+				$meta_field_name = isset($options['meta_field_name']) ? (string) $options['meta_field_name'] : '';
+				if ($meta_field_name === '') {
+					return null;
+				}
+				return self::bulk_add_to_cart_find_product_by_meta($identifier, $meta_field_name);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Resolve product by slug (product or variation).
+	 */
+	private static function bulk_add_to_cart_find_product_by_slug(string $identifier) {
+		$slug = sanitize_title($identifier);
+		if ($slug === '') {
+			return null;
+		}
+
+		global $wpdb;
+		$product_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_name = %s AND post_type IN ('product','product_variation') AND post_status IN ('publish','private') ORDER BY post_type = 'product_variation' DESC, ID DESC LIMIT 1",
+				$slug
+			)
+		);
+
+		return $product_id ? wc_get_product((int) $product_id) : null;
+	}
+
+	/**
+	 * Resolve product by exact title (product or variation).
+	 */
+	private static function bulk_add_to_cart_find_product_by_title(string $identifier) {
+		global $wpdb;
+		$product_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type IN ('product','product_variation') AND post_status IN ('publish','private') ORDER BY post_type = 'product_variation' DESC, ID DESC LIMIT 1",
+				$identifier
+			)
+		);
+
+		return $product_id ? wc_get_product((int) $product_id) : null;
+	}
+
+	/**
+	 * Resolve product by custom meta value (product or variation).
+	 */
+	private static function bulk_add_to_cart_find_product_by_meta(string $identifier, string $meta_key) {
+		global $wpdb;
+		$product_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT pm.post_id
+				 FROM {$wpdb->postmeta} pm
+				 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+				 WHERE pm.meta_key = %s
+				   AND pm.meta_value = %s
+				   AND p.post_type IN ('product','product_variation')
+				   AND p.post_status IN ('publish','private')
+				 ORDER BY p.post_type = 'product_variation' DESC, pm.post_id DESC
+				 LIMIT 1",
+				$meta_key,
+				$identifier
+			)
+		);
+
+		return $product_id ? wc_get_product((int) $product_id) : null;
+	}
+
+	/**
+	 * Add a product (including variations) to the cart.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @param int        $quantity Quantity.
+	 * @return string|false
+	 */
+	private static function bulk_add_to_cart_add_product_to_cart($product, int $quantity) {
+		if (!$product || !function_exists('WC') || !WC()->cart) {
+			return false;
+		}
+
+		if ($product->is_type('variation')) {
+			$variation_id = (int) $product->get_id();
+			$parent_id    = (int) $product->get_parent_id();
+			if ($variation_id <= 0 || $parent_id <= 0) {
+				return false;
+			}
+
+			$attributes = method_exists($product, 'get_variation_attributes')
+				? (array) $product->get_variation_attributes()
+				: [];
+
+			return WC()->cart->add_to_cart($parent_id, $quantity, $variation_id, $attributes);
+		}
+
+		return WC()->cart->add_to_cart((int) $product->get_id(), $quantity);
 	}
 
 	/**
@@ -5462,29 +6362,12 @@ final class User_Manager_Core {
 				}
 				
 				for (var i = 0; i < options.length; i++) {
-					var optionData = options[i];
-					var optionValue = "";
-					var optionUserId = "";
-
-					if (typeof optionData === "string") {
-						optionValue = optionData;
-					} else if (optionData && typeof optionData === "object") {
-						if (typeof optionData.value === "string") {
-							optionValue = optionData.value;
-						}
-						if (typeof optionData.user_id === "number" || typeof optionData.user_id === "string") {
-							optionUserId = String(optionData.user_id);
-						}
-					}
-
-					if (optionValue === "") {
+					var value = options[i];
+					if (typeof value !== "string" || value === "") {
 						continue;
 					}
 					var optionEl = document.createElement("option");
-					optionEl.value = optionValue;
-					if (optionUserId !== "") {
-						optionEl.setAttribute("data-um-user-id", optionUserId);
-					}
+					optionEl.value = value;
 					datalistEl.appendChild(optionEl);
 				}
 				
@@ -5514,10 +6397,7 @@ final class User_Manager_Core {
 					var options = [];
 					if (response && response.success && response.data && Array.isArray(response.data.options)) {
 						options = response.data.options.filter(function(item) {
-							if (typeof item === "string") {
-								return item !== "";
-							}
-							return !!(item && typeof item === "object" && typeof item.value === "string" && item.value !== "");
+							return typeof item === "string" && item !== "";
 						});
 					}
 					sourceCache[source] = options;
@@ -5619,7 +6499,6 @@ final class User_Manager_Core {
 			border: 1px solid #c3c4c7;
 			border-radius: 4px;
 			box-shadow: 0 1px 1px rgba(0,0,0,.04);
-			max-height: 750px;
 			display: flex;
 			flex-direction: column;
 		}
@@ -5646,7 +6525,6 @@ final class User_Manager_Core {
 		}
 		.um-admin-card-body {
 			padding: 16px;
-			overflow-y: auto;
 			flex: 1;
 			min-height: 0;
 		}
@@ -5993,53 +6871,25 @@ final class User_Manager_Core {
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Login As', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_ROLE_SWITCHING ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ROLE_SWITCHING)); ?>">
-					<span class="dashicons dashicons-visibility" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Role Switching', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_COUPONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_COUPONS)); ?>">
-					<span class="dashicons dashicons-tickets-alt" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Coupons', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_BULK_COUPONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_BULK_COUPONS)); ?>">
-					<span class="dashicons dashicons-tickets-alt" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Bulk Coupons', 'user-manager'); ?>
-				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_EMAIL_USERS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_EMAIL_USERS)); ?>">
 					<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Send Email', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_EMAIL_TEMPLATES ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_EMAIL_TEMPLATES)); ?>">
-					<span class="dashicons dashicons-email" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Templates', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_ACTIVITY_LOG ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ACTIVITY_LOG)); ?>">
-					<span class="dashicons dashicons-list-view" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Admin Log', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_LOGIN_HISTORY ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_LOGIN_HISTORY)); ?>">
-					<span class="dashicons dashicons-clock" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('User Activity', 'user-manager'); ?>
 				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_REPORTS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REPORTS)); ?>">
 					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Reports', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_TOOLS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_TOOLS)); ?>">
-					<span class="dashicons dashicons-admin-tools" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Tools', 'user-manager'); ?>
-				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_SETTINGS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_SETTINGS)); ?>">
 					<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Settings', 'user-manager'); ?>
 				</a>
+				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
+					<span class="dashicons dashicons-admin-plugins" style="font-size:16px;line-height:1.4;"></span>
+					<?php esc_html_e('Add-ons', 'user-manager'); ?>
+				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_DOCUMENTATION ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_DOCUMENTATION)); ?>">
 					<span class="dashicons dashicons-book" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Docs', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_VERSIONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_VERSIONS)); ?>">
-					<span class="dashicons dashicons-backup" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Versions', 'user-manager'); ?>
 				</a>
 			</h2>
 			<?php self::render_admin_notice($message); ?>
@@ -6053,11 +6903,31 @@ final class User_Manager_Core {
 	 */
 	public static function get_current_tab(): string {
 		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : self::TAB_CREATE_USER;
+		if ($tab === self::TAB_ROLE_SWITCHING) {
+			return self::TAB_ADDONS;
+		}
+		if ($tab === self::TAB_COUPONS) {
+			return self::TAB_ADDONS;
+		}
+		if ($tab === self::TAB_BULK_COUPONS) {
+			return self::TAB_ADDONS;
+		}
+		if ($tab === self::TAB_LOGIN_HISTORY || $tab === self::TAB_ACTIVITY_LOG) {
+			return self::TAB_REPORTS;
+		}
+		if ($tab === self::TAB_TOOLS && isset($_GET['coupon_lookup_email'])) {
+			return self::TAB_REPORTS;
+		}
+		if ($tab === self::TAB_EMAIL_TEMPLATES || $tab === self::TAB_TOOLS) {
+			return self::TAB_SETTINGS;
+		}
+		if ($tab === self::TAB_VERSIONS) {
+			return self::TAB_DOCUMENTATION;
+		}
 		$allowed = [
 			self::TAB_CREATE_USER,
 			self::TAB_RESET_PASSWORD,
 			self::TAB_REMOVE_USER,
-			self::TAB_ROLE_SWITCHING,
 			self::TAB_LOGIN_AS,
 			self::TAB_BULK_CREATE,
 			self::TAB_EMAIL_USERS,
@@ -6068,6 +6938,7 @@ final class User_Manager_Core {
 			self::TAB_COUPONS,
 			self::TAB_TOOLS,
 			self::TAB_SETTINGS,
+			self::TAB_ADDONS,
 			self::TAB_REPORTS,
 			self::TAB_DOCUMENTATION,
 			self::TAB_VERSIONS,
@@ -6085,6 +6956,9 @@ final class User_Manager_Core {
 			return;
 		}
 		$settings = get_option(self::OPTION_KEY, []);
+		if (!self::is_custom_admin_notifications_addon_enabled($settings)) {
+			return;
+		}
 		$notifications = isset($settings['custom_admin_notifications']) && is_array($settings['custom_admin_notifications']) ? $settings['custom_admin_notifications'] : [];
 		if (empty($notifications)) {
 			return;
@@ -6116,6 +6990,33 @@ final class User_Manager_Core {
 			</div>
 			<?php
 		}
+	}
+
+	/**
+	 * Determine whether WP-Admin Notifications add-on is enabled.
+	 * Falls back to legacy behavior when no explicit toggle is stored.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return bool
+	 */
+	private static function is_custom_admin_notifications_addon_enabled(array $settings): bool {
+		if (array_key_exists('custom_admin_notifications_enabled', $settings)) {
+			return !empty($settings['custom_admin_notifications_enabled']);
+		}
+
+		$notifications = isset($settings['custom_admin_notifications']) && is_array($settings['custom_admin_notifications']) ? $settings['custom_admin_notifications'] : [];
+		foreach ($notifications as $notification) {
+			if (!is_array($notification)) {
+				continue;
+			}
+			$title = trim((string) ($notification['title'] ?? ''));
+			$body  = trim((string) ($notification['body'] ?? ''));
+			if ($title !== '' || $body !== '') {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -6950,106 +7851,6 @@ final class User_Manager_Core {
 	}
 
 	/**
-	 * Get activity log.
-	 * 
-	 * @param int $per_page Number of entries per page (0 for all)
-	 * @param int $offset Offset for pagination
-	 * @param string|null $action_filter Filter by action type
-	 * @return array{entries: array, total: int}
-	 */
-	public static function get_activity_log(int $per_page = 0, int $offset = 0, ?string $action_filter = null): array {
-		global $wpdb;
-		$table = $wpdb->prefix . 'um_admin_activity';
-		
-		// Build WHERE clause for action filter
-		$where = '';
-		if (!empty($action_filter)) {
-			$where = $wpdb->prepare(' WHERE action = %s', $action_filter);
-		}
-		
-		// Get total count
-		$total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}{$where}");
-		
-		// Build query with pagination
-		$query = "SELECT id, action, user_id, tool, extra, created_by, created_at FROM {$table}{$where} ORDER BY created_at DESC";
-		if ($per_page > 0) {
-			$query .= $wpdb->prepare(' LIMIT %d OFFSET %d', $per_page, $offset);
-		} else {
-			// Legacy behavior: limit to 500 if no pagination specified
-			$query .= ' LIMIT 500';
-		}
-		
-		$rows = $wpdb->get_results($query, ARRAY_A);
-		if (empty($rows)) {
-			return ['entries' => [], 'total' => $total];
-		}
-		
-		foreach ($rows as &$row) {
-			$row['extra'] = !empty($row['extra']) ? json_decode($row['extra'], true) : [];
-		}
-		unset($row);
-		
-		return ['entries' => $rows, 'total' => $total];
-	}
-
-	/**
-	 * Add activity log entry.
-	 */
-	public static function add_activity_log(string $action, int $user_id, string $tool, array $extra = []): array {
-		$settings = self::get_settings();
-		$log_enabled = array_key_exists('log_activity', $settings) ? !empty($settings['log_activity']) : true;
-		$debug_enabled = !empty($settings['log_activity_debug']);
-		
-		$debug = [
-			'action' => $action,
-			'user_id' => $user_id,
-			'tool' => $tool,
-			'extra' => $extra,
-			'log_enabled' => $log_enabled,
-			'debug_enabled' => $debug_enabled,
-			'result' => 'skipped',
-		];
-		
-		if (!$log_enabled && !$debug_enabled) {
-			$debug['reason'] = 'logging_disabled';
-			return $debug;
-		}
-		
-		global $wpdb;
-		$table = $wpdb->prefix . 'um_admin_activity';
-		$data = [
-			'action' => sanitize_text_field($action),
-			'user_id' => (int) $user_id,
-			'tool' => sanitize_text_field($tool),
-			'extra' => wp_json_encode($extra),
-			'created_by' => get_current_user_id(),
-			'created_at' => current_time('mysql'),
-		];
-		
-		$result = $wpdb->insert(
-			$table,
-			$data,
-			['%s','%d','%s','%s','%d','%s']
-		);
-		
-		if (false === $result) {
-			$debug['result'] = 'db_error';
-			$debug['error'] = $wpdb->last_error;
-			self::maybe_debug_log('Failed to insert activity log', [
-				'error' => $wpdb->last_error,
-				'action' => $action,
-				'user_id' => $user_id,
-				'tool' => $tool,
-			]);
-		} else {
-			$debug['result'] = 'success';
-			$debug['insert_id'] = (int) $wpdb->insert_id;
-		}
-		
-		return $debug;
-	}
-
-	/**
 	 * Convert timestamps to human readable relative strings.
 	 *
 	 * Accepts Unix timestamps, MySQL datetime strings, or DateTime instances.
@@ -7201,13 +8002,70 @@ final class User_Manager_Core {
 				'options' => self::get_coupon_codes_for_datalist(),
 			]);
 		}
-		if ($source === 'user_emails') {
-			wp_send_json_success([
-				'options' => self::get_user_emails_for_datalist(),
-			]);
-		}
 		
 		wp_send_json_error(['message' => __('Unsupported datalist source.', 'user-manager')], 400);
+	}
+
+	/**
+	 * AJAX handler for Login As user search (username/email).
+	 */
+	public static function ajax_search_users_for_login_as(): void {
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(['message' => __('Unauthorized', 'user-manager')], 403);
+		}
+
+		check_ajax_referer('user_manager_login_as_search', 'nonce');
+
+		$query = isset($_GET['q']) ? sanitize_text_field(wp_unslash($_GET['q'])) : '';
+		$query = trim($query);
+		if (strlen($query) < 2) {
+			wp_send_json_success(['results' => []]);
+		}
+
+		$user_query = new WP_User_Query([
+			'number'         => 20,
+			'search'         => '*' . $query . '*',
+			'search_columns' => ['user_login', 'user_email'],
+			'orderby'        => 'user_login',
+			'order'          => 'ASC',
+			'fields'         => ['ID', 'user_login', 'user_email'],
+		]);
+
+		$results = [];
+		$seen    = [];
+		foreach ($user_query->get_results() as $user) {
+			if (!is_object($user)) {
+				continue;
+			}
+
+			// WP_User_Query may return WP_User objects or lightweight row objects
+			// depending on the "fields" argument. Support both formats.
+			$user_id = isset($user->ID) ? (int) $user->ID : 0;
+			if ($user_id <= 0 || isset($seen[$user_id])) {
+				continue;
+			}
+			$seen[$user_id] = true;
+
+			$user_login = isset($user->user_login) ? (string) $user->user_login : '';
+			$user_email = isset($user->user_email) ? (string) $user->user_email : '';
+			if ($user_login === '' && $user_email === '') {
+				continue;
+			}
+
+			$label = $user_login !== '' ? $user_login : $user_email;
+			if ($user_email !== '') {
+				$label .= ' (' . $user_email . ')';
+			}
+
+			$results[] = [
+				'id'    => $user_id,
+				'label' => $label,
+				'login' => $user_login,
+				'email' => $user_email,
+			];
+		}
+
+		wp_send_json_success(['results' => $results]);
 	}
 	
 	/**
@@ -7244,44 +8102,6 @@ final class User_Manager_Core {
 		return array_values(array_unique($codes));
 	}
 	
-	/**
-	 * Get user emails for Login As lazy datalist fields.
-	 *
-	 * @return array<int,array{value:string,user_id:int}>
-	 */
-	private static function get_user_emails_for_datalist(): array {
-		$users = get_users([
-			'orderby' => 'user_email',
-			'order'   => 'ASC',
-			'fields'  => ['ID', 'user_email'],
-		]);
-
-		if (empty($users) || !is_array($users)) {
-			return [];
-		}
-
-		$options = [];
-		$seen_emails = [];
-		foreach ($users as $user) {
-			$user_id = isset($user->ID) ? (int) $user->ID : 0;
-			$email = isset($user->user_email) ? sanitize_email((string) $user->user_email) : '';
-			if ($user_id <= 0 || $email === '') {
-				continue;
-			}
-			$email_key = strtolower($email);
-			if (isset($seen_emails[$email_key])) {
-				continue;
-			}
-			$seen_emails[$email_key] = true;
-			$options[] = [
-				'value'   => $email_key,
-				'user_id' => $user_id,
-			];
-		}
-
-		return $options;
-	}
-
 	/**
 	 * AJAX handler for email preview.
 	 */
@@ -7415,7 +8235,7 @@ final class User_Manager_Core {
 			</table>
 			
 			<h4><?php esc_html_e('Detailed Log', 'user-manager'); ?></h4>
-			<div style="max-height: 400px; overflow-y: auto;">
+			<div>
 				<table class="widefat striped">
 					<thead>
 						<tr>
@@ -7472,422 +8292,22 @@ final class User_Manager_Core {
 	/**
 	 * AJAX handler for getting activity details.
 	 */
-	public static function ajax_get_activity_details(): void {
-		if (!current_user_can('manage_options')) {
-			wp_send_json_error(['message' => __('Unauthorized', 'user-manager')]);
-		}
-
-		check_ajax_referer('user_manager_get_activity_details', '_wpnonce');
-
-		$entry_id = isset($_GET['entry_id']) ? absint($_GET['entry_id']) : 0;
-		
-		if (empty($entry_id)) {
-			wp_send_json_error(['message' => __('Invalid entry ID', 'user-manager')]);
-		}
-
-		global $wpdb;
-		$table = $wpdb->prefix . 'um_admin_activity';
-		$entry = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $entry_id), ARRAY_A);
-		
-		if (!$entry) {
-			wp_send_json_error(['message' => __('Activity entry not found.', 'user-manager')]);
-		}
-
-		$entry['extra'] = !empty($entry['extra']) ? json_decode($entry['extra'], true) : [];
-
-		$user = get_user_by('ID', $entry['user_id']);
-		$created_by = get_user_by('ID', $entry['created_by']);
-		$extra = $entry['extra'] ?? [];
-		$created_ts = !empty($entry['created_at']) ? strtotime($entry['created_at']) : current_time('timestamp');
-		
-		// For post actions, user_id is the editor, not the post author
-		$is_post_action = in_array($entry['action'], ['post_created', 'post_updated', 'post_status_changed'], true);
-		$is_plugin_action = in_array($entry['action'], ['plugin_activated', 'plugin_deactivated'], true);
-
-		// Determine action label and badge
-		$action_label = $entry['action'];
-		$badge_class = 'um-status-info';
-		$notification_msg = '';
-		$email_sent = !empty($extra['email_sent']);
-		
-		switch ($entry['action']) {
-			case 'user_created':
-				$action_label = __('User Created', 'user-manager');
-				$badge_class = 'um-status-success';
-				$notification_msg = $email_sent 
-					? __('User created successfully and email sent.', 'user-manager')
-					: __('User created successfully.', 'user-manager');
-				break;
-			case 'user_updated':
-				$action_label = __('User Updated', 'user-manager');
-				$badge_class = 'um-status-warning';
-				$notification_msg = $email_sent 
-					? __('Existing user updated successfully and email sent.', 'user-manager')
-					: __('Existing user updated successfully.', 'user-manager');
-				break;
-			case 'password_reset':
-				$action_label = __('Password Reset', 'user-manager');
-				$badge_class = 'um-status-info';
-				$notification_msg = $email_sent 
-					? __('Password reset successfully and email sent.', 'user-manager')
-					: __('Password reset successfully.', 'user-manager');
-				break;
-			case 'email_sent':
-				$action_label = __('Email Sent', 'user-manager');
-				$badge_class = 'um-status-success';
-				$notification_msg = __('Email sent successfully.', 'user-manager');
-				break;
-			case 'admin_login':
-				$action_label = __('WP Admin Login', 'user-manager');
-				$badge_class = 'um-status-info';
-				$notification_msg = __('Admin user logged into wp-admin.', 'user-manager');
-				break;
-			case 'login_as_start':
-				$action_label = __('Login As – Temporary Password Set', 'user-manager');
-				$badge_class = 'um-status-warning';
-				$target_login = isset($extra['target_user_login']) ? $extra['target_user_login'] : '';
-				$target_email = isset($extra['target_user_email']) ? $extra['target_user_email'] : '';
-				if ($target_login || $target_email) {
-					$notification_msg = sprintf(
-						/* translators: 1: username, 2: email */
-						__('Temporary password set for user %1$s (%2$s).', 'user-manager'),
-						$target_login ?: __('(unknown)', 'user-manager'),
-						$target_email ?: __('(unknown)', 'user-manager')
-					);
-				} else {
-					$notification_msg = __('Temporary password set via Login As.', 'user-manager');
-				}
-				break;
-			case 'login_as_restore':
-				$action_label = __('Login As – Password Restored', 'user-manager');
-				$badge_class = 'um-status-success';
-				$notification_msg = __('Original password restored for Login As session.', 'user-manager');
-				break;
-			case 'post_created':
-				$action_label = __('Post Created', 'user-manager');
-				$badge_class = 'um-status-success';
-				$notification_msg = __('Post created successfully.', 'user-manager');
-				break;
-			case 'post_updated':
-				$action_label = __('Post Updated', 'user-manager');
-				$badge_class = 'um-status-warning';
-				$notification_msg = __('Post updated successfully.', 'user-manager');
-				break;
-			case 'post_status_changed':
-				$action_label = __('Post Status Changed', 'user-manager');
-				$badge_class = 'um-status-info';
-				$old_status = isset($extra['old_status']) ? $extra['old_status'] : '';
-				$new_status = isset($extra['new_status']) ? $extra['new_status'] : '';
-				$notification_msg = sprintf(__('Post status changed from %s to %s.', 'user-manager'), $old_status, $new_status);
-				break;
-			case 'plugin_activated':
-				$action_label = __('Plugin Activated', 'user-manager');
-				$badge_class = 'um-status-success';
-				$plugin_name = isset($extra['plugin_name']) ? $extra['plugin_name'] : '';
-				$notification_msg = $plugin_name 
-					? sprintf(__('Plugin "%s" activated successfully.', 'user-manager'), $plugin_name)
-					: __('Plugin activated successfully.', 'user-manager');
-				break;
-			case 'plugin_deactivated':
-				$action_label = __('Plugin Deactivated', 'user-manager');
-				$badge_class = 'um-status-warning';
-				$plugin_name = isset($extra['plugin_name']) ? $extra['plugin_name'] : '';
-				$notification_msg = $plugin_name 
-					? sprintf(__('Plugin "%s" deactivated.', 'user-manager'), $plugin_name)
-					: __('Plugin deactivated.', 'user-manager');
-				break;
-			case 'coupon_lookup':
-				$action_label = __('Coupon Lookup by Email', 'user-manager');
-				$badge_class = 'um-status-info';
-				$email = isset($extra['email']) ? $extra['email'] : '';
-				$result_count = isset($extra['result_count']) ? (int) $extra['result_count'] : 0;
-				$notification_msg = $email
-					? sprintf(__('Searched for coupons with email %1$s; %2$d result(s).', 'user-manager'), $email, $result_count)
-					: __('Coupon lookup was performed.', 'user-manager');
-				break;
-			case 'blog_post_import':
-				$action_label = __('Blog Post Importer', 'user-manager');
-				$badge_class = 'um-status-success';
-				$created_count = isset($extra['created_count']) ? (int) $extra['created_count'] : 0;
-				$notification_msg = sprintf(__('Created %d blog post(s).', 'user-manager'), $created_count);
-				if (!empty($extra['apply_random_image'])) {
-					$notification_msg .= ' ' . __('Random featured images applied.', 'user-manager');
-				}
-				if (!empty($extra['spread_dates_used'])) {
-					$notification_msg .= ' ' . __('Dates spread between first and last.', 'user-manager');
-				}
-				break;
-		}
-
-		// Build HTML output
-		ob_start();
-		?>
-		<table class="widefat" style="margin-bottom: 16px;">
-			<tr>
-				<td style="width: 140px;"><strong><?php esc_html_e('Action', 'user-manager'); ?></strong></td>
-				<td><span class="um-status-badge <?php echo esc_attr($badge_class); ?>"><?php echo esc_html($action_label); ?></span></td>
-			</tr>
-			<?php if ($is_post_action) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Post', 'user-manager'); ?></strong></td>
-				<td>
-					<?php if (!empty($extra['post_title'])) : ?>
-						<strong><?php echo esc_html($extra['post_title']); ?></strong>
-						<?php if (!empty($extra['edit_link'])) : ?>
-							<br><a href="<?php echo esc_url($extra['edit_link']); ?>" target="_blank"><?php esc_html_e('Edit Post', 'user-manager'); ?></a>
-						<?php endif; ?>
-						<?php if (!empty($extra['view_link'])) : ?>
-							| <a href="<?php echo esc_url($extra['view_link']); ?>" target="_blank"><?php esc_html_e('View Post', 'user-manager'); ?></a>
-						<?php endif; ?>
-					<?php else : ?>
-						<em><?php esc_html_e('N/A', 'user-manager'); ?></em>
-					<?php endif; ?>
-				</td>
-			</tr>
-			<?php if (!empty($extra['post_type_label'])) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Post Type', 'user-manager'); ?></strong></td>
-				<td><?php echo esc_html($extra['post_type_label']); ?></td>
-			</tr>
-			<?php endif; ?>
-			<?php if ($entry['action'] === 'post_status_changed') : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Status Change', 'user-manager'); ?></strong></td>
-				<td>
-					<?php 
-					$old_status = isset($extra['old_status']) ? $extra['old_status'] : '';
-					$new_status = isset($extra['new_status']) ? $extra['new_status'] : '';
-					?>
-					<span style="text-decoration: line-through; color: #646970;"><?php echo esc_html(ucfirst($old_status)); ?></span>
-					→
-					<strong style="color: #0073aa;"><?php echo esc_html(ucfirst($new_status)); ?></strong>
-				</td>
-			</tr>
-			<?php endif; ?>
-			<?php elseif ($is_plugin_action) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Plugin', 'user-manager'); ?></strong></td>
-				<td>
-					<?php if (!empty($extra['plugin_name'])) : ?>
-						<strong><?php echo esc_html($extra['plugin_name']); ?></strong>
-						<?php if (!empty($extra['plugin_url'])) : ?>
-							<br><a href="<?php echo esc_url($extra['plugin_url']); ?>" target="_blank"><?php esc_html_e('Manage Plugins', 'user-manager'); ?></a>
-						<?php endif; ?>
-					<?php else : ?>
-						<em><?php esc_html_e('N/A', 'user-manager'); ?></em>
-					<?php endif; ?>
-				</td>
-			</tr>
-			<?php if (!empty($extra['plugin_version'])) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Version', 'user-manager'); ?></strong></td>
-				<td><?php echo esc_html($extra['plugin_version']); ?></td>
-			</tr>
-			<?php endif; ?>
-			<?php if (!empty($extra['plugin_author'])) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Author', 'user-manager'); ?></strong></td>
-				<td><?php echo esc_html($extra['plugin_author']); ?></td>
-			</tr>
-			<?php endif; ?>
-			<?php if (isset($extra['network_wide']) && $extra['network_wide']) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Network Wide', 'user-manager'); ?></strong></td>
-				<td><span class="um-status-badge um-status-info"><?php esc_html_e('Yes', 'user-manager'); ?></span></td>
-			</tr>
-			<?php endif; ?>
-			<?php else : ?>
-			<tr>
-				<td><strong><?php esc_html_e('User Email', 'user-manager'); ?></strong></td>
-				<td>
-					<?php if ($user) : ?>
-						<a href="<?php echo esc_url(get_edit_user_link($user->ID)); ?>"><?php echo esc_html($user->user_email); ?></a>
-					<?php else : ?>
-						<em><?php esc_html_e('User deleted', 'user-manager'); ?></em>
-					<?php endif; ?>
-				</td>
-			</tr>
-			<?php if ($entry['action'] === 'coupon_lookup' && !empty($extra['email'])) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Email searched', 'user-manager'); ?></strong></td>
-				<td><?php echo esc_html($extra['email']); ?> (<?php echo (int) ($extra['result_count'] ?? 0); ?> <?php esc_html_e('result(s)', 'user-manager'); ?>)</td>
-			</tr>
-			<?php endif; ?>
-			<?php if ($entry['action'] === 'blog_post_import' && !empty($extra['post_titles'])) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Posts created', 'user-manager'); ?></strong></td>
-				<td><ul style="margin:0; padding-left:20px;"><?php foreach ((array) $extra['post_titles'] as $pt) : ?><li><?php echo esc_html($pt); ?></li><?php endforeach; ?></ul></td>
-			</tr>
-			<?php endif; ?>
-			<?php endif; ?>
-			<tr>
-				<td><strong><?php esc_html_e('Tool/Source', 'user-manager'); ?></strong></td>
-				<td><?php echo esc_html($entry['tool']); ?></td>
-			</tr>
-			<?php if (!empty($extra['source_file'])) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Source File', 'user-manager'); ?></strong></td>
-				<td><code><?php echo esc_html($extra['source_file']); ?></code></td>
-			</tr>
-			<?php endif; ?>
-			<tr>
-				<td><strong><?php esc_html_e('Email Sent', 'user-manager'); ?></strong></td>
-				<td>
-					<?php if ($email_sent) : ?>
-						<span class="um-status-badge um-status-success"><?php esc_html_e('Yes', 'user-manager'); ?></span>
-					<?php else : ?>
-						<span class="um-status-badge um-status-info"><?php esc_html_e('No', 'user-manager'); ?></span>
-					<?php endif; ?>
-				</td>
-			</tr>
-			<?php if (!empty($extra['template_id'])) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Email Template', 'user-manager'); ?></strong></td>
-				<td><?php echo esc_html($extra['template_id']); ?></td>
-			</tr>
-			<?php endif; ?>
-			<?php if (!empty($extra['login_url'])) : ?>
-			<tr>
-				<td><strong><?php esc_html_e('Login URL', 'user-manager'); ?></strong></td>
-				<td><code><?php echo esc_html($extra['login_url']); ?></code></td>
-			</tr>
-			<?php endif; ?>
-			<tr>
-				<td><strong><?php esc_html_e('Performed By', 'user-manager'); ?></strong></td>
-				<td><?php echo esc_html($created_by ? $created_by->display_name : __('Unknown', 'user-manager')); ?></td>
-			</tr>
-			<tr>
-				<td><strong><?php esc_html_e('Date/Time', 'user-manager'); ?></strong></td>
-				<td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $created_ts)); ?></td>
-			</tr>
-		</table>
-		
-		<?php if (!empty($extra['new_values']) && $entry['action'] === 'user_created') : ?>
-		<h4 style="margin: 16px 0 8px;"><?php esc_html_e('User Details Created', 'user-manager'); ?></h4>
-		<table class="widefat striped">
-			<thead>
-				<tr>
-					<th><?php esc_html_e('Field', 'user-manager'); ?></th>
-					<th><?php esc_html_e('Value', 'user-manager'); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ($extra['new_values'] as $field => $value) : ?>
-				<tr>
-					<td><strong><?php echo esc_html(ucwords(str_replace('_', ' ', $field))); ?></strong></td>
-					<td>
-						<?php 
-						if (is_bool($value)) {
-							echo $value ? '<span class="um-status-badge um-status-success">' . esc_html__('Yes', 'user-manager') . '</span>' : '<span class="um-status-badge um-status-info">' . esc_html__('No', 'user-manager') . '</span>';
-						} else {
-							echo esc_html($value ?: '—');
-						}
-						?>
-					</td>
-				</tr>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
-		<?php endif; ?>
-		
-		<?php if (!empty($extra['old_values']) && !empty($extra['new_values']) && $entry['action'] === 'user_updated') : ?>
-		<h4 style="margin: 16px 0 8px;"><?php esc_html_e('Changes Made', 'user-manager'); ?></h4>
-		<table class="widefat striped">
-			<thead>
-				<tr>
-					<th><?php esc_html_e('Field', 'user-manager'); ?></th>
-					<th><?php esc_html_e('Old Value', 'user-manager'); ?></th>
-					<th><?php esc_html_e('New Value', 'user-manager'); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ($extra['new_values'] as $field => $new_value) : 
-					$old_value = $extra['old_values'][$field] ?? '';
-					$changed = $old_value !== $new_value;
-				?>
-				<tr style="<?php echo $changed ? 'background: #fff8e5;' : ''; ?>">
-					<td><strong><?php echo esc_html(ucwords(str_replace('_', ' ', $field))); ?></strong></td>
-					<td><?php echo esc_html($old_value ?: '—'); ?></td>
-					<td>
-						<?php if ($changed) : ?>
-							<strong style="color: #0073aa;"><?php echo esc_html($new_value ?: '—'); ?></strong>
-						<?php else : ?>
-							<?php echo esc_html($new_value ?: '—'); ?>
-						<?php endif; ?>
-					</td>
-				</tr>
-				<?php endforeach; ?>
-				<?php if (!empty($extra['password_changed'])) : ?>
-				<tr style="background: #fff8e5;">
-					<td><strong><?php esc_html_e('Password', 'user-manager'); ?></strong></td>
-					<td>••••••••</td>
-					<td><strong style="color: #0073aa;"><?php esc_html_e('Changed', 'user-manager'); ?></strong></td>
-				</tr>
-				<?php endif; ?>
-			</tbody>
-		</table>
-		<?php endif; ?>
-		
-		<?php if ($is_post_action && !empty($extra['changes']) && $entry['action'] === 'post_updated') : ?>
-		<h4 style="margin: 16px 0 8px;"><?php esc_html_e('Changes Made', 'user-manager'); ?></h4>
-		<table class="widefat striped">
-			<thead>
-				<tr>
-					<th><?php esc_html_e('Field', 'user-manager'); ?></th>
-					<th><?php esc_html_e('Old Value', 'user-manager'); ?></th>
-					<th><?php esc_html_e('New Value', 'user-manager'); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ($extra['changes'] as $field => $change) : 
-					$old_value = $change['old'] ?? '';
-					$new_value = $change['new'] ?? '';
-					$field_label = ucwords(str_replace('_', ' ', str_replace('post_', '', $field)));
-				?>
-				<tr style="background: #fff8e5;">
-					<td><strong><?php echo esc_html($field_label); ?></strong></td>
-					<td style="max-width: 300px; word-wrap: break-word;">
-						<?php 
-						if ($field === 'post_content') {
-							echo esc_html(wp_trim_words($old_value, 20));
-						} else {
-							echo esc_html($old_value ?: '—');
-						}
-						?>
-					</td>
-					<td style="max-width: 300px; word-wrap: break-word;">
-						<strong style="color: #0073aa;">
-						<?php 
-						if ($field === 'post_content') {
-							echo esc_html(wp_trim_words($new_value, 20));
-						} else {
-							echo esc_html($new_value ?: '—');
-						}
-						?>
-						</strong>
-					</td>
-				</tr>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
-		<?php endif; ?>
-		
-		<!-- Notification Message -->
-		<div style="margin-top: 16px; padding: 12px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
-			<strong style="display: block; margin-bottom: 4px;">
-				<span class="dashicons dashicons-yes-alt" style="color: #155724;"></span>
-				<?php esc_html_e('Admin Notification Message:', 'user-manager'); ?>
-			</strong>
-			<span style="color: #155724;"><?php echo esc_html($notification_msg); ?></span>
-		</div>
-		<?php
-		$html = ob_get_clean();
-
-		wp_send_json_success(['html' => $html]);
-	}
-
-	
-	/**
+/**
+	 * Flatten nested activity log details into key/value rows.
+	 *
+	 * @param mixed  $value Raw data value.
+	 * @param string $path  Current field path.
+	 * @return array<int, array{path: string, value: mixed}>
+	 */
+/**
+	 * Normalize scalar values for display in Activity Details modal.
+	 *
+	 * @param mixed $value Scalar-ish value.
+	 */
+/**
+	 * Detect sensitive detail keys that should be masked in UI.
+	 */
+/**
 	 * Woo: Replace lost password message with friendlier "set new password" copy.
 	 */
 	public static function filter_lost_password_message($message) {
@@ -8750,7 +9170,7 @@ final class User_Manager_Core {
 					<?php if (empty($logins)) : ?>
 						<em><?php esc_html_e('No login records found for this user on this site.', 'user-manager'); ?></em>
 					<?php else : ?>
-						<div style="max-height:260px; overflow:auto; border:1px solid #dcdcde; border-radius:4px; background:#fff;">
+						<div style="border:1px solid #dcdcde; border-radius:4px; background:#fff;">
 							<table class="widefat striped" style="margin:0;">
 								<thead>
 									<tr>

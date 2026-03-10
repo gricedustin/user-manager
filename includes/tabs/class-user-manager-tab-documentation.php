@@ -10,8 +10,45 @@ if (!defined('ABSPATH')) {
 class User_Manager_Tab_Documentation {
 
 	public static function render(): void {
+		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_DOCUMENTATION);
+		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_DOCUMENTATION;
+		$docs_section = isset($_GET['docs_section']) ? sanitize_key(wp_unslash($_GET['docs_section'])) : '';
+		$valid_sections = ['documentation', 'versions'];
+
+		// Backward compatibility: legacy Versions tab now lives under Docs sub links.
+		if ($docs_section === '' && $requested_tab === User_Manager_Core::TAB_VERSIONS) {
+			$docs_section = 'versions';
+		}
+		if (!in_array($docs_section, $valid_sections, true)) {
+			$docs_section = 'documentation';
+		}
+
+		$documentation_url = add_query_arg('docs_section', 'documentation', $base_url);
+		$versions_url = add_query_arg('docs_section', 'versions', $base_url);
+
 		?>
-		<div class="um-admin-grid">
+		<ul class="subsubsub" style="margin: 12px 0 14px;">
+			<li>
+				<a href="<?php echo esc_url($documentation_url); ?>" class="<?php echo $docs_section === 'documentation' ? 'current' : ''; ?>">
+					<?php esc_html_e('Documentation', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($versions_url); ?>" class="<?php echo $docs_section === 'versions' ? 'current' : ''; ?>">
+					<?php esc_html_e('Versions', 'user-manager'); ?>
+				</a>
+			</li>
+		</ul>
+		<br class="clear" />
+		<?php
+
+		if ($docs_section === 'versions') {
+			User_Manager_Tab_Versions::render();
+			return;
+		}
+
+		?>
+		<div class="um-admin-grid um-admin-grid-single">
 			<div class="um-admin-card">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-info-outline"></span>
@@ -83,8 +120,8 @@ class User_Manager_Tab_Documentation {
 							<div class="um-feature-item">
 								<span class="dashicons dashicons-admin-site-alt3"></span>
 								<div class="um-feature-item-content">
-									<h4><?php esc_html_e('Role Switching', 'user-manager'); ?></h4>
-									<p><?php esc_html_e('A dedicated Role Switching tab plus a front-end switcher bar let approved users preview the site as other roles, with permissions and history changes logged into the Admin Activity Log.', 'user-manager'); ?></p>
+									<h4><?php esc_html_e('User Role Switching', 'user-manager'); ?></h4>
+									<p><?php esc_html_e('The User Role Switching add-on plus a front-end switcher bar let approved users preview the site as other roles, with permissions and history changes logged into the Admin Activity Log.', 'user-manager'); ?></p>
 								</div>
 							</div>
 							<div class="um-feature-item">
@@ -97,7 +134,7 @@ class User_Manager_Tab_Documentation {
 							<div class="um-feature-item">
 								<span class="dashicons dashicons-tickets-alt"></span>
 								<div class="um-feature-item-content">
-									<h4><?php esc_html_e('Bulk Coupons', 'user-manager'); ?></h4>
+									<h4><?php esc_html_e('Coupon Bulk Creator', 'user-manager'); ?></h4>
 									<p><?php esc_html_e('Clone an existing WooCommerce coupon into many unique codes using either a fixed count or per-email mode, with support for amount and expiration overrides, custom code prefix/suffix, random-length codes, and full logging plus on-screen summaries.', 'user-manager'); ?></p>
 								</div>
 							</div>
@@ -133,7 +170,7 @@ class User_Manager_Tab_Documentation {
 								<span class="dashicons dashicons-admin-tools"></span>
 								<div class="um-feature-item-content">
 									<h4><?php esc_html_e('Tools', 'user-manager'); ?></h4>
-									<p><?php esc_html_e('Run utility tasks such as importing demo and automated coupon email templates, clearing logs and view data, and using the Coupon Lookup by Email tool to inspect coupons tied to a specific address.', 'user-manager'); ?></p>
+									<p><?php esc_html_e('Run utility tasks such as importing demo and automated coupon email templates, clearing logs and view data, and blog content helper tools.', 'user-manager'); ?></p>
 								</div>
 							</div>
 							<div class="um-feature-item">
@@ -146,7 +183,7 @@ class User_Manager_Tab_Documentation {
 							<div class="um-feature-item">
 								<span class="dashicons dashicons-search"></span>
 								<div class="um-feature-item-content">
-									<h4><?php esc_html_e('Quick Search Bar', 'user-manager'); ?></h4>
+									<h4><?php esc_html_e('WP-Admin Bar Quick Search', 'user-manager'); ?></h4>
 									<p><?php esc_html_e('An optional admin bar search icon that opens a dropdown of search fields for active post types, users, and terms, with smart single-result redirects into the right edit screens.', 'user-manager'); ?></p>
 								</div>
 							</div>
@@ -209,12 +246,14 @@ class User_Manager_Tab_Documentation {
 							<li><strong><?php esc_html_e('User & Login', 'user-manager'); ?></strong> — <?php esc_html_e('Default role, login URL, paste-from-spreadsheet column order.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('Email Settings', 'user-manager'); ?></strong> — <?php esc_html_e('Send-from name/email, reply-to, throttling.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('Activity & Logging', 'user-manager'); ?></strong> — <?php esc_html_e('Activity log, view/404/search reports, debug messages, WP-Admin activity logging.', 'user-manager'); ?></li>
-							<li><strong><?php esc_html_e('User Experience', 'user-manager'); ?></strong> — <?php esc_html_e('Rebrand reset password copy, Quick Search bar, Coupon Email List Converter meta box, coupons email column, WooCommerce search-by-SKU redirect, Apply Coupon via URL parameter, display all post meta meta box, and allow editing of post meta (including add new custom fields).', 'user-manager'); ?></li>
+							<li><strong><?php esc_html_e('User Experience', 'user-manager'); ?></strong> — <?php esc_html_e('Rebrand reset password copy and WooCommerce search-by-SKU redirect.', 'user-manager'); ?></li>
+							<li><strong><?php esc_html_e('Coupons', 'user-manager'); ?></strong> — <?php esc_html_e('Coupon Email List Converter meta box, assigned emails column, and apply-coupon URL parameter settings.', 'user-manager'); ?></li>
+							<li><strong><?php esc_html_e('Post Meta', 'user-manager'); ?></strong> — <?php esc_html_e('Display all post meta values while editing posts and optionally allow direct meta editing.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('WP-Admin CSS', 'user-manager'); ?></strong> — <?php esc_html_e('Apply CSS in wp-admin by all roles (with exclusions), by user, or by role.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('Bulk Add to Cart', 'user-manager'); ?></strong> — <?php esc_html_e('Activation, redirect, CSV column mapping, identifier type.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('User Creation & Import', 'user-manager'); ?></strong> — <?php esc_html_e('Update existing users, SFTP/directory paths for CSV import.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('Checkout', 'user-manager'); ?></strong> — <?php esc_html_e('Ship To Pre-Defined Addresses and related checkout options.', 'user-manager'); ?></li>
-							<li><strong><?php esc_html_e('Custom WP-Admin Notifications', 'user-manager'); ?></strong> — <?php esc_html_e('Admin notices and dismissible messages in wp-admin.', 'user-manager'); ?></li>
+							<li><strong><?php esc_html_e('WP-Admin Notifications', 'user-manager'); ?></strong> — <?php esc_html_e('Admin notices and dismissible messages in wp-admin.', 'user-manager'); ?></li>
 							<li><strong><?php esc_html_e('WP-Admin Bar Menu Items', 'user-manager'); ?></strong> — <?php esc_html_e('Custom shortcut menus in the admin bar (label and links).', 'user-manager'); ?></li>
 						</ul>
 					</div>
