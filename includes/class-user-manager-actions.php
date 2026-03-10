@@ -1893,7 +1893,15 @@ class User_Manager_Actions {
 		update_option(User_Manager_Core::OPTION_KEY, $settings);
 		User_Manager_Core::sync_coupon_notification_settings($settings);
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message($redirect_tab, 'settings_saved'));
+		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, 'settings_saved');
+		if ($redirect_tab === User_Manager_Core::TAB_ADDONS && isset($_POST['addon_section'])) {
+			$addon_section = sanitize_key(wp_unslash($_POST['addon_section']));
+			if ($addon_section !== '') {
+				$redirect_url = add_query_arg('addon_section', $addon_section, $redirect_url);
+			}
+		}
+
+		wp_safe_redirect($redirect_url);
 		exit;
 	}
 

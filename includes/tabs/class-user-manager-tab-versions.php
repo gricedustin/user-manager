@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.78 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tab: added a subsubsub-style add-on navigation list to quickly jump to a specific add-on section.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons tab: added per-section filtering so selecting an add-on shows only that add-on card while keeping Save Add-ons available.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons tab: active add-on links in the new navigation are bold, and saving now keeps users on the same selected add-on section.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.77 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons: added a new "My Account Coupon Screen" add-on with Activate toggle plus settings for Menu Title Name, Page Title, and Page Description.', 'user-manager'); ?></li>

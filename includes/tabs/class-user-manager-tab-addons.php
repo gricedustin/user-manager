@@ -29,30 +29,86 @@ class User_Manager_Tab_Addons {
 		$settings      = User_Manager_Core::get_settings();
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		$settings_form_id = 'um-addons-settings-form';
+		$addon_sections = self::get_addon_sections($settings);
+		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : 'all';
+		if ($current_addon_section !== 'all' && !isset($addon_sections[$current_addon_section])) {
+			$current_addon_section = 'all';
+		}
+		$addons_base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
 		?>
+		<ul class="subsubsub" style="margin: 12px 0 14px;">
+			<li>
+				<a href="<?php echo esc_url(add_query_arg('addon_section', 'all', $addons_base_url)); ?>" class="<?php echo $current_addon_section === 'all' ? 'current' : ''; ?>">
+					<?php esc_html_e('All Add-ons', 'user-manager'); ?>
+				</a>
+				<?php if (!empty($addon_sections)) : ?> |<?php endif; ?>
+			</li>
+			<?php $addon_total = count($addon_sections); $addon_index = 0; ?>
+			<?php foreach ($addon_sections as $section_key => $section_meta) : $addon_index++; ?>
+				<li>
+					<a href="<?php echo esc_url(add_query_arg('addon_section', $section_key, $addons_base_url)); ?>" class="<?php echo $current_addon_section === $section_key ? 'current' : ''; ?>">
+						<?php if (!empty($section_meta['active'])) : ?><strong><?php endif; ?>
+						<?php echo esc_html((string) $section_meta['label']); ?>
+						<?php if (!empty($section_meta['active'])) : ?></strong><?php endif; ?>
+					</a><?php echo $addon_index < $addon_total ? ' |' : ''; ?>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="<?php echo esc_attr($settings_form_id); ?>">
 			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="addons" />
+			<input type="hidden" name="addon_section" value="<?php echo esc_attr($current_addon_section); ?>" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single">
-				<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
-				<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
-				<?php User_Manager_Addon_Bulk_Coupons::render($settings); ?>
-				<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
-				<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
-				<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
-				<?php User_Manager_Addon_My_Account_Coupon_Screen::render($settings); ?>
-				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
+				<?php if (self::is_section_visible($current_addon_section, 'add-to-cart-bulk-import')) : ?>
+					<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
+				<?php endif; ?>
+				<?php if (self::is_section_visible($current_addon_section, 'checkout-pre-defined-addresses')) : ?>
+					<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
+				<?php endif; ?>
+				<?php if (self::is_section_visible($current_addon_section, 'coupon-creator')) : ?>
+					<?php User_Manager_Addon_Bulk_Coupons::render($settings); ?>
+				<?php endif; ?>
+				<?php if (self::is_section_visible($current_addon_section, 'coupon-for-new-user')) : ?>
+					<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
+				<?php endif; ?>
+				<?php if (self::is_section_visible($current_addon_section, 'coupon-notifications-for-users-with-coupons')) : ?>
+					<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
+				<?php endif; ?>
+				<?php if (self::is_section_visible($current_addon_section, 'coupon-remaining-balances')) : ?>
+					<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
+				<?php endif; ?>
+				<?php if (self::is_section_visible($current_addon_section, 'my-account-coupon-screen')) : ?>
+					<?php User_Manager_Addon_My_Account_Coupon_Screen::render($settings); ?>
+				<?php endif; ?>
+				<?php if (self::is_section_visible($current_addon_section, 'my-account-site-admin')) : ?>
+					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
+				<?php endif; ?>
 			</div>
 		</form>
 		<div class="um-admin-grid um-admin-grid-single">
-			<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
-			<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings, $settings_form_id); ?>
-			<?php User_Manager_Addon_Role_Switching::render($settings_form_id); ?>
-			<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings, $settings_form_id); ?>
-			<?php User_Manager_Addon_Quick_Search::render($settings, $settings_form_id); ?>
-			<?php User_Manager_Addon_WP_Admin_CSS::render($settings, $settings_form_id); ?>
-			<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
+			<?php if (self::is_section_visible($current_addon_section, 'post-content-generator')) : ?>
+				<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
+			<?php endif; ?>
+			<?php if (self::is_section_visible($current_addon_section, 'post-idea-generator')) : ?>
+				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings, $settings_form_id); ?>
+			<?php endif; ?>
+			<?php if (self::is_section_visible($current_addon_section, 'user-role-switching')) : ?>
+				<?php User_Manager_Addon_Role_Switching::render($settings_form_id); ?>
+			<?php endif; ?>
+			<?php if (self::is_section_visible($current_addon_section, 'wp-admin-bar-menu-items')) : ?>
+				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings, $settings_form_id); ?>
+			<?php endif; ?>
+			<?php if (self::is_section_visible($current_addon_section, 'wp-admin-bar-quick-search')) : ?>
+				<?php User_Manager_Addon_Quick_Search::render($settings, $settings_form_id); ?>
+			<?php endif; ?>
+			<?php if (self::is_section_visible($current_addon_section, 'wp-admin-css')) : ?>
+				<?php User_Manager_Addon_WP_Admin_CSS::render($settings, $settings_form_id); ?>
+			<?php endif; ?>
+			<?php if (self::is_section_visible($current_addon_section, 'wp-admin-notifications')) : ?>
+				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
+			<?php endif; ?>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-body">
 					<p style="margin:0;">
@@ -160,6 +216,7 @@ class User_Manager_Tab_Addons {
 		jQuery(document).ready(function($) {
 			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
 			var addonInactiveText = '<?php echo esc_js(__('Inactive', 'user-manager')); ?>';
+			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
 
 			function isAddonCardActive($card) {
 				var selectorsRaw = ($card.attr('data-um-active-selectors') || '').trim();
@@ -276,8 +333,9 @@ class User_Manager_Tab_Addons {
 						setAddonCardCollapsed($card, !$card.hasClass('um-addon-collapsed'));
 					});
 
-					// Keep all add-on cards collapsed by default.
-					setAddonCardCollapsed($card, true, true);
+					// Keep cards collapsed by default in "all" view,
+					// but auto-expand when user is focused on a single add-on section.
+					setAddonCardCollapsed($card, currentAddonSection === 'all', true);
 					refreshAddonCardAutoState($card);
 				});
 			}
@@ -550,6 +608,95 @@ class User_Manager_Tab_Addons {
 		});
 		</script>
 		<?php
+	}
+
+	private static function is_section_visible(string $current_section, string $target_section): bool {
+		return $current_section === 'all' || $current_section === $target_section;
+	}
+
+	/**
+	 * Build Add-ons sub-navigation metadata.
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return array<string,array{label:string,active:bool}>
+	 */
+	private static function get_addon_sections(array $settings): array {
+		$role_switch_settings = get_option('view_website_by_role_settings', []);
+		if (!is_array($role_switch_settings)) {
+			$role_switch_settings = [];
+		}
+
+		$my_account_site_admin_enabled = array_key_exists('my_account_site_admin_enabled', $settings)
+			? !empty($settings['my_account_site_admin_enabled'])
+			: (
+				!empty($settings['my_account_admin_order_viewer_enabled'])
+				|| !empty($settings['my_account_admin_product_viewer_enabled'])
+				|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
+				|| !empty($settings['my_account_admin_user_viewer_enabled'])
+			);
+
+		return [
+			'add-to-cart-bulk-import' => [
+				'label'  => __('Add to Cart Bulk Import', 'user-manager'),
+				'active' => !empty($settings['bulk_add_to_cart_enabled']),
+			],
+			'checkout-pre-defined-addresses' => [
+				'label'  => __('Checkout Pre-Defined Addresses', 'user-manager'),
+				'active' => !empty($settings['checkout_ship_to_predefined_enabled']),
+			],
+			'coupon-creator' => [
+				'label'  => __('Coupon Creator', 'user-manager'),
+				'active' => !empty($settings['bulk_coupons_enabled']),
+			],
+			'coupon-for-new-user' => [
+				'label'  => __('Coupon for New User', 'user-manager'),
+				'active' => !empty($settings['nuc_enabled']),
+			],
+			'coupon-notifications-for-users-with-coupons' => [
+				'label'  => __('Coupon Notifications for Users with Coupons', 'user-manager'),
+				'active' => !empty($settings['user_coupon_notifications_enabled']),
+			],
+			'coupon-remaining-balances' => [
+				'label'  => __('Coupon Remaining Balances (Simple Gift Card & Store Credit Functionality)', 'user-manager'),
+				'active' => !empty($settings['coupon_remainder_enabled']),
+			],
+			'my-account-coupon-screen' => [
+				'label'  => __('My Account Coupon Screen', 'user-manager'),
+				'active' => !empty($settings['my_account_coupon_screen_enabled']),
+			],
+			'my-account-site-admin' => [
+				'label'  => __('My Account Site Admin', 'user-manager'),
+				'active' => $my_account_site_admin_enabled,
+			],
+			'post-content-generator' => [
+				'label'  => __('Post Content Generator', 'user-manager'),
+				'active' => !empty($settings['openai_content_generator_enabled']),
+			],
+			'post-idea-generator' => [
+				'label'  => __('Post Idea Generator', 'user-manager'),
+				'active' => !empty($settings['openai_blog_post_idea_generator_enabled']),
+			],
+			'user-role-switching' => [
+				'label'  => __('User Role Switching', 'user-manager'),
+				'active' => !empty($role_switch_settings['enabled']),
+			],
+			'wp-admin-bar-menu-items' => [
+				'label'  => __('WP-Admin Bar Menu Items', 'user-manager'),
+				'active' => array_key_exists('admin_bar_menu_items_enabled', $settings) ? !empty($settings['admin_bar_menu_items_enabled']) : true,
+			],
+			'wp-admin-bar-quick-search' => [
+				'label'  => __('WP-Admin Bar Quick Search', 'user-manager'),
+				'active' => array_key_exists('um_quick_search_enabled', $settings) ? !empty($settings['um_quick_search_enabled']) : true,
+			],
+			'wp-admin-css' => [
+				'label'  => __('WP-Admin CSS', 'user-manager'),
+				'active' => array_key_exists('wp_admin_css_enabled', $settings) ? !empty($settings['wp_admin_css_enabled']) : true,
+			],
+			'wp-admin-notifications' => [
+				'label'  => __('WP-Admin Notifications', 'user-manager'),
+				'active' => array_key_exists('custom_admin_notifications_enabled', $settings) ? !empty($settings['custom_admin_notifications_enabled']) : true,
+			],
+		];
 	}
 }
 
