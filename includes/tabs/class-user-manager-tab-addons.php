@@ -663,7 +663,7 @@ class User_Manager_Tab_Addons {
 				'active' => !empty($settings['coupon_remainder_enabled']),
 			],
 			'my-account-coupon-screen' => [
-				'label'  => __('My Account Coupon Screen', 'user-manager'),
+				'label'  => __('My Account Coupons Page', 'user-manager'),
 				'active' => !empty($settings['my_account_coupon_screen_enabled']),
 			],
 			'my-account-site-admin' => [

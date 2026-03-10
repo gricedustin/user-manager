@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: My Account Coupon Screen.
+ * Add-on card: My Account Coupons Page.
  */
 
 if (!defined('ABSPATH')) {
@@ -18,7 +18,7 @@ class User_Manager_Addon_My_Account_Coupon_Screen {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-my-account-coupon-screen" data-um-active-selectors="#um-my-account-coupon-screen-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-tickets-alt"></span>
-				<h2><?php esc_html_e('My Account Coupon Screen', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('My Account Coupons Page', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
