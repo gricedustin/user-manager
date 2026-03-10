@@ -73,16 +73,18 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<?php esc_html_e('My Account Admin Product Viewer', 'user-manager'); ?>
 					</label>
 				</div>
-				<div class="um-form-field" id="um-my-account-admin-product-viewer-users-field" style="<?php echo empty($settings['my_account_admin_product_viewer_enabled']) ? 'display:none;' : ''; ?>">
-					<label for="um-my-account-admin-product-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
-					<input type="text" name="my_account_admin_product_viewer_usernames" id="um-my-account-admin-product-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_product_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
-					<?php self::render_role_checkboxes('my_account_admin_product_viewer_roles', $settings['my_account_admin_product_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Products', 'user-manager')); ?>
-				</div>
-				<div class="um-form-field" id="um-my-account-admin-product-meta-field" style="<?php echo empty($settings['my_account_admin_product_viewer_enabled']) ? 'display:none;' : ''; ?>">
-					<label>
-						<input type="checkbox" name="my_account_admin_product_viewer_show_meta" id="um-my-account-admin-product-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_product_viewer_show_meta'] ?? false); ?> />
-						<?php esc_html_e('Show Meta Data area for Product details', 'user-manager'); ?>
-					</label>
+				<div class="um-my-account-product-viewer-sub-settings" style="margin-left: 24px; padding-left: 16px; border-left: 2px solid #dcdcde;">
+					<div class="um-form-field" id="um-my-account-admin-product-viewer-users-field" style="<?php echo empty($settings['my_account_admin_product_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label for="um-my-account-admin-product-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_product_viewer_usernames" id="um-my-account-admin-product-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_product_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
+						<?php self::render_role_checkboxes('my_account_admin_product_viewer_roles', $settings['my_account_admin_product_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Products', 'user-manager')); ?>
+					</div>
+					<div class="um-form-field" id="um-my-account-admin-product-meta-field" style="<?php echo empty($settings['my_account_admin_product_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label>
+							<input type="checkbox" name="my_account_admin_product_viewer_show_meta" id="um-my-account-admin-product-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_product_viewer_show_meta'] ?? false); ?> />
+							<?php esc_html_e('Show Meta Data area for Product details', 'user-manager'); ?>
+						</label>
+					</div>
 				</div>
 
 				<div class="um-form-field">
@@ -91,16 +93,18 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<?php esc_html_e('My Account Admin Coupon Viewer', 'user-manager'); ?>
 					</label>
 				</div>
-				<div class="um-form-field" id="um-my-account-admin-coupon-viewer-users-field" style="<?php echo empty($settings['my_account_admin_coupon_viewer_enabled']) ? 'display:none;' : ''; ?>">
-					<label for="um-my-account-admin-coupon-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
-					<input type="text" name="my_account_admin_coupon_viewer_usernames" id="um-my-account-admin-coupon-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_coupon_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
-					<?php self::render_role_checkboxes('my_account_admin_coupon_viewer_roles', $settings['my_account_admin_coupon_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Coupons', 'user-manager')); ?>
-				</div>
-				<div class="um-form-field" id="um-my-account-admin-coupon-meta-field" style="<?php echo empty($settings['my_account_admin_coupon_viewer_enabled']) ? 'display:none;' : ''; ?>">
-					<label>
-						<input type="checkbox" name="my_account_admin_coupon_viewer_show_meta" id="um-my-account-admin-coupon-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_coupon_viewer_show_meta'] ?? false); ?> />
-						<?php esc_html_e('Show Meta Data area for Coupon details', 'user-manager'); ?>
-					</label>
+				<div class="um-my-account-coupon-viewer-sub-settings" style="margin-left: 24px; padding-left: 16px; border-left: 2px solid #dcdcde;">
+					<div class="um-form-field" id="um-my-account-admin-coupon-viewer-users-field" style="<?php echo empty($settings['my_account_admin_coupon_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label for="um-my-account-admin-coupon-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_coupon_viewer_usernames" id="um-my-account-admin-coupon-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_coupon_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
+						<?php self::render_role_checkboxes('my_account_admin_coupon_viewer_roles', $settings['my_account_admin_coupon_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Coupons', 'user-manager')); ?>
+					</div>
+					<div class="um-form-field" id="um-my-account-admin-coupon-meta-field" style="<?php echo empty($settings['my_account_admin_coupon_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label>
+							<input type="checkbox" name="my_account_admin_coupon_viewer_show_meta" id="um-my-account-admin-coupon-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_coupon_viewer_show_meta'] ?? false); ?> />
+							<?php esc_html_e('Show Meta Data area for Coupon details', 'user-manager'); ?>
+						</label>
+					</div>
 				</div>
 
 				<div class="um-form-field">
@@ -109,16 +113,18 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<?php esc_html_e('My Account Admin User Viewer', 'user-manager'); ?>
 					</label>
 				</div>
-				<div class="um-form-field" id="um-my-account-admin-user-viewer-users-field" style="<?php echo empty($settings['my_account_admin_user_viewer_enabled']) ? 'display:none;' : ''; ?>">
-					<label for="um-my-account-admin-user-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
-					<input type="text" name="my_account_admin_user_viewer_usernames" id="um-my-account-admin-user-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_user_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
-					<?php self::render_role_checkboxes('my_account_admin_user_viewer_roles', $settings['my_account_admin_user_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Users', 'user-manager')); ?>
-				</div>
-				<div class="um-form-field" id="um-my-account-admin-user-meta-field" style="<?php echo empty($settings['my_account_admin_user_viewer_enabled']) ? 'display:none;' : ''; ?>">
-					<label>
-						<input type="checkbox" name="my_account_admin_user_viewer_show_meta" id="um-my-account-admin-user-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_user_viewer_show_meta'] ?? false); ?> />
-						<?php esc_html_e('Show Meta Data area for User details', 'user-manager'); ?>
-					</label>
+				<div class="um-my-account-user-viewer-sub-settings" style="margin-left: 24px; padding-left: 16px; border-left: 2px solid #dcdcde;">
+					<div class="um-form-field" id="um-my-account-admin-user-viewer-users-field" style="<?php echo empty($settings['my_account_admin_user_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label for="um-my-account-admin-user-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_user_viewer_usernames" id="um-my-account-admin-user-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_user_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
+						<?php self::render_role_checkboxes('my_account_admin_user_viewer_roles', $settings['my_account_admin_user_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Users', 'user-manager')); ?>
+					</div>
+					<div class="um-form-field" id="um-my-account-admin-user-meta-field" style="<?php echo empty($settings['my_account_admin_user_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label>
+							<input type="checkbox" name="my_account_admin_user_viewer_show_meta" id="um-my-account-admin-user-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_user_viewer_show_meta'] ?? false); ?> />
+							<?php esc_html_e('Show Meta Data area for User details', 'user-manager'); ?>
+						</label>
+					</div>
 				</div>
 				</div>
 			</div>
