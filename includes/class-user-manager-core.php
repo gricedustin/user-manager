@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.90';
+	const VERSION = '2.2.91';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1166,6 +1166,7 @@ final class User_Manager_Core {
 		$roles_css = isset($settings['wp_admin_css_roles']) && is_array($settings['wp_admin_css_roles']) ? $settings['wp_admin_css_roles'] : [];
 
 		$to_output = [];
+		$hide_admin_chrome_applied = false;
 
 		// All roles CSS (unless user's role is in exclude list)
 		$css_all = isset($settings['wp_admin_css_all']) ? trim((string) $settings['wp_admin_css_all']) : '';
@@ -1229,6 +1230,7 @@ final class User_Manager_Core {
 
 			if (self::wp_admin_css_user_matches_targets($user, $user_roles, $hide_users, $hide_roles)) {
 				$to_output[] = self::get_wp_admin_css_hide_admin_chrome_preset();
+				$hide_admin_chrome_applied = true;
 			}
 		}
 
@@ -1238,7 +1240,10 @@ final class User_Manager_Core {
 
 		$combined = implode("\n", $to_output);
 		$combined = str_replace(['</style>', '<script'], '', $combined);
-		echo '<style id="um-wp-admin-css">' . "\n" . esc_html($combined) . "\n" . '</style>' . "\n";
+		echo '<style id="um-wp-admin-css">' . "\n" . $combined . "\n" . '</style>' . "\n";
+		if ($hide_admin_chrome_applied) {
+			self::render_wp_admin_css_hide_admin_chrome_script();
+		}
 	}
 
 	/**
@@ -1332,6 +1337,63 @@ html body .woocommerce-layout__header {
 	width: 100% !important;
 }
 ';
+	}
+
+	/**
+	 * JavaScript fallback to hide admin chrome for dynamically rendered admin UI.
+	 */
+	private static function render_wp_admin_css_hide_admin_chrome_script(): void {
+		$hide_selectors = [
+			'#adminmenu',
+			'#adminmenumain',
+			'#adminmenuwrap',
+			'#adminmenuback',
+			'.woocommerce-layout__header',
+			'.updated',
+			'.notice',
+			'.noticex',
+			'.error',
+			'#dashboard-widgets-wrap',
+			'#message',
+			'#screen-meta-links',
+			'#screen-meta',
+			'#contextual-help-link-wrap',
+			'#screen-options-link-wrap',
+		];
+		$show_selectors = [
+			'#wpadminbar li#wp-admin-bar-my-account',
+			'#wpadminbar li#wp-admin-bar-my-account *',
+			'#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"]',
+			'#wpadminbar li[id^="wp-admin-bar-um-custom-bar-"] *',
+		];
+		?>
+		<script id="um-wp-admin-css-hide-admin-chrome-fallback">
+		(function() {
+			var hideSelectors = <?php echo wp_json_encode($hide_selectors); ?>;
+			var showSelectors = <?php echo wp_json_encode($show_selectors); ?>;
+			function applyHidePreset() {
+				hideSelectors.forEach(function(selector) {
+					document.querySelectorAll(selector).forEach(function(node) {
+						node.style.setProperty('display', 'none', 'important');
+					});
+				});
+				showSelectors.forEach(function(selector) {
+					document.querySelectorAll(selector).forEach(function(node) {
+						node.style.setProperty('display', 'block', 'important');
+					});
+				});
+				document.querySelectorAll('#wpcontent, #wpfooter, #wpbody-content').forEach(function(node) {
+					node.style.setProperty('margin-left', '0', 'important');
+				});
+			}
+			document.addEventListener('DOMContentLoaded', function() {
+				applyHidePreset();
+				setTimeout(applyHidePreset, 150);
+				setTimeout(applyHidePreset, 800);
+			});
+		})();
+		</script>
+		<?php
 	}
 
 	/**
