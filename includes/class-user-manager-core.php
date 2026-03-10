@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.72';
+	const VERSION = '2.2.73';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2305,6 +2305,8 @@ final class User_Manager_Core {
 		$error_count          = 0;
 		$errors               = [];
 		$successful_additions = [];
+		$total_items_added    = 0;
+		$line_item_results    = [];
 		$row_number           = 1;
 		$blank_rows_skipped   = 0;
 		$zero_qty_skipped     = 0;
@@ -2341,6 +2343,15 @@ final class User_Manager_Core {
 					esc_html($quantity_raw)
 				);
 				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => '',
+					'product_title' => '',
+					'variation'     => '',
+					'qty_added'     => 0,
+					'note'          => (string) __('Missing identifier; row not added.', 'user-manager'),
+				];
 				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_missing_identifier', wp_strip_all_tags($message));
 				continue;
 			}
@@ -2355,9 +2366,20 @@ final class User_Manager_Core {
 					esc_html((string) $quantity)
 				);
 				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => $identifier,
+					'product_title' => '',
+					'variation'     => '',
+					'qty_added'     => 0,
+					'note'          => (string) __('Product not found; row not added.', 'user-manager'),
+				];
 				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_product_not_found', wp_strip_all_tags($message));
 				continue;
 			}
+			[$product_title, $product_variation] = self::bulk_add_to_cart_get_product_title_and_variation($product);
+			$product_id_for_line = (string) $product->get_id();
 
 			if (!$product->is_purchasable()) {
 				$error_count++;
@@ -2368,6 +2390,15 @@ final class User_Manager_Core {
 					esc_html((string) $quantity)
 				);
 				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => $product_id_for_line,
+					'product_title' => $product_title,
+					'variation'     => $product_variation,
+					'qty_added'     => 0,
+					'note'          => (string) __('Product is not purchasable; row not added.', 'user-manager'),
+				];
 				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_not_purchasable', wp_strip_all_tags($message));
 				continue;
 			}
@@ -2382,6 +2413,20 @@ final class User_Manager_Core {
 					esc_html((string) $product->get_stock_quantity())
 				);
 				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => $product_id_for_line,
+					'product_title' => $product_title,
+					'variation'     => $product_variation,
+					'qty_added'     => 0,
+					'note'          => sprintf(
+						/* translators: 1: requested qty, 2: available qty */
+						__('Insufficient stock (requested %1$s, available %2$s); row not added.', 'user-manager'),
+						(string) $quantity,
+						(string) $product->get_stock_quantity()
+					),
+				];
 				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_insufficient_stock', wp_strip_all_tags($message));
 				continue;
 			}
@@ -2389,11 +2434,21 @@ final class User_Manager_Core {
 			$cart_item_key = self::bulk_add_to_cart_add_product_to_cart($product, $quantity);
 			if ($cart_item_key) {
 				$success_count++;
+				$total_items_added += $quantity;
 				$name = $product->get_name();
 				if (!isset($successful_additions[$name])) {
 					$successful_additions[$name] = 0;
 				}
 				$successful_additions[$name] += $quantity;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'success',
+					'product_id'    => $product_id_for_line,
+					'product_title' => $product_title,
+					'variation'     => $product_variation,
+					'qty_added'     => $quantity,
+					'note'          => (string) __('Added to cart.', 'user-manager'),
+				];
 				self::bulk_add_to_cart_append_debug_trace(
 					$debug_trace,
 					$csv_line_number,
@@ -2409,30 +2464,29 @@ final class User_Manager_Core {
 					esc_html((string) $quantity)
 				);
 				$errors[] = $message;
+				$line_item_results[] = [
+					'line'          => $csv_line_number,
+					'status'        => 'error',
+					'product_id'    => $product_id_for_line,
+					'product_title' => $product_title,
+					'variation'     => $product_variation,
+					'qty_added'     => 0,
+					'note'          => (string) __('Could not add to cart (WooCommerce rejected this row).', 'user-manager'),
+				];
 				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_add_to_cart_failed', wp_strip_all_tags($message));
 			}
 		}
 
 		fclose($handle);
 
-		if ($success_count > 0) {
-			wc_add_notice(
-				sprintf(
-					/* translators: %d: number of products */
-					_n('%d product added to cart.', '%d products added to cart.', $success_count, 'user-manager'),
-					$success_count
-				),
-				'success'
+		if ($total_items_added > 0) {
+			$summary_message = sprintf(
+				/* translators: %d: total quantity of items added */
+				_n('%d item total was added to cart.', '%d items total were added to cart.', $total_items_added, 'user-manager'),
+				$total_items_added
 			);
-
-			if (!empty($successful_additions)) {
-				$details = '<ul style="margin-left: 20px;">';
-				foreach ($successful_additions as $product_name => $qty) {
-					$details .= sprintf('<li>%s: %d</li>', esc_html($product_name), (int) $qty);
-				}
-				$details .= '</ul>';
-				wc_add_notice($details, 'success');
-			}
+			$summary_message .= ' <a href="' . esc_url(wc_get_cart_url()) . '" class="button wc-forward">' . esc_html__('View cart', 'user-manager') . '</a>';
+			wc_add_notice($summary_message, 'success');
 		}
 
 		if ($error_count > 0) {
@@ -2444,42 +2498,42 @@ final class User_Manager_Core {
 				),
 				'error'
 			);
+		}
 
-			if (!empty($errors)) {
-				$max_error_notices = 50;
-				$shown = 0;
-				foreach ($errors as $msg) {
-					if ($shown >= $max_error_notices) {
-						break;
-					}
-					wc_add_notice($msg, 'error');
-					$shown++;
-				}
-				$remaining = count($errors) - $shown;
-				if ($remaining > 0) {
-					wc_add_notice(
-						sprintf(
-							/* translators: %d: number of hidden errors */
-							esc_html__('%d additional row errors were hidden to keep the notice list manageable.', 'user-manager'),
-							$remaining
-						),
-						'error'
-					);
-				}
+		if (!empty($line_item_results)) {
+			$line_notice = '<strong>' . esc_html__('Line-by-line product processing:', 'user-manager') . '</strong>';
+			$line_notice .= '<ul style="margin:8px 0 0 20px;">';
+			foreach ($line_item_results as $entry) {
+				$line_notice .= '<li>' . esc_html(
+					sprintf(
+						/* translators: 1: csv line, 2: product ID, 3: product title, 4: variation, 5: qty added, 6: status, 7: note */
+						__('CSV Line %1$s | Product ID: %2$s | Product Title: %3$s | Variation: %4$s | Qty Added: %5$s | Status: %6$s | Note: %7$s', 'user-manager'),
+						(string) ($entry['line'] ?? ''),
+						(string) (!empty($entry['product_id']) ? $entry['product_id'] : '—'),
+						(string) (!empty($entry['product_title']) ? $entry['product_title'] : '—'),
+						(string) (!empty($entry['variation']) ? $entry['variation'] : '—'),
+						(string) ($entry['qty_added'] ?? 0),
+						(string) (($entry['status'] ?? '') === 'success' ? __('Added', 'user-manager') : __('Error', 'user-manager')),
+						(string) ($entry['note'] ?? '')
+					)
+				) . '</li>';
 			}
+			$line_notice .= '</ul>';
+			wc_add_notice($line_notice, 'notice');
 		}
 		self::bulk_add_to_cart_append_debug_trace(
 			$debug_trace,
 			0,
 			'summary',
-			'Rows seen: ' . $data_rows_seen . '; blank rows skipped: ' . $blank_rows_skipped . '; zero/blank quantity rows skipped: ' . $zero_qty_skipped . '; added: ' . $success_count . '; errors: ' . $error_count . '.'
+			'Rows seen: ' . $data_rows_seen . '; blank rows skipped: ' . $blank_rows_skipped . '; zero/blank quantity rows skipped: ' . $zero_qty_skipped . '; rows added: ' . $success_count . '; total items added: ' . $total_items_added . '; errors: ' . $error_count . '.'
 		);
 		if ($debug_enabled) {
 			wc_add_notice(
 				'Processing summary - Rows seen: ' . $data_rows_seen .
 				', Blank rows skipped: ' . $blank_rows_skipped .
 				', Zero/blank quantity rows skipped: ' . $zero_qty_skipped .
-				', Added: ' . $success_count .
+				', Rows added: ' . $success_count .
+				', Total items added: ' . $total_items_added .
 				', Errors: ' . $error_count,
 				'notice'
 			);
@@ -2737,6 +2791,38 @@ final class User_Manager_Core {
 		$result['attachment_id'] = (int) $attachment_id;
 		$result['attachment_url'] = (string) wp_get_attachment_url((int) $attachment_id);
 		return $result;
+	}
+
+	/**
+	 * Return display-ready product title + variation text.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return array{0:string,1:string}
+	 */
+	private static function bulk_add_to_cart_get_product_title_and_variation($product): array {
+		if (!$product || !is_object($product) || !method_exists($product, 'is_type')) {
+			return ['', ''];
+		}
+
+		if ($product->is_type('variation')) {
+			$parent_title = '';
+			$parent_id = method_exists($product, 'get_parent_id') ? (int) $product->get_parent_id() : 0;
+			if ($parent_id > 0) {
+				$parent = wc_get_product($parent_id);
+				if ($parent && is_object($parent) && method_exists($parent, 'get_name')) {
+					$parent_title = (string) $parent->get_name();
+				}
+			}
+			$title = $parent_title !== '' ? $parent_title : (method_exists($product, 'get_name') ? (string) $product->get_name() : '');
+			$variation = '';
+			if (function_exists('wc_get_formatted_variation')) {
+				$variation = trim(wp_strip_all_tags((string) wc_get_formatted_variation($product, true, true, true)));
+			}
+			return [$title, $variation];
+		}
+
+		$title = method_exists($product, 'get_name') ? (string) $product->get_name() : '';
+		return [$title, ''];
 	}
 
 	/**

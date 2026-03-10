@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.73 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart: added a new WooCommerce success notification showing total items added and a View Cart button.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart: added a new line-by-line WooCommerce notification listing CSV line, product ID, product title, variation, qty added, status, and error reason when applicable.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.72 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Email Templates UI: moved Live Preview (Demo Data) above Saved Templates in editing mode so both are visible side by side.', 'user-manager'); ?></li>

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.72
+ * Version: 2.2.73
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.73 - March 8, 2026
+ * - Bulk Add to Cart: added a new WooCommerce success notification showing total items added and a View Cart button.
+ * - Bulk Add to Cart: added a new line-by-line WooCommerce notification listing CSV line, product ID, product title, variation, qty added, status, and error reason when applicable.
+ *
  * 2.2.72 - March 8, 2026
  * - Email Templates UI: moved Live Preview (Demo Data) above Saved Templates in editing mode so both are visible side by side.
  * - Email Templates layout: preview now appears at the top of the form column while editing.
