@@ -643,7 +643,7 @@ class User_Manager_Tab_Addons {
 				'active' => !empty($settings['bulk_add_to_cart_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
-				'label'  => __('Checkout Pre-Defined Addresses', 'user-manager'),
+				'label'  => __('Checkout Address Selector', 'user-manager'),
 				'active' => !empty($settings['checkout_ship_to_predefined_enabled']),
 			],
 			'coupon-creator' => [

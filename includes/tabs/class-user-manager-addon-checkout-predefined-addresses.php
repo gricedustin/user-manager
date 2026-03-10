@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Checkout Pre-Defined Addresses.
+ * Add-on card: Checkout Address Selector.
  */
 
 if (!defined('ABSPATH')) {
@@ -14,7 +14,7 @@ class User_Manager_Addon_Checkout_Predefined_Addresses {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-checkout-predefined" data-um-active-selectors="#um-checkout-ship-to-predefined">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-location-alt"></span>
-				<h2><?php esc_html_e('Checkout Pre-Defined Addresses', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Checkout Address Selector', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
