@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.76 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart notice copy: changed "Line-by-line product processing" heading to "Details" and shortened each row line.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart details line format now uses "ID: ... — Added/Error (qty)" and only includes "Note: ..." when the row has an error.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.75 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Email Templates layout: default view now shows Saved Templates + Add New Template (empty form) in two columns.', 'user-manager'); ?></li>

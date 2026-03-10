@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.75';
+	const VERSION = '2.2.76';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2540,22 +2540,27 @@ final class User_Manager_Core {
 		}
 
 		if (!empty($line_item_results)) {
-			$line_notice = '<strong>' . esc_html__('Line-by-line product processing:', 'user-manager') . '</strong>';
+			$line_notice = '<strong>' . esc_html__('Details:', 'user-manager') . '</strong>';
 			$line_notice .= '<ul style="margin:8px 0 0 20px;">';
 			foreach ($line_item_results as $entry) {
-				$line_notice .= '<li>' . esc_html(
-					sprintf(
-						/* translators: 1: csv line, 2: product ID, 3: product title, 4: variation, 5: qty added, 6: status, 7: note */
-						__('CSV Line %1$s | Product ID: %2$s | Product Title: %3$s | Variation: %4$s | Qty Added: %5$s | Status: %6$s | Note: %7$s', 'user-manager'),
-						(string) ($entry['line'] ?? ''),
-						(string) (!empty($entry['product_id']) ? $entry['product_id'] : '—'),
-						(string) (!empty($entry['product_title']) ? $entry['product_title'] : '—'),
-						(string) (!empty($entry['variation']) ? $entry['variation'] : '—'),
-						(string) ($entry['qty_added'] ?? 0),
-						(string) (($entry['status'] ?? '') === 'success' ? __('Added', 'user-manager') : __('Error', 'user-manager')),
-						(string) ($entry['note'] ?? '')
-					)
-				) . '</li>';
+				$is_success = (($entry['status'] ?? '') === 'success');
+				$line_text = sprintf(
+					/* translators: 1: product ID, 2: product title, 3: variation label, 4: Added/Error, 5: qty added */
+					__('ID: %1$s %2$s %3$s %4$s (%5$s)', 'user-manager'),
+					(string) (!empty($entry['product_id']) ? $entry['product_id'] : '—'),
+					(string) (!empty($entry['product_title']) ? $entry['product_title'] : '—'),
+					(string) (!empty($entry['variation']) ? $entry['variation'] : '—'),
+					(string) ($is_success ? __('Added', 'user-manager') : __('Error', 'user-manager')),
+					(string) ($entry['qty_added'] ?? 0)
+				);
+				if (!$is_success && !empty($entry['note'])) {
+					$line_text .= ' ' . sprintf(
+						/* translators: %s: error note */
+						__('Note: %s', 'user-manager'),
+						(string) $entry['note']
+					);
+				}
+				$line_notice .= '<li>' . esc_html($line_text) . '</li>';
 			}
 			$line_notice .= '</ul>';
 			wc_add_notice($line_notice, 'notice', ['um_bulk_add_to_cart_keep_visible' => 1]);
