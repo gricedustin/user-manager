@@ -651,15 +651,15 @@ class User_Manager_Tab_Addons {
 				'active' => !empty($settings['bulk_coupons_enabled']),
 			],
 			'coupon-for-new-user' => [
-				'label'  => __('Coupon for New User', 'user-manager'),
+				'label'  => __('New User Coupons', 'user-manager'),
 				'active' => !empty($settings['nuc_enabled']),
 			],
 			'coupon-notifications-for-users-with-coupons' => [
-				'label'  => __('Coupon Notifications for Users with Coupons', 'user-manager'),
+				'label'  => __('User Coupon Notifications', 'user-manager'),
 				'active' => !empty($settings['user_coupon_notifications_enabled']),
 			],
 			'coupon-remaining-balances' => [
-				'label'  => __('Coupon Remaining Balances', 'user-manager'),
+				'label'  => __('User Coupon Remaining Balances', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
 			],
 			'my-account-coupon-screen' => [

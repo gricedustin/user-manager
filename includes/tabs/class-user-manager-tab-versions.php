@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.84 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons UI: retitled "Coupon for New User" to "New User Coupons", "Coupon Notifications for Users with Coupons" to "User Coupon Notifications", and "Coupon Remaining Balances" to "User Coupon Remaining Balances".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.83 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons UI: retitled "My Account Site Admin" to "My Account Admin".', 'user-manager'); ?></li>

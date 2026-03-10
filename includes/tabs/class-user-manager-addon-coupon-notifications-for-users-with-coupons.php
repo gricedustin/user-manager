@@ -15,7 +15,7 @@ class User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-coupon-notifications" data-um-active-selectors="#um-coupon-notifications-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-megaphone"></span>
-				<h2><?php esc_html_e('Coupon Notifications for Users with Coupons', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('User Coupon Notifications', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
