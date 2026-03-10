@@ -1746,6 +1746,12 @@ class User_Manager_Actions {
 				);
 				$settings['my_account_admin_user_viewer_show_meta'] = isset($_POST['my_account_admin_user_viewer_show_meta']) && $_POST['my_account_admin_user_viewer_show_meta'] === '1';
 				$settings['my_account_site_admin_enabled'] = isset($_POST['my_account_site_admin_enabled']) && $_POST['my_account_site_admin_enabled'] === '1';
+				$settings['my_account_coupon_screen_enabled'] = isset($_POST['my_account_coupon_screen_enabled']) && $_POST['my_account_coupon_screen_enabled'] === '1';
+				$menu_title = isset($_POST['my_account_coupon_screen_menu_title']) ? sanitize_text_field(wp_unslash($_POST['my_account_coupon_screen_menu_title'])) : 'Coupons';
+				$page_title = isset($_POST['my_account_coupon_screen_page_title']) ? sanitize_text_field(wp_unslash($_POST['my_account_coupon_screen_page_title'])) : 'Coupons';
+				$settings['my_account_coupon_screen_menu_title'] = $menu_title !== '' ? $menu_title : 'Coupons';
+				$settings['my_account_coupon_screen_page_title'] = $page_title !== '' ? $page_title : 'Coupons';
+				$settings['my_account_coupon_screen_page_description'] = isset($_POST['my_account_coupon_screen_page_description']) ? sanitize_textarea_field(wp_unslash($_POST['my_account_coupon_screen_page_description'])) : '';
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';

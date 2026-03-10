@@ -16,6 +16,7 @@ require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users
 require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php';
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
+require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
@@ -40,6 +41,7 @@ class User_Manager_Tab_Addons {
 				<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
 				<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
+				<?php User_Manager_Addon_My_Account_Coupon_Screen::render($settings); ?>
 				<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
 			</div>
 		</form>
@@ -345,12 +347,16 @@ class User_Manager_Tab_Addons {
 			function toggleCouponRemainderAddonFields() {
 				$('#um-coupon-remainder-fields').toggle($('#um-coupon-remainder-enabled').is(':checked'));
 			}
+			function toggleMyAccountCouponScreenFields() {
+				$('#um-my-account-coupon-screen-fields').toggle($('#um-my-account-coupon-screen-enabled').is(':checked'));
+			}
 			$('#um-bulk-coupons-enabled').on('change', toggleBulkCouponsFields);
 			toggleBulkCouponsFields();
 			toggleBulkAddToCartAddonFields();
 			toggleNewUserCouponAddonFields();
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
+			toggleMyAccountCouponScreenFields();
 			$('.um-addon-action-submit').on('click', function() {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
 				$('#um-addons-form-action').val(targetAction);
@@ -465,6 +471,10 @@ class User_Manager_Tab_Addons {
 			$('#um-coupon-remainder-enabled').on('change', function() {
 				toggleCouponRemainderAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
+			});
+			$('#um-my-account-coupon-screen-enabled').on('change', function() {
+				toggleMyAccountCouponScreenFields();
+				refreshAddonCardAutoState($('#um-addon-card-my-account-coupon-screen'));
 			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();

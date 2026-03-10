@@ -13,6 +13,7 @@ if (defined('USER_MANAGER_COUPON_NOTICES_LOADED')) {
 define('USER_MANAGER_COUPON_NOTICES_LOADED', true);
 
 final class User_Manager_Coupon_Notices {
+	private const MY_ACCOUNT_COUPON_ENDPOINT = 'um-coupons';
 	private $settings = [];
 	private $enabled = false;
 	private $options = [];
@@ -85,6 +86,13 @@ final class User_Manager_Coupon_Notices {
 		}
 		add_action('loop_start', [$this, 'render_coupon_notifications_elsewhere']);
 		add_action('wp_ajax_umcn_apply_coupon', [$this, 'handle_apply_coupon']);
+		if ($this->is_my_account_coupon_screen_enabled()) {
+			add_action('init', [$this, 'register_my_account_coupon_endpoint'], 20);
+			add_filter('query_vars', [$this, 'add_my_account_coupon_query_var'], 20, 1);
+			add_filter('woocommerce_get_query_vars', [$this, 'add_my_account_coupon_wc_query_var'], 20, 1);
+			add_filter('woocommerce_account_menu_items', [$this, 'add_my_account_coupon_menu_item'], 40, 1);
+			add_action('woocommerce_account_' . self::MY_ACCOUNT_COUPON_ENDPOINT . '_endpoint', [$this, 'render_my_account_coupon_endpoint']);
+		}
        if ($this->options['block_support']) {
            add_filter('render_block', [$this, 'maybe_detect_block'], 10, 2);
            add_action('wp_footer', [$this, 'inject_block_markup'], 5);
@@ -204,6 +212,114 @@ final class User_Manager_Coupon_Notices {
 		];
 	}
 
+	private function is_my_account_coupon_screen_enabled(): bool {
+		return !empty($this->settings['my_account_coupon_screen_enabled']);
+	}
+
+	private function get_my_account_coupon_screen_menu_title(): string {
+		$menu_title = isset($this->settings['my_account_coupon_screen_menu_title'])
+			? trim((string) $this->settings['my_account_coupon_screen_menu_title'])
+			: '';
+		return $menu_title !== '' ? $menu_title : __('Coupons', 'user-manager');
+	}
+
+	private function get_my_account_coupon_screen_page_title(): string {
+		$page_title = isset($this->settings['my_account_coupon_screen_page_title'])
+			? trim((string) $this->settings['my_account_coupon_screen_page_title'])
+			: '';
+		return $page_title !== '' ? $page_title : __('Coupons', 'user-manager');
+	}
+
+	private function get_my_account_coupon_screen_page_description(): string {
+		return isset($this->settings['my_account_coupon_screen_page_description'])
+			? trim((string) $this->settings['my_account_coupon_screen_page_description'])
+			: '';
+	}
+
+	public function register_my_account_coupon_endpoint(): void {
+		if (!$this->is_my_account_coupon_screen_enabled()) {
+			return;
+		}
+		add_rewrite_endpoint(self::MY_ACCOUNT_COUPON_ENDPOINT, EP_ROOT | EP_PAGES);
+	}
+
+	public function add_my_account_coupon_query_var(array $vars): array {
+		if (!$this->is_my_account_coupon_screen_enabled()) {
+			return $vars;
+		}
+		if (!in_array(self::MY_ACCOUNT_COUPON_ENDPOINT, $vars, true)) {
+			$vars[] = self::MY_ACCOUNT_COUPON_ENDPOINT;
+		}
+		return $vars;
+	}
+
+	public function add_my_account_coupon_wc_query_var(array $query_vars): array {
+		if (!$this->is_my_account_coupon_screen_enabled()) {
+			return $query_vars;
+		}
+		$query_vars[self::MY_ACCOUNT_COUPON_ENDPOINT] = self::MY_ACCOUNT_COUPON_ENDPOINT;
+		return $query_vars;
+	}
+
+	public function add_my_account_coupon_menu_item(array $items): array {
+		if (!$this->is_my_account_coupon_screen_enabled() || !is_user_logged_in()) {
+			return $items;
+		}
+
+		$label      = $this->get_my_account_coupon_screen_menu_title();
+		$menu_items = [self::MY_ACCOUNT_COUPON_ENDPOINT => $label];
+		$merged     = [];
+		$inserted   = false;
+
+		foreach ($items as $key => $value) {
+			if ($key === 'customer-logout' && !$inserted) {
+				$merged   = array_merge($merged, $menu_items);
+				$inserted = true;
+			}
+			$merged[$key] = $value;
+		}
+
+		if (!$inserted) {
+			$merged = array_merge($merged, $menu_items);
+		}
+
+		return $merged;
+	}
+
+	public function render_my_account_coupon_endpoint(): void {
+		if (!$this->is_my_account_coupon_screen_enabled() || !is_user_logged_in()) {
+			return;
+		}
+
+		echo '<div class="um-my-account-coupon-screen">';
+		echo '<h2>' . esc_html($this->get_my_account_coupon_screen_page_title()) . '</h2>';
+
+		$description = $this->get_my_account_coupon_screen_page_description();
+		if ($description !== '') {
+			echo '<p>' . esc_html($description) . '</p>';
+		}
+
+		$coupons = $this->get_user_coupons();
+		if (empty($coupons)) {
+			if (function_exists('wc_print_notice')) {
+				wc_print_notice(__('No coupon notifications are currently available for your account.', 'user-manager'), 'notice');
+			} else {
+				echo '<p class="woocommerce-info">' . esc_html__('No coupon notifications are currently available for your account.', 'user-manager') . '</p>';
+			}
+			echo '</div>';
+			return;
+		}
+
+		// Show all available coupon notices on this dedicated screen.
+		$original_collapse = isset($this->options['collapse']) ? (int) $this->options['collapse'] : 1;
+		$this->options['collapse'] = PHP_INT_MAX;
+		$this->render_coupon_markup($coupons);
+		$this->options['collapse'] = $original_collapse;
+		$this->print_apply_script();
+
+		echo '</div>';
+	}
+
 	public function hide_store_credit_css(): void {
 		echo '<style>.wc-store-credit-cart-coupons-container{display:none!important;}</style>';
 	}
@@ -233,10 +349,24 @@ final class User_Manager_Coupon_Notices {
 		if ($this->should_use_block_injection()) {
 			return;
 		}
+		if ($this->is_my_account_coupon_screen_enabled() && $this->is_on_my_account_coupon_screen_endpoint()) {
+			return;
+		}
 		if (!$this->should_display()) {
 			return;
 		}
 		$this->maybe_render_notice($this->get_user_coupons());
+	}
+
+	private function is_on_my_account_coupon_screen_endpoint(): bool {
+		if (!function_exists('WC') || !WC() || !isset(WC()->query) || !is_object(WC()->query)) {
+			return false;
+		}
+		if (!function_exists('is_account_page') || !is_account_page()) {
+			return false;
+		}
+		$current_endpoint = (string) WC()->query->get_current_endpoint();
+		return $current_endpoint === self::MY_ACCOUNT_COUPON_ENDPOINT;
 	}
 
 	private function should_display(bool $log_only = false): bool {
