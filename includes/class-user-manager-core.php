@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.2.94';
+	const VERSION = '2.2.95';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2073,7 +2073,9 @@ html body .woocommerce-layout__header {
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
 		$force_debug       = self::is_bulk_add_to_cart_debug_requested();
 		$debug_enabled     = (isset($options['debug_mode']) && (string) $options['debug_mode'] === '1') || $force_debug;
-		$sample_csv        = $identifier_column . ',' . $quantity_column . "\n" . '123,1' . "\n" . '456,2' . "\n";
+		$sample_csv        = $identifier_column . ',' . $quantity_column . ',product_title,product_variation' . "\n"
+			. '123,1,Sample Product,' . "\n"
+			. '456,2,Sample Variation Product,Size: M | Color: Blue' . "\n";
 		$sample_csv_url    = 'data:text/csv;charset=utf-8,' . rawurlencode($sample_csv);
 		$sample_with_data_url = add_query_arg('um_bulk_add_to_cart_sample_data', '1', remove_query_arg('um_bulk_add_to_cart_sample_data'));
 		$form_action_url   = esc_url($_SERVER['REQUEST_URI'] ?? '');
