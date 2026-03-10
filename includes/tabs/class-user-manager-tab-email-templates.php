@@ -28,7 +28,7 @@ class User_Manager_Tab_Email_Templates {
 		$edit_id = isset($_GET['edit_template']) ? sanitize_key($_GET['edit_template']) : null;
 		$editing = ($edit_id && isset($templates[$edit_id])) ? $templates[$edit_id] : null;
 		?>
-		<div class="um-email-templates-layout">
+		<div class="um-email-templates-layout<?php echo $editing ? ' um-email-templates-layout-editing' : ''; ?>">
 			<!-- Left Column: Saved Templates -->
 			<div class="um-email-templates-list">
 				<div class="um-admin-card">
@@ -205,7 +205,7 @@ class User_Manager_Tab_Email_Templates {
 				
 				$preview_html = User_Manager_Email::get_preview_html($preview_body, $preview_heading);
 				?>
-				<div class="um-admin-card" style="margin-top: 24px;">
+				<div class="um-admin-card um-live-preview-card">
 					<div class="um-admin-card-header">
 						<span class="dashicons dashicons-visibility"></span>
 						<h2><?php esc_html_e('Live Preview (Demo Data)', 'user-manager'); ?></h2>
@@ -227,6 +227,18 @@ class User_Manager_Tab_Email_Templates {
 			grid-template-columns: 1fr 1fr;
 			gap: 20px;
 			margin-top: 20px;
+		}
+		.um-email-templates-form {
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+		}
+		.um-email-templates-layout.um-email-templates-layout-editing .um-email-templates-form {
+			order: -1;
+		}
+		.um-email-templates-form .um-live-preview-card {
+			order: -1;
+			margin-top: 0;
 		}
 		@media (max-width: 1200px) {
 			.um-email-templates-layout {
