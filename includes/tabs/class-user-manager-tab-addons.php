@@ -61,54 +61,54 @@ class User_Manager_Tab_Addons {
 			<input type="hidden" name="addon_section" value="<?php echo esc_attr($current_addon_section); ?>" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single">
-				<?php if (self::is_section_visible($current_addon_section, 'add-to-cart-bulk-import')) : ?>
+				<div class="um-addon-section" data-addon-section="add-to-cart-bulk-import">
 					<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
-				<?php endif; ?>
-				<?php if (self::is_section_visible($current_addon_section, 'checkout-pre-defined-addresses')) : ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="checkout-pre-defined-addresses">
 					<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
-				<?php endif; ?>
-				<?php if (self::is_section_visible($current_addon_section, 'coupon-creator')) : ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="coupon-creator">
 					<?php User_Manager_Addon_Bulk_Coupons::render($settings); ?>
-				<?php endif; ?>
-				<?php if (self::is_section_visible($current_addon_section, 'coupon-for-new-user')) : ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="coupon-for-new-user">
 					<?php User_Manager_Addon_Coupons_For_New_Users::render($settings); ?>
-				<?php endif; ?>
-				<?php if (self::is_section_visible($current_addon_section, 'coupon-notifications-for-users-with-coupons')) : ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="coupon-notifications-for-users-with-coupons">
 					<?php User_Manager_Addon_Coupon_Notifications_For_Users_With_Coupons::render($settings); ?>
-				<?php endif; ?>
-				<?php if (self::is_section_visible($current_addon_section, 'coupon-remaining-balances')) : ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="coupon-remaining-balances">
 					<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
-				<?php endif; ?>
-				<?php if (self::is_section_visible($current_addon_section, 'my-account-coupon-screen')) : ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="my-account-coupon-screen">
 					<?php User_Manager_Addon_My_Account_Coupon_Screen::render($settings); ?>
-				<?php endif; ?>
-				<?php if (self::is_section_visible($current_addon_section, 'my-account-site-admin')) : ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="my-account-site-admin">
 					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
-				<?php endif; ?>
+				</div>
 			</div>
 		</form>
 		<div class="um-admin-grid um-admin-grid-single">
-			<?php if (self::is_section_visible($current_addon_section, 'post-content-generator')) : ?>
+			<div class="um-addon-section" data-addon-section="post-content-generator">
 				<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
-			<?php endif; ?>
-			<?php if (self::is_section_visible($current_addon_section, 'post-idea-generator')) : ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="post-idea-generator">
 				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings, $settings_form_id); ?>
-			<?php endif; ?>
-			<?php if (self::is_section_visible($current_addon_section, 'user-role-switching')) : ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="user-role-switching">
 				<?php User_Manager_Addon_Role_Switching::render($settings_form_id); ?>
-			<?php endif; ?>
-			<?php if (self::is_section_visible($current_addon_section, 'wp-admin-bar-menu-items')) : ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="wp-admin-bar-menu-items">
 				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings, $settings_form_id); ?>
-			<?php endif; ?>
-			<?php if (self::is_section_visible($current_addon_section, 'wp-admin-bar-quick-search')) : ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="wp-admin-bar-quick-search">
 				<?php User_Manager_Addon_Quick_Search::render($settings, $settings_form_id); ?>
-			<?php endif; ?>
-			<?php if (self::is_section_visible($current_addon_section, 'wp-admin-css')) : ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="wp-admin-css">
 				<?php User_Manager_Addon_WP_Admin_CSS::render($settings, $settings_form_id); ?>
-			<?php endif; ?>
-			<?php if (self::is_section_visible($current_addon_section, 'wp-admin-notifications')) : ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="wp-admin-notifications">
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
-			<?php endif; ?>
+			</div>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-body">
 					<p style="margin:0;">
@@ -217,6 +217,15 @@ class User_Manager_Tab_Addons {
 			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
 			var addonInactiveText = '<?php echo esc_js(__('Inactive', 'user-manager')); ?>';
 			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
+
+			function applyAddonSectionFilter() {
+				if (!currentAddonSection || currentAddonSection === 'all') {
+					$('.um-addon-section').show();
+					return;
+				}
+				$('.um-addon-section').hide();
+				$('.um-addon-section[data-addon-section="' + currentAddonSection + '"]').show();
+			}
 
 			function isAddonCardActive($card) {
 				var selectorsRaw = ($card.attr('data-um-active-selectors') || '').trim();
@@ -340,6 +349,7 @@ class User_Manager_Tab_Addons {
 				});
 			}
 
+			applyAddonSectionFilter();
 			initAddonCollapsibleCards();
 
 			function umToggleBulkMetaFieldRow() {
@@ -608,10 +618,6 @@ class User_Manager_Tab_Addons {
 		});
 		</script>
 		<?php
-	}
-
-	private static function is_section_visible(string $current_section, string $target_section): bool {
-		return $current_section === 'all' || $current_section === $target_section;
 	}
 
 	/**

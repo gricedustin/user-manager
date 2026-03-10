@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.2.79 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons focused section safety fix: all add-on cards now remain in the form markup while non-selected sections are visually hidden, preventing unrelated add-on settings from being cleared on save.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.2.78 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tab: added a subsubsub-style add-on navigation list to quickly jump to a specific add-on section.', 'user-manager'); ?></li>

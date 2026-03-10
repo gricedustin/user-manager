@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.2.78
+ * Version: 2.2.79
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.2.79 - March 8, 2026
+ * - Add-ons focused section safety fix: all add-on cards now remain in the form markup while non-selected sections are visually hidden, preventing unrelated add-on settings from being cleared on save.
+ *
  * 2.2.78 - March 8, 2026
  * - Add-ons tab: added a subsubsub-style add-on navigation list to quickly jump to a specific add-on section.
  * - Add-ons tab: added per-section filtering so selecting an add-on shows only that add-on card while keeping Save Add-ons available.
