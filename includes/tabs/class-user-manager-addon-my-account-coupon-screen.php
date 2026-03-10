@@ -27,6 +27,18 @@ class User_Manager_Addon_My_Account_Coupon_Screen {
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('Add a dedicated Coupons tab to My Account that displays eligible user coupons using WooCommerce-style notices.', 'user-manager'); ?></p>
+					<p class="description">
+						<?php
+						printf(
+							/* translators: %s: Permalinks settings URL */
+							wp_kses(
+								__('After activating, <a href="%s">resave Permalinks</a> so the new My Account endpoint is registered.', 'user-manager'),
+								['a' => ['href' => []]]
+							),
+							esc_url(admin_url('options-permalink.php'))
+						);
+						?>
+					</p>
 				</div>
 
 				<div id="um-my-account-coupon-screen-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
