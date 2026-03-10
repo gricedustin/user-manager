@@ -667,7 +667,7 @@ class User_Manager_Tab_Addons {
 				'active' => !empty($settings['my_account_coupon_screen_enabled']),
 			],
 			'my-account-site-admin' => [
-				'label'  => __('My Account Site Admin', 'user-manager'),
+				'label'  => __('My Account Admin', 'user-manager'),
 				'active' => $my_account_site_admin_enabled,
 			],
 			'post-content-generator' => [

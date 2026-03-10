@@ -23,7 +23,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-my-account" data-um-active-selectors="#um-my-account-site-admin-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-admin-site"></span>
-				<h2><?php esc_html_e('My Account Site Admin', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('My Account Admin', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
