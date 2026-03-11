@@ -1504,6 +1504,17 @@ class User_Manager_Actions {
 		if (!is_array($settings)) {
 			$settings = [];
 		}
+		$settings_before = $settings;
+		$bulk_settings_before = get_option('bulk_add_to_cart_settings', []);
+		if (!is_array($bulk_settings_before)) {
+			$bulk_settings_before = [];
+		}
+		$role_switch_settings_before = get_option('view_website_by_role_settings', []);
+		if (!is_array($role_switch_settings_before)) {
+			$role_switch_settings_before = [];
+		}
+		$bulk_settings_after = $bulk_settings_before;
+		$role_switch_settings_after = $role_switch_settings_before;
 
 		$redirect_tab = User_Manager_Core::TAB_SETTINGS;
 
@@ -1781,10 +1792,11 @@ class User_Manager_Actions {
 					'quantity_column'    => isset($_POST['bulk_add_to_cart_quantity_column']) ? sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_quantity_column'])) : 'quantity',
 					'debug_mode'         => isset($_POST['bulk_add_to_cart_debug_mode']) && $_POST['bulk_add_to_cart_debug_mode'] === '1' ? '1' : '0',
 				];
+				$bulk_settings_after = $bulk_settings;
 				update_option('bulk_add_to_cart_settings', $bulk_settings);
 
 				// Role Switching settings.
-				$role_switch_settings    = get_option('view_website_by_role_settings', []);
+				$role_switch_settings    = $role_switch_settings_before;
 				$old_role_switch_enabled = !empty($role_switch_settings['enabled']);
 				$old_hidden_roles        = isset($role_switch_settings['hidden_roles']) && is_array($role_switch_settings['hidden_roles']) ? $role_switch_settings['hidden_roles'] : [];
 				$old_allow_reset         = !empty($role_switch_settings['allow_reset']);
@@ -1793,14 +1805,12 @@ class User_Manager_Actions {
 				$new_hidden_roles        = isset($_POST['hidden_roles']) ? array_map('sanitize_text_field', (array) wp_unslash($_POST['hidden_roles'])) : [];
 				$new_allow_reset         = isset($_POST['allow_reset']) && $_POST['allow_reset'] === '1';
 
-				update_option(
-					'view_website_by_role_settings',
-					[
-						'enabled'      => $new_role_switch_enabled,
-						'hidden_roles' => $new_hidden_roles,
-						'allow_reset'  => $new_allow_reset,
-					]
-				);
+				$role_switch_settings_after = [
+					'enabled'      => $new_role_switch_enabled,
+					'hidden_roles' => $new_hidden_roles,
+					'allow_reset'  => $new_allow_reset,
+				];
+				update_option('view_website_by_role_settings', $role_switch_settings_after);
 
 				$role_switch_changes = [];
 				if ($old_role_switch_enabled !== $new_role_switch_enabled) {
@@ -1907,6 +1917,29 @@ class User_Manager_Actions {
 		update_option(User_Manager_Core::OPTION_KEY, $settings);
 		User_Manager_Core::sync_coupon_notification_settings($settings);
 
+		$changed_fields = self::collect_changed_values($settings_before, $settings, 'settings');
+		if ($section === 'addons') {
+			$changed_fields = array_merge(
+				$changed_fields,
+				self::collect_changed_values($bulk_settings_before, $bulk_settings_after, 'bulk_add_to_cart_settings'),
+				self::collect_changed_values($role_switch_settings_before, $role_switch_settings_after, 'role_switch_settings')
+			);
+		}
+		if (!empty($changed_fields)) {
+			$log_extra = [
+				'settings_section' => $section,
+				'changed_count'    => count($changed_fields),
+				'changed_fields'   => $changed_fields,
+			];
+			if (isset($_POST['addon_section'])) {
+				$addon_section = sanitize_key(wp_unslash($_POST['addon_section']));
+				if ($addon_section !== '') {
+					$log_extra['addon_section'] = $addon_section;
+				}
+			}
+			User_Manager_Core::add_activity_log('settings_updated', get_current_user_id(), 'Settings', $log_extra);
+		}
+
 		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, 'settings_saved');
 		if ($redirect_tab === User_Manager_Core::TAB_ADDONS && isset($_POST['addon_section'])) {
 			$addon_section = sanitize_key(wp_unslash($_POST['addon_section']));
@@ -1917,6 +1950,138 @@ class User_Manager_Actions {
 
 		wp_safe_redirect($redirect_url);
 		exit;
+	}
+
+	/**
+	 * Build changed field rows between old/new values.
+	 *
+	 * @param mixed  $before Previous value.
+	 * @param mixed  $after  New value.
+	 * @param string $path   Current field path.
+	 * @return array<int,array{field:string,old:mixed,new:mixed}>
+	 */
+	private static function collect_changed_values($before, $after, string $path = ''): array {
+		if (is_object($before)) {
+			$before = (array) $before;
+		}
+		if (is_object($after)) {
+			$after = (array) $after;
+		}
+
+		if (is_array($before) && is_array($after)) {
+			$keys = array_values(array_unique(array_merge(array_keys($before), array_keys($after))));
+			sort($keys, SORT_STRING);
+			$changes = [];
+			foreach ($keys as $key) {
+				$key_string = (string) $key;
+				$child_path = $path === '' ? $key_string : $path . '[' . $key_string . ']';
+				$child_before = array_key_exists($key, $before) ? $before[$key] : null;
+				$child_after  = array_key_exists($key, $after) ? $after[$key] : null;
+				$changes = array_merge($changes, self::collect_changed_values($child_before, $child_after, $child_path));
+			}
+			return $changes;
+		}
+
+		if (self::normalize_value_for_change_compare($before) === self::normalize_value_for_change_compare($after)) {
+			return [];
+		}
+
+		$field = $path !== '' ? $path : 'value';
+		return [[
+			'field' => $field,
+			'old'   => self::format_changed_value_for_log($field, $before),
+			'new'   => self::format_changed_value_for_log($field, $after),
+		]];
+	}
+
+	/**
+	 * Normalize values for stable change comparison.
+	 *
+	 * @param mixed $value
+	 */
+	private static function normalize_value_for_change_compare($value): string {
+		if (is_object($value)) {
+			$value = (array) $value;
+		}
+		if (is_array($value)) {
+			$normalized = [];
+			foreach ($value as $key => $child) {
+				$normalized[(string) $key] = self::normalize_value_for_change_compare($child);
+			}
+			if (self::is_assoc_array($normalized)) {
+				ksort($normalized, SORT_STRING);
+			}
+			$encoded = wp_json_encode($normalized);
+			return is_string($encoded) ? $encoded : '';
+		}
+		if (is_bool($value)) {
+			return $value ? 'true' : 'false';
+		}
+		if ($value === null) {
+			return 'null';
+		}
+		return (string) $value;
+	}
+
+	/**
+	 * Convert changed values into safe log payload values.
+	 *
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	private static function format_changed_value_for_log(string $field, $value) {
+		if (self::is_sensitive_change_field($field)) {
+			return '[redacted]';
+		}
+		if (is_object($value)) {
+			$value = (array) $value;
+		}
+		if (is_array($value)) {
+			$encoded = wp_json_encode($value);
+			return is_string($encoded) ? $encoded : '';
+		}
+		if (is_bool($value)) {
+			return $value;
+		}
+		if ($value === null) {
+			return null;
+		}
+		return (string) $value;
+	}
+
+	/**
+	 * Check if an array is associative.
+	 *
+	 * @param array<mixed> $array
+	 */
+	private static function is_assoc_array(array $array): bool {
+		if ($array === []) {
+			return false;
+		}
+		return array_keys($array) !== range(0, count($array) - 1);
+	}
+
+	/**
+	 * Determine whether field path contains sensitive data.
+	 */
+	private static function is_sensitive_change_field(string $field): bool {
+		$needle = strtolower($field);
+		$sensitive_tokens = [
+			'password',
+			'user_pass',
+			'api_key',
+			'token',
+			'secret',
+			'nonce',
+			'authorization',
+			'cookie',
+		];
+		foreach ($sensitive_tokens as $token) {
+			if ($token !== '' && strpos($needle, $token) !== false) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

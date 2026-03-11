@@ -225,6 +225,18 @@ trait User_Manager_Core_Activity_Log_Trait {
 						? sprintf(__('Plugin "%s" deactivated.', 'user-manager'), $plugin_name)
 						: __('Plugin deactivated.', 'user-manager');
 					break;
+				case 'settings_updated':
+					$action_label = __('Settings Updated', 'user-manager');
+					$badge_class = 'um-status-warning';
+					$changed_count = isset($extra['changed_count']) ? (int) $extra['changed_count'] : 0;
+					$section_label = isset($extra['settings_section']) ? (string) $extra['settings_section'] : __('general', 'user-manager');
+					$notification_msg = sprintf(
+						/* translators: 1: section key, 2: number of changed settings */
+						__('Updated "%1$s" settings (%2$d change(s)).', 'user-manager'),
+						$section_label,
+						$changed_count
+					);
+					break;
 				case 'coupon_lookup':
 					$action_label = __('Coupon Lookup by Email', 'user-manager');
 					$badge_class = 'um-status-info';
@@ -496,6 +508,33 @@ trait User_Manager_Core_Activity_Log_Trait {
 							</strong>
 						</td>
 					</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<?php endif; ?>
+
+			<?php if ($entry['action'] === 'settings_updated' && !empty($extra['changed_fields']) && is_array($extra['changed_fields'])) : ?>
+			<h4 style="margin: 16px 0 8px;"><?php esc_html_e('Settings Changes', 'user-manager'); ?></h4>
+			<table class="widefat striped">
+				<thead>
+					<tr>
+						<th><?php esc_html_e('Field', 'user-manager'); ?></th>
+						<th><?php esc_html_e('Old Value', 'user-manager'); ?></th>
+						<th><?php esc_html_e('New Value', 'user-manager'); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ($extra['changed_fields'] as $change_row) : ?>
+						<?php
+						$field = isset($change_row['field']) ? (string) $change_row['field'] : '';
+						$old_value = $change_row['old'] ?? '';
+						$new_value = $change_row['new'] ?? '';
+						?>
+						<tr style="background: #fff8e5;">
+							<td><code><?php echo esc_html($field); ?></code></td>
+							<td><?php echo esc_html(self::format_activity_detail_scalar($old_value)); ?></td>
+							<td><strong style="color: #0073aa;"><?php echo esc_html(self::format_activity_detail_scalar($new_value)); ?></strong></td>
+						</tr>
 					<?php endforeach; ?>
 				</tbody>
 			</table>
