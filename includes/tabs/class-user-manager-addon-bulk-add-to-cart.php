@@ -78,17 +78,17 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 					</p>
 				</div>
 				<div class="um-form-field">
-					<label for="um-bulk-identifier-column"><?php esc_html_e('Product Identifier Column', 'user-manager'); ?></label>
-					<input type="text" name="bulk_add_to_cart_identifier_column" id="um-bulk-identifier-column" class="regular-text" value="<?php echo esc_attr($bulk_settings['identifier_column'] ?? 'product_id'); ?>" />
-					<p class="description">
-						<?php esc_html_e('Exact column header in your CSV that contains the product identifier (ID, SKU, slug, title, or meta field value).', 'user-manager'); ?>
-					</p>
-				</div>
-				<div class="um-form-field">
 					<label for="um-bulk-product-id-custom-header"><?php esc_html_e('product_id Custom Column Header', 'user-manager'); ?></label>
 					<input type="text" name="bulk_add_to_cart_product_id_custom_column_header" id="um-bulk-product-id-custom-header" class="regular-text" value="<?php echo esc_attr($bulk_settings['product_id_custom_column_header'] ?? 'product_id'); ?>" />
 					<p class="description">
 						<?php esc_html_e('Changes the forced product_id column header in sample CSV files. Processing still treats this column as product_id fallback.', 'user-manager'); ?>
+					</p>
+				</div>
+				<div class="um-form-field">
+					<label for="um-bulk-identifier-column"><?php esc_html_e('Product Identifier Column', 'user-manager'); ?></label>
+					<input type="text" name="bulk_add_to_cart_identifier_column" id="um-bulk-identifier-column" class="regular-text" value="<?php echo esc_attr($bulk_settings['identifier_column'] ?? 'product_id'); ?>" />
+					<p class="description">
+						<?php esc_html_e('Exact column header in your CSV that contains the product identifier (ID, SKU, slug, title, or meta field value).', 'user-manager'); ?>
 					</p>
 				</div>
 				<div class="um-form-field">
