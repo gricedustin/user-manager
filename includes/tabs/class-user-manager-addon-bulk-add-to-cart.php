@@ -40,13 +40,6 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 					</p>
 				</div>
 				<div class="um-form-field">
-					<label class="um-label-block"><?php esc_html_e('Front-end debug URL parameter', 'user-manager'); ?></label>
-					<input type="text" readonly class="large-text code" value="?um_bulk_add_to_cart_debug=1" onclick="this.select();" />
-					<p class="description">
-						<?php esc_html_e('Append this parameter to the page with [bulk_add_to_cart] to force verbose debug notices for that request, even if debug mode is unchecked.', 'user-manager'); ?>
-					</p>
-				</div>
-				<div class="um-form-field">
 					<?php
 					$show_sample_csv = array_key_exists('show_sample_csv', $bulk_settings)
 						? ($bulk_settings['show_sample_csv'] ?? '1') === '1'
@@ -126,6 +119,13 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 					</label>
 					<p class="description">
 						<?php esc_html_e('When enabled, extra WooCommerce notices will describe how the CSV was parsed and how each row was handled.', 'user-manager'); ?>
+					</p>
+				</div>
+				<div class="um-form-field">
+					<label class="um-label-block"><?php esc_html_e('Front-end debug URL parameter', 'user-manager'); ?></label>
+					<input type="text" readonly class="large-text code" value="?um_bulk_add_to_cart_debug=1" onclick="this.select();" />
+					<p class="description">
+						<?php esc_html_e('Append this parameter to the page with [bulk_add_to_cart] to force verbose debug notices for that request, even if debug mode is unchecked.', 'user-manager'); ?>
 					</p>
 				</div>
 				</div>
