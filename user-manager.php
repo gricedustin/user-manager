@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.3.11
+ * Version: 2.3.12
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.3.12 - March 8, 2026
+ * - Post Content Generator and Post Idea Generator add-ons now require a saved ChatGPT / OpenAI API key before showing their full settings/tools after activation.
+ * - When activated without an API key, each add-on now shows a requirement message with a direct link to Settings > API Keys.
+ *
  * 2.3.11 - March 8, 2026
  * - Add-ons empty-state "Choose an Add-on" tiles now highlight active add-ons with a green tile treatment for faster scanning.
  *

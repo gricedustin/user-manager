@@ -11,6 +11,8 @@ class User_Manager_Addon_Blog_Post_Idea_Generator {
 
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
+		$has_openai_api_key = trim((string) ($settings['openai_api_key'] ?? '')) !== '';
+		$api_keys_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS);
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-blog-post-idea-generator" data-um-active-selectors="#um-openai-blog-post-idea-generator-enabled">
 			<div class="um-admin-card-header">
@@ -26,10 +28,17 @@ class User_Manager_Addon_Blog_Post_Idea_Generator {
 					<p class="description"><?php esc_html_e('Generate fresh blog topic ideas from your existing content using AI.', 'user-manager'); ?></p>
 				</div>
 				<div id="um-openai-blog-post-idea-generator-fields" style="<?php echo empty($settings['openai_blog_post_idea_generator_enabled']) ? 'display:none;' : ''; ?>">
-					<p class="description" style="margin-top:0;">
-						<?php esc_html_e('Enable or disable Post Idea Generator tools in Add-ons.', 'user-manager'); ?>
-					</p>
-					<?php User_Manager_Tab_Tools::render(false, false, true, false, true, false); ?>
+					<?php if (!$has_openai_api_key) : ?>
+						<p class="description" style="margin-top:0;">
+							<?php esc_html_e('To use this add-on, please save a ChatGPT / OpenAI API Key first.', 'user-manager'); ?>
+							<a href="<?php echo esc_url($api_keys_url); ?>"><?php esc_html_e('Go to Settings > API Keys', 'user-manager'); ?></a>.
+						</p>
+					<?php else : ?>
+						<p class="description" style="margin-top:0;">
+							<?php esc_html_e('Enable or disable Post Idea Generator tools in Add-ons.', 'user-manager'); ?>
+						</p>
+						<?php User_Manager_Tab_Tools::render(false, false, true, false, true, false); ?>
+					<?php endif; ?>
 				</div>
 			</div>
 		</div>
