@@ -235,6 +235,18 @@ class User_Manager_Tab_Addons {
 			font-size: 12px;
 			color: #646970;
 		}
+		.um-addon-tile-active {
+			border-color: #7ad07f;
+			background: #edfaef;
+		}
+		.um-addon-tile-active:hover,
+		.um-addon-tile-active:focus {
+			border-color: #2ea043;
+			box-shadow: 0 0 0 1px #2ea043;
+		}
+		.um-addon-tile-active .um-addon-tile-title {
+			color: #137333;
+		}
 		.um-addon-tile-active .um-addon-tile-state {
 			color: #137333;
 			font-weight: 600;
