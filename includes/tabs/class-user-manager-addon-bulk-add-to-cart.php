@@ -132,7 +132,7 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 			</div>
 		</div>
 
-		<div class="um-admin-card">
+		<div class="um-admin-card" style="margin-top: 18px;">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-list-view"></span>
 				<h2><?php esc_html_e('Add to Cart Bulk Import History', 'user-manager'); ?></h2>

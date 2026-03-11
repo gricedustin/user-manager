@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.5 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons UI: added extra top spacing above the "Add to Cart Bulk Import History" card for clearer visual separation.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.4 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Bulk Add to Cart sample CSVs now force a product_id column first, and include Product Identifier Column as a second column when different.', 'user-manager'); ?></li>

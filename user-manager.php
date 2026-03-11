@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.3.4
+ * Version: 2.3.5
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.3.5 - March 8, 2026
+ * - Add-ons UI: added extra top spacing above the "Add to Cart Bulk Import History" card for clearer visual separation.
+ *
  * 2.3.4 - March 8, 2026
  * - Bulk Add to Cart sample CSVs now force a product_id column first, and include Product Identifier Column as a second column when different.
  * - Bulk Add to Cart upload now supports Product Identifier Column and/or product_id fallback (identifier first, then product_id fallback if needed).
