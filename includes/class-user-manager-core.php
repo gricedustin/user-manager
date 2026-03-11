@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.1';
+	const VERSION = '2.3.2';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -7427,6 +7427,9 @@ html body .woocommerce-layout__header {
 			case 'user_exists':
 				$content = __('A user with that email already exists. Enable "Update existing users" in Settings to update instead.', 'user-manager');
 				$type = 'error';
+				break;
+			case 'user_added_to_subsite':
+				$content = __('Existing network user was added to this sub-site successfully.', 'user-manager');
 				break;
 			case 'user_not_found':
 				$content = __('No user found with that email address.', 'user-manager');

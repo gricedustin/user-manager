@@ -407,6 +407,8 @@ class User_Manager_Actions {
 		$settings = User_Manager_Core::get_settings();
 		
 		if ($existing_user) {
+			$added_to_subsite = self::maybe_add_existing_network_user_to_current_site((int) $existing_user->ID, $role, $settings);
+
 			if (!empty($settings['update_existing_users'])) {
 				// Capture old values before update
 				$old_values = [
@@ -437,6 +439,7 @@ class User_Manager_Actions {
 					'template_id' => $template_id,
 					'login_url' => $login_url,
 					'password_changed' => true,
+					'added_to_subsite' => $added_to_subsite,
 					'old_values' => $old_values,
 					'new_values' => [
 						'first_name' => $first_name,
@@ -458,6 +461,19 @@ class User_Manager_Actions {
 				}
 				exit;
 			} else {
+				if ($added_to_subsite) {
+					$log_debug = User_Manager_Core::add_activity_log('user_added_to_subsite', $existing_user->ID, 'Create User (Added to Site)', [
+						'email' => $email,
+						'role' => $role,
+						'blog_id' => get_current_blog_id(),
+						'multisite' => is_multisite(),
+						'update_existing_users' => false,
+					]);
+					$url = User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CREATE_USER, 'user_added_to_subsite');
+					$url = User_Manager_Core::maybe_add_log_debug_to_url($url, $log_debug);
+					wp_safe_redirect($url);
+					exit;
+				}
 				wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CREATE_USER, 'user_exists'));
 				exit;
 			}
@@ -931,6 +947,7 @@ class User_Manager_Actions {
 			}
 
 			if ($existing_user) {
+				$added_to_subsite = self::maybe_add_existing_network_user_to_current_site((int) $existing_user->ID, $role, $settings);
 				if ($update_existing) {
 					// Capture old values
 					$old_values = [
@@ -962,6 +979,7 @@ class User_Manager_Actions {
 							'template_id' => $template_id,
 							'login_url' => $login_url,
 							'password_changed' => true,
+							'added_to_subsite' => $added_to_subsite,
 							'old_values' => $old_values,
 							'new_values' => [
 								'first_name' => $first_name,
@@ -989,6 +1007,27 @@ class User_Manager_Actions {
 					$row_coupon_code = isset($row['coupon_email_append']) ? trim((string) $row['coupon_email_append']) : '';
 					if ($row_coupon_code !== '' && class_exists('WC_Coupon')) {
 						self::append_email_to_coupon_by_code($row_coupon_code, $email);
+					}
+				} elseif ($added_to_subsite) {
+					$created++;
+					$display_name = trim($existing_user->first_name . ' ' . $existing_user->last_name);
+					if ($display_name === '') {
+						$display_name = (string) $existing_user->display_name;
+					}
+					$created_users[] = [
+						'id' => $existing_user->ID,
+						'email' => $email,
+						'name' => $display_name,
+					];
+
+					if ($settings['log_activity'] ?? true) {
+						User_Manager_Core::add_activity_log('user_added_to_subsite', $existing_user->ID, 'Bulk Create (Added to Site)', [
+							'email' => $email,
+							'role' => $role,
+							'blog_id' => get_current_blog_id(),
+							'multisite' => is_multisite(),
+							'update_existing_users' => false,
+						]);
 					}
 				}
 				continue;
@@ -1592,6 +1631,7 @@ class User_Manager_Actions {
 				$settings['log_admin_activity'] = isset($_POST['log_admin_activity']) && $_POST['log_admin_activity'] === '1';
 				$settings['enable_view_reports'] = isset($_POST['enable_view_reports']) && $_POST['enable_view_reports'] === '1';
 				$settings['update_existing_users'] = isset($_POST['update_existing_users']) && $_POST['update_existing_users'] === '1';
+				$settings['add_existing_network_user_to_subsite'] = isset($_POST['add_existing_network_user_to_subsite']) && $_POST['add_existing_network_user_to_subsite'] === '1';
 				$settings['rebrand_reset_password_copy'] = isset($_POST['rebrand_reset_password_copy']) && $_POST['rebrand_reset_password_copy'] === '1';
 				$settings['coupon_email_converter'] = isset($_POST['coupon_email_converter']) && $_POST['coupon_email_converter'] === '1';
 				$settings['coupon_show_email_column'] = isset($_POST['coupon_show_email_column']) && $_POST['coupon_show_email_column'] === '1';
@@ -2047,6 +2087,7 @@ class User_Manager_Actions {
 			$existing_user = get_user_by('email', $email);
 
 			if ($existing_user) {
+				$added_to_subsite = self::maybe_add_existing_network_user_to_current_site((int) $existing_user->ID, $role, $settings);
 				if (!empty($settings['update_existing_users'])) {
 					// Capture old values
 					$old_values = [
@@ -2091,6 +2132,7 @@ class User_Manager_Actions {
 						'import_id' => $import_id,
 						'source_file' => basename($filepath),
 						'password_changed' => $password_changed,
+						'added_to_subsite' => $added_to_subsite,
 						'old_values' => $old_values,
 						'new_values' => [
 							'first_name' => $first_name,
@@ -2103,6 +2145,25 @@ class User_Manager_Actions {
 						User_Manager_Email::send_user_email($existing_user->ID, $password, $login_url, $template_id);
 						$emails_sent++;
 					}
+				} elseif ($added_to_subsite) {
+					$created++;
+					$detailed_log[] = [
+						'row' => $row_num,
+						'email' => $email,
+						'user_id' => $existing_user->ID,
+						'status' => 'added',
+						'message' => __('Existing network user added to this site', 'user-manager'),
+					];
+					User_Manager_Core::add_activity_log('user_added_to_subsite', $existing_user->ID, 'SFTP Import (Added to Site)', [
+						'import_id' => $import_id,
+						'source_file' => basename($filepath),
+						'row' => $row_num,
+						'email' => $email,
+						'role' => $role,
+						'blog_id' => get_current_blog_id(),
+						'multisite' => is_multisite(),
+						'update_existing_users' => false,
+					]);
 				} else {
 					$skipped++;
 					$detailed_log[] = [
@@ -2240,6 +2301,63 @@ class User_Manager_Actions {
 			'emails' => $emails_sent,
 		]));
 		exit;
+	}
+
+	/**
+	 * Whether auto-adding existing network users to current sub-site is enabled.
+	 *
+	 * Defaults to true when the setting does not yet exist.
+	 */
+	private static function should_auto_add_existing_network_user_to_subsite(array $settings): bool {
+		if (!is_multisite()) {
+			return false;
+		}
+		if (!array_key_exists('add_existing_network_user_to_subsite', $settings)) {
+			return true;
+		}
+		return !empty($settings['add_existing_network_user_to_subsite']);
+	}
+
+	/**
+	 * Add an existing network user to the current site when enabled.
+	 */
+	private static function maybe_add_existing_network_user_to_current_site(int $user_id, string $requested_role, array $settings): bool {
+		if ($user_id <= 0 || !self::should_auto_add_existing_network_user_to_subsite($settings)) {
+			return false;
+		}
+
+		$blog_id = (int) get_current_blog_id();
+		if ($blog_id <= 0 || is_user_member_of_blog($user_id, $blog_id)) {
+			return false;
+		}
+
+		$role = self::resolve_multisite_membership_role($requested_role);
+		$result = add_user_to_blog($blog_id, $user_id, $role);
+		return !is_wp_error($result);
+	}
+
+	/**
+	 * Ensure the role exists before assigning membership on multisite.
+	 */
+	private static function resolve_multisite_membership_role(string $requested_role): string {
+		$role = sanitize_key($requested_role);
+		if ($role === '') {
+			$role = sanitize_key((string) get_option('default_role', 'subscriber'));
+		}
+		if ($role === '') {
+			$role = 'subscriber';
+		}
+
+		if (function_exists('wp_roles')) {
+			$wp_roles = wp_roles();
+			$available_roles = ($wp_roles && method_exists($wp_roles, 'get_names')) ? array_keys((array) $wp_roles->get_names()) : [];
+			if (!empty($available_roles) && !in_array($role, $available_roles, true)) {
+				$default_role = sanitize_key((string) get_option('default_role', 'subscriber'));
+				$role = in_array($default_role, $available_roles, true) ? $default_role : 'subscriber';
+			}
+		}
+
+		return $role;
 	}
 
 	/**

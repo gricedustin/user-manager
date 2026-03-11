@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.3.1
+ * Version: 2.3.2
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.3.2 - March 8, 2026
+ * - Settings: added a new default-enabled option to auto-add existing multisite network users to the current sub-site during user creation flows.
+ * - Create User, Bulk Create, and SFTP Import now add existing network users to the current sub-site (when enabled) instead of only skipping them.
+ *
  * 2.3.1 - March 8, 2026
  * - Bulk Add to Cart sample downloads now honor the active Identifier Type when generating identifier values.
  * - When Identifier Type is "Custom Meta Field Value", both sample CSV downloads now use the configured meta field value in the identifier column instead of product ID.

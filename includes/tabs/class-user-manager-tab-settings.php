@@ -323,6 +323,18 @@ if (!defined('ABSPATH')) {
 							<p class="description"><?php esc_html_e('Instead of skipping existing users, update their first name, last name, role, and password.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
+							<?php
+							$add_existing_network_user_to_subsite_enabled = array_key_exists('add_existing_network_user_to_subsite', $settings)
+								? !empty($settings['add_existing_network_user_to_subsite'])
+								: true;
+							?>
+							<label>
+								<input type="checkbox" name="add_existing_network_user_to_subsite" value="1" <?php checked($add_existing_network_user_to_subsite_enabled); ?> />
+								<?php esc_html_e('If a user already exists in a multisite network, but does not already exist in this sub-site, add them to the sub-site', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('Applies to Create User, Bulk Create, and SFTP import. Default is enabled.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
 							<label for="um-sftp-directories"><?php esc_html_e('SFTP/Directory Paths for CSV Import', 'user-manager'); ?></label>
 							<textarea name="sftp_directories" id="um-sftp-directories" rows="5" class="large-text code" placeholder="<?php echo esc_attr("/home/username/imports/\n/var/www/html/wp-content/uploads/user-imports/\n" . WP_CONTENT_DIR . "/uploads/user-imports/"); ?>"><?php echo esc_textarea($settings['sftp_directories'] ?? ''); ?></textarea>
 							<p class="description"><?php esc_html_e('Enter one directory path per line. These directories will be monitored for CSV files in the Bulk Create tool.', 'user-manager'); ?></p>
