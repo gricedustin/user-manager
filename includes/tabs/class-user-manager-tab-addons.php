@@ -30,10 +30,9 @@ class User_Manager_Tab_Addons {
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		$settings_form_id = 'um-addons-settings-form';
 		$addon_sections = self::get_addon_sections($settings);
-		$default_addon_section = !empty($addon_sections) ? (string) key($addon_sections) : 'all';
-		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : $default_addon_section;
-		if ($current_addon_section !== 'all' && !isset($addon_sections[$current_addon_section])) {
-			$current_addon_section = $default_addon_section;
+		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : '';
+		if ($current_addon_section !== '' && $current_addon_section !== 'all' && !isset($addon_sections[$current_addon_section])) {
+			$current_addon_section = '';
 		}
 		$addons_base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
 		?>
@@ -51,12 +50,32 @@ class User_Manager_Tab_Addons {
 		</ul>
 		<br class="clear" />
 
+		<div class="um-addons-empty-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-grid-view"></span>
+					<h2><?php esc_html_e('Choose an Add-on', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p class="description" style="margin-top:0;"><?php esc_html_e('Select an add-on tile below to open its settings.', 'user-manager'); ?></p>
+					<div class="um-addon-tile-grid">
+						<?php foreach ($addon_sections as $section_key => $section_meta) : ?>
+							<a class="um-addon-tile<?php echo !empty($section_meta['active']) ? ' um-addon-tile-active' : ''; ?>" href="<?php echo esc_url(add_query_arg('addon_section', $section_key, $addons_base_url)); ?>">
+								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
+								<span class="um-addon-tile-state"><?php echo !empty($section_meta['active']) ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
+							</a>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="<?php echo esc_attr($settings_form_id); ?>">
 			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="addons" />
 			<input type="hidden" name="addon_section" value="<?php echo esc_attr($current_addon_section); ?>" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
-			<div class="um-admin-grid um-admin-grid-single">
+			<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 				<div class="um-addon-section" data-addon-section="add-to-cart-bulk-import">
 					<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
 				</div>
@@ -83,7 +102,7 @@ class User_Manager_Tab_Addons {
 				</div>
 			</div>
 		</form>
-		<div class="um-admin-grid um-admin-grid-single">
+		<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 			<div class="um-addon-section" data-addon-section="post-content-generator">
 				<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
 			</div>
@@ -105,7 +124,7 @@ class User_Manager_Tab_Addons {
 			<div class="um-addon-section" data-addon-section="wp-admin-notifications">
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
 			</div>
-			<div class="um-admin-card um-admin-card-full">
+			<div class="um-admin-card um-admin-card-full um-addon-save-card">
 				<div class="um-admin-card-body">
 					<p style="margin:0;">
 						<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
@@ -183,6 +202,43 @@ class User_Manager_Tab_Addons {
 			line-height: 1.4;
 			font-weight: 400;
 		}
+		.um-addon-tile-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			gap: 12px;
+			margin-top: 8px;
+		}
+		.um-addon-tile {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			padding: 14px 16px;
+			border: 1px solid #dcdcde;
+			border-radius: 6px;
+			background: #fff;
+			text-decoration: none;
+			color: #1d2327;
+			min-height: 86px;
+			box-sizing: border-box;
+		}
+		.um-addon-tile:hover,
+		.um-addon-tile:focus {
+			border-color: #2271b1;
+			box-shadow: 0 0 0 1px #2271b1;
+			outline: none;
+		}
+		.um-addon-tile-title {
+			font-weight: 600;
+			line-height: 1.35;
+		}
+		.um-addon-tile-state {
+			font-size: 12px;
+			color: #646970;
+		}
+		.um-addon-tile-active .um-addon-tile-state {
+			color: #137333;
+			font-weight: 600;
+		}
 		.um-checkbox-section-title {
 			margin: 0 0 6px;
 			font-size: 14px;
@@ -215,7 +271,15 @@ class User_Manager_Tab_Addons {
 			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
 
 			function applyAddonSectionFilter() {
-				if (!currentAddonSection || currentAddonSection === 'all') {
+				if (!currentAddonSection) {
+					$('.um-addon-section').hide();
+					$('.um-addons-empty-state').show();
+					$('.um-addon-save-card').hide();
+					return;
+				}
+				$('.um-addons-empty-state').hide();
+				$('.um-addon-save-card').show();
+				if (currentAddonSection === 'all') {
 					$('.um-addon-section').show();
 					return;
 				}
@@ -340,7 +404,7 @@ class User_Manager_Tab_Addons {
 
 					// Keep cards collapsed by default in "all" view,
 					// but auto-expand when user is focused on a single add-on section.
-					setAddonCardCollapsed($card, currentAddonSection === 'all', true);
+					setAddonCardCollapsed($card, !currentAddonSection || currentAddonSection === 'all', true);
 					refreshAddonCardAutoState($card);
 				});
 			}
