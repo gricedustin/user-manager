@@ -62,6 +62,24 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 					</label>
 				</div>
 				<div class="um-form-field">
+					<?php
+					$include_private_products = ($bulk_settings['sample_with_data_include_private_products'] ?? '0') === '1';
+					?>
+					<label>
+						<input type="checkbox" name="bulk_add_to_cart_sample_with_data_include_private_products" value="1" <?php checked($include_private_products); ?> />
+						<?php esc_html_e('Include private products (exclude by default)', 'user-manager'); ?>
+					</label>
+				</div>
+				<div class="um-form-field">
+					<?php
+					$include_draft_products = ($bulk_settings['sample_with_data_include_draft_products'] ?? '0') === '1';
+					?>
+					<label>
+						<input type="checkbox" name="bulk_add_to_cart_sample_with_data_include_draft_products" value="1" <?php checked($include_draft_products); ?> />
+						<?php esc_html_e('Include draft products (exclude by default)', 'user-manager'); ?>
+					</label>
+				</div>
+				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="bulk_add_to_cart_redirect_to_cart" value="1" <?php checked(($bulk_settings['redirect_to_cart'] ?? '1') === '1'); ?> />
 						<?php esc_html_e('Redirect to cart page after processing CSV file', 'user-manager'); ?>

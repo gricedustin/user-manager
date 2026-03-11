@@ -1823,6 +1823,8 @@ class User_Manager_Actions {
 					'debug_mode'         => isset($_POST['bulk_add_to_cart_debug_mode']) && $_POST['bulk_add_to_cart_debug_mode'] === '1' ? '1' : '0',
 					'show_sample_csv'    => isset($_POST['bulk_add_to_cart_show_sample_csv']) && $_POST['bulk_add_to_cart_show_sample_csv'] === '1' ? '1' : '0',
 					'show_sample_with_product_data' => isset($_POST['bulk_add_to_cart_show_sample_with_product_data']) && $_POST['bulk_add_to_cart_show_sample_with_product_data'] === '1' ? '1' : '0',
+					'sample_with_data_include_private_products' => isset($_POST['bulk_add_to_cart_sample_with_data_include_private_products']) && $_POST['bulk_add_to_cart_sample_with_data_include_private_products'] === '1' ? '1' : '0',
+					'sample_with_data_include_draft_products' => isset($_POST['bulk_add_to_cart_sample_with_data_include_draft_products']) && $_POST['bulk_add_to_cart_sample_with_data_include_draft_products'] === '1' ? '1' : '0',
 				];
 				if (trim((string) $bulk_settings['product_id_custom_column_header']) === '') {
 					$bulk_settings['product_id_custom_column_header'] = 'product_id';

@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.9';
+	const VERSION = '2.3.10';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2964,6 +2964,8 @@ html body .woocommerce-layout__header {
 		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
 		$product_id_column_header = self::bulk_add_to_cart_get_product_id_column_header($options);
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
+		$include_private_products = (string) ($options['sample_with_data_include_private_products'] ?? '0') === '1';
+		$include_draft_products   = (string) ($options['sample_with_data_include_draft_products'] ?? '0') === '1';
 		if ($identifier_column === '') {
 			$identifier_column = 'product_id';
 		}
@@ -3115,10 +3117,17 @@ html body .woocommerce-layout__header {
 			$quantity_column = 'quantity';
 		}
 		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column_header);
+		$post_statuses = ['publish'];
+		if ($include_private_products) {
+			$post_statuses[] = 'private';
+		}
+		if ($include_draft_products) {
+			$post_statuses[] = 'draft';
+		}
 
 		$ids = get_posts([
 			'post_type'              => ['product', 'product_variation'],
-			'post_status'            => ['publish', 'private'],
+			'post_status'            => $post_statuses,
 			'posts_per_page'         => -1,
 			'orderby'                => 'ID',
 			'order'                  => 'ASC',

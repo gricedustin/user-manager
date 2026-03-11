@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.10 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Bulk Import: added "Include private products (exclude by default)" and "Include draft products (exclude by default)" settings for "Download Sample CSV with Product Data".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Product-data sample export now defaults to publish-only products unless those include toggles are enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.9 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tab default state now shows no add-on cards when no add-on is selected.', 'user-manager'); ?></li>

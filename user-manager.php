@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: Comprehensive user + coupon automation for WooCommerce: create/reset users (single, CSV, paste, SFTP), per-login history, customizable email templates, login-triggered per-user coupon cloning with storefront notifications, custom user meta imports, activity logging, and optional rebranded “set password” UX.
- * Version: 2.3.9
+ * Version: 2.3.10
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.3.10 - March 8, 2026
+ * - Add to Cart Bulk Import: added "Include private products (exclude by default)" and "Include draft products (exclude by default)" settings for "Download Sample CSV with Product Data".
+ * - Product-data sample export now defaults to publish-only products unless those include toggles are enabled.
+ *
  * 2.3.9 - March 8, 2026
  * - Add-ons tab default state now shows no add-on cards when no add-on is selected.
  * - Added a responsive tile-based add-on directory grid (rows/columns) for the default Add-ons view so users can pick an add-on before editing settings.
