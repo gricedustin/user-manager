@@ -108,7 +108,7 @@ class User_Manager_Tab_Addons {
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-body">
 					<p style="margin:0;">
-						<?php submit_button(__('Save Add-ons', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
+						<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
 					</p>
 				</div>
 			</div>
