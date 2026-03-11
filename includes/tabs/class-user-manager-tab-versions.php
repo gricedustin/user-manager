@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.4 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart sample CSVs now force a product_id column first, and include Product Identifier Column as a second column when different.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart upload now supports Product Identifier Column and/or product_id fallback (identifier first, then product_id fallback if needed).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-on setting added: "product_id Custom Column Header" to rename the CSV product_id header while still processing it as product_id.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.3 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Bulk Import add-on: added two new checkboxes to control visibility of "Download Sample CSV" and "Download Sample CSV with Product Data" links.', 'user-manager'); ?></li>

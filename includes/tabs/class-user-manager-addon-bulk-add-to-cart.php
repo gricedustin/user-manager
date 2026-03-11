@@ -85,6 +85,13 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 					</p>
 				</div>
 				<div class="um-form-field">
+					<label for="um-bulk-product-id-custom-header"><?php esc_html_e('product_id Custom Column Header', 'user-manager'); ?></label>
+					<input type="text" name="bulk_add_to_cart_product_id_custom_column_header" id="um-bulk-product-id-custom-header" class="regular-text" value="<?php echo esc_attr($bulk_settings['product_id_custom_column_header'] ?? 'product_id'); ?>" />
+					<p class="description">
+						<?php esc_html_e('Changes the forced product_id column header in sample CSV files. Processing still treats this column as product_id fallback.', 'user-manager'); ?>
+					</p>
+				</div>
+				<div class="um-form-field">
 					<label for="um-bulk-identifier-type"><?php esc_html_e('Identifier Type', 'user-manager'); ?></label>
 					<select name="bulk_add_to_cart_identifier_type" id="um-bulk-identifier-type" class="regular-text">
 						<?php $identifier_type = $bulk_settings['identifier_type'] ?? 'product_id'; ?>

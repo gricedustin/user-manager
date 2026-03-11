@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.3';
+	const VERSION = '2.3.4';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2071,6 +2071,7 @@ html body .woocommerce-layout__header {
 		$options           = get_option('bulk_add_to_cart_settings', []);
 		$identifier_column = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
+		$product_id_column_header = self::bulk_add_to_cart_get_product_id_column_header($options);
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
 		$show_sample_csv   = !array_key_exists('show_sample_csv', $options) || (string) ($options['show_sample_csv'] ?? '1') === '1';
 		$show_sample_with_data = !array_key_exists('show_sample_with_product_data', $options) || (string) ($options['show_sample_with_product_data'] ?? '1') === '1';
@@ -2249,6 +2250,11 @@ html body .woocommerce-layout__header {
 		$output .= '<li>' . esc_html__('Prepare a CSV file with these columns (in any order):', 'user-manager') . '</li>';
 		$output .= '<ul style="margin: 10px 0;">';
 		$output .= '<li>' . sprintf(
+			/* translators: %s: product_id fallback column header */
+			esc_html__('"%s" - Product ID fallback column (checked automatically if the Product Identifier Column does not match).', 'user-manager'),
+			esc_html($product_id_column_header)
+		) . '</li>';
+		$output .= '<li>' . sprintf(
 			/* translators: 1: column name, 2: identifier type */
 			esc_html__('"%1$s" - Contains the product %2$s', 'user-manager'),
 			esc_html($identifier_column),
@@ -2380,9 +2386,16 @@ html body .woocommerce-layout__header {
 		self::$bulk_add_to_cart_media_upload_info = [];
 
 		$options          = get_option('bulk_add_to_cart_settings', []);
-		$identifier_col   = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
+		$identifier_col   = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
 		$identifier_type  = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
-		$quantity_col     = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
+		$product_id_col_header = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$quantity_col     = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
+		if ($identifier_col === '') {
+			$identifier_col = 'product_id';
+		}
+		if ($quantity_col === '') {
+			$quantity_col = 'quantity';
+		}
 		$debug_mode       = isset($options['debug_mode']) ? (string) $options['debug_mode'] : '0';
 		$debug_enabled    = $debug_mode === '1' || self::is_bulk_add_to_cart_debug_requested();
 		$debug_trace      = [];
@@ -2523,9 +2536,11 @@ html body .woocommerce-layout__header {
 		}
 
 		$normalized_headers = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], $headers);
-		$normalized_lookup  = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], [$identifier_col, $quantity_col]);
+		$normalized_lookup  = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], [$identifier_col, $quantity_col, $product_id_col_header, 'product_id']);
 		$identifier_lookup  = $normalized_lookup[0] ?? 'product_id';
 		$quantity_lookup    = $normalized_lookup[1] ?? 'quantity';
+		$product_id_lookup  = $normalized_lookup[2] ?? 'product_id';
+		$product_id_builtin_lookup = $normalized_lookup[3] ?? 'product_id';
 
 		if ($debug_enabled) {
 			wc_add_notice('CSV Headers: ' . implode(', ', $headers), 'notice');
@@ -2533,7 +2548,8 @@ html body .woocommerce-layout__header {
 			wc_add_notice(
 				'Using settings - Identifier Column: ' . $identifier_col .
 				', Type: ' . $identifier_type .
-				', Quantity Column: ' . $quantity_col,
+				', Quantity Column: ' . $quantity_col .
+				', product_id fallback column: ' . $product_id_col_header,
 				'notice'
 			);
 			wc_add_notice('Leading blank rows skipped before header: ' . $leading_blank_rows, 'notice');
@@ -2541,23 +2557,30 @@ html body .woocommerce-layout__header {
 
 		$identifier_index = array_search($identifier_lookup, $normalized_headers, true);
 		$quantity_index   = array_search($quantity_lookup, $normalized_headers, true);
+		$product_id_index = array_search($product_id_lookup, $normalized_headers, true);
+		if ($product_id_index === false && $product_id_builtin_lookup !== $product_id_lookup) {
+			$product_id_index = array_search($product_id_builtin_lookup, $normalized_headers, true);
+		}
 
 		self::bulk_add_to_cart_append_debug_trace(
 			$debug_trace,
 			0,
 			'column_lookup',
-			'Identifier column index: ' . ($identifier_index !== false ? (string) $identifier_index : 'not found') . '; Quantity column index: ' . ($quantity_index !== false ? (string) $quantity_index : 'not found') . '.'
+			'Identifier column index: ' . ($identifier_index !== false ? (string) $identifier_index : 'not found') .
+			'; product_id fallback index: ' . ($product_id_index !== false ? (string) $product_id_index : 'not found') .
+			'; Quantity column index: ' . ($quantity_index !== false ? (string) $quantity_index : 'not found') . '.'
 		);
 
 		if ($debug_enabled) {
 			wc_add_notice(
 				'Column indices - Identifier: ' . ($identifier_index !== false ? $identifier_index : 'not found') .
+				', product_id fallback: ' . ($product_id_index !== false ? $product_id_index : 'not found') .
 				', Quantity: ' . ($quantity_index !== false ? $quantity_index : 'not found'),
 				'notice'
 			);
 		}
 
-		if ($identifier_index === false || $quantity_index === false) {
+		if (($identifier_index === false && $product_id_index === false) || $quantity_index === false) {
 			fclose($handle);
 			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_missing_columns', 'Required columns were not found in header.');
 			if ($debug_enabled) {
@@ -2565,9 +2588,10 @@ html body .woocommerce-layout__header {
 			}
 			wc_add_notice(
 				sprintf(
-					esc_html__('Required columns not found. Looking for "%1$s" and "%2$s".', 'user-manager'),
+					esc_html__('Required columns not found. Need quantity "%1$s" and at least one identifier column ("%2$s" or "%3$s").', 'user-manager'),
+					$quantity_col,
 					$identifier_col,
-					$quantity_col
+					$product_id_col_header
 				),
 				'error'
 			);
@@ -2594,7 +2618,8 @@ html body .woocommerce-layout__header {
 				continue;
 			}
 			$row_number++;
-			$identifier = isset($row[$identifier_index]) ? trim((string) $row[$identifier_index]) : '';
+			$identifier_primary = ($identifier_index !== false && isset($row[$identifier_index])) ? trim((string) $row[$identifier_index]) : '';
+			$product_id_fallback_identifier = ($product_id_index !== false && isset($row[$product_id_index])) ? trim((string) $row[$product_id_index]) : '';
 			$quantity_raw = isset($row[$quantity_index]) ? (string) $row[$quantity_index] : '';
 			$quantity   = self::bulk_add_to_cart_parse_quantity($quantity_raw);
 
@@ -2604,15 +2629,43 @@ html body .woocommerce-layout__header {
 					$debug_trace,
 					$csv_line_number,
 					'skip_zero_or_blank_quantity',
-					'Identifier "' . ($identifier !== '' ? $identifier : '(empty)') . '" skipped because quantity "' . $quantity_raw . '" parses to 0.'
+					'Identifier "' . ($identifier_primary !== '' ? $identifier_primary : '(empty)') . '" skipped because quantity "' . $quantity_raw . '" parses to 0.'
 				);
 				continue;
 			}
-			if ($identifier === '') {
+
+			$lookup_attempts = [];
+			if ($identifier_primary !== '') {
+				$lookup_attempts[] = [
+					'value'  => $identifier_primary,
+					'type'   => $identifier_type,
+					'source' => 'identifier',
+				];
+			}
+			if ($product_id_fallback_identifier !== '') {
+				$is_duplicate = false;
+				foreach ($lookup_attempts as $attempt) {
+					if ((string) $attempt['value'] === $product_id_fallback_identifier && (string) $attempt['type'] === 'product_id') {
+						$is_duplicate = true;
+						break;
+					}
+				}
+				if (!$is_duplicate) {
+					$lookup_attempts[] = [
+						'value'  => $product_id_fallback_identifier,
+						'type'   => 'product_id',
+						'source' => 'product_id',
+					];
+				}
+			}
+
+			if (empty($lookup_attempts)) {
 				$error_count++;
 				$message = sprintf(
-					esc_html__('Row %1$d: Missing identifier (Quantity: "%2$s")', 'user-manager'),
+					esc_html__('Row %1$d: Missing identifier columns "%2$s" and "%3$s" (Quantity: "%4$s")', 'user-manager'),
 					$row_number,
+					esc_html($identifier_col),
+					esc_html($product_id_col_header),
 					esc_html($quantity_raw)
 				);
 				$errors[] = $message;
@@ -2629,20 +2682,36 @@ html body .woocommerce-layout__header {
 				continue;
 			}
 
-			$product = self::bulk_add_to_cart_find_product($identifier, $identifier_type, $options);
+			$product = null;
+			$identifier_used = '';
+			$identifier_source = '';
+			$attempted_descriptions = [];
+			foreach ($lookup_attempts as $attempt) {
+				$attempt_value = (string) ($attempt['value'] ?? '');
+				$attempt_type  = (string) ($attempt['type'] ?? 'product_id');
+				$attempt_source = (string) ($attempt['source'] ?? 'identifier');
+				$attempted_descriptions[] = $attempt_source . ':' . $attempt_value;
+				$product = self::bulk_add_to_cart_find_product($attempt_value, $attempt_type, $options);
+				if ($product) {
+					$identifier_used = $attempt_value;
+					$identifier_source = $attempt_source;
+					break;
+				}
+			}
 			if (!$product) {
 				$error_count++;
+				$attempted_label = !empty($attempted_descriptions) ? implode(' | ', $attempted_descriptions) : __('(none)', 'user-manager');
 				$message = sprintf(
-					esc_html__('Row %1$d: Product not found: %2$s (Quantity: %3$s)', 'user-manager'),
+					esc_html__('Row %1$d: Product not found by identifier values: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
-					esc_html($identifier),
+					esc_html($attempted_label),
 					esc_html((string) $quantity)
 				);
 				$errors[] = $message;
 				$line_item_results[] = [
 					'line'          => $csv_line_number,
 					'status'        => 'error',
-					'product_id'    => $identifier,
+					'product_id'    => $identifier_primary !== '' ? $identifier_primary : $product_id_fallback_identifier,
 					'product_title' => '',
 					'variation'     => '',
 					'qty_added'     => 0,
@@ -2659,7 +2728,7 @@ html body .woocommerce-layout__header {
 				$message = sprintf(
 					esc_html__('Row %1$d: Product not purchasable: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
-					esc_html($identifier),
+					esc_html($identifier_used),
 					esc_html((string) $quantity)
 				);
 				$errors[] = $message;
@@ -2681,7 +2750,7 @@ html body .woocommerce-layout__header {
 				$message = sprintf(
 					esc_html__('Row %1$d: Insufficient stock for: %2$s (Requested: %3$s, Available: %4$s)', 'user-manager'),
 					$row_number,
-					esc_html($identifier),
+					esc_html($identifier_used),
 					esc_html((string) $quantity),
 					esc_html((string) $product->get_stock_quantity())
 				);
@@ -2726,14 +2795,14 @@ html body .woocommerce-layout__header {
 					$debug_trace,
 					$csv_line_number,
 					'added_to_cart',
-					'Added "' . $identifier . '" (qty ' . $quantity . ') to cart.'
+					'Added "' . $identifier_used . '" from ' . ($identifier_source !== '' ? $identifier_source : 'identifier') . ' (qty ' . $quantity . ') to cart.'
 				);
 			} else {
 				$error_count++;
 				$message = sprintf(
 					esc_html__('Row %1$d: Failed to add to cart: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
-					esc_html($identifier),
+					esc_html($identifier_used),
 					esc_html((string) $quantity)
 				);
 				$errors[] = $message;
@@ -2893,6 +2962,7 @@ html body .woocommerce-layout__header {
 		}
 		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
+		$product_id_column_header = self::bulk_add_to_cart_get_product_id_column_header($options);
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
 		if ($identifier_column === '') {
 			$identifier_column = 'product_id';
@@ -2903,6 +2973,7 @@ html body .woocommerce-layout__header {
 		if ($quantity_column === '') {
 			$quantity_column = 'quantity';
 		}
+		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column_header);
 
 		nocache_headers();
 		header('Content-Type: text/csv; charset=utf-8');
@@ -2913,7 +2984,14 @@ html body .woocommerce-layout__header {
 			exit;
 		}
 
-		fputcsv($out, [$identifier_column, $quantity_column, 'product_title', 'product_variation']);
+		$header_row = [$product_id_column_header];
+		if ($include_identifier_column) {
+			$header_row[] = $identifier_column;
+		}
+		$header_row[] = $quantity_column;
+		$header_row[] = 'product_title';
+		$header_row[] = 'product_variation';
+		fputcsv($out, $header_row);
 		fwrite($out, "\r\n");
 
 		$rows = [];
@@ -2934,14 +3012,12 @@ html body .woocommerce-layout__header {
 				continue;
 			}
 			$identifier_value = self::bulk_add_to_cart_get_identifier_value_for_product($product_id, $identifier_type, $options);
-			if ($identifier_value === '') {
-				continue;
-			}
 			$rows[] = [
-				$identifier_value,
-				'0',
-				(string) get_the_title($product_id),
-				self::bulk_add_to_cart_get_variation_summary_for_product($product_id),
+				'product_id'     => (string) $product_id,
+				'identifier'     => $identifier_value,
+				'quantity'       => '0',
+				'product_title'  => (string) get_the_title($product_id),
+				'variation'      => self::bulk_add_to_cart_get_variation_summary_for_product($product_id),
 			];
 		}
 
@@ -2967,12 +3043,34 @@ html body .woocommerce-layout__header {
 					$sample_two = ($meta_field_name !== '' ? $meta_field_name : 'meta_value') . '_002';
 					break;
 			}
-			$rows[] = [$sample_one, '1', 'Sample Product', ''];
-			$rows[] = [$sample_two, '2', 'Sample Variation Product', 'Size: M | Color: Blue'];
+			$rows[] = [
+				'product_id'    => '123',
+				'identifier'    => $sample_one,
+				'quantity'      => '1',
+				'product_title' => 'Sample Product',
+				'variation'     => '',
+			];
+			$rows[] = [
+				'product_id'    => '456',
+				'identifier'    => $sample_two,
+				'quantity'      => '2',
+				'product_title' => 'Sample Variation Product',
+				'variation'     => 'Size: M | Color: Blue',
+			];
 		}
 
 		foreach ($rows as $row) {
-			fputcsv($out, $row);
+			if (!is_array($row)) {
+				continue;
+			}
+			$out_row = [(string) ($row['product_id'] ?? '')];
+			if ($include_identifier_column) {
+				$out_row[] = (string) ($row['identifier'] ?? '');
+			}
+			$out_row[] = (string) ($row['quantity'] ?? '0');
+			$out_row[] = (string) ($row['product_title'] ?? '');
+			$out_row[] = (string) ($row['variation'] ?? '');
+			fputcsv($out, $out_row);
 		}
 		fclose($out);
 		exit;
@@ -2982,7 +3080,7 @@ html body .woocommerce-layout__header {
 	 * Download a CSV prefilled with all products/variations and zero quantities.
 	 *
 	 * Extra columns (like product title / variation summary) are informational and
-	 * ignored by the uploader, which only reads the configured identifier + quantity columns.
+	 * ignored by the uploader, which reads quantity + identifier columns (configured identifier first, then product_id fallback).
 	 */
 	public static function bulk_add_to_cart_maybe_download_sample_with_product_data(): void {
 		if (is_admin()) {
@@ -3005,6 +3103,7 @@ html body .woocommerce-layout__header {
 		}
 		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
+		$product_id_column_header = self::bulk_add_to_cart_get_product_id_column_header($options);
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
 		if ($identifier_column === '') {
 			$identifier_column = 'product_id';
@@ -3015,6 +3114,7 @@ html body .woocommerce-layout__header {
 		if ($quantity_column === '') {
 			$quantity_column = 'quantity';
 		}
+		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column_header);
 
 		$ids = get_posts([
 			'post_type'              => ['product', 'product_variation'],
@@ -3037,7 +3137,14 @@ html body .woocommerce-layout__header {
 			exit;
 		}
 
-		fputcsv($out, [$identifier_column, $quantity_column, 'product_title', 'product_variation']);
+		$header_row = [$product_id_column_header];
+		if ($include_identifier_column) {
+			$header_row[] = $identifier_column;
+		}
+		$header_row[] = $quantity_column;
+		$header_row[] = 'product_title';
+		$header_row[] = 'product_variation';
+		fputcsv($out, $header_row);
 		foreach ($ids as $product_id) {
 			$product_id = absint($product_id);
 			if ($product_id <= 0) {
@@ -3045,18 +3152,14 @@ html body .woocommerce-layout__header {
 			}
 
 			$identifier_value = self::bulk_add_to_cart_get_identifier_value_for_product($product_id, $identifier_type, $options);
-			if ($identifier_value === '') {
-				continue;
+			$out_row = [(string) $product_id];
+			if ($include_identifier_column) {
+				$out_row[] = $identifier_value;
 			}
-			fputcsv(
-				$out,
-				[
-					$identifier_value,
-					'0',
-					(string) get_the_title($product_id),
-					self::bulk_add_to_cart_get_variation_summary_for_product($product_id),
-				]
-			);
+			$out_row[] = '0';
+			$out_row[] = (string) get_the_title($product_id);
+			$out_row[] = self::bulk_add_to_cart_get_variation_summary_for_product($product_id);
+			fputcsv($out, $out_row);
 		}
 
 		fclose($out);
@@ -3349,6 +3452,26 @@ html body .woocommerce-layout__header {
 			}
 		}
 		return $lines;
+	}
+
+	/**
+	 * Resolve the configurable CSV header label for the forced product_id column.
+	 */
+	private static function bulk_add_to_cart_get_product_id_column_header(array $options): string {
+		$header = isset($options['product_id_custom_column_header']) ? trim((string) $options['product_id_custom_column_header']) : 'product_id';
+		return $header !== '' ? $header : 'product_id';
+	}
+
+	/**
+	 * Whether a separate identifier column should be included in sample CSV files.
+	 */
+	private static function bulk_add_to_cart_should_include_identifier_column(string $identifier_column, string $product_id_column_header): bool {
+		$identifier_column = trim($identifier_column);
+		if ($identifier_column === '') {
+			return false;
+		}
+
+		return self::bulk_add_to_cart_normalize_header($identifier_column) !== self::bulk_add_to_cart_normalize_header($product_id_column_header);
 	}
 
 	/**
