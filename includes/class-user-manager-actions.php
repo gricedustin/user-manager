@@ -1820,6 +1820,8 @@ class User_Manager_Actions {
 					'meta_field_name'    => isset($_POST['bulk_add_to_cart_meta_field_name']) ? sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_meta_field_name'])) : '',
 					'quantity_column'    => isset($_POST['bulk_add_to_cart_quantity_column']) ? sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_quantity_column'])) : 'quantity',
 					'debug_mode'         => isset($_POST['bulk_add_to_cart_debug_mode']) && $_POST['bulk_add_to_cart_debug_mode'] === '1' ? '1' : '0',
+					'show_sample_csv'    => isset($_POST['bulk_add_to_cart_show_sample_csv']) && $_POST['bulk_add_to_cart_show_sample_csv'] === '1' ? '1' : '0',
+					'show_sample_with_product_data' => isset($_POST['bulk_add_to_cart_show_sample_with_product_data']) && $_POST['bulk_add_to_cart_show_sample_with_product_data'] === '1' ? '1' : '0',
 				];
 				update_option('bulk_add_to_cart_settings', $bulk_settings);
 

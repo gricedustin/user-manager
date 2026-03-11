@@ -16,7 +16,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.2';
+	const VERSION = '2.3.3';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -2072,6 +2072,8 @@ html body .woocommerce-layout__header {
 		$identifier_column = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
+		$show_sample_csv   = !array_key_exists('show_sample_csv', $options) || (string) ($options['show_sample_csv'] ?? '1') === '1';
+		$show_sample_with_data = !array_key_exists('show_sample_with_product_data', $options) || (string) ($options['show_sample_with_product_data'] ?? '1') === '1';
 		$force_debug       = self::is_bulk_add_to_cart_debug_requested();
 		$debug_enabled     = (isset($options['debug_mode']) && (string) $options['debug_mode'] === '1') || $force_debug;
 		$sample_csv_url    = add_query_arg('um_bulk_add_to_cart_sample', '1', remove_query_arg(['um_bulk_add_to_cart_sample', 'um_bulk_add_to_cart_sample_data']));
@@ -2290,10 +2292,16 @@ html body .woocommerce-layout__header {
 
 		$output .= '<form method="post" enctype="multipart/form-data" action="' . $form_action_url . '">';
 		$output .= wp_nonce_field('bulk_add_to_cart_upload', 'bulk_add_to_cart_nonce', true, false);
-		$output .= '<p style="margin: 0 0 12px 0;">';
-		$output .= '<a href="' . esc_url($sample_csv_url) . '">' . esc_html__('Download Sample CSV', 'user-manager') . '</a>';
-		$output .= ' | <a href="' . esc_url($sample_with_data_url) . '">' . esc_html__('Download Sample CSV with Product Data', 'user-manager') . '</a>';
-		$output .= '</p>';
+		$sample_links = [];
+		if ($show_sample_csv) {
+			$sample_links[] = '<a href="' . esc_url($sample_csv_url) . '">' . esc_html__('Download Sample CSV', 'user-manager') . '</a>';
+		}
+		if ($show_sample_with_data) {
+			$sample_links[] = '<a href="' . esc_url($sample_with_data_url) . '">' . esc_html__('Download Sample CSV with Product Data', 'user-manager') . '</a>';
+		}
+		if (!empty($sample_links)) {
+			$output .= '<p style="margin: 0 0 12px 0;">' . implode(' | ', $sample_links) . '</p>';
+		}
 		$output .= '<div style="margin-bottom: 20px;">';
 		$output .= '<label for="csv_file" style="display: block; margin-bottom: 10px; font-weight: bold;">' . esc_html__('Select CSV File:', 'user-manager') . '</label>';
 		$output .= '<input type="file" name="csv_file" id="csv_file" accept=".csv" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">';
@@ -2879,6 +2887,10 @@ html body .woocommerce-layout__header {
 		}
 
 		$options           = get_option('bulk_add_to_cart_settings', []);
+		$show_sample_csv   = !array_key_exists('show_sample_csv', $options) || (string) ($options['show_sample_csv'] ?? '1') === '1';
+		if (!$show_sample_csv) {
+			wp_die(esc_html__('Download Sample CSV is disabled in Add-on settings.', 'user-manager'));
+		}
 		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
@@ -2987,6 +2999,10 @@ html body .woocommerce-layout__header {
 		}
 
 		$options           = get_option('bulk_add_to_cart_settings', []);
+		$show_sample_with_data = !array_key_exists('show_sample_with_product_data', $options) || (string) ($options['show_sample_with_product_data'] ?? '1') === '1';
+		if (!$show_sample_with_data) {
+			wp_die(esc_html__('Download Sample CSV with Product Data is disabled in Add-on settings.', 'user-manager'));
+		}
 		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';

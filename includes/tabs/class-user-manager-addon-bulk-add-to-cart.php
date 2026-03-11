@@ -47,6 +47,28 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 					</p>
 				</div>
 				<div class="um-form-field">
+					<?php
+					$show_sample_csv = array_key_exists('show_sample_csv', $bulk_settings)
+						? ($bulk_settings['show_sample_csv'] ?? '1') === '1'
+						: true;
+					?>
+					<label>
+						<input type="checkbox" name="bulk_add_to_cart_show_sample_csv" value="1" <?php checked($show_sample_csv); ?> />
+						<?php esc_html_e('Show "Download Sample CSV" link', 'user-manager'); ?>
+					</label>
+				</div>
+				<div class="um-form-field">
+					<?php
+					$show_sample_with_data = array_key_exists('show_sample_with_product_data', $bulk_settings)
+						? ($bulk_settings['show_sample_with_product_data'] ?? '1') === '1'
+						: true;
+					?>
+					<label>
+						<input type="checkbox" name="bulk_add_to_cart_show_sample_with_product_data" value="1" <?php checked($show_sample_with_data); ?> />
+						<?php esc_html_e('Show "Download Sample CSV with Product Data" link', 'user-manager'); ?>
+					</label>
+				</div>
+				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="bulk_add_to_cart_redirect_to_cart" value="1" <?php checked(($bulk_settings['redirect_to_cart'] ?? '1') === '1'); ?> />
 						<?php esc_html_e('Redirect to cart page after processing CSV file', 'user-manager'); ?>
