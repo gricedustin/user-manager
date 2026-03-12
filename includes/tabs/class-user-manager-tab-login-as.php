@@ -130,30 +130,6 @@ class User_Manager_Tab_Login_As {
 								<div style="display:flex; flex-direction:column; gap:10px; max-width:480px;">
 									<div>
 										<div style="font-weight:600; margin-bottom:4px;">
-											<?php esc_html_e('Username:', 'user-manager'); ?>
-										</div>
-										<input
-											type="text"
-											class="regular-text um-login-as-copy"
-											data-label="<?php esc_attr_e('Username', 'user-manager'); ?>"
-											value="<?php echo esc_attr($target_user->user_login); ?>"
-											readonly
-										/>
-									</div>
-									<div>
-										<div style="font-weight:600; margin-bottom:4px;">
-											<?php esc_html_e('Temporary Password:', 'user-manager'); ?>
-										</div>
-										<input
-											type="text"
-											class="regular-text um-login-as-copy"
-											data-label="<?php esc_attr_e('Temporary Password', 'user-manager'); ?>"
-											value="<?php echo esc_attr($active_session['temp_password']); ?>"
-											readonly
-										/>
-									</div>
-									<div>
-										<div style="font-weight:600; margin-bottom:4px;">
 											<?php esc_html_e('Login URL:', 'user-manager'); ?>
 										</div>
 										<input
@@ -173,6 +149,30 @@ class User_Manager_Tab_Login_As {
 											class="regular-text um-login-as-copy"
 											data-label="<?php esc_attr_e('SSO Bypass Login URL', 'user-manager'); ?>"
 											value="<?php echo esc_attr($sso_bypass_url); ?>"
+											readonly
+										/>
+									</div>
+									<div>
+										<div style="font-weight:600; margin-bottom:4px;">
+											<?php esc_html_e('Username:', 'user-manager'); ?>
+										</div>
+										<input
+											type="text"
+											class="regular-text um-login-as-copy"
+											data-label="<?php esc_attr_e('Username', 'user-manager'); ?>"
+											value="<?php echo esc_attr($target_user->user_login); ?>"
+											readonly
+										/>
+									</div>
+									<div>
+										<div style="font-weight:600; margin-bottom:4px;">
+											<?php esc_html_e('Temporary Password:', 'user-manager'); ?>
+										</div>
+										<input
+											type="text"
+											class="regular-text um-login-as-copy"
+											data-label="<?php esc_attr_e('Temporary Password', 'user-manager'); ?>"
+											value="<?php echo esc_attr($active_session['temp_password']); ?>"
 											readonly
 										/>
 									</div>
