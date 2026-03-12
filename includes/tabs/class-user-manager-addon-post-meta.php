@@ -22,9 +22,9 @@ class User_Manager_Addon_Post_Meta {
 				<div class="um-form-field">
 					<label>
 						<input type="checkbox" id="um-post-meta-enabled" name="display_post_meta_meta_box" value="1" <?php checked($enabled); ?><?php echo $form_attr; ?> />
-						<?php esc_html_e('Display all post meta fields & values in a meta box when editing posts', 'user-manager'); ?>
+						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
-					<p class="description"><?php esc_html_e('Shows a meta box on the edit screen for all post types listing every post meta key and its value(s).', 'user-manager'); ?></p>
+					<p class="description"><?php esc_html_e('Shows a Post Meta box on post edit screens listing post meta fields and values.', 'user-manager'); ?></p>
 				</div>
 				<div id="um-post-meta-edit-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
 					<div class="um-form-field">
