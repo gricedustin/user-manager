@@ -84,6 +84,38 @@ class User_Manager_Addon_Bulk_Add_To_Cart {
 					</p>
 				</div>
 				<div class="um-form-field">
+					<label for="um-bulk-product-id-column-header"><?php esc_html_e('Product ID Custom Column Header', 'user-manager'); ?></label>
+					<input type="text" name="bulk_add_to_cart_product_id_custom_column_header" id="um-bulk-product-id-column-header" class="regular-text" value="<?php echo esc_attr($bulk_settings['product_id_custom_column_header'] ?? 'product_id'); ?>" />
+					<p class="description">
+						<?php esc_html_e('Column header used for the Product ID column in sample CSV downloads and fallback matching during imports.', 'user-manager'); ?>
+					</p>
+				</div>
+				<div class="um-form-field">
+					<label for="um-bulk-sku-column-header"><?php esc_html_e('Product SKU (_sku) Custom Column Header', 'user-manager'); ?></label>
+					<input type="text" name="bulk_add_to_cart_sku_custom_column_header" id="um-bulk-sku-column-header" class="regular-text" value="<?php echo esc_attr($bulk_settings['sku_custom_column_header'] ?? '_sku'); ?>" />
+					<p class="description">
+						<?php esc_html_e('Column header used for the SKU column in sample CSV downloads and fallback matching during imports.', 'user-manager'); ?>
+					</p>
+				</div>
+				<div class="um-form-field">
+					<label>
+						<input type="checkbox" name="bulk_add_to_cart_hide_product_id_column" value="1" <?php checked(($bulk_settings['hide_product_id_column'] ?? '0') === '1'); ?> />
+						<?php esc_html_e('Hide Product ID column in sample CSV downloads', 'user-manager'); ?>
+					</label>
+					<p class="description">
+						<?php esc_html_e('When enabled, sample CSV files will not include the Product ID column unless your main Identifier Column uses that same header.', 'user-manager'); ?>
+					</p>
+				</div>
+				<div class="um-form-field">
+					<label>
+						<input type="checkbox" name="bulk_add_to_cart_hide_sku_column" value="1" <?php checked(($bulk_settings['hide_sku_column'] ?? '0') === '1'); ?> />
+						<?php esc_html_e('Hide SKU (_sku) column in sample CSV downloads', 'user-manager'); ?>
+					</label>
+					<p class="description">
+						<?php esc_html_e('When enabled, sample CSV files will not include the SKU column unless your main Identifier Column uses that same header.', 'user-manager'); ?>
+					</p>
+				</div>
+				<div class="um-form-field">
 					<label for="um-bulk-quantity-column"><?php esc_html_e('Quantity Column', 'user-manager'); ?></label>
 					<input type="text" name="bulk_add_to_cart_quantity_column" id="um-bulk-quantity-column" class="regular-text" value="<?php echo esc_attr($bulk_settings['quantity_column'] ?? 'quantity'); ?>" />
 					<p class="description">
