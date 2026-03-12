@@ -17,6 +17,7 @@ require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php'
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
+require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
@@ -30,10 +31,9 @@ class User_Manager_Tab_Addons {
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		$settings_form_id = 'um-addons-settings-form';
 		$addon_sections = self::get_addon_sections($settings);
-		$default_addon_section = !empty($addon_sections) ? (string) key($addon_sections) : 'all';
-		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : $default_addon_section;
-		if ($current_addon_section !== 'all' && !isset($addon_sections[$current_addon_section])) {
-			$current_addon_section = $default_addon_section;
+		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : '';
+		if ($current_addon_section !== '' && !isset($addon_sections[$current_addon_section])) {
+			$current_addon_section = '';
 		}
 		$addons_base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
 		?>
@@ -51,12 +51,35 @@ class User_Manager_Tab_Addons {
 		</ul>
 		<br class="clear" />
 
+		<div class="um-addons-empty-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-screenoptions"></span>
+					<h2><?php esc_html_e('Choose an Add-on', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<div class="um-addon-tile-grid">
+						<?php foreach ($addon_sections as $section_key => $section_meta) : ?>
+							<?php $is_active = !empty($section_meta['active']); ?>
+							<a
+								class="um-addon-tile<?php echo $is_active ? ' um-addon-tile-active' : ''; ?>"
+								href="<?php echo esc_url(add_query_arg('addon_section', $section_key, $addons_base_url)); ?>"
+							>
+								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
+								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
+							</a>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="<?php echo esc_attr($settings_form_id); ?>">
 			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="addons" />
 			<input type="hidden" name="addon_section" value="<?php echo esc_attr($current_addon_section); ?>" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
-			<div class="um-admin-grid um-admin-grid-single">
+			<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 				<div class="um-addon-section" data-addon-section="add-to-cart-bulk-import">
 					<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
 				</div>
@@ -83,7 +106,10 @@ class User_Manager_Tab_Addons {
 				</div>
 			</div>
 		</form>
-		<div class="um-admin-grid um-admin-grid-single">
+		<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
+			<div class="um-addon-section" data-addon-section="post-meta">
+				<?php User_Manager_Addon_Post_Meta::render($settings, $settings_form_id); ?>
+			</div>
 			<div class="um-addon-section" data-addon-section="post-content-generator">
 				<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
 			</div>
@@ -105,7 +131,7 @@ class User_Manager_Tab_Addons {
 			<div class="um-addon-section" data-addon-section="wp-admin-notifications">
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
 			</div>
-			<div class="um-admin-card um-admin-card-full">
+			<div class="um-admin-card um-admin-card-full um-addon-save-card">
 				<div class="um-admin-card-body">
 					<p style="margin:0;">
 						<?php submit_button(__('Save Add-ons', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
@@ -118,6 +144,41 @@ class User_Manager_Tab_Addons {
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template($settings_form_id); ?>
 
 		<style>
+		.um-addon-tile-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			gap: 12px;
+		}
+		.um-addon-tile {
+			display: block;
+			padding: 12px;
+			border: 1px solid #dcdcde;
+			border-radius: 6px;
+			background: #fff;
+			text-decoration: none;
+			color: #1d2327;
+			transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+		}
+		.um-addon-tile:hover,
+		.um-addon-tile:focus {
+			border-color: #72aee6;
+			box-shadow: 0 0 0 1px rgba(34, 113, 177, 0.18);
+			outline: none;
+		}
+		.um-addon-tile.um-addon-tile-active {
+			background: #e7f1ff;
+			border-color: #72aee6;
+		}
+		.um-addon-tile-title {
+			display: block;
+			font-weight: 600;
+			margin-bottom: 4px;
+		}
+		.um-addon-tile-status {
+			display: inline-block;
+			font-size: 12px;
+			color: #50575e;
+		}
 		.um-addon-collapsible .um-admin-card-header {
 			display: flex;
 			align-items: center;
@@ -215,12 +276,16 @@ class User_Manager_Tab_Addons {
 			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
 
 			function applyAddonSectionFilter() {
-				if (!currentAddonSection || currentAddonSection === 'all') {
-					$('.um-addon-section').show();
+				if (!currentAddonSection) {
+					$('.um-addons-empty-state').show();
+					$('.um-addon-section').hide();
+					$('.um-addon-save-card').hide();
 					return;
 				}
+				$('.um-addons-empty-state').hide();
 				$('.um-addon-section').hide();
 				$('.um-addon-section[data-addon-section="' + currentAddonSection + '"]').show();
+				$('.um-addon-save-card').show();
 			}
 
 			function isAddonCardActive($card) {
@@ -338,9 +403,9 @@ class User_Manager_Tab_Addons {
 						setAddonCardCollapsed($card, !$card.hasClass('um-addon-collapsed'));
 					});
 
-					// Keep cards collapsed by default in "all" view,
+					// Keep cards collapsed by default in choose/add-on index view,
 					// but auto-expand when user is focused on a single add-on section.
-					setAddonCardCollapsed($card, currentAddonSection === 'all', true);
+					setAddonCardCollapsed($card, currentAddonSection === '', true);
 					refreshAddonCardAutoState($card);
 				});
 			}
@@ -398,6 +463,9 @@ class User_Manager_Tab_Addons {
 					umToggleBulkMetaFieldRow();
 				}
 			}
+			function togglePostMetaAddonFields() {
+				$('#um-post-meta-edit-fields').toggle($('#um-post-meta-enabled').is(':checked'));
+			}
 			function toggleNewUserCouponAddonFields() {
 				var enabled = $('#um-nuc-enabled').is(':checked');
 				$('#um-nuc-fields').toggle(enabled);
@@ -417,6 +485,7 @@ class User_Manager_Tab_Addons {
 			$('#um-bulk-coupons-enabled').on('change', toggleBulkCouponsFields);
 			toggleBulkCouponsFields();
 			toggleBulkAddToCartAddonFields();
+			togglePostMetaAddonFields();
 			toggleNewUserCouponAddonFields();
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
@@ -487,6 +556,10 @@ class User_Manager_Tab_Addons {
 			$("input[name='bulk_add_to_cart_enabled']").on('change', function() {
 				toggleBulkAddToCartAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-bulk-add-to-cart'));
+			});
+			$('#um-post-meta-enabled').on('change', function() {
+				togglePostMetaAddonFields();
+				refreshAddonCardAutoState($('#um-addon-card-post-meta'));
 			});
 			$('#um-bulk-coupons-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-bulk-coupons'));
@@ -669,6 +742,10 @@ class User_Manager_Tab_Addons {
 			'my-account-site-admin' => [
 				'label'  => __('My Account Admin', 'user-manager'),
 				'active' => $my_account_site_admin_enabled,
+			],
+			'post-meta' => [
+				'label'  => __('Post Meta', 'user-manager'),
+				'active' => !empty($settings['display_post_meta_meta_box']),
 			],
 			'post-content-generator' => [
 				'label'  => __('Post Content Generator', 'user-manager'),

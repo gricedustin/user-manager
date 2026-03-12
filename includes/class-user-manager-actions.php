@@ -1610,8 +1610,6 @@ class User_Manager_Actions {
 				$settings['coupon_code_url_param_enabled'] = isset($_POST['coupon_code_url_param_enabled']) && $_POST['coupon_code_url_param_enabled'] === '1';
 				$param_name = isset($_POST['coupon_code_url_param_name']) ? sanitize_key(str_replace(' ', '-', wp_unslash($_POST['coupon_code_url_param_name']))) : 'coupon-code';
 				$settings['coupon_code_url_param_name'] = $param_name !== '' ? $param_name : 'coupon-code';
-				$settings['display_post_meta_meta_box'] = isset($_POST['display_post_meta_meta_box']) && $_POST['display_post_meta_meta_box'] === '1';
-				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 				$settings['sftp_directories'] = isset($_POST['sftp_directories']) ? sanitize_textarea_field(wp_unslash($_POST['sftp_directories'])) : '';
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';
@@ -1628,6 +1626,8 @@ class User_Manager_Actions {
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
+				$settings['display_post_meta_meta_box'] = isset($_POST['display_post_meta_meta_box']) && $_POST['display_post_meta_meta_box'] === '1';
+				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 
 				// Coupons for New Users.
 				$settings['nuc_enabled'] = isset($_POST['nuc_enabled']) && $_POST['nuc_enabled'] === '1';
