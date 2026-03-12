@@ -744,7 +744,7 @@ class User_Manager_Tab_Addons {
 				'active' => $my_account_site_admin_enabled,
 			],
 			'post-meta' => [
-				'label'  => __('Post Meta', 'user-manager'),
+				'label'  => __('Post Meta Viewer', 'user-manager'),
 				'active' => !empty($settings['display_post_meta_meta_box']),
 			],
 			'post-content-generator' => [

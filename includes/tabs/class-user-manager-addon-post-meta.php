@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Post Meta.
+ * Add-on card: Post Meta Viewer.
  */
 
 if (!defined('ABSPATH')) {
@@ -16,7 +16,7 @@ class User_Manager_Addon_Post_Meta {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-post-meta" data-um-active-selectors="#um-post-meta-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-editor-code"></span>
-				<h2><?php esc_html_e('Post Meta', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Post Meta Viewer', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
