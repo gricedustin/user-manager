@@ -145,13 +145,13 @@ class User_Manager_Tab_Addons {
 			box-shadow: 0 0 0 2px rgba(140, 143, 148, 0.2);
 		}
 		.um-addon-collapsible.um-addon-active .um-addon-active-indicator {
-			background: #edfaef;
-			border-color: #7ad07f;
-			color: #137333;
+			background: #e7f1ff;
+			border-color: #72aee6;
+			color: #0a4b78;
 		}
 		.um-addon-collapsible.um-addon-active .um-addon-active-dot {
-			background: #2ea043;
-			box-shadow: 0 0 0 2px rgba(46, 160, 67, 0.25);
+			background: #2271b1;
+			box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.25);
 		}
 		.um-addon-collapse-indicator {
 			margin-left: 8px;
