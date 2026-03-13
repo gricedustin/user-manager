@@ -31,6 +31,17 @@ class User_Manager_Tab_Addons {
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		$settings_form_id = 'um-addons-settings-form';
 		$addon_sections = self::get_addon_sections($settings);
+		$sorted_addon_sections = $addon_sections;
+		uasort($sorted_addon_sections, static function (array $a, array $b): int {
+			$a_label = isset($a['label']) ? (string) $a['label'] : '';
+			$b_label = isset($b['label']) ? (string) $b['label'] : '';
+			return strcasecmp($a_label, $b_label);
+		});
+		$addon_tags = self::get_addon_tags($addon_sections);
+		$current_addon_tag = isset($_GET['addon_tag']) ? sanitize_title(wp_unslash($_GET['addon_tag'])) : '';
+		if ($current_addon_tag !== '' && !isset($addon_tags[$current_addon_tag])) {
+			$current_addon_tag = '';
+		}
 		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : '';
 		if ($current_addon_section !== '' && !isset($addon_sections[$current_addon_section])) {
 			$current_addon_section = '';
@@ -38,14 +49,12 @@ class User_Manager_Tab_Addons {
 		$addons_base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
 		?>
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
-			<?php $addon_total = count($addon_sections); $addon_index = 0; ?>
-			<?php foreach ($addon_sections as $section_key => $section_meta) : $addon_index++; ?>
+			<?php $tag_total = count($addon_tags); $tag_index = 0; ?>
+			<?php foreach ($addon_tags as $tag_key => $tag_label) : $tag_index++; ?>
 				<li>
-					<a href="<?php echo esc_url(add_query_arg('addon_section', $section_key, $addons_base_url)); ?>" class="<?php echo $current_addon_section === $section_key ? 'current' : ''; ?>">
-						<?php if (!empty($section_meta['active'])) : ?><strong><?php endif; ?>
-						<?php echo esc_html((string) $section_meta['label']); ?>
-						<?php if (!empty($section_meta['active'])) : ?></strong><?php endif; ?>
-					</a><?php echo $addon_index < $addon_total ? ' |' : ''; ?>
+					<a href="<?php echo esc_url(add_query_arg('addon_tag', $tag_key, $addons_base_url)); ?>" class="<?php echo $current_addon_tag === $tag_key ? 'current' : ''; ?>">
+						<?php echo esc_html($tag_label); ?>
+					</a><?php echo $tag_index < $tag_total ? ' |' : ''; ?>
 				</li>
 			<?php endforeach; ?>
 		</ul>
@@ -59,19 +68,37 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-addon-tile-grid">
-						<?php foreach ($addon_sections as $section_key => $section_meta) : ?>
+						<?php
+						$visible_tiles = 0;
+						foreach ($sorted_addon_sections as $section_key => $section_meta) :
+							$section_tags = self::get_addon_section_tags($section_meta);
+							if ($current_addon_tag !== '' && !isset($section_tags[$current_addon_tag])) {
+								continue;
+							}
+							$visible_tiles++;
+							?>
 							<?php $is_active = !empty($section_meta['active']); ?>
 							<a
 								class="um-addon-tile<?php echo $is_active ? ' um-addon-tile-active' : ''; ?>"
-								href="<?php echo esc_url(add_query_arg('addon_section', $section_key, $addons_base_url)); ?>"
+								href="<?php echo esc_url(add_query_arg(['addon_section' => $section_key, 'addon_tag' => $current_addon_tag], $addons_base_url)); ?>"
 							>
 								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
 								<?php if (!empty($section_meta['description'])) : ?>
 									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
 								<?php endif; ?>
+								<?php if (!empty($section_tags)) : ?>
+									<span class="um-addon-tile-tags">
+										<?php foreach ($section_tags as $section_tag_key => $section_tag_label) : ?>
+											<span class="um-addon-tile-tag um-addon-tile-tag-<?php echo esc_attr($section_tag_key); ?>"><?php echo esc_html($section_tag_label); ?></span>
+										<?php endforeach; ?>
+									</span>
+								<?php endif; ?>
 								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
 							</a>
 						<?php endforeach; ?>
+						<?php if ($visible_tiles === 0) : ?>
+							<p class="description"><?php esc_html_e('No add-ons match this tag.', 'user-manager'); ?></p>
+						<?php endif; ?>
 					</div>
 				</div>
 			</div>
@@ -81,6 +108,7 @@ class User_Manager_Tab_Addons {
 			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="addons" />
 			<input type="hidden" name="addon_section" value="<?php echo esc_attr($current_addon_section); ?>" />
+			<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 				<div class="um-addon-section" data-addon-section="add-to-cart-bulk-import">
@@ -183,6 +211,23 @@ class User_Manager_Tab_Addons {
 			line-height: 1.4;
 			color: #50575e;
 			margin-bottom: 6px;
+		}
+		.um-addon-tile-tags {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+			margin-bottom: 6px;
+		}
+		.um-addon-tile-tag {
+			display: inline-block;
+			padding: 1px 7px;
+			border-radius: 999px;
+			background: #f0f6fc;
+			border: 1px solid #c5d9ed;
+			color: #0a4b78;
+			font-size: 11px;
+			line-height: 1.5;
+			font-weight: 500;
 		}
 		.um-addon-tile-status {
 			display: inline-block;
@@ -723,85 +768,172 @@ class User_Manager_Tab_Addons {
 		return [
 			'add-to-cart-bulk-import' => [
 				'label'  => __('Add to Cart Bulk Import', 'user-manager'),
-				'description' => __('Upload a CSV on the front end to add many products to cart.', 'user-manager'),
+				'description' => __('Upload a product CSV so users can add many items before checkout.', 'user-manager'),
 				'active' => !empty($settings['bulk_add_to_cart_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),
-				'description' => __('Add a checkout address selector that can overwrite shipping and billing fields.', 'user-manager'),
+				'description' => __('Offer a checkout selector that pre-fills and controls address details.', 'user-manager'),
 				'active' => !empty($settings['checkout_ship_to_predefined_enabled']),
 			],
 			'coupon-creator' => [
 				'label'  => __('Coupon Creator', 'user-manager'),
-				'description' => __('Generate coupons in bulk with optional email assignment and template support.', 'user-manager'),
+				'description' => __('Create many coupons at once with templates, email, and usage options.', 'user-manager'),
 				'active' => !empty($settings['bulk_coupons_enabled']),
 			],
 			'coupon-for-new-user' => [
 				'label'  => __('New User Coupons', 'user-manager'),
-				'description' => __('Automatically create and optionally email template-based coupons to eligible new users.', 'user-manager'),
+				'description' => __('Automatically issue template coupons to new users and optionally email them.', 'user-manager'),
 				'active' => !empty($settings['nuc_enabled']),
 			],
 			'coupon-notifications-for-users-with-coupons' => [
 				'label'  => __('User Coupon Notifications', 'user-manager'),
-				'description' => __('Show logged-in users coupon reminder notices on selected storefront pages.', 'user-manager'),
+				'description' => __('Display reminder notices for each eligible user coupon on selected pages.', 'user-manager'),
 				'active' => !empty($settings['user_coupon_notifications_enabled']),
 			],
 			'coupon-remaining-balances' => [
 				'label'  => __('User Coupon Remaining Balances', 'user-manager'),
-				'description' => __('Issue a new single-use coupon for qualifying leftover balances after checkout.', 'user-manager'),
+				'description' => __('Create a replacement coupon when a qualifying balance remains after checkout.', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
 			],
 			'my-account-coupon-screen' => [
 				'label'  => __('My Account Coupons Page', 'user-manager'),
-				'description' => __('Add a Coupons tab in My Account that shows eligible coupon notices.', 'user-manager'),
+				'description' => __('Add a My Account Coupons page that lists eligible coupon notices.', 'user-manager'),
 				'active' => !empty($settings['my_account_coupon_screen_enabled']),
 			],
 			'my-account-site-admin' => [
 				'label'  => __('My Account Admin', 'user-manager'),
-				'description' => __('Add Orders, Products, Coupons, and Users admin-style tools inside My Account.', 'user-manager'),
+				'description' => __('Add admin-style Orders, Products, Coupons, and Users tools in My Account.', 'user-manager'),
 				'active' => $my_account_site_admin_enabled,
 			],
 			'post-meta' => [
 				'label'  => __('Post Meta Viewer', 'user-manager'),
-				'description' => __('Show a Post Meta box on edit screens with keys and values.', 'user-manager'),
+				'description' => __('Show all post meta keys and values in a dedicated editor box.', 'user-manager'),
 				'active' => !empty($settings['display_post_meta_meta_box']),
 			],
 			'post-content-generator' => [
 				'label'  => __('Post Content Generator', 'user-manager'),
-				'description' => __('Generate and import AI-written post content with an optional post meta box.', 'user-manager'),
+				'description' => __('Generate AI post content and import drafts with configurable prompt options.', 'user-manager'),
 				'active' => !empty($settings['openai_content_generator_enabled']),
 			],
 			'post-idea-generator' => [
 				'label'  => __('Post Idea Generator', 'user-manager'),
-				'description' => __('Generate AI-assisted blog topic ideas based on your existing site content.', 'user-manager'),
+				'description' => __('Generate AI-assisted post ideas based on your existing site content.', 'user-manager'),
 				'active' => !empty($settings['openai_blog_post_idea_generator_enabled']),
 			],
 			'user-role-switching' => [
 				'label'  => __('User Role Switching', 'user-manager'),
-				'description' => __('Enable front-end role switching controls and related profile permissions.', 'user-manager'),
+				'description' => __('Enable front-end role switching controls with profile permission support.', 'user-manager'),
 				'active' => !empty($role_switch_settings['enabled']),
 			],
 			'wp-admin-bar-menu-items' => [
 				'label'  => __('WP-Admin Bar Menu Items', 'user-manager'),
-				'description' => __('Create custom WP-Admin bar shortcut menus for faster navigation.', 'user-manager'),
+				'description' => __('Create custom WP-Admin bar shortcut menus for faster admin navigation.', 'user-manager'),
 				'active' => array_key_exists('admin_bar_menu_items_enabled', $settings) ? !empty($settings['admin_bar_menu_items_enabled']) : true,
 			],
 			'wp-admin-bar-quick-search' => [
 				'label'  => __('WP-Admin Bar Quick Search', 'user-manager'),
-				'description' => __('Add a WP-Admin search panel for posts, products, orders, and users.', 'user-manager'),
+				'description' => __('Add a WP-Admin quick search panel for posts, orders, and users.', 'user-manager'),
 				'active' => array_key_exists('um_quick_search_enabled', $settings) ? !empty($settings['um_quick_search_enabled']) : true,
 			],
 			'wp-admin-css' => [
 				'label'  => __('WP-Admin CSS', 'user-manager'),
-				'description' => __('Apply custom CSS in wp-admin globally, by role, or by user.', 'user-manager'),
+				'description' => __('Apply custom CSS in WP-Admin globally, by role, or by user.', 'user-manager'),
 				'active' => array_key_exists('wp_admin_css_enabled', $settings) ? !empty($settings['wp_admin_css_enabled']) : true,
 			],
 			'wp-admin-notifications' => [
 				'label'  => __('WP-Admin Notifications', 'user-manager'),
-				'description' => __('Display custom WP-Admin notification banners with optional URL-based targeting.', 'user-manager'),
+				'description' => __('Display WP-Admin notification banners with optional URL-based targeting rules.', 'user-manager'),
 				'active' => array_key_exists('custom_admin_notifications_enabled', $settings) ? !empty($settings['custom_admin_notifications_enabled']) : true,
 			],
 		];
+	}
+
+	/**
+	 * Build a sorted map of add-on tags.
+	 *
+	 * @param array<string,array<string,mixed>> $addon_sections
+	 * @return array<string,string>
+	 */
+	private static function get_addon_tags(array $addon_sections): array {
+		$tags = [];
+		foreach ($addon_sections as $section_meta) {
+			foreach (self::get_addon_section_tags($section_meta) as $tag_key => $tag_label) {
+				$tags[$tag_key] = $tag_label;
+			}
+		}
+
+		asort($tags, SORT_NATURAL | SORT_FLAG_CASE);
+		return $tags;
+	}
+
+	/**
+	 * Master add-on tags and keyword triggers.
+	 *
+	 * @return array<string,array{label:string,keywords:array<int,string>}>
+	 */
+	private static function get_master_addon_tags(): array {
+		return [
+			'checkout'   => [
+				'label'    => __('Checkout', 'user-manager'),
+				'keywords' => ['checkout'],
+			],
+			'coupon'     => [
+				'label'    => __('Coupon', 'user-manager'),
+				'keywords' => ['coupon'],
+			],
+			'my-account' => [
+				'label'    => __('My Account', 'user-manager'),
+				'keywords' => ['my account', 'my-account'],
+			],
+			'post'       => [
+				'label'    => __('Post', 'user-manager'),
+				'keywords' => ['post'],
+			],
+			'user'       => [
+				'label'    => __('User', 'user-manager'),
+				'keywords' => ['user'],
+			],
+			'wp-admin'   => [
+				'label'    => __('WP-Admin', 'user-manager'),
+				'keywords' => ['wp-admin', 'wp admin'],
+			],
+		];
+	}
+
+	/**
+	 * Derive add-on tags by checking label/description against master keywords.
+	 *
+	 * @param array<string,mixed> $section_meta
+	 * @return array<string,string>
+	 */
+	private static function get_addon_section_tags(array $section_meta): array {
+		$label = isset($section_meta['label']) ? trim((string) $section_meta['label']) : '';
+		$description = isset($section_meta['description']) ? trim((string) $section_meta['description']) : '';
+		$search_text = trim($label . ' ' . $description);
+		if ($search_text === '') {
+			return [];
+		}
+
+		$matches = [];
+		foreach (self::get_master_addon_tags() as $tag_key => $tag_meta) {
+			$tag_label = isset($tag_meta['label']) ? trim((string) $tag_meta['label']) : '';
+			$keywords = isset($tag_meta['keywords']) && is_array($tag_meta['keywords']) ? $tag_meta['keywords'] : [];
+			if ($tag_label === '' || empty($keywords)) {
+				continue;
+			}
+
+			foreach ($keywords as $keyword) {
+				$keyword = trim((string) $keyword);
+				if ($keyword !== '' && stripos($search_text, $keyword) !== false) {
+					$matches[$tag_key] = $tag_label;
+					break;
+				}
+			}
+		}
+
+		asort($matches, SORT_NATURAL | SORT_FLAG_CASE);
+		return $matches;
 	}
 }
 

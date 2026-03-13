@@ -1956,6 +1956,12 @@ class User_Manager_Actions {
 			if ($addon_section !== '') {
 				$redirect_url = add_query_arg('addon_section', $addon_section, $redirect_url);
 			}
+			if (isset($_POST['addon_tag'])) {
+				$addon_tag = sanitize_title(wp_unslash($_POST['addon_tag']));
+				if ($addon_tag !== '') {
+					$redirect_url = add_query_arg('addon_tag', $addon_tag, $redirect_url);
+				}
+			}
 		}
 
 		wp_safe_redirect($redirect_url);
