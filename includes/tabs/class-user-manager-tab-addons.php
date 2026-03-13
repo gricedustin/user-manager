@@ -723,82 +723,82 @@ class User_Manager_Tab_Addons {
 		return [
 			'add-to-cart-bulk-import' => [
 				'label'  => __('Add to Cart Bulk Import', 'user-manager'),
-				'description' => __('Enables the [bulk_add_to_cart] CSV upload form on the front-end and processes uploaded files to add multiple products to the WooCommerce cart.', 'user-manager'),
+				'description' => __('Upload a CSV on the front end to add many products to cart.', 'user-manager'),
 				'active' => !empty($settings['bulk_add_to_cart_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),
-				'description' => __('Pre-load a dropdown of Ship To addresses on checkout so users can select an office or location. The selected address overwrites the shipping (and optionally billing) address. The field appears where the chosen hook runs (e.g. after order notes on the classic checkout form).', 'user-manager'),
+				'description' => __('Add a checkout address selector that can overwrite shipping and billing fields.', 'user-manager'),
 				'active' => !empty($settings['checkout_ship_to_predefined_enabled']),
 			],
 			'coupon-creator' => [
 				'label'  => __('Coupon Creator', 'user-manager'),
-				'description' => __('Enable bulk coupon generation inside Add-ons.', 'user-manager'),
+				'description' => __('Generate coupons in bulk with optional email assignment and template support.', 'user-manager'),
 				'active' => !empty($settings['bulk_coupons_enabled']),
 			],
 			'coupon-for-new-user' => [
 				'label'  => __('New User Coupons', 'user-manager'),
-				'description' => __('Create a user-specific coupon cloned from a template and optionally email it to the user.', 'user-manager'),
+				'description' => __('Automatically create and optionally email template-based coupons to eligible new users.', 'user-manager'),
 				'active' => !empty($settings['nuc_enabled']),
 			],
 			'coupon-notifications-for-users-with-coupons' => [
 				'label'  => __('User Coupon Notifications', 'user-manager'),
-				'description' => __('Show eligible coupon reminders to logged-in users across selected storefront pages.', 'user-manager'),
+				'description' => __('Show logged-in users coupon reminder notices on selected storefront pages.', 'user-manager'),
 				'active' => !empty($settings['user_coupon_notifications_enabled']),
 			],
 			'coupon-remaining-balances' => [
 				'label'  => __('User Coupon Remaining Balances', 'user-manager'),
-				'description' => __('If parameters are met after checkout, the system creates a fresh fixed cart coupon covering the remaining balance, sets usage limit to 1, and restricts it to the shopper\'s email automatically.', 'user-manager'),
+				'description' => __('Issue a new single-use coupon for qualifying leftover balances after checkout.', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
 			],
 			'my-account-coupon-screen' => [
 				'label'  => __('My Account Coupons Page', 'user-manager'),
-				'description' => __('Add a dedicated Coupons tab to My Account that displays eligible user coupons using WooCommerce-style notices.', 'user-manager'),
+				'description' => __('Add a Coupons tab in My Account that shows eligible coupon notices.', 'user-manager'),
 				'active' => !empty($settings['my_account_coupon_screen_enabled']),
 			],
 			'my-account-site-admin' => [
 				'label'  => __('My Account Admin', 'user-manager'),
-				'description' => __('Add admin-style Orders, Products, Coupons, and Users tools inside WooCommerce My Account.', 'user-manager'),
+				'description' => __('Add Orders, Products, Coupons, and Users admin-style tools inside My Account.', 'user-manager'),
 				'active' => $my_account_site_admin_enabled,
 			],
 			'post-meta' => [
 				'label'  => __('Post Meta Viewer', 'user-manager'),
-				'description' => __('Shows a Post Meta box on post edit screens listing post meta fields and values.', 'user-manager'),
+				'description' => __('Show a Post Meta box on edit screens with keys and values.', 'user-manager'),
 				'active' => !empty($settings['display_post_meta_meta_box']),
 			],
 			'post-content-generator' => [
 				'label'  => __('Post Content Generator', 'user-manager'),
-				'description' => __('Enable AI-powered blog content generation and import tools in this add-on card.', 'user-manager'),
+				'description' => __('Generate and import AI-written post content with an optional post meta box.', 'user-manager'),
 				'active' => !empty($settings['openai_content_generator_enabled']),
 			],
 			'post-idea-generator' => [
 				'label'  => __('Post Idea Generator', 'user-manager'),
-				'description' => __('Generate fresh blog topic ideas from your existing content using AI.', 'user-manager'),
+				'description' => __('Generate AI-assisted blog topic ideas based on your existing site content.', 'user-manager'),
 				'active' => !empty($settings['openai_blog_post_idea_generator_enabled']),
 			],
 			'user-role-switching' => [
 				'label'  => __('User Role Switching', 'user-manager'),
-				'description' => __('Enable front-end role switcher and user profile permissions.', 'user-manager'),
+				'description' => __('Enable front-end role switching controls and related profile permissions.', 'user-manager'),
 				'active' => !empty($role_switch_settings['enabled']),
 			],
 			'wp-admin-bar-menu-items' => [
 				'label'  => __('WP-Admin Bar Menu Items', 'user-manager'),
-				'description' => __('Add custom top-bar shortcut menus for quick navigation in WordPress admin and front-end.', 'user-manager'),
+				'description' => __('Create custom WP-Admin bar shortcut menus for faster navigation.', 'user-manager'),
 				'active' => array_key_exists('admin_bar_menu_items_enabled', $settings) ? !empty($settings['admin_bar_menu_items_enabled']) : true,
 			],
 			'wp-admin-bar-quick-search' => [
 				'label'  => __('WP-Admin Bar Quick Search', 'user-manager'),
-				'description' => __('Adds a "Search" icon to the WordPress admin bar that opens a quick search dropdown for posts, products, orders, users, product categories, and media.', 'user-manager'),
+				'description' => __('Add a WP-Admin search panel for posts, products, orders, and users.', 'user-manager'),
 				'active' => array_key_exists('um_quick_search_enabled', $settings) ? !empty($settings['um_quick_search_enabled']) : true,
 			],
 			'wp-admin-css' => [
 				'label'  => __('WP-Admin CSS', 'user-manager'),
-				'description' => __('Inject custom CSS into wp-admin globally, by role, or for specific users.', 'user-manager'),
+				'description' => __('Apply custom CSS in wp-admin globally, by role, or by user.', 'user-manager'),
 				'active' => array_key_exists('wp_admin_css_enabled', $settings) ? !empty($settings['wp_admin_css_enabled']) : true,
 			],
 			'wp-admin-notifications' => [
 				'label'  => __('WP-Admin Notifications', 'user-manager'),
-				'description' => __('Display custom notice banners across wp-admin, optionally filtered by URL match.', 'user-manager'),
+				'description' => __('Display custom WP-Admin notification banners with optional URL-based targeting.', 'user-manager'),
 				'active' => array_key_exists('custom_admin_notifications_enabled', $settings) ? !empty($settings['custom_admin_notifications_enabled']) : true,
 			],
 		];
