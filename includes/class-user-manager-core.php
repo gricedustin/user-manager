@@ -9,8 +9,10 @@ if (!defined('ABSPATH')) {
 
 
 require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
+require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
 final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
+	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
 	const OPTION_KEY = 'user_manager_settings';
 	const ACTIVITY_LOG_KEY = 'user_manager_activity_log';
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
@@ -204,6 +206,10 @@ final class User_Manager_Core {
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_maybe_download_sample_csv']);
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_maybe_download_sample_with_product_data']);
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_process_upload']);
+		}
+		if (!empty($settings['add_to_cart_variation_table_enabled']) && class_exists('WooCommerce')) {
+			add_action('woocommerce_after_add_to_cart_form', [__CLASS__, 'maybe_render_add_to_cart_variation_table'], 20);
+			add_action('template_redirect', [__CLASS__, 'handle_add_to_cart_variation_table_submission'], 15);
 		}
 
 		// Role Switching feature (front-end role preview) – only when enabled and

@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) {
 }
 
 require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
+require_once __DIR__ . '/class-user-manager-addon-add-to-cart-variation-table.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
 require_once __DIR__ . '/class-user-manager-addon-blog-post-idea-generator.php';
@@ -118,6 +119,9 @@ class User_Manager_Tab_Addons {
 			<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 				<div class="um-addon-section" data-addon-section="add-to-cart-bulk-import">
 					<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="add-to-cart-variation-table">
+					<?php User_Manager_Addon_Add_To_Cart_Variation_Table::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="checkout-pre-defined-addresses">
 					<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
@@ -630,6 +634,9 @@ class User_Manager_Tab_Addons {
 				togglePostMetaAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-post-meta'));
 			});
+			$('#um-add-to-cart-variation-table-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-add-to-cart-variation-table'));
+			});
 			$('#um-bulk-coupons-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-bulk-coupons'));
 			});
@@ -784,6 +791,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Add to Cart Bulk Import', 'user-manager'),
 				'description' => __('Upload a product CSV so users can add many items before checkout.', 'user-manager'),
 				'active' => !empty($settings['bulk_add_to_cart_enabled']),
+			],
+			'add-to-cart-variation-table' => [
+				'label'  => __('Add to Cart Variation Table', 'user-manager'),
+				'description' => __('Show variable product rows with quantities so multiple variations can be added at once.', 'user-manager'),
+				'active' => !empty($settings['add_to_cart_variation_table_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),
