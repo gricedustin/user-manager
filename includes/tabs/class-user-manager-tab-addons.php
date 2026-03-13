@@ -89,15 +89,15 @@ class User_Manager_Tab_Addons {
 							>
 								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
 								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
+								<?php if (!empty($section_meta['description'])) : ?>
+									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
+								<?php endif; ?>
 								<?php if (!empty($section_tags)) : ?>
 									<span class="um-addon-tile-tags">
 										<?php foreach ($section_tags as $section_tag_key => $section_tag_label) : ?>
 											<span class="um-addon-tile-tag um-addon-tile-tag-<?php echo esc_attr($section_tag_key); ?>"><?php echo esc_html($section_tag_label); ?></span>
 										<?php endforeach; ?>
 									</span>
-								<?php endif; ?>
-								<?php if (!empty($section_meta['description'])) : ?>
-									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
 								<?php endif; ?>
 							</a>
 						<?php endforeach; ?>
@@ -187,7 +187,9 @@ class User_Manager_Tab_Addons {
 			justify-content: start;
 		}
 		.um-addon-tile {
-			display: block;
+			display: flex;
+			flex-direction: column;
+			height: 100%;
 			padding: 12px;
 			border: 1px solid #dcdcde;
 			border-radius: 6px;
@@ -222,7 +224,7 @@ class User_Manager_Tab_Addons {
 			display: flex;
 			flex-wrap: wrap;
 			gap: 4px;
-			margin-bottom: 6px;
+			margin-top: auto;
 		}
 		.um-addon-tile-tag {
 			display: inline-block;
