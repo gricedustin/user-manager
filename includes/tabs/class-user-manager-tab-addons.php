@@ -50,6 +50,11 @@ class User_Manager_Tab_Addons {
 		?>
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
 			<?php $tag_total = count($addon_tags); $tag_index = 0; ?>
+			<li>
+				<a href="<?php echo esc_url($addons_base_url); ?>" class="<?php echo $current_addon_tag === '' ? 'current' : ''; ?>">
+					<?php esc_html_e('All Add-ons', 'user-manager'); ?>
+				</a> |
+			</li>
 			<?php foreach ($addon_tags as $tag_key => $tag_label) : $tag_index++; ?>
 				<li>
 					<a href="<?php echo esc_url(add_query_arg('addon_tag', $tag_key, $addons_base_url)); ?>" class="<?php echo $current_addon_tag === $tag_key ? 'current' : ''; ?>">
@@ -83,6 +88,7 @@ class User_Manager_Tab_Addons {
 								href="<?php echo esc_url(add_query_arg(['addon_section' => $section_key, 'addon_tag' => $current_addon_tag], $addons_base_url)); ?>"
 							>
 								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
+								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
 								<?php if (!empty($section_meta['description'])) : ?>
 									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
 								<?php endif; ?>
@@ -93,7 +99,6 @@ class User_Manager_Tab_Addons {
 										<?php endforeach; ?>
 									</span>
 								<?php endif; ?>
-								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
 							</a>
 						<?php endforeach; ?>
 						<?php if ($visible_tiles === 0) : ?>
@@ -177,8 +182,9 @@ class User_Manager_Tab_Addons {
 		<style>
 		.um-addon-tile-grid {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			grid-template-columns: repeat(auto-fill, minmax(240px, 240px));
 			gap: 12px;
+			justify-content: start;
 		}
 		.um-addon-tile {
 			display: block;
@@ -230,9 +236,15 @@ class User_Manager_Tab_Addons {
 			font-weight: 500;
 		}
 		.um-addon-tile-status {
-			display: inline-block;
+			display: block;
 			font-size: 12px;
 			color: #50575e;
+			margin-bottom: 6px;
+		}
+		@media (max-width: 600px) {
+			.um-addon-tile-grid {
+				grid-template-columns: minmax(220px, 1fr);
+			}
 		}
 		.um-addon-collapsible .um-admin-card-header {
 			display: flex;
@@ -874,12 +886,16 @@ class User_Manager_Tab_Addons {
 	 */
 	private static function get_master_addon_tags(): array {
 		return [
+			'cart'       => [
+				'label'    => __('Cart', 'user-manager'),
+				'keywords' => ['cart'],
+			],
 			'checkout'   => [
 				'label'    => __('Checkout', 'user-manager'),
 				'keywords' => ['checkout'],
 			],
 			'coupon'     => [
-				'label'    => __('Coupon', 'user-manager'),
+				'label'    => __('Coupons', 'user-manager'),
 				'keywords' => ['coupon'],
 			],
 			'my-account' => [
@@ -887,11 +903,11 @@ class User_Manager_Tab_Addons {
 				'keywords' => ['my account', 'my-account'],
 			],
 			'post'       => [
-				'label'    => __('Post', 'user-manager'),
+				'label'    => __('Posts', 'user-manager'),
 				'keywords' => ['post'],
 			],
 			'user'       => [
-				'label'    => __('User', 'user-manager'),
+				'label'    => __('Users', 'user-manager'),
 				'keywords' => ['user'],
 			],
 			'wp-admin'   => [
