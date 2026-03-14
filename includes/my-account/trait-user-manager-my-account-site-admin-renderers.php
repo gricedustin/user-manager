@@ -82,19 +82,29 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			$endpoint     = 'admin_orders';
 			$current_page = self::get_current_page();
 			$search       = self::get_search_query();
+			$status_filters = self::get_configured_order_status_filters();
+			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
 			if ($search !== '') {
-				$all_orders = self::search_orders($search);
+				$all_orders = self::search_orders($search, $selected_status_key);
 				$paged      = self::paginate_items($all_orders, $current_page, self::PER_PAGE);
 				$orders     = $paged['items'];
 				$pages      = $paged['total_pages'];
 			} else {
-				$result = wc_get_orders([
+				$query_args = [
 					'limit'    => self::PER_PAGE,
 					'page'     => $current_page,
 					'paginate' => true,
 					'orderby'  => 'date',
 					'order'    => 'DESC',
-				]);
+				];
+				if ($selected_status_key !== '') {
+					$status_slug = preg_replace('/^wc-/', '', $selected_status_key);
+					$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+					if ($status_slug !== '') {
+						$query_args['status'] = [$status_slug];
+					}
+				}
+				$result = wc_get_orders($query_args);
 				$orders = [];
 				$pages  = 1;
 	
@@ -112,6 +122,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			echo '<h3 class="swh_order_history_title">' . esc_html__('Admin: Orders', 'user-manager') . '</h3>';
 			echo '<p class="swh_order_history_desc"></p>';
 			self::render_search_form($endpoint, __('Search orders...', 'user-manager'));
+			self::render_order_status_filter_links($endpoint, $status_filters, $selected_status_key, $search);
 	
 			echo '<table class="express_checkout_order_approvals woocommerce_my_account_admin_tools woocommerce_my_account_admin_tools_orders">';
 			echo '<thead><tr>';

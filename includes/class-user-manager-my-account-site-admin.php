@@ -468,6 +468,178 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Parse configured Order status filter definitions.
+	 *
+	 * Format: wc_completed:Complete,wc_failed:Failed
+	 *
+	 * @return array<string,array{status_key:string,status_slug:string,label:string}>
+	 */
+	private static function get_configured_order_status_filters(): array {
+		$settings = User_Manager_Core::get_settings();
+		$raw = isset($settings['my_account_admin_order_status_filters'])
+			? (string) $settings['my_account_admin_order_status_filters']
+			: '';
+		$raw = trim($raw);
+		if ($raw === '') {
+			return [];
+		}
+
+		$registered_statuses = [];
+		if (function_exists('wc_get_order_statuses')) {
+			$registered = wc_get_order_statuses();
+			if (is_array($registered)) {
+				$registered_statuses = $registered;
+			}
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw);
+		if (!is_array($parts)) {
+			return [];
+		}
+
+		$filters = [];
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+
+			$status_raw = $part;
+			$label_raw = '';
+			if (strpos($part, ':') !== false) {
+				$pair = explode(':', $part, 2);
+				$status_raw = isset($pair[0]) ? (string) $pair[0] : '';
+				$label_raw  = isset($pair[1]) ? (string) $pair[1] : '';
+			}
+
+			$status_key = self::normalize_order_status_filter_key($status_raw);
+			if ($status_key === '' || isset($filters[$status_key])) {
+				continue;
+			}
+
+			$status_slug = preg_replace('/^wc-/', '', $status_key);
+			$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+			if ($status_slug === '') {
+				continue;
+			}
+
+			$label = sanitize_text_field(trim($label_raw));
+			if ($label === '' && isset($registered_statuses[$status_key])) {
+				$label = wp_strip_all_tags((string) $registered_statuses[$status_key]);
+			}
+			if ($label === '') {
+				$label = ucwords(str_replace(['wc-', '-', '_'], ['', ' ', ' '], $status_key));
+			}
+
+			$filters[$status_key] = [
+				'status_key'  => $status_key,
+				'status_slug' => $status_slug,
+				'label'       => $label,
+			];
+		}
+
+		return $filters;
+	}
+
+	/**
+	 * Normalize order status filter keys like wc_completed/wc-completed/completed.
+	 */
+	private static function normalize_order_status_filter_key(string $raw): string {
+		$raw = trim(strtolower($raw));
+		if ($raw === '') {
+			return '';
+		}
+		$raw = str_replace('_', '-', $raw);
+		$raw = sanitize_key($raw);
+		if ($raw === '') {
+			return '';
+		}
+		if (strpos($raw, 'wc-') !== 0) {
+			$raw = 'wc-' . ltrim($raw, '-');
+		}
+		return sanitize_key($raw);
+	}
+
+	/**
+	 * Read selected order status filter from the request.
+	 *
+	 * @param array<string,array{status_key:string,status_slug:string,label:string}> $filters
+	 */
+	private static function get_selected_order_status_filter_key(array $filters): string {
+		if (empty($_GET['um_order_status'])) {
+			return '';
+		}
+
+		$raw = sanitize_text_field(wp_unslash($_GET['um_order_status']));
+		$key = self::normalize_order_status_filter_key($raw);
+		if ($key === '') {
+			return '';
+		}
+
+		return isset($filters[$key]) ? $key : '';
+	}
+
+	/**
+	 * Check whether an order matches the selected status filter key.
+	 *
+	 * @param WC_Order $order Order object.
+	 */
+	private static function order_matches_status_filter($order, string $status_key): bool {
+		if ($status_key === '') {
+			return true;
+		}
+		if (!$order instanceof WC_Order) {
+			return false;
+		}
+
+		$status_slug = preg_replace('/^wc-/', '', $status_key);
+		$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+		if ($status_slug === '') {
+			return true;
+		}
+
+		return sanitize_key((string) $order->get_status()) === $status_slug;
+	}
+
+	/**
+	 * Render order status filters above the orders table.
+	 *
+	 * @param string                                                       $endpoint Endpoint slug.
+	 * @param array<string,array{status_key:string,status_slug:string,label:string}> $filters  Configured filters.
+	 * @param string                                                       $selected_status_key Selected status key.
+	 * @param string                                                       $search Current search query.
+	 */
+	private static function render_order_status_filter_links(string $endpoint, array $filters, string $selected_status_key, string $search = ''): void {
+		if (empty($filters)) {
+			return;
+		}
+
+		$base_args = [];
+		if ($search !== '') {
+			$base_args['um_search'] = $search;
+		}
+
+		echo '<ul class="subsubsub" style="margin: 6px 0 12px;">';
+		$total = count($filters) + 1;
+		$index = 0;
+
+		$index++;
+		$all_url = self::get_endpoint_url($endpoint, $base_args);
+		echo '<li><a href="' . esc_url($all_url) . '" class="' . ($selected_status_key === '' ? 'current' : '') . '">' . esc_html__('All Statuses', 'user-manager') . '</a>' . ($index < $total ? ' |' : '') . '</li>';
+
+		foreach ($filters as $status_key => $meta) {
+			$index++;
+			$args = $base_args;
+			$args['um_order_status'] = $status_key;
+			$url = self::get_endpoint_url($endpoint, $args);
+			$current = $selected_status_key === $status_key ? 'current' : '';
+			echo '<li><a href="' . esc_url($url) . '" class="' . esc_attr($current) . '">' . esc_html($meta['label']) . '</a>' . ($index < $total ? ' |' : '') . '</li>';
+		}
+
+		echo '</ul><br class="clear" />';
+	}
+
+	/**
 	 * Paginate an array of items.
 	 *
 	 * @param array $items Items.
@@ -496,9 +668,10 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Search orders by multiple common fields.
 	 *
 	 * @param string $search Search query.
+	 * @param string $status_key Optional status filter key (wc-* format).
 	 * @return array<int,WC_Order>
 	 */
-	private static function search_orders(string $search): array {
+	private static function search_orders(string $search, string $status_key = ''): array {
 		$needle = strtolower(trim($search));
 		if ($needle === '') {
 			return [];
@@ -509,7 +682,7 @@ final class User_Manager_My_Account_Site_Admin {
 
 		if (is_numeric($search)) {
 			$single = wc_get_order(absint($search));
-			if ($single instanceof WC_Order) {
+			if ($single instanceof WC_Order && self::order_matches_status_filter($single, $status_key)) {
 				$orders[(int) $single->get_id()] = $single;
 			}
 		}
@@ -536,6 +709,15 @@ final class User_Manager_My_Account_Site_Admin {
 				'billing_email' => $search,
 			];
 		}
+		if ($status_key !== '') {
+			$status_slug = preg_replace('/^wc-/', '', $status_key);
+			$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+			if ($status_slug !== '') {
+				foreach ($queries as $query_index => $query_args) {
+					$queries[$query_index]['status'] = [$status_slug];
+				}
+			}
+		}
 
 		foreach ($queries as $query_args) {
 			$results = wc_get_orders($query_args);
@@ -547,6 +729,9 @@ final class User_Manager_My_Account_Site_Admin {
 					continue;
 				}
 				if (!self::order_matches_search($order, $needle)) {
+					continue;
+				}
+				if (!self::order_matches_status_filter($order, $status_key)) {
 					continue;
 				}
 				$orders[(int) $order->get_id()] = $order;
@@ -1086,11 +1271,24 @@ final class User_Manager_My_Account_Site_Admin {
 	private static function render_search_form(string $endpoint, string $placeholder): void {
 		$search = self::get_search_query();
 		$url    = self::get_endpoint_url($endpoint);
+		$selected_status_key = '';
+		if ($endpoint === 'admin_orders') {
+			$status_filters = self::get_configured_order_status_filters();
+			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
+		}
 		echo '<form class="um-my-account-admin-search-form" method="get" action="' . esc_url($url) . '">';
+		if ($selected_status_key !== '') {
+			echo '<input type="hidden" name="um_order_status" value="' . esc_attr($selected_status_key) . '" />';
+		}
 		echo '<input type="search" name="um_search" value="' . esc_attr($search) . '" placeholder="' . esc_attr($placeholder) . '" />';
 		echo '<button type="submit" class="button">' . esc_html__('Search', 'user-manager') . '</button>';
 		if ($search !== '') {
-			echo ' <a class="button" href="' . esc_url($url) . '">' . esc_html__('Clear', 'user-manager') . '</a>';
+			$clear_args = [];
+			if ($selected_status_key !== '') {
+				$clear_args['um_order_status'] = $selected_status_key;
+			}
+			$clear_url = self::get_endpoint_url($endpoint, $clear_args);
+			echo ' <a class="button" href="' . esc_url($clear_url) . '">' . esc_html__('Clear', 'user-manager') . '</a>';
 		}
 		echo '</form>';
 	}
@@ -1111,6 +1309,13 @@ final class User_Manager_My_Account_Site_Admin {
 		$base_args = [];
 		if ($search !== '') {
 			$base_args['um_search'] = $search;
+		}
+		if ($endpoint === 'admin_orders') {
+			$status_filters = self::get_configured_order_status_filters();
+			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
+			if ($selected_status_key !== '') {
+				$base_args['um_order_status'] = $selected_status_key;
+			}
 		}
 
 		echo '<div class="um-my-account-admin-pagination">';
@@ -1485,6 +1690,13 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 		if ($search !== '') {
 			$args['um_search'] = $search;
+		}
+		if (function_exists('get_query_var') && get_query_var('admin_orders', null) !== null) {
+			$status_filters = self::get_configured_order_status_filters();
+			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
+			if ($selected_status_key !== '') {
+				$args['um_order_status'] = $selected_status_key;
+			}
 		}
 		return $args;
 	}
