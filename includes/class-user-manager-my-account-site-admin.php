@@ -278,8 +278,8 @@ final class User_Manager_My_Account_Site_Admin {
 			return;
 		}
 
-		if (!$order->has_status('pending')) {
-			self::$order_action_notice_code = 'order_not_pending';
+		if ($order->has_status('completed')) {
+			self::$order_action_notice_code = 'order_completed_locked';
 			return;
 		}
 
@@ -319,15 +319,15 @@ final class User_Manager_My_Account_Site_Admin {
 		switch ($code) {
 			case 'approved':
 				$type = 'success';
-				$message = __('Order approved. Status changed from Pending payment to Processing.', 'user-manager');
+				$message = __('Order approved. Status changed to Processing.', 'user-manager');
 				break;
 			case 'declined':
 				$type = 'success';
-				$message = __('Order declined. Status changed from Pending payment to Canceled.', 'user-manager');
+				$message = __('Order declined. Status changed to Canceled.', 'user-manager');
 				break;
-			case 'order_not_pending':
+			case 'order_completed_locked':
 				$type = 'notice';
-				$message = __('Order is not in Pending payment status, so it was not changed.', 'user-manager');
+				$message = __('Completed orders cannot be approved or declined from this area.', 'user-manager');
 				break;
 			case 'order_not_found':
 			case 'invalid_order':

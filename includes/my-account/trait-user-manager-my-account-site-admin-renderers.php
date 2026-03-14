@@ -177,7 +177,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					echo '<td class="center">';
 					echo '<a class="button breathing_room full_width" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
 					echo '<a class="button breathing_room full_width" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
-					if ($can_approve && $order->has_status('pending')) {
+					if ($can_approve && !$order->has_status('completed')) {
 						$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());
 						$decline_url = self::get_decline_order_url($order_id, self::get_list_context_query_args());
 						echo ' <a class="button breathing_room full_width" href="' . esc_url($approve_url) . '">' . esc_html__('Approve', 'user-manager') . '</a>';
@@ -202,7 +202,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			}
 	
 			$back_url = self::get_list_url('admin_orders');
-			$can_approve = self::current_user_can_approve_orders() && $order->has_status('pending');
+			$can_approve = self::current_user_can_approve_orders() && !$order->has_status('completed');
 			echo '<h3 class="swh_order_history_title">' . esc_html__('Admin: Orders', 'user-manager') . '</h3>';
 			echo '<p class="swh_order_history_desc"></p>';
 			echo '<a class="button" href="' . esc_url($back_url) . '">' . esc_html__('Back', 'user-manager') . '</a>';
