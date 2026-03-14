@@ -187,13 +187,17 @@ class User_Manager_Tab_Addons {
 		.um-addon-tile-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(240px, 240px));
+			grid-auto-rows: 1fr;
 			gap: 12px;
 			justify-content: start;
+			align-items: stretch;
 		}
 		.um-addon-tile {
 			display: flex;
 			flex-direction: column;
 			height: 100%;
+			box-sizing: border-box;
+			min-height: 180px;
 			padding: 12px;
 			border: 1px solid #dcdcde;
 			border-radius: 6px;
@@ -228,6 +232,7 @@ class User_Manager_Tab_Addons {
 			display: flex;
 			flex-wrap: wrap;
 			gap: 4px;
+			padding-top: 6px;
 			margin-top: auto;
 		}
 		.um-addon-tile-tag {
