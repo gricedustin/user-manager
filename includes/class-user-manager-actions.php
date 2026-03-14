@@ -1730,6 +1730,7 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_status_filters'] = isset($_POST['my_account_admin_order_status_filters'])
 					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_status_filters']))
 					: '';
+				$settings['my_account_admin_order_hide_status'] = isset($_POST['my_account_admin_order_hide_status']) && $_POST['my_account_admin_order_hide_status'] === '1';
 				$settings['my_account_admin_order_approval_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_order_approval_usernames']) ? wp_unslash($_POST['my_account_admin_order_approval_usernames']) : ''
 				);

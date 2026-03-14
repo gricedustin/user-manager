@@ -51,6 +51,10 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<input type="text" name="my_account_admin_order_status_filters" id="um-my-account-admin-order-status-filters" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_order_status_filters'] ?? ''); ?>" placeholder="wc_completed:Complete,wc_failed:Failed" />
 						<p class="description"><?php esc_html_e('Use wc_status keys, separated by commas. If a colon is included, the value after the colon is used as the filter title/label.', 'user-manager'); ?></p>
 						<p class="description"><?php echo esc_html($order_status_note); ?></p>
+						<label>
+							<input type="checkbox" name="my_account_admin_order_hide_status" id="um-my-account-admin-order-hide-status" value="1" <?php checked($settings['my_account_admin_order_hide_status'] ?? false); ?> />
+							<?php esc_html_e('Hide Order Status', 'user-manager'); ?>
+						</label>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-approver-users-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label for="um-my-account-admin-order-approval-usernames"><?php esc_html_e('Order approval allowed usernames (comma-separated)', 'user-manager'); ?></label>

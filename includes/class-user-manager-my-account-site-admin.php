@@ -635,6 +635,14 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Whether order status text should be hidden in the Admin: Orders list.
+	 */
+	private static function should_hide_order_status(): bool {
+		$settings = User_Manager_Core::get_settings();
+		return !empty($settings['my_account_admin_order_hide_status']);
+	}
+
+	/**
 	 * Render order status filters above the orders table.
 	 *
 	 * @param string                                                       $endpoint Endpoint slug.

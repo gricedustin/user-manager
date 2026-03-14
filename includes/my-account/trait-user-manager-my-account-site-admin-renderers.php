@@ -118,6 +118,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			}
 	
 			$can_approve = self::current_user_can_approve_orders();
+			$hide_order_status = self::should_hide_order_status();
 	
 			echo '<h3 class="swh_order_history_title">' . esc_html__('Admin: Orders', 'user-manager') . '</h3>';
 			echo '<p class="swh_order_history_desc"></p>';
@@ -168,7 +169,9 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					if ($billing_email !== '') {
 						echo '<br />' . esc_html($billing_email);
 					}
-					echo '<br /><span class="um-my-account-admin-status">' . esc_html($status_label) . '</span>';
+					if (!$hide_order_status) {
+						echo '<br /><span class="um-my-account-admin-status">' . esc_html($status_label) . '</span>';
+					}
 					echo '</td>';
 					echo '<td>' . wp_kses_post($address_html) . '</td>';
 					echo '<td class="center">';
