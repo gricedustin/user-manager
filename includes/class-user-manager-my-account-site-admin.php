@@ -283,10 +283,29 @@ final class User_Manager_My_Account_Site_Admin {
 			return;
 		}
 
+		$current_user = wp_get_current_user();
+		$actor_login = isset($current_user->user_login) ? sanitize_text_field((string) $current_user->user_login) : '';
+		if ($actor_login === '') {
+			$actor_login = __('Unknown user', 'user-manager');
+		}
+		$action_time = function_exists('wp_date')
+			? wp_date(get_option('date_format') . ' ' . get_option('time_format'), current_time('timestamp'))
+			: date_i18n(get_option('date_format') . ' ' . get_option('time_format'), current_time('timestamp'));
+
 		if ($action === 'decline') {
 			$order->update_status(
 				'cancelled',
 				__('Order declined from My Account Admin Orders.', 'user-manager'),
+				true
+			);
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: user login, 2: localized date/time */
+					__('Internal note: Order declined by %1$s on %2$s via My Account Admin Orders.', 'user-manager'),
+					$actor_login,
+					$action_time
+				),
+				0,
 				true
 			);
 			self::$order_action_notice_code = 'declined';
@@ -294,6 +313,16 @@ final class User_Manager_My_Account_Site_Admin {
 			$order->update_status(
 				'processing',
 				__('Order approved from My Account Admin Orders.', 'user-manager'),
+				true
+			);
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: user login, 2: localized date/time */
+					__('Internal note: Order approved by %1$s on %2$s via My Account Admin Orders.', 'user-manager'),
+					$actor_login,
+					$action_time
+				),
+				0,
 				true
 			);
 			self::$order_action_notice_code = 'approved';
