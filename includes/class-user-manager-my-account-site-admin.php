@@ -282,6 +282,14 @@ final class User_Manager_My_Account_Site_Admin {
 			self::$order_action_notice_code = 'order_completed_locked';
 			return;
 		}
+		if ($action === 'approve' && $order->has_status('processing')) {
+			self::$order_action_notice_code = 'order_already_processing';
+			return;
+		}
+		if ($action === 'decline' && $order->has_status(['cancelled', 'canceled'])) {
+			self::$order_action_notice_code = 'order_already_cancelled';
+			return;
+		}
 
 		$current_user = wp_get_current_user();
 		$actor_login = isset($current_user->user_login) ? sanitize_text_field((string) $current_user->user_login) : '';
@@ -358,6 +366,14 @@ final class User_Manager_My_Account_Site_Admin {
 				$type = 'notice';
 				$message = __('Completed orders cannot be approved or declined from this area.', 'user-manager');
 				break;
+			case 'order_already_processing':
+				$type = 'notice';
+				$message = __('Order is already Processing.', 'user-manager');
+				break;
+			case 'order_already_cancelled':
+				$type = 'notice';
+				$message = __('Order is already Canceled.', 'user-manager');
+				break;
 			case 'order_not_found':
 			case 'invalid_order':
 				$type = 'error';
@@ -415,6 +431,28 @@ final class User_Manager_My_Account_Site_Admin {
 		$args['um_decline_order'] = $order_id;
 		$url = self::get_endpoint_url('admin_orders', $args);
 		return wp_nonce_url($url, 'um_decline_order_' . $order_id);
+	}
+
+	/**
+	 * Resolve approve button label from settings.
+	 */
+	private static function get_order_approve_button_label(): string {
+		$settings = User_Manager_Core::get_settings();
+		$label = isset($settings['my_account_admin_order_approve_button_label'])
+			? sanitize_text_field((string) $settings['my_account_admin_order_approve_button_label'])
+			: '';
+		return $label !== '' ? $label : __('Move to Processing', 'user-manager');
+	}
+
+	/**
+	 * Resolve decline button label from settings.
+	 */
+	private static function get_order_decline_button_label(): string {
+		$settings = User_Manager_Core::get_settings();
+		$label = isset($settings['my_account_admin_order_decline_button_label'])
+			? sanitize_text_field((string) $settings['my_account_admin_order_decline_button_label'])
+			: '';
+		return $label !== '' ? $label : __('Move to Canceled', 'user-manager');
 	}
 
 	/**

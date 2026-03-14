@@ -1737,6 +1737,12 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_approval_roles'] = self::sanitize_role_keys_array(
 					isset($_POST['my_account_admin_order_approval_roles']) ? wp_unslash($_POST['my_account_admin_order_approval_roles']) : []
 				);
+				$settings['my_account_admin_order_approve_button_label'] = isset($_POST['my_account_admin_order_approve_button_label'])
+					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_approve_button_label']))
+					: 'Move to Processing';
+				$settings['my_account_admin_order_decline_button_label'] = isset($_POST['my_account_admin_order_decline_button_label'])
+					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_decline_button_label']))
+					: 'Move to Canceled';
 				$settings['my_account_admin_order_default_pending_enabled'] = isset($_POST['my_account_admin_order_default_pending_enabled']) && $_POST['my_account_admin_order_default_pending_enabled'] === '1';
 				$settings['my_account_admin_order_additional_meta_fields'] = isset($_POST['my_account_admin_order_additional_meta_fields'])
 					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_additional_meta_fields']))
