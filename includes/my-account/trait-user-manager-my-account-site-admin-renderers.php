@@ -266,6 +266,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			echo $shipping !== '' ? wp_kses_post($shipping) : '&ndash;';
 			echo '</address>';
 			echo '</section>';
+
+			self::render_order_additional_meta_fields($order);
 	
 			if (self::should_show_meta_for_area('orders')) {
 				self::render_meta_table_from_post((int) $order->get_id());

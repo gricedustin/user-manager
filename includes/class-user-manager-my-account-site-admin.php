@@ -1160,6 +1160,155 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Parse configured additional order meta fields.
+	 *
+	 * @param string $raw Raw setting value.
+	 * @return array<int,array{key:string,label:string}>
+	 */
+	private static function parse_order_additional_meta_field_definitions(string $raw): array {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return [];
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw);
+		if (!is_array($parts)) {
+			return [];
+		}
+
+		$definitions = [];
+		$seen_keys = [];
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+
+			$meta_key_raw = $part;
+			$label_raw = $part;
+			if (strpos($part, ':') !== false) {
+				$pair = explode(':', $part, 2);
+				$meta_key_raw = isset($pair[0]) ? (string) $pair[0] : '';
+				$label_raw    = isset($pair[1]) ? (string) $pair[1] : '';
+			}
+
+			$meta_key = sanitize_key(trim($meta_key_raw));
+			if ($meta_key === '') {
+				continue;
+			}
+			if (isset($seen_keys[$meta_key])) {
+				continue;
+			}
+
+			$label = sanitize_text_field(trim($label_raw));
+			if ($label === '') {
+				$label = $meta_key;
+			}
+
+			$definitions[] = [
+				'key'   => $meta_key,
+				'label' => $label,
+			];
+			$seen_keys[$meta_key] = true;
+		}
+
+		return $definitions;
+	}
+
+	/**
+	 * Get additional order meta field definitions from settings.
+	 *
+	 * @return array<int,array{key:string,label:string}>
+	 */
+	private static function get_order_additional_meta_field_definitions(): array {
+		$settings = User_Manager_Core::get_settings();
+		$raw = isset($settings['my_account_admin_order_additional_meta_fields'])
+			? (string) $settings['my_account_admin_order_additional_meta_fields']
+			: '';
+
+		return self::parse_order_additional_meta_field_definitions($raw);
+	}
+
+	/**
+	 * Render configured additional order meta fields.
+	 *
+	 * @param WC_Order $order Order object.
+	 */
+	private static function render_order_additional_meta_fields($order): void {
+		if (!$order instanceof WC_Order) {
+			return;
+		}
+
+		$definitions = self::get_order_additional_meta_field_definitions();
+		if (empty($definitions)) {
+			return;
+		}
+
+		$rows_html = '';
+		foreach ($definitions as $definition) {
+			$meta_values = get_post_meta((int) $order->get_id(), $definition['key']);
+			if (empty($meta_values) || !is_array($meta_values)) {
+				continue;
+			}
+
+			$value_html = self::format_meta_values_for_display_with_links($meta_values);
+			if ($value_html === '') {
+				continue;
+			}
+
+			ob_start();
+			self::render_key_value_row($definition['label'], $value_html, true);
+			$rows_html .= (string) ob_get_clean();
+		}
+
+		if ($rows_html === '') {
+			return;
+		}
+
+		echo '<section class="woocommerce-order-details">';
+		echo '<table class="woocommerce-table woocommerce-table--order-details shop_table order_details">';
+		echo '<thead><tr><th class="middle">' . esc_html__('Additional Order Fields', 'user-manager') . '</th><th class="middle"></th></tr></thead><tbody>';
+		echo wp_kses_post($rows_html);
+		echo '</tbody></table>';
+		echo '</section>';
+	}
+
+	/**
+	 * Format metadata values and link http(s) values.
+	 *
+	 * @param array $values Raw meta values.
+	 * @return string
+	 */
+	private static function format_meta_values_for_display_with_links(array $values): string {
+		$rendered = [];
+		foreach ($values as $value) {
+			if (is_array($value) || is_object($value)) {
+				$json = wp_json_encode($value);
+				$display_value = is_string($json) ? $json : '';
+			} elseif (is_bool($value)) {
+				$display_value = $value ? '1' : '0';
+			} elseif ($value === null) {
+				$display_value = '';
+			} else {
+				$display_value = (string) $value;
+			}
+
+			$trimmed = trim($display_value);
+			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
+				$url = esc_url($trimmed);
+				if ($url !== '') {
+					$rendered[] = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html($trimmed) . '</a>';
+					continue;
+				}
+			}
+
+			$rendered[] = esc_html($display_value);
+		}
+
+		return implode(' | ', $rendered);
+	}
+
+	/**
 	 * Render a post meta data table.
 	 *
 	 * @param int $post_id Post ID.
