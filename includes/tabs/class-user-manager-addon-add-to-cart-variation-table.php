@@ -40,6 +40,15 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 					</div>
 					<div class="um-form-field">
 						<label>
+							<input type="checkbox" id="um-add-to-cart-variation-table-show-price-column" name="add_to_cart_variation_table_show_price_column" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_show_price_column'])); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Show Price column and line total amount in Totals row', 'user-manager'); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e('Adds a third Price column and dynamically calculates the total amount for entered quantities in the bottom Totals row.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label>
 							<input type="checkbox" id="um-add-to-cart-variation-table-debug-mode" name="add_to_cart_variation_table_debug_mode" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_debug_mode'])); ?><?php echo $form_attr; ?> />
 							<?php esc_html_e('Enable debug mode for Add to Cart Variation Table', 'user-manager'); ?>
 						</label>

@@ -64,6 +64,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			$rows[] = [
 				'id'          => $variation_id,
 				'label'       => wc_get_formatted_variation($variation, true, true, false),
+				'unit_price'  => function_exists('wc_get_price_to_display') ? (float) wc_get_price_to_display($variation) : (float) $variation->get_price(),
 				'status'      => $is_in_stock ? __('In stock', 'user-manager') : __('Out of stock', 'user-manager'),
 				'disabled'    => $is_row_disabled,
 				'max'         => $max_qty,
@@ -74,10 +75,25 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			return;
 		}
 
+		$settings = User_Manager_Core::get_settings();
+		$show_price_column = !empty($settings['add_to_cart_variation_table_show_price_column']);
+		$currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '$';
+		$currency_position = (string) get_option('woocommerce_currency_pos', 'left');
+		$currency_decimals = function_exists('wc_get_price_decimals') ? (int) wc_get_price_decimals() : 2;
+		$currency_decimal_sep = function_exists('wc_get_price_decimal_separator') ? wc_get_price_decimal_separator() : '.';
+		$currency_thousand_sep = function_exists('wc_get_price_thousand_separator') ? wc_get_price_thousand_separator() : ',';
 		$debug_enabled = self::is_add_to_cart_variation_table_debug_enabled();
 		$debug_payload = self::consume_add_to_cart_variation_table_debug_payload();
 		?>
-		<div class="um-add-to-cart-variation-table" style="margin-top:16px;">
+		<div
+			class="um-add-to-cart-variation-table"
+			style="margin-top:16px;"
+			data-currency-symbol="<?php echo esc_attr($currency_symbol); ?>"
+			data-currency-position="<?php echo esc_attr($currency_position); ?>"
+			data-currency-decimals="<?php echo esc_attr((string) $currency_decimals); ?>"
+			data-currency-decimal-sep="<?php echo esc_attr($currency_decimal_sep); ?>"
+			data-currency-thousand-sep="<?php echo esc_attr($currency_thousand_sep); ?>"
+		>
 			<h3 style="margin:0 0 10px;"><?php esc_html_e('Add Multiple Variations', 'user-manager'); ?></h3>
 			<p class="description" style="margin:0 0 12px;">
 				<?php esc_html_e('Alternative tool: keep the normal Add to Cart flow, or use this table to add many variations at once.', 'user-manager'); ?>
@@ -91,6 +107,9 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 						<tr>
 							<th><?php esc_html_e('Variation', 'user-manager'); ?></th>
 							<th style="width:120px;"><?php esc_html_e('Qty', 'user-manager'); ?></th>
+							<?php if ($show_price_column) : ?>
+								<th style="width:160px;"><?php esc_html_e('Price', 'user-manager'); ?></th>
+							<?php endif; ?>
 						</tr>
 					</thead>
 					<tbody>
@@ -112,17 +131,24 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 										value="0"
 										class="input-text qty text"
 										style="max-width:90px;"
+										data-unit-price="<?php echo esc_attr(number_format((float) $row['unit_price'], 6, '.', '')); ?>"
 										<?php echo $row['disabled'] ? 'disabled' : ''; ?>
 										<?php echo $row['max'] !== '' ? 'max="' . esc_attr($row['max']) . '"' : ''; ?>
 									/>
 								</td>
+								<?php if ($show_price_column) : ?>
+									<td><?php echo wp_kses_post(wc_price((float) $row['unit_price'])); ?></td>
+								<?php endif; ?>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
 					<tfoot>
 						<tr>
-							<th><?php esc_html_e('Total', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Totals', 'user-manager'); ?></th>
 							<th><span class="um-add-to-cart-variation-table-total">0</span></th>
+							<?php if ($show_price_column) : ?>
+								<th><span class="um-add-to-cart-variation-table-total-amount"><?php echo wp_kses_post(wc_price(0)); ?></span></th>
+							<?php endif; ?>
 						</tr>
 					</tfoot>
 				</table>
@@ -133,18 +159,57 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 					var root = document.currentScript ? document.currentScript.closest('.um-add-to-cart-variation-table') : null;
 					if (!root) return;
 					var qtyInputs = root.querySelectorAll('input[name^="um_add_to_cart_variation_qty["]');
-					var totalNode = root.querySelector('.um-add-to-cart-variation-table-total');
-					if (!totalNode) return;
+					var totalQtyNode = root.querySelector('.um-add-to-cart-variation-table-total');
+					var totalAmountNode = root.querySelector('.um-add-to-cart-variation-table-total-amount');
+					if (!totalQtyNode) return;
+					var currencySymbol = root.getAttribute('data-currency-symbol') || '$';
+					var currencyPosition = root.getAttribute('data-currency-position') || 'left';
+					var currencyDecimals = parseInt(root.getAttribute('data-currency-decimals') || '2', 10);
+					if (isNaN(currencyDecimals) || currencyDecimals < 0) {
+						currencyDecimals = 2;
+					}
+					var currencyDecimalSep = root.getAttribute('data-currency-decimal-sep') || '.';
+					var currencyThousandSep = root.getAttribute('data-currency-thousand-sep') || ',';
+					var formatNumber = function(value, decimals, decimalSep, thousandSep) {
+						var fixed = Number(value).toFixed(decimals);
+						var parts = fixed.split('.');
+						var integerPart = parts[0];
+						var decimalPart = parts.length > 1 ? parts[1] : '';
+						integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSep);
+						return decimals > 0 ? integerPart + decimalSep + decimalPart : integerPart;
+					};
+					var formatMoney = function(value) {
+						var amount = formatNumber(value, currencyDecimals, currencyDecimalSep, currencyThousandSep);
+						switch (currencyPosition) {
+							case 'right':
+								return amount + currencySymbol;
+							case 'left_space':
+								return currencySymbol + ' ' + amount;
+							case 'right_space':
+								return amount + ' ' + currencySymbol;
+							case 'left':
+							default:
+								return currencySymbol + amount;
+						}
+					};
 					var recalc = function() {
-						var total = 0;
+						var totalQty = 0;
+						var totalAmount = 0;
 						qtyInputs.forEach(function(input) {
 							if (input.disabled) return;
 							var value = parseInt(input.value || '0', 10);
 							if (!isNaN(value) && value > 0) {
-								total += value;
+								totalQty += value;
+								var unitPrice = parseFloat(input.getAttribute('data-unit-price') || '0');
+								if (!isNaN(unitPrice) && unitPrice > 0) {
+									totalAmount += (value * unitPrice);
+								}
 							}
 						});
-						totalNode.textContent = String(total);
+						totalQtyNode.textContent = String(totalQty);
+						if (totalAmountNode) {
+							totalAmountNode.textContent = formatMoney(totalAmount);
+						}
 					};
 					qtyInputs.forEach(function(input) {
 						input.addEventListener('input', recalc);
