@@ -21,3 +21,12 @@ When updating this plugin:
    - Do not wait until a file becomes "very large" before refactoring; split incrementally as features are added.
    - Keep orchestration files lean and move feature-specific logic into purpose-named files.
 
+5) Versioning and changelog discipline:
+   - For every code change, increment plugin version by +0.0.1 (patch bump).
+   - Keep version values in sync in both:
+     - `user-manager.php` plugin header `Version:`
+     - `includes/class-user-manager-core.php` `const VERSION`
+   - Add a matching changelog entry for each bump in:
+     - `user-manager.php` header changelog block
+     - `includes/tabs/class-user-manager-tab-versions.php`
+
