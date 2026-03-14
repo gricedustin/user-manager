@@ -1401,7 +1401,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Parse configured additional order meta fields.
 	 *
 	 * @param string $raw Raw setting value.
-	 * @return array<int,array{key:string,label:string}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string}>
 	 */
 	private static function parse_order_additional_meta_field_definitions(string $raw): array {
 		$raw = trim($raw);
@@ -1424,10 +1424,12 @@ final class User_Manager_My_Account_Site_Admin {
 
 			$meta_key_raw = $part;
 			$label_raw = $part;
+			$prefix_raw = '';
 			if (strpos($part, ':') !== false) {
-				$pair = explode(':', $part, 2);
+				$pair = explode(':', $part, 3);
 				$meta_key_raw = isset($pair[0]) ? (string) $pair[0] : '';
 				$label_raw    = isset($pair[1]) ? (string) $pair[1] : '';
+				$prefix_raw   = isset($pair[2]) ? (string) $pair[2] : '';
 			}
 
 			$meta_key = sanitize_key(trim($meta_key_raw));
@@ -1444,8 +1446,9 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 
 			$definitions[] = [
-				'key'   => $meta_key,
-				'label' => $label,
+				'key'                 => $meta_key,
+				'label'               => $label,
+				'prefix_before_value' => sanitize_text_field(trim($prefix_raw)),
 			];
 			$seen_keys[$meta_key] = true;
 		}
@@ -1456,7 +1459,7 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Get additional order meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string}>
 	 */
 	private static function get_order_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -1489,7 +1492,8 @@ final class User_Manager_My_Account_Site_Admin {
 				continue;
 			}
 
-			$value_html = self::format_meta_values_for_display_with_links($meta_values);
+			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
+			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value);
 			if ($value_html === '') {
 				continue;
 			}
@@ -1514,11 +1518,13 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Format metadata values and link http(s) values.
 	 *
-	 * @param array $values Raw meta values.
+	 * @param array  $values Raw meta values.
+	 * @param string $prefix_before_value Optional prefix to prepend before URL detection.
 	 * @return string
 	 */
-	private static function format_meta_values_for_display_with_links(array $values): string {
+	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = ''): string {
 		$rendered = [];
+		$prefix_before_value = trim($prefix_before_value);
 		foreach ($values as $value) {
 			if (is_array($value) || is_object($value)) {
 				$json = wp_json_encode($value);
@@ -1531,7 +1537,13 @@ final class User_Manager_My_Account_Site_Admin {
 				$display_value = (string) $value;
 			}
 
-			$trimmed = trim($display_value);
+			$value_for_output = $display_value;
+			if ($prefix_before_value !== '') {
+				$normalized_value = self::normalize_meta_scalar_for_prefixed_link($display_value);
+				$value_for_output = $prefix_before_value . ltrim($normalized_value, '/');
+			}
+
+			$trimmed = trim($value_for_output);
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
 				$url = esc_url($trimmed);
 				if ($url !== '') {
@@ -1540,10 +1552,31 @@ final class User_Manager_My_Account_Site_Admin {
 				}
 			}
 
-			$rendered[] = esc_html($display_value);
+			$rendered[] = esc_html($value_for_output);
 		}
 
 		return implode(' | ', $rendered);
+	}
+
+	/**
+	 * Normalize scalar-like strings before applying URL prefixes.
+	 * Converts one-item JSON arrays such as ["abc"] to abc.
+	 */
+	private static function normalize_meta_scalar_for_prefixed_link(string $value): string {
+		$value = trim($value);
+		if ($value === '') {
+			return '';
+		}
+
+		$decoded = json_decode($value, true);
+		if (json_last_error() === JSON_ERROR_NONE && is_array($decoded) && count($decoded) === 1) {
+			$first = reset($decoded);
+			if (is_scalar($first) || $first === null) {
+				return trim((string) $first);
+			}
+		}
+
+		return $value;
 	}
 
 	/**
