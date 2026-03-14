@@ -176,7 +176,9 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					echo '<a class="button breathing_room full_width" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
 					if ($can_approve && $order->has_status('pending')) {
 						$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());
+						$decline_url = self::get_decline_order_url($order_id, self::get_list_context_query_args());
 						echo ' <a class="button breathing_room full_width" href="' . esc_url($approve_url) . '">' . esc_html__('Approve', 'user-manager') . '</a>';
+						echo ' <a class="button breathing_room full_width" href="' . esc_url($decline_url) . '">' . esc_html__('Decline', 'user-manager') . '</a>';
 					}
 					echo '</td>';
 					echo '</tr>';
@@ -208,7 +210,9 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					$approve_args['print'] = '1';
 				}
 				$approve_url = self::get_approve_order_url((int) $order->get_id(), $approve_args);
+				$decline_url = self::get_decline_order_url((int) $order->get_id(), $approve_args);
 				echo ' <a class="button" href="' . esc_url($approve_url) . '">' . esc_html__('Approve', 'user-manager') . '</a>';
+				echo ' <a class="button" href="' . esc_url($decline_url) . '">' . esc_html__('Decline', 'user-manager') . '</a>';
 			}
 			echo '<br><br>';
 	

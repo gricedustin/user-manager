@@ -239,22 +239,30 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
-	 * Handle approve-order actions from My Account admin orders.
+	 * Handle approve/decline order actions from My Account admin orders.
 	 */
 	private static function maybe_handle_order_approval_action(): void {
-		if (!isset($_GET['um_approve_order'])) {
+		$action = '';
+		if (isset($_GET['um_approve_order'])) {
+			$action = 'approve';
+		} elseif (isset($_GET['um_decline_order'])) {
+			$action = 'decline';
+		}
+		if ($action === '') {
 			return;
 		}
 
 		self::$order_action_notice_code = '';
-		$order_id = absint(wp_unslash($_GET['um_approve_order']));
+		$order_param = $action === 'decline' ? 'um_decline_order' : 'um_approve_order';
+		$order_id = isset($_GET[$order_param]) ? absint(wp_unslash($_GET[$order_param])) : 0;
 		if ($order_id <= 0) {
 			self::$order_action_notice_code = 'invalid_order';
 			return;
 		}
 
 		$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'um_approve_order_' . $order_id)) {
+		$nonce_action = $action === 'decline' ? 'um_decline_order_' . $order_id : 'um_approve_order_' . $order_id;
+		if ($nonce === '' || !wp_verify_nonce($nonce, $nonce_action)) {
 			self::$order_action_notice_code = 'invalid_nonce';
 			return;
 		}
@@ -275,13 +283,21 @@ final class User_Manager_My_Account_Site_Admin {
 			return;
 		}
 
-		$order->update_status(
-			'processing',
-			__('Order approved from My Account Admin Orders.', 'user-manager'),
-			true
-		);
-
-		self::$order_action_notice_code = 'approved';
+		if ($action === 'decline') {
+			$order->update_status(
+				'cancelled',
+				__('Order declined from My Account Admin Orders.', 'user-manager'),
+				true
+			);
+			self::$order_action_notice_code = 'declined';
+		} else {
+			$order->update_status(
+				'processing',
+				__('Order approved from My Account Admin Orders.', 'user-manager'),
+				true
+			);
+			self::$order_action_notice_code = 'approved';
+		}
 	}
 
 	/**
@@ -305,6 +321,10 @@ final class User_Manager_My_Account_Site_Admin {
 				$type = 'success';
 				$message = __('Order approved. Status changed from Pending payment to Processing.', 'user-manager');
 				break;
+			case 'declined':
+				$type = 'success';
+				$message = __('Order declined. Status changed from Pending payment to Canceled.', 'user-manager');
+				break;
 			case 'order_not_pending':
 				$type = 'notice';
 				$message = __('Order is not in Pending payment status, so it was not changed.', 'user-manager');
@@ -316,11 +336,11 @@ final class User_Manager_My_Account_Site_Admin {
 				break;
 			case 'invalid_nonce':
 				$type = 'error';
-				$message = __('Security check failed for order approval.', 'user-manager');
+				$message = __('Security check failed for the order action.', 'user-manager');
 				break;
 			case 'not_allowed':
 				$type = 'error';
-				$message = __('You are not allowed to approve orders in this area.', 'user-manager');
+				$message = __('You are not allowed to approve or decline orders in this area.', 'user-manager');
 				break;
 		}
 
@@ -338,8 +358,8 @@ final class User_Manager_My_Account_Site_Admin {
 			echo '<p class="' . esc_attr($class) . '">' . esc_html($message) . '</p>';
 		}
 
-		// Prevent re-running approval action on page refresh by removing action params from URL.
-		echo '<script>(function(){try{var url=new URL(window.location.href);url.searchParams.delete("um_approve_order");url.searchParams.delete("_wpnonce");url.searchParams.delete("um_order_notice");window.history.replaceState({},document.title,url.toString());}catch(e){}})();</script>';
+		// Prevent re-running approve/decline action on page refresh by removing action params from URL.
+		echo '<script>(function(){try{var url=new URL(window.location.href);url.searchParams.delete("um_approve_order");url.searchParams.delete("um_decline_order");url.searchParams.delete("_wpnonce");url.searchParams.delete("um_order_notice");window.history.replaceState({},document.title,url.toString());}catch(e){}})();</script>';
 	}
 
 	/**
@@ -353,6 +373,19 @@ final class User_Manager_My_Account_Site_Admin {
 		$args['um_approve_order'] = $order_id;
 		$url = self::get_endpoint_url('admin_orders', $args);
 		return wp_nonce_url($url, 'um_approve_order_' . $order_id);
+	}
+
+	/**
+	 * Build decline order URL with nonce.
+	 *
+	 * @param int   $order_id Order ID.
+	 * @param array $args Base query args.
+	 * @return string
+	 */
+	private static function get_decline_order_url(int $order_id, array $args = []): string {
+		$args['um_decline_order'] = $order_id;
+		$url = self::get_endpoint_url('admin_orders', $args);
+		return wp_nonce_url($url, 'um_decline_order_' . $order_id);
 	}
 
 	/**
