@@ -1783,6 +1783,7 @@ class User_Manager_Actions {
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
 				$settings['add_to_cart_variation_table_enabled'] = isset($_POST['add_to_cart_variation_table_enabled']) && $_POST['add_to_cart_variation_table_enabled'] === '1';
+				$settings['add_to_cart_variation_table_hide_default_form'] = isset($_POST['add_to_cart_variation_table_hide_default_form']) && $_POST['add_to_cart_variation_table_hide_default_form'] === '1';
 				$settings['add_to_cart_variation_table_debug_mode'] = isset($_POST['add_to_cart_variation_table_debug_mode']) && $_POST['add_to_cart_variation_table_debug_mode'] === '1';
 				$settings['bulk_coupons_enabled'] = isset($_POST['bulk_coupons_enabled']) && $_POST['bulk_coupons_enabled'] === '1';
 				$settings['bulk_coupons_template_code'] = isset($_POST['bulk_coupons_template_code']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_template_code'])) : '';

@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.3 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: switched to a vertical two-column layout (Variation + Qty), removed price output, added a live Total row, and kept it as a separate alternative form under the native add-to-cart area.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added setting to hide/show the native variable-product dropdown add-to-cart form when the bulk table is present.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added debug mode setting and front-end debug output for Add All Variations processing details.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.2 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Orders: added configurable button labels for Approve/Decline (default labels now "Move to Processing" and "Move to Canceled"), hid Approve when already Processing, and hid Decline when already Canceled.', 'user-manager'); ?></li>

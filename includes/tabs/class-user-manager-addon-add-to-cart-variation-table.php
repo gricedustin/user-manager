@@ -31,6 +31,15 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 				<div id="um-add-to-cart-variation-table-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
 					<div class="um-form-field">
 						<label>
+							<input type="checkbox" id="um-add-to-cart-variation-table-hide-default-form" name="add_to_cart_variation_table_hide_default_form" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_hide_default_form'])); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Hide default variable-product add to cart form when bulk table is shown', 'user-manager'); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e('When enabled, the normal variation dropdown + single Add to Cart button are hidden and only this bulk table is shown.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label>
 							<input type="checkbox" id="um-add-to-cart-variation-table-debug-mode" name="add_to_cart_variation_table_debug_mode" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_debug_mode'])); ?><?php echo $form_attr; ?> />
 							<?php esc_html_e('Enable debug mode for Add to Cart Variation Table', 'user-manager'); ?>
 						</label>

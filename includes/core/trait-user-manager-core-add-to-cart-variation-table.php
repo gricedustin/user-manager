@@ -64,8 +64,6 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			$rows[] = [
 				'id'          => $variation_id,
 				'label'       => wc_get_formatted_variation($variation, true, true, false),
-				'sku'         => (string) $variation->get_sku(),
-				'price_html'  => (string) $variation->get_price_html(),
 				'status'      => $is_in_stock ? __('In stock', 'user-manager') : __('Out of stock', 'user-manager'),
 				'disabled'    => $is_row_disabled,
 				'max'         => $max_qty,
@@ -88,23 +86,23 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 				<?php wp_nonce_field('um_add_to_cart_variation_table_submit', 'um_add_to_cart_variation_table_nonce'); ?>
 				<input type="hidden" name="um_add_to_cart_variation_table_submit" value="1" />
 				<input type="hidden" name="um_add_to_cart_variation_table_product_id" value="<?php echo esc_attr((string) $product_id); ?>" />
-				<table class="shop_table shop_table_responsive" style="margin-bottom:12px;">
+				<table class="shop_table shop_table_responsive um-add-to-cart-variation-vertical-table" style="margin-bottom:12px;">
 					<thead>
 						<tr>
 							<th><?php esc_html_e('Variation', 'user-manager'); ?></th>
-							<th><?php esc_html_e('SKU', 'user-manager'); ?></th>
-							<th><?php esc_html_e('Price', 'user-manager'); ?></th>
-							<th><?php esc_html_e('Status', 'user-manager'); ?></th>
 							<th style="width:120px;"><?php esc_html_e('Qty', 'user-manager'); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php foreach ($rows as $row) : ?>
+							<?php
+							$display_label = $row['label'] !== '' ? $row['label'] : ('#' . (string) $row['id']);
+							if ($row['disabled']) {
+								$display_label .= ' (' . $row['status'] . ')';
+							}
+							?>
 							<tr>
-								<td><?php echo esc_html($row['label'] !== '' ? $row['label'] : ('#' . (string) $row['id'])); ?></td>
-								<td><?php echo esc_html($row['sku'] !== '' ? $row['sku'] : '-'); ?></td>
-								<td><?php echo wp_kses_post($row['price_html'] !== '' ? $row['price_html'] : '-'); ?></td>
-								<td><?php echo esc_html($row['status']); ?></td>
+								<td><?php echo esc_html($display_label); ?></td>
 								<td>
 									<input
 										type="number"
@@ -121,9 +119,40 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
+					<tfoot>
+						<tr>
+							<th><?php esc_html_e('Total', 'user-manager'); ?></th>
+							<th><span class="um-add-to-cart-variation-table-total">0</span></th>
+						</tr>
+					</tfoot>
 				</table>
 				<button type="submit" class="button alt"><?php esc_html_e('Add All Variations', 'user-manager'); ?></button>
 			</form>
+			<script>
+				(function() {
+					var root = document.currentScript ? document.currentScript.closest('.um-add-to-cart-variation-table') : null;
+					if (!root) return;
+					var qtyInputs = root.querySelectorAll('input[name^="um_add_to_cart_variation_qty["]');
+					var totalNode = root.querySelector('.um-add-to-cart-variation-table-total');
+					if (!totalNode) return;
+					var recalc = function() {
+						var total = 0;
+						qtyInputs.forEach(function(input) {
+							if (input.disabled) return;
+							var value = parseInt(input.value || '0', 10);
+							if (!isNaN(value) && value > 0) {
+								total += value;
+							}
+						});
+						totalNode.textContent = String(total);
+					};
+					qtyInputs.forEach(function(input) {
+						input.addEventListener('input', recalc);
+						input.addEventListener('change', recalc);
+					});
+					recalc();
+				})();
+			</script>
 			<?php if ($debug_enabled) : ?>
 				<div class="woocommerce-info" style="margin-top:12px;">
 					<strong><?php esc_html_e('Add to Cart Variation Table Debug', 'user-manager'); ?></strong>
@@ -392,6 +421,36 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		delete_transient($key);
 
 		return is_array($data) ? $data : [];
+	}
+
+	/**
+	 * Optionally hide the native variable-product add-to-cart form.
+	 */
+	public static function maybe_hide_default_add_to_cart_variation_form(): void {
+		if (is_admin() || wp_doing_ajax()) {
+			return;
+		}
+		if (!function_exists('is_product') || !is_product() || !function_exists('wc_get_product')) {
+			return;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['add_to_cart_variation_table_enabled']) || empty($settings['add_to_cart_variation_table_hide_default_form'])) {
+			return;
+		}
+
+		$product_id = get_queried_object_id();
+		$product = $product_id > 0 ? wc_get_product($product_id) : null;
+		if (!$product instanceof WC_Product || !$product->is_type('variable')) {
+			return;
+		}
+		?>
+		<style id="um-hide-default-variable-add-to-cart">
+			.single-product form.variations_form.cart {
+				display: none !important;
+			}
+		</style>
+		<?php
 	}
 }
 
