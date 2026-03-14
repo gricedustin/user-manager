@@ -652,24 +652,19 @@ final class User_Manager_My_Account_Site_Admin {
 			$base_args['um_search'] = $search;
 		}
 
-		echo '<ul class="subsubsub" style="margin: 6px 0 12px;">';
-		$total = count($filters) + 1;
-		$index = 0;
-
-		$index++;
+		$link_html = [];
 		$all_url = self::get_endpoint_url($endpoint, $base_args);
-		echo '<li><a href="' . esc_url($all_url) . '" class="' . ($selected_status_key === '' ? 'current' : '') . '">' . esc_html__('All Statuses', 'user-manager') . '</a>' . ($index < $total ? ' |' : '') . '</li>';
+		$link_html[] = '<a href="' . esc_url($all_url) . '" class="' . ($selected_status_key === '' ? 'current' : '') . '">' . esc_html__('All Statuses', 'user-manager') . '</a>';
 
 		foreach ($filters as $status_key => $meta) {
-			$index++;
 			$args = $base_args;
 			$args['um_order_status'] = $status_key;
 			$url = self::get_endpoint_url($endpoint, $args);
 			$current = $selected_status_key === $status_key ? 'current' : '';
-			echo '<li><a href="' . esc_url($url) . '" class="' . esc_attr($current) . '">' . esc_html($meta['label']) . '</a>' . ($index < $total ? ' |' : '') . '</li>';
+			$link_html[] = '<a href="' . esc_url($url) . '" class="' . esc_attr($current) . '">' . esc_html($meta['label']) . '</a>';
 		}
 
-		echo '</ul><br class="clear" />';
+		echo '<p class="um-order-status-filter-links" style="margin: 6px 0 12px;">' . implode(' <span aria-hidden="true">|</span> ', $link_html) . '</p>';
 	}
 
 	/**
