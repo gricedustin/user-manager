@@ -11,6 +11,7 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
+		$enabled = !empty($settings['add_to_cart_variation_table_enabled']);
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-add-to-cart-variation-table" data-um-active-selectors="#um-add-to-cart-variation-table-enabled">
 			<div class="um-admin-card-header">
@@ -20,12 +21,23 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
 					<label>
-						<input type="checkbox" id="um-add-to-cart-variation-table-enabled" name="add_to_cart_variation_table_enabled" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_enabled'])); ?><?php echo $form_attr; ?> />
+						<input type="checkbox" id="um-add-to-cart-variation-table-enabled" name="add_to_cart_variation_table_enabled" value="1" <?php checked($enabled); ?><?php echo $form_attr; ?> />
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
-						<?php esc_html_e('On variable product pages, display a variation table with quantity inputs so customers can add multiple variations to cart in one submission.', 'user-manager'); ?>
+						<?php esc_html_e('On variable product pages, add a separate variation table under the default Add to Cart area so customers can bulk-add multiple variations without changing native add-to-cart behavior.', 'user-manager'); ?>
 					</p>
+				</div>
+				<div id="um-add-to-cart-variation-table-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-add-to-cart-variation-table-debug-mode" name="add_to_cart_variation_table_debug_mode" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_debug_mode'])); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Enable debug mode for Add to Cart Variation Table', 'user-manager'); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e('When enabled, a front-end debug panel displays per-variation processing details after submitting Add All Variations.', 'user-manager'); ?>
+						</p>
+					</div>
 				</div>
 			</div>
 		</div>

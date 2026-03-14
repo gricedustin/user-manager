@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 	/**
-	 * Render variation quantity table on variable product pages.
+	 * Render alternate variation quantity table under the default add-to-cart form.
 	 */
 	public static function maybe_render_add_to_cart_variation_table(): void {
 		if (!function_exists('is_product') || !is_product()) {
@@ -24,15 +24,15 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		if (!$product instanceof WC_Product || !$product->is_type('variable')) {
 			return;
 		}
+		if (!$product->is_purchasable()) {
+			return;
+		}
 		static $rendered_product_ids = [];
-		$product_id = $product->get_id();
+		$product_id = (int) $product->get_id();
 		if (isset($rendered_product_ids[$product_id])) {
 			return;
 		}
 		$rendered_product_ids[$product_id] = true;
-		if (!$product->is_purchasable()) {
-			return;
-		}
 
 		$available_variations = $product->get_available_variations();
 		if (empty($available_variations) || !is_array($available_variations)) {
@@ -75,16 +75,19 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		if (empty($rows)) {
 			return;
 		}
+
+		$debug_enabled = self::is_add_to_cart_variation_table_debug_enabled();
+		$debug_payload = self::consume_add_to_cart_variation_table_debug_payload();
 		?>
 		<div class="um-add-to-cart-variation-table" style="margin-top:16px;">
 			<h3 style="margin:0 0 10px;"><?php esc_html_e('Add Multiple Variations', 'user-manager'); ?></h3>
 			<p class="description" style="margin:0 0 12px;">
-				<?php esc_html_e('Enter quantities for one or more variations, then add all selected rows to cart at once.', 'user-manager'); ?>
+				<?php esc_html_e('Alternative tool: keep the normal Add to Cart flow, or use this table to add many variations at once.', 'user-manager'); ?>
 			</p>
-			<form method="post" action="<?php echo esc_url(remove_query_arg(['add-to-cart', 'variation_id'], $product->get_permalink())); ?>" class="cart um-add-to-cart-variation-table-form">
+			<form method="post" action="<?php echo esc_url($product->get_permalink()); ?>" class="um-add-to-cart-variation-table-form">
 				<?php wp_nonce_field('um_add_to_cart_variation_table_submit', 'um_add_to_cart_variation_table_nonce'); ?>
 				<input type="hidden" name="um_add_to_cart_variation_table_submit" value="1" />
-				<input type="hidden" name="um_add_to_cart_variation_table_product_id" value="<?php echo esc_attr((string) $product->get_id()); ?>" />
+				<input type="hidden" name="um_add_to_cart_variation_table_product_id" value="<?php echo esc_attr((string) $product_id); ?>" />
 				<table class="shop_table shop_table_responsive" style="margin-bottom:12px;">
 					<thead>
 						<tr>
@@ -119,8 +122,18 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 						<?php endforeach; ?>
 					</tbody>
 				</table>
-				<button type="submit" class="button alt"><?php esc_html_e('Add Selected Variations to Cart', 'user-manager'); ?></button>
+				<button type="submit" class="button alt"><?php esc_html_e('Add All Variations', 'user-manager'); ?></button>
 			</form>
+			<?php if ($debug_enabled) : ?>
+				<div class="woocommerce-info" style="margin-top:12px;">
+					<strong><?php esc_html_e('Add to Cart Variation Table Debug', 'user-manager'); ?></strong>
+					<?php if (!empty($debug_payload)) : ?>
+						<pre style="white-space:pre-wrap; margin:8px 0 0;"><?php echo esc_html(wp_json_encode($debug_payload, JSON_PRETTY_PRINT)); ?></pre>
+					<?php else : ?>
+						<p style="margin:8px 0 0;"><?php esc_html_e('Submit Add All Variations to see debug details for each variation.', 'user-manager'); ?></p>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -138,16 +151,23 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		if (!function_exists('WC') || !function_exists('wc_get_product')) {
 			return;
 		}
+		$debug_enabled = self::is_add_to_cart_variation_table_debug_enabled();
+		$debug_rows = [];
 		if (empty($_POST['um_add_to_cart_variation_table_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['um_add_to_cart_variation_table_nonce'])), 'um_add_to_cart_variation_table_submit')) {
 			wc_add_notice(__('Security check failed. Please try again.', 'user-manager'), 'error');
-			self::redirect_add_to_cart_variation_table_request(0);
+			self::redirect_add_to_cart_variation_table_request(0, self::build_add_to_cart_variation_table_debug_query_args($debug_enabled, [
+				'error' => 'invalid_nonce',
+			]));
 		}
 
 		$product_id = isset($_POST['um_add_to_cart_variation_table_product_id']) ? absint($_POST['um_add_to_cart_variation_table_product_id']) : 0;
 		$product = $product_id > 0 ? wc_get_product($product_id) : null;
 		if (!$product instanceof WC_Product || !$product->is_type('variable')) {
 			wc_add_notice(__('Invalid variable product for bulk variation add to cart.', 'user-manager'), 'error');
-			self::redirect_add_to_cart_variation_table_request($product_id);
+			self::redirect_add_to_cart_variation_table_request($product_id, self::build_add_to_cart_variation_table_debug_query_args($debug_enabled, [
+				'error' => 'invalid_product',
+				'product_id' => $product_id,
+			]));
 		}
 
 		if (!WC()->cart && function_exists('wc_load_cart')) {
@@ -155,7 +175,10 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		}
 		if (!WC()->cart) {
 			wc_add_notice(__('Cart is unavailable right now. Please try again.', 'user-manager'), 'error');
-			self::redirect_add_to_cart_variation_table_request($product_id);
+			self::redirect_add_to_cart_variation_table_request($product_id, self::build_add_to_cart_variation_table_debug_query_args($debug_enabled, [
+				'error' => 'cart_unavailable',
+				'product_id' => $product_id,
+			]));
 		}
 
 		$qty_map = [];
@@ -175,6 +198,11 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 			$qty = is_numeric($qty_raw) ? (int) floor((float) $qty_raw) : 0;
 			if ($qty <= 0) {
+				$debug_rows[] = [
+					'variation_id' => $variation_id,
+					'status'       => 'skipped',
+					'note'         => 'Quantity is zero/empty.',
+				];
 				continue;
 			}
 
@@ -183,11 +211,23 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			$variation = wc_get_product($variation_id);
 			if (!$variation instanceof WC_Product_Variation || $variation->get_parent_id() !== $product_id) {
 				$error_messages[] = sprintf(__('Variation #%d is not valid for this product.', 'user-manager'), $variation_id);
+				$debug_rows[] = [
+					'variation_id' => $variation_id,
+					'qty'          => $qty,
+					'status'       => 'error',
+					'note'         => 'Variation does not belong to this product.',
+				];
 				continue;
 			}
 
 			if (!$variation->is_purchasable() || !$variation->is_in_stock()) {
 				$error_messages[] = sprintf(__('Variation #%d is currently unavailable.', 'user-manager'), $variation_id);
+				$debug_rows[] = [
+					'variation_id' => $variation_id,
+					'qty'          => $qty,
+					'status'       => 'error',
+					'note'         => 'Variation unavailable.',
+				];
 				continue;
 			}
 
@@ -199,6 +239,11 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			}
 			if ($qty <= 0) {
 				$error_messages[] = sprintf(__('Variation #%d has no available stock.', 'user-manager'), $variation_id);
+				$debug_rows[] = [
+					'variation_id' => $variation_id,
+					'status'       => 'error',
+					'note'         => 'No stock after stock checks.',
+				];
 				continue;
 			}
 
@@ -211,21 +256,39 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 			if ($added) {
 				$items_added += $qty;
+				$debug_rows[] = [
+					'variation_id' => $variation_id,
+					'qty'          => $qty,
+					'status'       => 'added',
+					'note'         => 'Added to cart.',
+				];
 			} else {
 				$error_messages[] = sprintf(__('Variation #%d could not be added to cart.', 'user-manager'), $variation_id);
+				$debug_rows[] = [
+					'variation_id' => $variation_id,
+					'qty'          => $qty,
+					'status'       => 'error',
+					'note'         => 'WC()->cart->add_to_cart returned false.',
+				];
 			}
 		}
 
 		if ($rows_selected === 0) {
 			wc_add_notice(__('Enter a quantity greater than 0 for at least one variation.', 'user-manager'), 'notice');
-			self::redirect_add_to_cart_variation_table_request($product_id);
+			self::redirect_add_to_cart_variation_table_request($product_id, self::build_add_to_cart_variation_table_debug_query_args($debug_enabled, [
+				'product_id'    => $product_id,
+				'rows_selected' => 0,
+				'items_added'   => 0,
+				'errors'        => $error_messages,
+				'rows'          => $debug_rows,
+			]));
 		}
 
 		if ($items_added > 0) {
 			wc_add_notice(
 				sprintf(
 					/* translators: %d: number of items added */
-					_n('%d item added to cart from variation table.', '%d items added to cart from variation table.', $items_added, 'user-manager'),
+					_n('%d variation item added to cart.', '%d variation items added to cart.', $items_added, 'user-manager'),
 					$items_added
 				),
 				'success'
@@ -240,13 +303,19 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			wc_add_notice($error_preview, 'error');
 		}
 
-		self::redirect_add_to_cart_variation_table_request($product_id);
+		self::redirect_add_to_cart_variation_table_request($product_id, self::build_add_to_cart_variation_table_debug_query_args($debug_enabled, [
+			'product_id'    => $product_id,
+			'rows_selected' => $rows_selected,
+			'items_added'   => $items_added,
+			'errors'        => $error_messages,
+			'rows'          => $debug_rows,
+		]));
 	}
 
 	/**
 	 * Redirect after processing to prevent duplicate submissions on refresh.
 	 */
-	private static function redirect_add_to_cart_variation_table_request(int $product_id): void {
+	private static function redirect_add_to_cart_variation_table_request(int $product_id, array $query_args = []): void {
 		$redirect_url = wp_get_referer();
 		if (!is_string($redirect_url) || $redirect_url === '') {
 			$redirect_url = $product_id > 0 ? get_permalink($product_id) : home_url('/');
@@ -254,8 +323,75 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		if (!is_string($redirect_url) || $redirect_url === '') {
 			$redirect_url = home_url('/');
 		}
+		$redirect_url = remove_query_arg(
+			[
+				'um_add_to_cart_variation_table_submit',
+				'um_add_to_cart_variation_table_nonce',
+				'um_add_to_cart_variation_table_debug',
+				'um_add_to_cart_variation_table_debug_token',
+			],
+			$redirect_url
+		);
+		if (!empty($query_args)) {
+			$redirect_url = add_query_arg($query_args, $redirect_url);
+		}
 		wp_safe_redirect($redirect_url);
 		exit;
+	}
+
+	/**
+	 * Whether debug mode is enabled for this feature.
+	 */
+	private static function is_add_to_cart_variation_table_debug_enabled(): bool {
+		$settings = User_Manager_Core::get_settings();
+		if (!empty($settings['add_to_cart_variation_table_debug_mode'])) {
+			return true;
+		}
+		if (!isset($_GET['um_add_to_cart_variation_table_debug'])) {
+			return false;
+		}
+		$raw = sanitize_text_field(wp_unslash($_GET['um_add_to_cart_variation_table_debug']));
+		return in_array(strtolower($raw), ['1', 'true', 'yes', 'on'], true);
+	}
+
+	/**
+	 * Persist debug payload and return redirect query args.
+	 *
+	 * @param bool              $enabled Debug enabled.
+	 * @param array<string,mixed> $payload Debug payload.
+	 * @return array<string,string>
+	 */
+	private static function build_add_to_cart_variation_table_debug_query_args(bool $enabled, array $payload): array {
+		if (!$enabled) {
+			return [];
+		}
+		$token = wp_generate_password(20, false, false);
+		set_transient('um_variation_table_debug_' . $token, $payload, MINUTE_IN_SECONDS * 5);
+
+		return [
+			'um_add_to_cart_variation_table_debug' => '1',
+			'um_add_to_cart_variation_table_debug_token' => $token,
+		];
+	}
+
+	/**
+	 * Load debug payload from transient, then clear it.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function consume_add_to_cart_variation_table_debug_payload(): array {
+		if (!isset($_GET['um_add_to_cart_variation_table_debug_token'])) {
+			return [];
+		}
+		$token = sanitize_text_field(wp_unslash($_GET['um_add_to_cart_variation_table_debug_token']));
+		if ($token === '') {
+			return [];
+		}
+		$key = 'um_variation_table_debug_' . $token;
+		$data = get_transient($key);
+		delete_transient($key);
+
+		return is_array($data) ? $data : [];
 	}
 }
 

@@ -634,6 +634,9 @@ class User_Manager_Tab_Addons {
 			function toggleRoleSwitchingFields() {
 				$('#um-role-switching-fields').toggle($('#um-role-switching-enabled').is(':checked'));
 			}
+			function toggleAddToCartVariationTableFields() {
+				$('#um-add-to-cart-variation-table-fields').toggle($('#um-add-to-cart-variation-table-enabled').is(':checked'));
+			}
 
 			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
 			toggleMyAccountAdminViewerFields();
@@ -649,6 +652,7 @@ class User_Manager_Tab_Addons {
 				refreshAddonCardAutoState($('#um-addon-card-post-meta'));
 			});
 			$('#um-add-to-cart-variation-table-enabled').on('change', function() {
+				toggleAddToCartVariationTableFields();
 				refreshAddonCardAutoState($('#um-addon-card-add-to-cart-variation-table'));
 			});
 			$('#um-bulk-coupons-enabled').on('change', function() {
@@ -723,6 +727,7 @@ class User_Manager_Tab_Addons {
 			toggleAdminBarMenuItemsFields();
 			toggleWpAdminCssFields();
 			toggleRoleSwitchingFields();
+			toggleAddToCartVariationTableFields();
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;
