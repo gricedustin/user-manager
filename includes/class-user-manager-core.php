@@ -208,6 +208,7 @@ final class User_Manager_Core {
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_process_upload']);
 		}
 		if (!empty($settings['add_to_cart_variation_table_enabled']) && class_exists('WooCommerce')) {
+			add_action('woocommerce_single_product_summary', [__CLASS__, 'maybe_render_add_to_cart_variation_table'], 35);
 			add_action('woocommerce_after_add_to_cart_form', [__CLASS__, 'maybe_render_add_to_cart_variation_table'], 20);
 			add_action('template_redirect', [__CLASS__, 'handle_add_to_cart_variation_table_submission'], 15);
 		}

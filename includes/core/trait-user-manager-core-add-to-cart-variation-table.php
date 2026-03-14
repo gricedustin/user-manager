@@ -24,6 +24,12 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		if (!$product instanceof WC_Product || !$product->is_type('variable')) {
 			return;
 		}
+		static $rendered_product_ids = [];
+		$product_id = $product->get_id();
+		if (isset($rendered_product_ids[$product_id])) {
+			return;
+		}
+		$rendered_product_ids[$product_id] = true;
 		if (!$product->is_purchasable()) {
 			return;
 		}
@@ -75,7 +81,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			<p class="description" style="margin:0 0 12px;">
 				<?php esc_html_e('Enter quantities for one or more variations, then add all selected rows to cart at once.', 'user-manager'); ?>
 			</p>
-			<form method="post" class="cart um-add-to-cart-variation-table-form">
+			<form method="post" action="<?php echo esc_url(remove_query_arg(['add-to-cart', 'variation_id'], $product->get_permalink())); ?>" class="cart um-add-to-cart-variation-table-form">
 				<?php wp_nonce_field('um_add_to_cart_variation_table_submit', 'um_add_to_cart_variation_table_nonce'); ?>
 				<input type="hidden" name="um_add_to_cart_variation_table_submit" value="1" />
 				<input type="hidden" name="um_add_to_cart_variation_table_product_id" value="<?php echo esc_attr((string) $product->get_id()); ?>" />
