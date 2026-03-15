@@ -171,6 +171,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Generate multiple AI-written pages from Title|Prompt rows using your saved OpenAI API key, with optional image downloads and history tracking.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-database',
+				'title'   => __('Database Table Browser', 'user-manager'),
+				'summary' => __('Browse database tables, inspect column structure, and view paginated row data directly in WP-Admin for debugging and support workflows.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-location-alt',
 				'title'   => __('Checkout Address Selector', 'user-manager'),
 				'summary' => __('Streamline checkout with predefined address selections and conditional field behavior for faster, cleaner order submission.', 'user-manager'),

@@ -1816,6 +1816,8 @@ class User_Manager_Actions {
 				$settings['bulk_page_creator_set_featured_image'] = isset($_POST['bulk_page_creator_set_featured_image']) && $_POST['bulk_page_creator_set_featured_image'] === '1';
 				$settings['bulk_page_creator_include_with_every_prompt'] = isset($_POST['bulk_page_creator_include_with_every_prompt']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_page_creator_include_with_every_prompt'])) : '';
 				$settings['bulk_page_creator_page_data'] = isset($_POST['bulk_page_creator_page_data']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_page_creator_page_data'])) : '';
+				$settings['database_table_browser_enabled'] = isset($_POST['database_table_browser_enabled']) && $_POST['database_table_browser_enabled'] === '1';
+				$settings['database_table_browser_per_page_limit'] = isset($_POST['database_table_browser_per_page_limit']) ? max(1, min(1000, absint($_POST['database_table_browser_per_page_limit']))) : 100;
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';

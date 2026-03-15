@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.34 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Database Table Browser" add-on with Activate toggle and records-per-page setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Database Table Browser now lists all tables, supports secure table drill-down with nonce checks, and renders paginated table rows directly in Add-ons.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.33 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new "Bulk Page Creator" add-on with Activate toggle, OpenAI generation controls, bulk Title|Prompt input, and create action in the Add-ons tab.', 'user-manager'); ?></li>
