@@ -13,7 +13,7 @@ class User_Manager_Tab_Documentation {
 		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_DOCUMENTATION);
 		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_DOCUMENTATION;
 		$docs_section = isset($_GET['docs_section']) ? sanitize_key(wp_unslash($_GET['docs_section'])) : '';
-		$valid_sections = ['documentation', 'versions'];
+		$valid_sections = ['documentation', 'installation', 'about', 'support', 'versions'];
 
 		// Backward compatibility: legacy Versions tab now lives under Docs sub links.
 		if ($docs_section === '' && $requested_tab === User_Manager_Core::TAB_VERSIONS) {
@@ -24,6 +24,9 @@ class User_Manager_Tab_Documentation {
 		}
 
 		$documentation_url = add_query_arg('docs_section', 'documentation', $base_url);
+		$installation_url = add_query_arg('docs_section', 'installation', $base_url);
+		$about_url = add_query_arg('docs_section', 'about', $base_url);
+		$support_url = add_query_arg('docs_section', 'support', $base_url);
 		$versions_url = add_query_arg('docs_section', 'versions', $base_url);
 
 		?>
@@ -31,6 +34,21 @@ class User_Manager_Tab_Documentation {
 			<li>
 				<a href="<?php echo esc_url($documentation_url); ?>" class="<?php echo $docs_section === 'documentation' ? 'current' : ''; ?>">
 					<?php esc_html_e('Documentation', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($installation_url); ?>" class="<?php echo $docs_section === 'installation' ? 'current' : ''; ?>">
+					<?php esc_html_e('Installation', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($about_url); ?>" class="<?php echo $docs_section === 'about' ? 'current' : ''; ?>">
+					<?php esc_html_e('About', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($support_url); ?>" class="<?php echo $docs_section === 'support' ? 'current' : ''; ?>">
+					<?php esc_html_e('Support', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
@@ -44,6 +62,18 @@ class User_Manager_Tab_Documentation {
 
 		if ($docs_section === 'versions') {
 			User_Manager_Tab_Versions::render();
+			return;
+		}
+		if ($docs_section === 'installation') {
+			self::render_installation_section();
+			return;
+		}
+		if ($docs_section === 'about') {
+			self::render_about_section();
+			return;
+		}
+		if ($docs_section === 'support') {
+			self::render_support_section();
 			return;
 		}
 
@@ -541,6 +571,184 @@ class User_Manager_Tab_Documentation {
 		});
 		</script>
 		<?php
+	}
+
+	/**
+	 * Render Installation subsection.
+	 */
+	private static function render_installation_section(): void {
+		?>
+		<div class="um-admin-grid um-admin-grid-single">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-admin-tools"></span>
+					<h2><?php esc_html_e('Installation', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p><?php esc_html_e('Activate User Experience Manager from the WordPress Plugins screen, then open User Manager in wp-admin to begin configuring users, emails, settings, and add-ons.', 'user-manager'); ?></p>
+					<ol>
+						<li><?php esc_html_e('Activate the plugin under Plugins > Installed Plugins.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Open User Manager and configure core user workflows (Create User, Bulk Create, Reset Password, Remove User).', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Set up email templates and email-sending behavior for each user workflow.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Review Settings for global defaults and operational preferences.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Explore Add-ons and activate only the user-experience features you need.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Use Reports > Admin Log to verify setup actions and ongoing activity.', 'user-manager'); ?></li>
+					</ol>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render About subsection.
+	 */
+	private static function render_about_section(): void {
+		$screenshot_urls = self::get_about_screenshot_urls();
+		$tags = [
+			'woocommerce',
+			'user management',
+			'user experience',
+			'b2b ecommerce',
+			'b2c ecommerce',
+			'customer accounts',
+			'admin workflow',
+			'email automation',
+			'coupon automation',
+			'my account tools',
+			'order approvals',
+			'activity logging',
+			'wordpress plugin',
+			'store operations',
+			'support tooling',
+		];
+		?>
+		<div class="um-admin-grid um-admin-grid-single">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-info-outline"></span>
+					<h2><?php esc_html_e('About User Experience Manager', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<h3><?php esc_html_e('Item Name', 'user-manager'); ?></h3>
+					<p><strong><?php esc_html_e('User Experience Manager', 'user-manager'); ?></strong></p>
+
+					<h3><?php esc_html_e('Category', 'user-manager'); ?></h3>
+					<p><?php esc_html_e('WordPress → eCommerce → WooCommerce', 'user-manager'); ?></p>
+
+					<h3><?php esc_html_e('Tags', 'user-manager'); ?></h3>
+					<p><?php echo esc_html(implode(', ', $tags)); ?></p>
+
+					<h3><?php esc_html_e('Short Description', 'user-manager'); ?></h3>
+					<p><?php esc_html_e('User Experience Manager is an all-in-one operational toolkit for improving both admin workflows and customer account experiences in WooCommerce-powered stores. It centralizes user management, email workflows, reporting, and modular add-ons in one scalable interface.', 'user-manager'); ?></p>
+
+					<h3><?php esc_html_e('Long Description (HTML Supported)', 'user-manager'); ?></h3>
+					<div>
+						<p><?php esc_html_e('User Experience Manager was built to help teams manage complex ecommerce operations without stitching together dozens of disconnected tools. It combines user onboarding and account operations, reporting visibility, and high-impact WooCommerce user-experience add-ons in one platform.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('From bulk account imports and customer communication to order approval workflows, cart tools, and admin UI customization, the plugin is designed to support both fast-moving support teams and long-term growth-focused ecommerce operations.', 'user-manager'); ?></p>
+					</div>
+
+					<h3><?php esc_html_e('Feature List', 'user-manager'); ?></h3>
+					<ul>
+						<li><?php esc_html_e('Centralized user/account lifecycle tools (create, bulk import, remove, reset password).', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Template-driven email workflows and user communication controls.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Reports suite with Admin Log, user activity, and operational diagnostics.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Modular add-ons for checkout, cart, coupons, My Account, posts/pages, and wp-admin UX.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('WooCommerce-oriented functionality for store operations, approvals, and customer experience tuning.', 'user-manager'); ?></li>
+					</ul>
+
+					<h3><?php esc_html_e('Screenshots', 'user-manager'); ?></h3>
+					<p><?php esc_html_e('Screenshots automatically load from: /assets/documentation-screenshots/', 'user-manager'); ?></p>
+					<?php if (empty($screenshot_urls)) : ?>
+						<p><em><?php esc_html_e('No screenshots found yet. Add image files to assets/documentation-screenshots and they will appear automatically here.', 'user-manager'); ?></em></p>
+					<?php else : ?>
+						<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px;">
+							<?php foreach ($screenshot_urls as $screenshot_url) : ?>
+								<div style="border:1px solid #dcdcde; border-radius:6px; padding:8px; background:#fff;">
+									<img src="<?php echo esc_url($screenshot_url); ?>" alt="<?php esc_attr_e('User Experience Manager screenshot', 'user-manager'); ?>" style="max-width:100%; height:auto; display:block;" />
+								</div>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
+
+					<h3><?php esc_html_e('Use Cases', 'user-manager'); ?></h3>
+					<ul>
+						<li><?php esc_html_e('B2B account onboarding and role-based user provisioning at scale.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Customer account support workflows with controlled Login As troubleshooting.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Coupon and retention campaign management with reminder/remaining-balance workflows.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Operational visibility for teams managing multiple stores and admin users.', 'user-manager'); ?></li>
+					</ul>
+
+					<h3><?php esc_html_e('Requirements', 'user-manager'); ?></h3>
+					<p><?php esc_html_e('WordPress is required. WooCommerce is strongly recommended if you are selling online and want to use ecommerce-focused add-ons.', 'user-manager'); ?></p>
+
+					<h3><?php esc_html_e('Support Information', 'user-manager'); ?></h3>
+					<p><a href="https://www.griceprojects.com" target="_blank" rel="noopener noreferrer">www.griceprojects.com</a></p>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render Support subsection.
+	 */
+	private static function render_support_section(): void {
+		?>
+		<div class="um-admin-grid um-admin-grid-single">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-sos"></span>
+					<h2><?php esc_html_e('Support', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p><?php esc_html_e('We are happy to support your implementation and feature requests. User Experience Manager was developed in-house based on requests from hundreds of clients to manage thousands of ecommerce stores and customer/admin experiences in one place, and we would love to support your requests as well.', 'user-manager'); ?></p>
+					<p>
+						<a class="button button-primary" href="https://griceprojects.com/contact/?inquiry=uxm" target="_blank" rel="noopener noreferrer">
+							<?php esc_html_e('Contact Support', 'user-manager'); ?>
+						</a>
+					</p>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Auto-load screenshot image URLs from plugin folder.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_about_screenshot_urls(): array {
+		$plugin_root = dirname(__DIR__, 2);
+		$screenshots_dir = $plugin_root . '/assets/documentation-screenshots';
+		if (!is_dir($screenshots_dir)) {
+			return [];
+		}
+
+		$patterns = ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp', '*.svg'];
+		$files = [];
+		foreach ($patterns as $pattern) {
+			$matches = glob($screenshots_dir . '/' . $pattern);
+			if (!empty($matches) && is_array($matches)) {
+				$files = array_merge($files, $matches);
+			}
+		}
+		if (empty($files)) {
+			return [];
+		}
+
+		natcasesort($files);
+		$files = array_values(array_unique($files));
+		$urls = [];
+		foreach ($files as $file_path) {
+			if (!is_file($file_path)) {
+				continue;
+			}
+			$basename = basename((string) $file_path);
+			$urls[] = plugins_url('assets/documentation-screenshots/' . rawurlencode($basename), $plugin_root . '/user-manager.php');
+		}
+		return $urls;
 	}
 }
 

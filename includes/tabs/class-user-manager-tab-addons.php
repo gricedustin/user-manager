@@ -953,6 +953,16 @@ class User_Manager_Tab_Addons {
 	}
 
 	/**
+	 * Expose add-on section metadata for other tabs (Reports/Admin Log).
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return array<string,array{label:string,description:string,active:bool}>
+	 */
+	public static function get_addon_sections_for_reports(array $settings): array {
+		return self::get_addon_sections($settings);
+	}
+
+	/**
 	 * Build Add-ons sub-navigation metadata.
 	 *
 	 * @param array $settings Plugin settings.

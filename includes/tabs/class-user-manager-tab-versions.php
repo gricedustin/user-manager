@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.46 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports > Admin Log: added an "Add-ons Connected to Admin Log" panel that lists every add-on with status, quick links, and per-tool match counts, plus an add-on tool filter in the log table.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation tab: added new subsections before Versions (Installation, About, Support), including auto-loaded screenshots from /assets/documentation-screenshots when image files exist.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.45 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tag navigation: added a new "Pages" tag (A-Z sorted) and mapped Page Creator into this filter.', 'user-manager'); ?></li>
