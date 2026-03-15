@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.36 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Invoice Approval" add-on with invoice branding/settings controls, invoice approval form settings, and WooCommerce order invoice links.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Invoice Approval now supports per-user invoice approval access via Edit User checkbox (email-match based), in addition to the global approval email list setting.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.35 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new "Webhook URLs" add-on with Activate toggle plus full settings for debug mode, URL parameter handling, and individual webhook type activation.', 'user-manager'); ?></li>

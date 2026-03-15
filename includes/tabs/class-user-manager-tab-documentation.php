@@ -181,6 +181,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Expose configurable webhook endpoints for order/coupon workflows, password resets, and email sending with optional URL param support and debug output.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-media-spreadsheet',
+				'title'   => __('Invoice Approval', 'user-manager'),
+				'summary' => __('Render customer-facing invoice links/pages for WooCommerce orders with approval forms, PDF output, payment links, and approval access by email or user-profile checkbox.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-location-alt',
 				'title'   => __('Checkout Address Selector', 'user-manager'),
 				'summary' => __('Streamline checkout with predefined address selections and conditional field behavior for faster, cleaner order submission.', 'user-manager'),

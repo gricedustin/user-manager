@@ -1829,6 +1829,30 @@ class User_Manager_Actions {
 				$settings['webhook_urls_activate_product_cat_webhook'] = isset($_POST['webhook_urls_activate_product_cat_webhook']) && $_POST['webhook_urls_activate_product_cat_webhook'] === '1';
 				$settings['webhook_urls_activate_user_password_reset_webhook'] = isset($_POST['webhook_urls_activate_user_password_reset_webhook']) && $_POST['webhook_urls_activate_user_password_reset_webhook'] === '1';
 				$settings['webhook_urls_activate_send_email_webhook'] = isset($_POST['webhook_urls_activate_send_email_webhook']) && $_POST['webhook_urls_activate_send_email_webhook'] === '1';
+				$settings['invoice_approval_enabled'] = isset($_POST['invoice_approval_enabled']) && $_POST['invoice_approval_enabled'] === '1';
+				$settings['invoice_primary_color'] = isset($_POST['invoice_primary_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_primary_color'])) : '#4B2E83';
+				$settings['invoice_hide_logo_in_pdf'] = isset($_POST['invoice_hide_logo_in_pdf']) && $_POST['invoice_hide_logo_in_pdf'] === '1';
+				$settings['invoice_hide_buttons_in_pdf'] = isset($_POST['invoice_hide_buttons_in_pdf']) && $_POST['invoice_hide_buttons_in_pdf'] === '1';
+				$settings['invoice_button_color'] = isset($_POST['invoice_button_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_button_color'])) : '#4B2E83';
+				$settings['invoice_button_text_color'] = isset($_POST['invoice_button_text_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_button_text_color'])) : '#ffffff';
+				$settings['invoice_font_family'] = isset($_POST['invoice_font_family']) ? sanitize_text_field(wp_unslash($_POST['invoice_font_family'])) : 'Poppins, sans-serif';
+				$settings['invoice_logo_url'] = isset($_POST['invoice_logo_url']) ? esc_url_raw(wp_unslash($_POST['invoice_logo_url'])) : '';
+				$settings['invoice_logo_max_width'] = isset($_POST['invoice_logo_max_width']) ? sanitize_text_field(wp_unslash($_POST['invoice_logo_max_width'])) : '160px';
+				$settings['invoice_company_name'] = isset($_POST['invoice_company_name']) ? sanitize_text_field(wp_unslash($_POST['invoice_company_name'])) : get_bloginfo('name');
+				$settings['invoice_company_address'] = isset($_POST['invoice_company_address']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_company_address'])) : '';
+				$settings['invoice_company_email'] = isset($_POST['invoice_company_email']) ? sanitize_email(wp_unslash($_POST['invoice_company_email'])) : get_bloginfo('admin_email');
+				$settings['invoice_company_phone'] = isset($_POST['invoice_company_phone']) ? sanitize_text_field(wp_unslash($_POST['invoice_company_phone'])) : '';
+				$settings['invoice_header_note'] = isset($_POST['invoice_header_note']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_header_note'])) : '';
+				$settings['invoice_footer_note'] = isset($_POST['invoice_footer_note']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_footer_note'])) : '';
+				$settings['invoice_footer_note_below_buttons'] = isset($_POST['invoice_footer_note_below_buttons']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_footer_note_below_buttons'])) : '';
+				$settings['invoice_order_label'] = isset($_POST['invoice_order_label']) ? sanitize_text_field(wp_unslash($_POST['invoice_order_label'])) : 'Order';
+				$settings['invoice_show_hidden_meta_fields'] = isset($_POST['invoice_show_hidden_meta_fields']) && $_POST['invoice_show_hidden_meta_fields'] === '1';
+				$settings['invoice_enable_enhancements'] = isset($_POST['invoice_enable_enhancements']) && $_POST['invoice_enable_enhancements'] === '1';
+				$settings['invoice_scrollable_items_threshold'] = isset($_POST['invoice_scrollable_items_threshold']) ? sanitize_text_field(wp_unslash($_POST['invoice_scrollable_items_threshold'])) : '';
+				$settings['invoice_approval_emails'] = isset($_POST['invoice_approval_emails']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_approval_emails'])) : '';
+				$settings['invoice_approval_title'] = isset($_POST['invoice_approval_title']) ? sanitize_text_field(wp_unslash($_POST['invoice_approval_title'])) : 'Approve & Pay Later';
+				$settings['invoice_approval_checkbox_text'] = isset($_POST['invoice_approval_checkbox_text']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_approval_checkbox_text'])) : '';
+				$settings['invoice_approval_button_text'] = isset($_POST['invoice_approval_button_text']) ? sanitize_text_field(wp_unslash($_POST['invoice_approval_button_text'])) : 'Send to Production';
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';

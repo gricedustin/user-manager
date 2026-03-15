@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation).
- * Version: 2.3.35
+ * Version: 2.3.36
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.36 - March 15, 2026
+ * - Added new "Invoice Approval" add-on with invoice branding/settings controls, invoice approval form settings, and WooCommerce order invoice links.
+ * - Invoice Approval now supports per-user invoice approval access via Edit User checkbox (email-match based), in addition to the global approval email list setting.
+ *
  * 2.3.35 - March 15, 2026
  * - Added new "Webhook URLs" add-on with Activate toggle plus full settings for debug mode, URL parameter handling, and individual webhook type activation.
  * - Added front-end webhook router/handlers for create/edit orders, create/edit coupons, reset password, send email, and placeholders for user/post/product/category hooks.

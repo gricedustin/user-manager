@@ -21,6 +21,7 @@ require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
 require_once __DIR__ . '/class-user-manager-addon-database-table-browser.php';
 require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
+require_once __DIR__ . '/class-user-manager-addon-invoice-approval.php';
 require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
 require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
@@ -222,6 +223,9 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-addon-section" data-addon-section="wp-admin-notifications">
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="invoice-approval">
+				<?php User_Manager_Addon_Invoice_Approval::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="webhook-urls">
 				<?php User_Manager_Addon_Webhook_URLs::render($settings); ?>
@@ -681,6 +685,9 @@ class User_Manager_Tab_Addons {
 			function toggleWebhookUrlsFields() {
 				$('#um-webhook-urls-fields').toggle($('#um-webhook-urls-enabled').is(':checked'));
 			}
+			function toggleInvoiceApprovalFields() {
+				$('#um-invoice-approval-fields').toggle($('#um-invoice-approval-enabled').is(':checked'));
+			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
 			}
@@ -700,6 +707,7 @@ class User_Manager_Tab_Addons {
 			toggleBulkPageCreatorFields();
 			toggleDatabaseTableBrowserFields();
 			toggleWebhookUrlsFields();
+			toggleInvoiceApprovalFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
@@ -861,6 +869,10 @@ class User_Manager_Tab_Addons {
 				toggleWebhookUrlsFields();
 				refreshAddonCardAutoState($('#um-addon-card-webhook-urls'));
 			});
+			$('#um-invoice-approval-enabled').on('change', function() {
+				toggleInvoiceApprovalFields();
+				refreshAddonCardAutoState($('#um-addon-card-invoice-approval'));
+			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
 				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
@@ -989,6 +1001,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Webhook URLs', 'user-manager'),
 				'description' => __('Handle create/edit webhook requests for orders, coupons, password resets, and email sending with optional debug responses.', 'user-manager'),
 				'active' => !empty($settings['webhook_urls_enabled']),
+			],
+			'invoice-approval' => [
+				'label'  => __('Invoice Approval', 'user-manager'),
+				'description' => __('Render customer-facing invoice pages with optional approvals, PDF download, payment links, and order-level invoice metadata.', 'user-manager'),
+				'active' => !empty($settings['invoice_approval_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),
