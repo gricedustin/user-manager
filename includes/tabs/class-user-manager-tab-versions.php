@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.26 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Simplified plugin description by removing the long inline add-ons list from the header metadata.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.25 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a Settings shortcut link to the plugin row actions on the WordPress Plugins screen.', 'user-manager'); ?></li>
