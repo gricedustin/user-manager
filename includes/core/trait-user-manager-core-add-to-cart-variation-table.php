@@ -189,6 +189,10 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		$show_price_column = !empty($settings['add_to_cart_variation_table_show_price_column']);
 		$table_text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
 		$table_text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
+		$button_text = isset($settings['add_to_cart_variation_table_button_text']) ? trim((string) $settings['add_to_cart_variation_table_button_text']) : '';
+		if ($button_text === '') {
+			$button_text = __('Add All Variations', 'user-manager');
+		}
 		$currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '$';
 		$currency_position = (string) get_option('woocommerce_currency_pos', 'left');
 		$currency_decimals = function_exists('wc_get_price_decimals') ? (int) wc_get_price_decimals() : 2;
@@ -265,7 +269,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 						</tr>
 					</tfoot>
 				</table>
-				<button type="submit" class="button alt"><?php esc_html_e('Add All Variations', 'user-manager'); ?></button>
+				<button type="submit" class="button alt"><?php echo esc_html($button_text); ?></button>
 			</form>
 			<?php if (trim($table_text_below) !== '') : ?>
 				<div class="um-add-to-cart-variation-table-custom-text um-add-to-cart-variation-table-custom-text-below" style="margin:12px 0 0;">

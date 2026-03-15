@@ -14,6 +14,7 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 		$enabled = !empty($settings['add_to_cart_variation_table_enabled']);
 		$text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
 		$text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
+		$button_text = isset($settings['add_to_cart_variation_table_button_text']) ? (string) $settings['add_to_cart_variation_table_button_text'] : '';
 		$selected_hook = isset($settings['add_to_cart_variation_table_hook']) ? sanitize_key((string) $settings['add_to_cart_variation_table_hook']) : 'auto';
 		$hook_options = [
 			'auto'                         => __('Auto (try multiple WooCommerce hooks)', 'user-manager'),
@@ -80,6 +81,13 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						</label>
 						<p class="description">
 							<?php esc_html_e('When enabled, variation rows include attribute labels (for example "Size: Small"). When disabled, only values are shown (for example "Small").', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label for="um-add-to-cart-variation-table-button-text"><?php esc_html_e('Add to Cart Variation Table Button Text', 'user-manager'); ?></label>
+						<input type="text" id="um-add-to-cart-variation-table-button-text" name="add_to_cart_variation_table_button_text" class="regular-text" value="<?php echo esc_attr($button_text); ?>" placeholder="<?php esc_attr_e('Add All Variations', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<p class="description">
+							<?php esc_html_e('Optional override for the front-end submit button text. Leave blank to use "Add All Variations".', 'user-manager'); ?>
 						</p>
 					</div>
 					<div class="um-form-field">
