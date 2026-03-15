@@ -184,10 +184,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 							$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());
 							echo ' <a class="button breathing_room full_width" href="' . esc_url($approve_url) . '">' . esc_html($approve_label) . '</a>';
 						}
-						if (!$order->has_status(['cancelled', 'canceled'])) {
-							$decline_url = self::get_decline_order_url($order_id, self::get_list_context_query_args());
-							echo ' <a class="button breathing_room full_width" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
-						}
+						$decline_url = self::get_decline_order_url($order_id, self::get_list_context_query_args());
+						echo ' <a class="button breathing_room full_width" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
 					}
 					echo '</td>';
 					echo '</tr>';
@@ -224,10 +222,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					$approve_url = self::get_approve_order_url((int) $order->get_id(), $approve_args);
 					echo ' <a class="button" href="' . esc_url($approve_url) . '">' . esc_html($approve_label) . '</a>';
 				}
-				if (!$order->has_status(['cancelled', 'canceled'])) {
-					$decline_url = self::get_decline_order_url((int) $order->get_id(), $approve_args);
-					echo ' <a class="button" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
-				}
+				$decline_url = self::get_decline_order_url((int) $order->get_id(), $approve_args);
+				echo ' <a class="button" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
 			}
 			echo '<br><br>';
 	

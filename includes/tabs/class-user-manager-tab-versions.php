@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.37 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin > Orders: ensured the Decline / "Move to Canceled" action button is shown next to other status action buttons on order views.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.36 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new "Invoice Approval" add-on with invoice branding/settings controls, invoice approval form settings, and WooCommerce order invoice links.', 'user-manager'); ?></li>
