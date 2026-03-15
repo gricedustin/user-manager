@@ -74,6 +74,15 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						</p>
 					</div>
 					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-add-to-cart-variation-table-prefix-labels" name="add_to_cart_variation_table_prefix_labels" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_prefix_labels'])); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Prefix all variations with the variation label', 'user-manager'); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e('When enabled, variation rows include attribute labels (for example "Size: Small"). When disabled, only values are shown (for example "Small").', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
 						<label for="um-add-to-cart-variation-table-text-above"><?php esc_html_e('Add Text Above Variation Table', 'user-manager'); ?></label>
 						<textarea id="um-add-to-cart-variation-table-text-above" name="add_to_cart_variation_table_text_above" rows="4" class="large-text"<?php echo $form_attr; ?>><?php echo esc_textarea($text_above); ?></textarea>
 						<p class="description">

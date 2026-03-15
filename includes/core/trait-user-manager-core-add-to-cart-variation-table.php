@@ -144,6 +144,8 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			self::append_add_to_cart_variation_table_trace('Skip: no available variations found.');
 			return;
 		}
+		$settings = User_Manager_Core::get_settings();
+		$prefix_variation_labels = !empty($settings['add_to_cart_variation_table_prefix_labels']);
 
 		$rows = [];
 		foreach ($available_variations as $variation_data) {
@@ -169,7 +171,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 			$rows[] = [
 				'id'          => $variation_id,
-				'label'       => wc_get_formatted_variation($variation, true, true, false),
+				'label'       => wc_get_formatted_variation($variation, true, $prefix_variation_labels, false),
 				'unit_price'  => function_exists('wc_get_price_to_display') ? (float) wc_get_price_to_display($variation) : (float) $variation->get_price(),
 				'status'      => $is_in_stock ? __('In stock', 'user-manager') : __('Out of stock', 'user-manager'),
 				'disabled'    => $is_row_disabled,
@@ -184,7 +186,6 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		self::$add_to_cart_variation_table_rendered = true;
 		self::append_add_to_cart_variation_table_trace(sprintf('Rendering table for product #%d with %d variation rows.', $product_id, count($rows)));
 
-		$settings = User_Manager_Core::get_settings();
 		$show_price_column = !empty($settings['add_to_cart_variation_table_show_price_column']);
 		$table_text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
 		$table_text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
