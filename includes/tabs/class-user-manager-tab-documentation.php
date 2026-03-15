@@ -294,6 +294,48 @@ class User_Manager_Tab_Documentation {
 			],
 		];
 
+		$general_reports = [
+			__('Coupon Audit', 'user-manager'),
+			__('Coupons Unused', 'user-manager'),
+			__('Coupons Used', 'user-manager'),
+			__('Coupons with Email Addresses', 'user-manager'),
+			__('Coupons with Free Shipping', 'user-manager'),
+			__('Coupons with No Expiration', 'user-manager'),
+			__('Coupons with Remaining Balances', 'user-manager'),
+			__('Order Notes', 'user-manager'),
+			__('Order Payment Methods', 'user-manager'),
+			__('Order Refunds', 'user-manager'),
+			__('Order Sales vs Coupon Usage', 'user-manager'),
+			__('Order Total Shipments by Day', 'user-manager'),
+			__('Order Total Shipments by Month', 'user-manager'),
+			__('Order Total Shipments by Week', 'user-manager'),
+			__('Order Tracking Number Notes', 'user-manager'),
+			__('Order Tracking Numbers', 'user-manager'),
+			__('Orders Processing by Number of Days', 'user-manager'),
+			__('Orders with $0 Total', 'user-manager'),
+			__('Orders with Free Shipping', 'user-manager'),
+			__('Page Category Archives Views', 'user-manager'),
+			__('Page Not Found 404 Errors', 'user-manager'),
+			__('Page Views', 'user-manager'),
+			__('Post Category Archives Views', 'user-manager'),
+			__('Post Meta Field Names (Unique List)', 'user-manager'),
+			__('Post Tag Archives Views', 'user-manager'),
+			__('Post Views', 'user-manager'),
+			__('Product Category Archives Views', 'user-manager'),
+			__('Product Category Purchases', 'user-manager'),
+			__('Product Purchases', 'user-manager'),
+			__('Product Tag Archives Views', 'user-manager'),
+			__('Product Tag Purchases', 'user-manager'),
+			__('Product Views', 'user-manager'),
+			__('Search Queries', 'user-manager'),
+			__('User Coupon Usage', 'user-manager'),
+			__('User Data', 'user-manager'),
+			__('User Logins', 'user-manager'),
+			__('User Password Changes', 'user-manager'),
+			__('User Password Resets', 'user-manager'),
+			__('User Total Sales', 'user-manager'),
+		];
+
 		?>
 		<div class="um-admin-card um-admin-card-full" style="margin-top: 20px;">
 			<div class="um-admin-card-header">
@@ -376,6 +418,33 @@ class User_Manager_Tab_Documentation {
 					</div>
 				</div>
 			<?php endforeach; ?>
+
+			<div class="um-admin-card um-docs-filter-card">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-chart-bar"></span>
+					<h2><?php esc_html_e('All Reports (Reports Tab Reference)', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p><?php esc_html_e('This is the complete report inventory currently available from the Reports tab.', 'user-manager'); ?></p>
+					<div class="um-doc-section">
+						<h3><?php esc_html_e('Reports Sections', 'user-manager'); ?></h3>
+						<ul>
+							<li><?php esc_html_e('General Reports', 'user-manager'); ?></li>
+							<li><?php esc_html_e('User Activity', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Admin Log', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Coupon Lookup by Email', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-doc-section">
+						<h3><?php esc_html_e('General Reports List', 'user-manager'); ?></h3>
+						<ul>
+							<?php foreach ($general_reports as $report_label) : ?>
+								<li><?php echo esc_html($report_label); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				</div>
+			</div>
 
 			<div class="um-admin-card um-docs-filter-card">
 				<div class="um-admin-card-header">

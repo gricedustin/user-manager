@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation).
- * Version: 2.3.28
+ * Version: 2.3.29
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.29 - March 15, 2026
+ * - Documentation tab: added a new "All Reports (Reports Tab Reference)" card listing every Reports section and all General Reports currently available.
+ *
  * 2.3.28 - March 15, 2026
  * - Add-ons UI: Add-ons Filter now has extra spacing below it and only displays on the all add-on tiles view (not inside individual add-on settings screens).
  *
