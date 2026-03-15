@@ -1796,6 +1796,7 @@ class User_Manager_Actions {
 					? array_values(array_unique(array_filter(array_map('absint', wp_unslash($_POST['add_to_cart_variation_table_category_ids'])))))
 					: [];
 				$settings['add_to_cart_variation_table_category_ids'] = $variation_table_category_ids;
+				$settings['add_to_cart_variation_table_empty_cart_button_on_cart'] = isset($_POST['add_to_cart_variation_table_empty_cart_button_on_cart']) && $_POST['add_to_cart_variation_table_empty_cart_button_on_cart'] === '1';
 				$settings['add_to_cart_variation_table_button_text'] = isset($_POST['add_to_cart_variation_table_button_text']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_button_text'])) : '';
 				$settings['add_to_cart_variation_table_text_above'] = isset($_POST['add_to_cart_variation_table_text_above']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_above'])) : '';
 				$settings['add_to_cart_variation_table_text_below'] = isset($_POST['add_to_cart_variation_table_text_below']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_below'])) : '';

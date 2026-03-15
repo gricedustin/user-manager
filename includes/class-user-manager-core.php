@@ -22,7 +22,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.13';
+	const VERSION = '2.3.14';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -213,6 +213,8 @@ final class User_Manager_Core {
 		}
 		if (!empty($settings['add_to_cart_variation_table_enabled'])) {
 			self::register_add_to_cart_variation_table_render_hooks();
+			add_action('woocommerce_cart_actions', [__CLASS__, 'maybe_render_empty_cart_button_on_cart_screen'], 15);
+			add_action('template_redirect', [__CLASS__, 'maybe_handle_empty_cart_button_submission'], 14);
 			add_action('template_redirect', [__CLASS__, 'handle_add_to_cart_variation_table_submission'], 15);
 			add_action('wp_head', [__CLASS__, 'maybe_hide_default_add_to_cart_variation_form'], 20);
 			add_action('wp_footer', [__CLASS__, 'maybe_render_add_to_cart_variation_table_trace_panel'], 1003);

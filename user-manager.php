@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: WooCommerce User Manager with tabs for Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, and Documentation; plus add-ons for Add to Cart Bulk Import, Add to Cart Variation Table, Checkout Address Selector, Coupon Creator, New User Coupons, User Coupon Notifications, User Coupon Remaining Balances, Fatal Error Debugger, Front-End URL Parameter Debugger, My Account Coupons Page, My Account Admin, Post Meta Viewer, Post Content Generator, Post Idea Generator, User Role Switching, WP-Admin Bar Menu Items, WP-Admin Bar Quick Search, WP-Admin CSS, and WP-Admin Notifications.
- * Version: 2.3.13
+ * Version: 2.3.14
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.3.14 - March 8, 2026
+ * - Add to Cart Variation Table: added a new checkbox setting "Add an Empty Cart button on Cart Screen".
+ * - When enabled, an Empty Cart button now renders in WooCommerce cart actions and empties the cart via nonce-protected submission.
+ *
  * 2.3.13 - March 8, 2026
  * - Add to Cart Variation Table: added a category filter setting "Only display variation table for products in these categories" with a scrollable checkbox list of product categories.
  * - Add to Cart Variation Table front-end rendering now respects selected product categories; when no categories are selected, it remains available to all variable products.

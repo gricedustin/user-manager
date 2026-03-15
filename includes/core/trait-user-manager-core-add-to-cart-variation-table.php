@@ -461,6 +461,61 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 	}
 
 	/**
+	 * Render "Empty Cart" action button on cart form actions.
+	 */
+	public static function maybe_render_empty_cart_button_on_cart_screen(): void {
+		if (is_admin() || wp_doing_ajax()) {
+			return;
+		}
+		if (!function_exists('is_cart') || !is_cart()) {
+			return;
+		}
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['add_to_cart_variation_table_empty_cart_button_on_cart'])) {
+			return;
+		}
+		if (!function_exists('WC') || !WC()->cart) {
+			return;
+		}
+		if (WC()->cart->is_empty()) {
+			return;
+		}
+		wp_nonce_field('um_empty_cart_action', 'um_empty_cart_nonce');
+		?>
+		<button type="submit" class="button" name="um_empty_cart_submit" value="1" formnovalidate>
+			<?php esc_html_e('Empty cart', 'user-manager'); ?>
+		</button>
+		<?php
+	}
+
+	/**
+	 * Handle empty cart button submission.
+	 */
+	public static function maybe_handle_empty_cart_button_submission(): void {
+		if (empty($_POST['um_empty_cart_submit'])) {
+			return;
+		}
+		if (is_admin() || wp_doing_ajax()) {
+			return;
+		}
+		if (!function_exists('is_cart') || !is_cart()) {
+			return;
+		}
+		if (!function_exists('WC') || !WC()->cart) {
+			return;
+		}
+		if (empty($_POST['um_empty_cart_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['um_empty_cart_nonce'])), 'um_empty_cart_action')) {
+			wc_add_notice(__('Security check failed. Please refresh and try again.', 'user-manager'), 'error');
+			wp_safe_redirect(wc_get_cart_url());
+			exit;
+		}
+		WC()->cart->empty_cart();
+		wc_add_notice(__('Cart emptied.', 'user-manager'), 'success');
+		wp_safe_redirect(wc_get_cart_url());
+		exit;
+	}
+
+	/**
 	 * Process variation-table add to cart submissions.
 	 */
 	public static function handle_add_to_cart_variation_table_submission(): void {

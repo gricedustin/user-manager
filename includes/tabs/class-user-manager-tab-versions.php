@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.14 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a new checkbox setting "Add an Empty Cart button on Cart Screen".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, an Empty Cart button now renders in WooCommerce cart actions and empties the cart via nonce-protected submission.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.13 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a category filter setting "Only display variation table for products in these categories" with a scrollable checkbox list of product categories.', 'user-manager'); ?></li>
