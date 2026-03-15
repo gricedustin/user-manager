@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.48 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Documentation sub-menu order updated so Versions appears before About.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.47 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved "Allow WooCommerce front-end product search to include SKUs" from Settings into a new Add-ons card: "Product Search by SKU" with standard Activate toggle and description.', 'user-manager'); ?></li>

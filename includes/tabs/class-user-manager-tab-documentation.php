@@ -42,8 +42,8 @@ class User_Manager_Tab_Documentation {
 				</a> |
 			</li>
 			<li>
-				<a href="<?php echo esc_url($about_url); ?>" class="<?php echo $docs_section === 'about' ? 'current' : ''; ?>">
-					<?php esc_html_e('About', 'user-manager'); ?>
+				<a href="<?php echo esc_url($versions_url); ?>" class="<?php echo $docs_section === 'versions' ? 'current' : ''; ?>">
+					<?php esc_html_e('Versions', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
@@ -52,8 +52,8 @@ class User_Manager_Tab_Documentation {
 				</a> |
 			</li>
 			<li>
-				<a href="<?php echo esc_url($versions_url); ?>" class="<?php echo $docs_section === 'versions' ? 'current' : ''; ?>">
-					<?php esc_html_e('Versions', 'user-manager'); ?>
+				<a href="<?php echo esc_url($about_url); ?>" class="<?php echo $docs_section === 'about' ? 'current' : ''; ?>">
+					<?php esc_html_e('About', 'user-manager'); ?>
 				</a>
 			</li>
 		</ul>
