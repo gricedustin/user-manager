@@ -1624,9 +1624,6 @@ class User_Manager_Actions {
 				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
 				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
-				$settings['frontend_url_param_debugger_enabled'] = isset($_POST['frontend_url_param_debugger_enabled']) && $_POST['frontend_url_param_debugger_enabled'] === '1';
-				$debug_param_name = isset($_POST['frontend_url_param_debugger_param']) ? sanitize_key(wp_unslash($_POST['frontend_url_param_debugger_param'])) : 'um_url_debug';
-				$settings['frontend_url_param_debugger_param'] = $debug_param_name !== '' ? $debug_param_name : 'um_url_debug';
 				$settings['fatal_error_debugger_enabled'] = isset($_POST['fatal_error_debugger_enabled']) && $_POST['fatal_error_debugger_enabled'] === '1';
 				$settings['fatal_error_debugger_email'] = isset($_POST['fatal_error_debugger_email']) ? sanitize_email(wp_unslash($_POST['fatal_error_debugger_email'])) : '';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';

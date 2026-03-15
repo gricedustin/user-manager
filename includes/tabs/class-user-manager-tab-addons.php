@@ -18,7 +18,6 @@ require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php'
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
 require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
-require_once __DIR__ . '/class-user-manager-addon-frontend-url-parameter-debugger.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
@@ -160,9 +159,6 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="coupon-remaining-balances">
 					<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
-				</div>
-				<div class="um-addon-section" data-addon-section="frontend-url-parameter-debugger">
-					<?php User_Manager_Addon_Frontend_URL_Parameter_Debugger::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="fatal-error-debugger">
 					<?php User_Manager_Addon_Fatal_Error_Debugger::render($settings, $settings_form_id); ?>
@@ -640,9 +636,6 @@ class User_Manager_Tab_Addons {
 			function toggleMyAccountCouponScreenFields() {
 				$('#um-my-account-coupon-screen-fields').toggle($('#um-my-account-coupon-screen-enabled').is(':checked'));
 			}
-			function toggleFrontendUrlParameterDebuggerFields() {
-				$('#um-frontend-url-parameter-debugger-fields').toggle($('#um-frontend-url-parameter-debugger-enabled').is(':checked'));
-			}
 			function toggleFatalErrorDebuggerFields() {
 				$('#um-fatal-error-debugger-fields').toggle($('#um-fatal-error-debugger-enabled').is(':checked'));
 			}
@@ -654,7 +647,6 @@ class User_Manager_Tab_Addons {
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
 			toggleMyAccountCouponScreenFields();
-			toggleFrontendUrlParameterDebuggerFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
@@ -782,10 +774,6 @@ class User_Manager_Tab_Addons {
 			$('#um-coupon-remainder-enabled').on('change', function() {
 				toggleCouponRemainderAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
-			});
-			$('#um-frontend-url-parameter-debugger-enabled').on('change', function() {
-				toggleFrontendUrlParameterDebuggerFields();
-				refreshAddonCardAutoState($('#um-addon-card-frontend-url-parameter-debugger'));
 			});
 			$('#um-fatal-error-debugger-enabled').on('change', function() {
 				toggleFatalErrorDebuggerFields();
@@ -928,11 +916,6 @@ class User_Manager_Tab_Addons {
 				'label'  => __('User Coupon Remaining Balances', 'user-manager'),
 				'description' => __('Create a replacement coupon when a qualifying balance remains after checkout.', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
-			],
-			'frontend-url-parameter-debugger' => [
-				'label'  => __('Front-End URL Parameter Debugger', 'user-manager'),
-				'description' => __('Help users debug front-end query parameters with an admin-only URL panel.', 'user-manager'),
-				'active' => !empty($settings['frontend_url_param_debugger_enabled']),
 			],
 			'fatal-error-debugger' => [
 				'label'  => __('Fatal Error Debugger', 'user-manager'),

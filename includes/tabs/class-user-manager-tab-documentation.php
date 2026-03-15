@@ -191,11 +191,6 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Capture front-end fatal errors for administrators and optionally send alert emails to speed up production issue response.', 'user-manager'),
 			],
 			[
-				'icon'    => 'dashicons-admin-links',
-				'title'   => __('Front-End URL Parameter Debugger', 'user-manager'),
-				'summary' => __('Inspect front-end URL parameters in an admin-only debug panel to troubleshoot query-driven behavior quickly.', 'user-manager'),
-			],
-			[
 				'icon'    => 'dashicons-tickets',
 				'title'   => __('My Account Coupons Page', 'user-manager'),
 				'summary' => __('Add a dedicated My Account coupons endpoint so customers can view available coupon notices in one place.', 'user-manager'),
@@ -266,7 +261,7 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'title'       => __('Speed Up Support and Issue Resolution', 'user-manager'),
-				'description' => __('Use Login As, Reports > Admin Log, Front-End URL Parameter Debugger, and Fatal Error Debugger to reproduce and diagnose account or page issues faster.', 'user-manager'),
+				'description' => __('Use Login As, Reports > Admin Log, and Fatal Error Debugger to reproduce and diagnose account or page issues faster.', 'user-manager'),
 			],
 			[
 				'title'       => __('Create Role-Specific Admin Experiences', 'user-manager'),
