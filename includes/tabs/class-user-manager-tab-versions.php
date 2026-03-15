@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.35 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Webhook URLs" add-on with Activate toggle plus full settings for debug mode, URL parameter handling, and individual webhook type activation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added front-end webhook router/handlers for create/edit orders, create/edit coupons, reset password, send email, and placeholders for user/post/product/category hooks.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.34 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new "Database Table Browser" add-on with Activate toggle and records-per-page setting.', 'user-manager'); ?></li>

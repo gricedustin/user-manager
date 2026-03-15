@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation).
- * Version: 2.3.34
+ * Version: 2.3.35
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.35 - March 15, 2026
+ * - Added new "Webhook URLs" add-on with Activate toggle plus full settings for debug mode, URL parameter handling, and individual webhook type activation.
+ * - Added front-end webhook router/handlers for create/edit orders, create/edit coupons, reset password, send email, and placeholders for user/post/product/category hooks.
+ *
  * 2.3.34 - March 15, 2026
  * - Added new "Database Table Browser" add-on with Activate toggle and records-per-page setting.
  * - Database Table Browser now lists all tables, supports secure table drill-down with nonce checks, and renders paginated table rows directly in Add-ons.

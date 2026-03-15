@@ -176,6 +176,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Browse database tables, inspect column structure, and view paginated row data directly in WP-Admin for debugging and support workflows.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-rss',
+				'title'   => __('Webhook URLs', 'user-manager'),
+				'summary' => __('Expose configurable webhook endpoints for order/coupon workflows, password resets, and email sending with optional URL param support and debug output.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-location-alt',
 				'title'   => __('Checkout Address Selector', 'user-manager'),
 				'summary' => __('Streamline checkout with predefined address selections and conditional field behavior for faster, cleaner order submission.', 'user-manager'),

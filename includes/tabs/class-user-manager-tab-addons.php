@@ -27,6 +27,7 @@ require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
+require_once __DIR__ . '/class-user-manager-addon-webhook-urls.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
 require_once __DIR__ . '/class-user-manager-addon-api.php';
@@ -221,6 +222,9 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-addon-section" data-addon-section="wp-admin-notifications">
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="webhook-urls">
+				<?php User_Manager_Addon_Webhook_URLs::render($settings); ?>
 			</div>
 			<div class="um-admin-card um-admin-card-full um-addon-save-card">
 				<div class="um-admin-card-body">
@@ -674,6 +678,9 @@ class User_Manager_Tab_Addons {
 			function toggleDatabaseTableBrowserFields() {
 				$('#um-database-table-browser-fields').toggle($('#um-database-table-browser-enabled').is(':checked'));
 			}
+			function toggleWebhookUrlsFields() {
+				$('#um-webhook-urls-fields').toggle($('#um-webhook-urls-enabled').is(':checked'));
+			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
 			}
@@ -692,6 +699,7 @@ class User_Manager_Tab_Addons {
 			toggleCartPricePerPieceFields();
 			toggleBulkPageCreatorFields();
 			toggleDatabaseTableBrowserFields();
+			toggleWebhookUrlsFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
@@ -849,6 +857,10 @@ class User_Manager_Tab_Addons {
 				toggleDatabaseTableBrowserFields();
 				refreshAddonCardAutoState($('#um-addon-card-database-table-browser'));
 			});
+			$('#um-webhook-urls-enabled').on('change', function() {
+				toggleWebhookUrlsFields();
+				refreshAddonCardAutoState($('#um-addon-card-webhook-urls'));
+			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
 				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
@@ -972,6 +984,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Database Table Browser', 'user-manager'),
 				'description' => __('Browse database tables, review structure, and view paginated row data directly in WP-Admin for troubleshooting and QA.', 'user-manager'),
 				'active' => !empty($settings['database_table_browser_enabled']),
+			],
+			'webhook-urls' => [
+				'label'  => __('Webhook URLs', 'user-manager'),
+				'description' => __('Handle create/edit webhook requests for orders, coupons, password resets, and email sending with optional debug responses.', 'user-manager'),
+				'active' => !empty($settings['webhook_urls_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),
