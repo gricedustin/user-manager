@@ -9,8 +9,10 @@ if (!defined('ABSPATH')) {
 
 
 require_once __DIR__ . '/actions/trait-user-manager-actions-content-generator.php';
+require_once __DIR__ . '/actions/trait-user-manager-actions-bulk-page-creator.php';
 class User_Manager_Actions {
 	use User_Manager_Actions_Content_Generator_Trait;
+	use User_Manager_Actions_Bulk_Page_Creator_Trait;
 
 	/**
 	 * Initialize action hooks.
@@ -41,6 +43,7 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_create_basic_coupon_template', [__CLASS__, 'handle_create_basic_coupon_template']);
 		add_action('admin_post_user_manager_reset_view_reports', [__CLASS__, 'handle_reset_view_reports']);
 		add_action('admin_post_user_manager_blog_post_importer', [__CLASS__, 'handle_blog_post_importer']);
+		add_action('admin_post_user_manager_bulk_page_creator', [__CLASS__, 'handle_bulk_page_creator']);
 		add_action('wp_ajax_user_manager_blog_chatgpt', [__CLASS__, 'ajax_blog_chatgpt']);
 		add_action('wp_ajax_user_manager_set_post_thumbnail', [__CLASS__, 'ajax_set_post_thumbnail']);
 		add_action('wp_ajax_user_manager_set_post_date', [__CLASS__, 'ajax_set_post_date']);
@@ -1797,6 +1800,22 @@ class User_Manager_Actions {
 				$settings['cart_price_per_piece_font_size'] = in_array($cart_price_per_piece_font_size, $allowed_cart_price_per_piece_font_sizes, true) ? $cart_price_per_piece_font_size : '12px';
 				$cart_price_per_piece_color = isset($_POST['cart_price_per_piece_text_color']) ? sanitize_hex_color(wp_unslash($_POST['cart_price_per_piece_text_color'])) : '#666666';
 				$settings['cart_price_per_piece_text_color'] = $cart_price_per_piece_color ? $cart_price_per_piece_color : '#666666';
+				$settings['bulk_page_creator_enabled'] = isset($_POST['bulk_page_creator_enabled']) && $_POST['bulk_page_creator_enabled'] === '1';
+				$settings['bulk_page_creator_max_tokens'] = isset($_POST['bulk_page_creator_max_tokens']) ? max(100, min(8000, absint($_POST['bulk_page_creator_max_tokens']))) : 2000;
+				$bulk_page_creator_temperature = isset($_POST['bulk_page_creator_temperature']) ? (float) wp_unslash($_POST['bulk_page_creator_temperature']) : 0.7;
+				if ($bulk_page_creator_temperature < 0) {
+					$bulk_page_creator_temperature = 0;
+				}
+				if ($bulk_page_creator_temperature > 1) {
+					$bulk_page_creator_temperature = 1;
+				}
+				$settings['bulk_page_creator_temperature'] = $bulk_page_creator_temperature;
+				$settings['bulk_page_creator_image_search_count'] = isset($_POST['bulk_page_creator_image_search_count']) ? max(1, min(10, absint($_POST['bulk_page_creator_image_search_count']))) : 3;
+				$settings['bulk_page_creator_auto_publish'] = isset($_POST['bulk_page_creator_auto_publish']) && $_POST['bulk_page_creator_auto_publish'] === '1';
+				$settings['bulk_page_creator_download_images'] = isset($_POST['bulk_page_creator_download_images']) && $_POST['bulk_page_creator_download_images'] === '1';
+				$settings['bulk_page_creator_set_featured_image'] = isset($_POST['bulk_page_creator_set_featured_image']) && $_POST['bulk_page_creator_set_featured_image'] === '1';
+				$settings['bulk_page_creator_include_with_every_prompt'] = isset($_POST['bulk_page_creator_include_with_every_prompt']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_page_creator_include_with_every_prompt'])) : '';
+				$settings['bulk_page_creator_page_data'] = isset($_POST['bulk_page_creator_page_data']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_page_creator_page_data'])) : '';
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';

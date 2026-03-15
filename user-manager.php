@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation).
- * Version: 2.3.32
+ * Version: 2.3.33
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.33 - March 15, 2026
+ * - Added new "Bulk Page Creator" add-on with Activate toggle, OpenAI generation controls, bulk Title|Prompt input, and create action in the Add-ons tab.
+ * - Bulk Page Creator now reuses the existing API key from Settings > API Keys, supports optional image downloads/featured image assignment, and stores run history.
+ *
  * 2.3.32 - March 15, 2026
  * - Added new "Cart Price Per-Piece" add-on with Activate toggle and settings for cart/order display, suffix text, font size, and text color.
  * - When active, unit pricing now appears under WooCommerce line subtotals for multi-quantity items on cart, checkout, and customer order views.

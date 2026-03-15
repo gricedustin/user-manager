@@ -11,6 +11,7 @@ require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
 require_once __DIR__ . '/class-user-manager-addon-add-to-cart-variation-table.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
+require_once __DIR__ . '/class-user-manager-addon-bulk-page-creator.php';
 require_once __DIR__ . '/class-user-manager-addon-cart-price-per-piece.php';
 require_once __DIR__ . '/class-user-manager-addon-blog-post-idea-generator.php';
 require_once __DIR__ . '/class-user-manager-addon-checkout-predefined-addresses.php';
@@ -168,6 +169,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="coupon-remaining-balances">
 					<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="bulk-page-creator">
+					<?php User_Manager_Addon_Bulk_Page_Creator::render($settings); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="security-hardening">
 					<?php User_Manager_Addon_Security_Hardening::render($settings, $settings_form_id); ?>
@@ -660,6 +664,9 @@ class User_Manager_Tab_Addons {
 			function toggleCartPricePerPieceFields() {
 				$('#um-cart-price-per-piece-fields').toggle($('#um-cart-price-per-piece-enabled').is(':checked'));
 			}
+			function toggleBulkPageCreatorFields() {
+				$('#um-bulk-page-creator-fields').toggle($('#um-bulk-page-creator-enabled').is(':checked'));
+			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
 			}
@@ -676,6 +683,7 @@ class User_Manager_Tab_Addons {
 			toggleMyAccountCouponScreenFields();
 			toggleMyAccountMenuTilesFields();
 			toggleCartPricePerPieceFields();
+			toggleBulkPageCreatorFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
@@ -825,6 +833,10 @@ class User_Manager_Tab_Addons {
 				toggleCartPricePerPieceFields();
 				refreshAddonCardAutoState($('#um-addon-card-cart-price-per-piece'));
 			});
+			$('#um-bulk-page-creator-enabled').on('change', function() {
+				toggleBulkPageCreatorFields();
+				refreshAddonCardAutoState($('#um-addon-card-bulk-page-creator'));
+			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
 				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
@@ -938,6 +950,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Cart Price Per-Piece', 'user-manager'),
 				'description' => __('Show per-piece unit pricing on cart, checkout, and order line subtotals when quantities exceed one.', 'user-manager'),
 				'active' => !empty($settings['cart_price_per_piece_enabled']),
+			],
+			'bulk-page-creator' => [
+				'label'  => __('Bulk Page Creator', 'user-manager'),
+				'description' => __('Generate multiple AI-written pages from Title|Prompt rows using your configured OpenAI API key and optional images for page/post campaigns.', 'user-manager'),
+				'active' => !empty($settings['bulk_page_creator_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),

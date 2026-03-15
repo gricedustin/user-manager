@@ -166,6 +166,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Display per-piece unit pricing under line subtotals for multi-quantity items across cart, checkout, and order views.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-admin-page',
+				'title'   => __('Bulk Page Creator', 'user-manager'),
+				'summary' => __('Generate multiple AI-written pages from Title|Prompt rows using your saved OpenAI API key, with optional image downloads and history tracking.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-location-alt',
 				'title'   => __('Checkout Address Selector', 'user-manager'),
 				'summary' => __('Streamline checkout with predefined address selections and conditional field behavior for faster, cleaner order submission.', 'user-manager'),
