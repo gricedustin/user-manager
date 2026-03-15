@@ -11,6 +11,26 @@ class User_Manager_Tab_Versions {
 
 	public static function render(): void {
 		?>
+		<div class="um-admin-card um-admin-card-full" style="margin-top: 20px;">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-filter"></span>
+				<h2><?php esc_html_e('Versions Filter', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+					<div style="min-width:280px; flex:1;">
+						<label for="um-versions-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-versions-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter changelog versions or notes...', 'user-manager'); ?>" />
+					</div>
+					<div>
+						<button type="button" class="button" id="um-versions-filter-clear"><?php esc_html_e('Clear Filter', 'user-manager'); ?></button>
+					</div>
+				</div>
+				<p class="description" id="um-versions-filter-empty" style="display:none; margin-top: 10px;">
+					<?php esc_html_e('No changelog items match the current filter.', 'user-manager'); ?>
+				</p>
+			</div>
+		</div>
 		<div class="um-admin-grid">
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
@@ -18,6 +38,14 @@ class User_Manager_Tab_Versions {
 					<h2><?php esc_html_e('Changelog', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+					<div class="um-changelog-item">
+						<h4>2.3.22 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Add-ons Filter card on tab=addons with keyword filtering and clear/reset behavior for add-on tiles and add-on settings screens.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new Documentation Filter card on tab=documentation with keyword filtering across documentation cards and use cases.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new Versions Filter card on docs_section=versions with keyword filtering across changelog items.', 'user-manager'); ?></li>
+						</ul>
+					</div>
 					<div class="um-changelog-item">
 						<h4>2.3.21 <span>(March 15, 2026)</span></h4>
 						<ul>
@@ -1168,6 +1196,35 @@ class User_Manager_Tab_Versions {
 				</div>
 			</div>
 		</div>
+		<script>
+		jQuery(document).ready(function($) {
+			function normalizeVersionsFilterText(str) {
+				return (str || '').toString().toLowerCase().trim();
+			}
+
+			function applyVersionsFilter() {
+				var keyword = normalizeVersionsFilterText($('#um-versions-filter-text').val());
+				var anyVisible = false;
+				$('.um-changelog-item').each(function() {
+					var $item = $(this);
+					var itemText = normalizeVersionsFilterText($item.text());
+					var matched = keyword === '' || itemText.indexOf(keyword) !== -1;
+					$item.toggle(matched);
+					if (matched) {
+						anyVisible = true;
+					}
+				});
+				$('#um-versions-filter-empty').toggle(keyword !== '' && !anyVisible);
+			}
+
+			$('#um-versions-filter-text').on('input', applyVersionsFilter);
+			$('#um-versions-filter-clear').on('click', function() {
+				$('#um-versions-filter-text').val('');
+				applyVersionsFilter();
+			});
+			applyVersionsFilter();
+		});
+		</script>
 		<?php
 	}
 }

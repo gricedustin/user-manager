@@ -291,8 +291,28 @@ class User_Manager_Tab_Documentation {
 		];
 
 		?>
+		<div class="um-admin-card um-admin-card-full" style="margin-top: 20px;">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-filter"></span>
+				<h2><?php esc_html_e('Documentation Filter', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+					<div style="min-width:280px; flex:1;">
+						<label for="um-docs-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-docs-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter documentation by title, details, or use case text...', 'user-manager'); ?>" />
+					</div>
+					<div>
+						<button type="button" class="button" id="um-docs-filter-clear"><?php esc_html_e('Clear Filter', 'user-manager'); ?></button>
+					</div>
+				</div>
+				<p class="description" id="um-docs-filter-empty" style="display:none; margin-top: 10px;">
+					<?php esc_html_e('No documentation cards match the current filter.', 'user-manager'); ?>
+				</p>
+			</div>
+		</div>
 		<div class="um-admin-grid um-admin-grid-single">
-			<div class="um-admin-card">
+			<div class="um-admin-card um-docs-filter-card">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-info-outline"></span>
 					<h2><?php esc_html_e('Platform Overview', 'user-manager'); ?></h2>
@@ -302,7 +322,7 @@ class User_Manager_Tab_Documentation {
 				</div>
 			</div>
 
-			<div class="um-admin-card">
+			<div class="um-admin-card um-docs-filter-card">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-index-card"></span>
 					<h2><?php esc_html_e('Tabs Reference', 'user-manager'); ?></h2>
@@ -313,7 +333,7 @@ class User_Manager_Tab_Documentation {
 			</div>
 
 			<?php foreach ($tab_cards as $tab_card) : ?>
-				<div class="um-admin-card">
+				<div class="um-admin-card um-docs-filter-card">
 					<div class="um-admin-card-header">
 						<span class="dashicons <?php echo esc_attr($tab_card['icon']); ?>"></span>
 						<h2><?php echo esc_html($tab_card['title']); ?></h2>
@@ -331,7 +351,7 @@ class User_Manager_Tab_Documentation {
 				</div>
 			<?php endforeach; ?>
 
-			<div class="um-admin-card">
+			<div class="um-admin-card um-docs-filter-card">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-screenoptions"></span>
 					<h2><?php esc_html_e('Add-ons Reference', 'user-manager'); ?></h2>
@@ -342,7 +362,7 @@ class User_Manager_Tab_Documentation {
 			</div>
 
 			<?php foreach ($addon_cards as $addon_card) : ?>
-				<div class="um-admin-card">
+				<div class="um-admin-card um-docs-filter-card">
 					<div class="um-admin-card-header">
 						<span class="dashicons <?php echo esc_attr($addon_card['icon']); ?>"></span>
 						<h2><?php echo esc_html($addon_card['title']); ?></h2>
@@ -353,7 +373,7 @@ class User_Manager_Tab_Documentation {
 				</div>
 			<?php endforeach; ?>
 
-			<div class="um-admin-card">
+			<div class="um-admin-card um-docs-filter-card">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-lightbulb"></span>
 					<h2><?php esc_html_e('Use Cases', 'user-manager'); ?></h2>
@@ -372,6 +392,46 @@ class User_Manager_Tab_Documentation {
 				</div>
 			</div>
 		</div>
+		<script>
+		jQuery(document).ready(function($) {
+			function normalizeDocsFilterText(str) {
+				return (str || '').toString().toLowerCase().trim();
+			}
+
+			function docsCardHaystack($card) {
+				var text = [];
+				text.push($card.text());
+				$card.find('input, select, textarea').each(function() {
+					var $input = $(this);
+					text.push($input.val());
+					text.push($input.attr('placeholder'));
+					text.push($input.attr('name'));
+				});
+				return normalizeDocsFilterText(text.join(' '));
+			}
+
+			function applyDocumentationFilter() {
+				var keyword = normalizeDocsFilterText($('#um-docs-filter-text').val());
+				var anyVisible = false;
+				$('.um-docs-filter-card').each(function() {
+					var $card = $(this);
+					var matched = keyword === '' || docsCardHaystack($card).indexOf(keyword) !== -1;
+					$card.toggle(matched);
+					if (matched) {
+						anyVisible = true;
+					}
+				});
+				$('#um-docs-filter-empty').toggle(keyword !== '' && !anyVisible);
+			}
+
+			$('#um-docs-filter-text').on('input', applyDocumentationFilter);
+			$('#um-docs-filter-clear').on('click', function() {
+				$('#um-docs-filter-text').val('');
+				applyDocumentationFilter();
+			});
+			applyDocumentationFilter();
+		});
+		</script>
 		<?php
 	}
 }

@@ -68,6 +68,27 @@ class User_Manager_Tab_Addons {
 		</ul>
 		<br class="clear" />
 
+		<div class="um-admin-card um-admin-card-full" style="margin-top: 20px;">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-filter"></span>
+				<h2><?php esc_html_e('Add-ons Filter', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+					<div style="min-width:280px; flex:1;">
+						<label for="um-addons-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-addons-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter add-ons by title, description, tag, or setting text...', 'user-manager'); ?>" />
+					</div>
+					<div>
+						<button type="button" class="button" id="um-addons-filter-clear"><?php esc_html_e('Clear Filter', 'user-manager'); ?></button>
+					</div>
+				</div>
+				<p class="description" id="um-addons-filter-empty" style="display:none; margin-top: 10px;">
+					<?php esc_html_e('No add-ons or settings match the current filter.', 'user-manager'); ?>
+				</p>
+			</div>
+		</div>
+
 		<div class="um-addons-empty-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
@@ -360,6 +381,51 @@ class User_Manager_Tab_Addons {
 			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
 			var addonInactiveText = '<?php echo esc_js(__('Inactive', 'user-manager')); ?>';
 			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
+			function normalizeAddonFilterText(str) {
+				return (str || '').toString().toLowerCase().trim();
+			}
+
+			function addonFilterHaystack($root) {
+				var text = [];
+				text.push($root.text());
+				text.push($root.attr('data-addon-section'));
+				text.push($root.attr('href'));
+				$root.find('input, select, textarea').each(function() {
+					var $input = $(this);
+					text.push($input.val());
+					text.push($input.attr('placeholder'));
+					text.push($input.attr('name'));
+				});
+				return normalizeAddonFilterText(text.join(' '));
+			}
+
+			function applyAddonsFilter() {
+				var keyword = normalizeAddonFilterText($('#um-addons-filter-text').val());
+				var anyVisible = false;
+
+				if (!currentAddonSection) {
+					$('.um-addons-empty-state .um-addon-tile').each(function() {
+						var $tile = $(this);
+						var matched = keyword === '' || addonFilterHaystack($tile).indexOf(keyword) !== -1;
+						$tile.toggle(matched);
+						if (matched) {
+							anyVisible = true;
+						}
+					});
+				} else {
+					$('.um-addon-section[data-addon-section="' + currentAddonSection + '"] .um-admin-card').each(function() {
+						var $card = $(this);
+						var matched = keyword === '' || addonFilterHaystack($card).indexOf(keyword) !== -1;
+						$card.toggle(matched);
+						if (matched) {
+							anyVisible = true;
+						}
+					});
+					$('.um-addon-save-card').show();
+				}
+
+				$('#um-addons-filter-empty').toggle(keyword !== '' && !anyVisible);
+			}
 
 			function applyAddonSectionFilter() {
 				if (!currentAddonSection) {
@@ -497,7 +563,13 @@ class User_Manager_Tab_Addons {
 			}
 
 			applyAddonSectionFilter();
+			$('#um-addons-filter-text').on('input', applyAddonsFilter);
+			$('#um-addons-filter-clear').on('click', function() {
+				$('#um-addons-filter-text').val('');
+				applyAddonsFilter();
+			});
 			initAddonCollapsibleCards();
+			applyAddonsFilter();
 
 			function umToggleBulkMetaFieldRow() {
 				var type = $('#um-bulk-identifier-type').val();
