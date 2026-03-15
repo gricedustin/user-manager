@@ -409,6 +409,9 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 	 * URL/front-end trigger for variation-table trace output.
 	 */
 	private static function is_add_to_cart_variation_table_trace_enabled(): bool {
+		if (!function_exists('is_user_logged_in') || !function_exists('current_user_can')) {
+			return false;
+		}
 		if (!is_user_logged_in() || !current_user_can('manage_options')) {
 			return false;
 		}

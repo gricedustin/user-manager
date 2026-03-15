@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.7 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table trace stability: added defensive function-exists guards for auth checks to prevent fatal errors during early plugin bootstrap.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.6 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: removed strict WooCommerce class-load gating so render/submission hooks are always registered when the add-on is active.', 'user-manager'); ?></li>
