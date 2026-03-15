@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.23 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated plugin author metadata from "Dustin Grice" to "Grice Projects".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.22 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Add-ons Filter card on tab=addons with keyword filtering and clear/reset behavior for add-on tiles and add-on settings screens.', 'user-manager'); ?></li>
