@@ -138,65 +138,29 @@ class User_Manager_Addon_Bulk_Page_Creator {
 							</label>
 						</div>
 					</div>
-
-					<?php wp_nonce_field('user_manager_bulk_page_creator', 'user_manager_bulk_page_creator_nonce', false); ?>
-
-					<div class="um-form-field">
-						<label for="um-bulk-page-creator-page-data"><?php esc_html_e('Page Data', 'user-manager'); ?></label>
-						<textarea id="um-bulk-page-creator-page-data" name="bulk_page_creator_page_data" rows="8" class="large-text code" placeholder="<?php esc_attr_e("Home|Create a welcoming homepage with clear value propositions\nAbout Us|Write our company history, mission, and team overview\nServices|Explain our key services and how clients benefit", 'user-manager'); ?>"><?php echo esc_textarea($page_data); ?></textarea>
-						<p class="description">
-							<?php esc_html_e('One line per page in this format: Title|Prompt', 'user-manager'); ?>
-						</p>
-					</div>
-
-					<p style="margin-top:12px;">
-						<button type="submit" class="button button-primary um-addon-action-submit" data-um-target-action="user_manager_bulk_page_creator" <?php disabled(!$has_api_key); ?>>
-							<?php esc_html_e('Create Pages', 'user-manager'); ?>
-						</button>
-					</p>
-
-					<?php if ($results !== null && !empty($results['details']) && is_array($results['details'])) : ?>
-						<hr style="margin:20px 0;" />
-						<h3 style="margin:0 0 8px;"><?php esc_html_e('Latest Run Details', 'user-manager'); ?></h3>
-						<table class="widefat striped">
-							<thead>
-								<tr>
-									<th><?php esc_html_e('Title', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Status', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Page', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Images', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Error', 'user-manager'); ?></th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($results['details'] as $detail) : ?>
-									<?php
-									$detail_title = isset($detail['title']) ? (string) $detail['title'] : '';
-									$detail_status = isset($detail['status']) ? (string) $detail['status'] : 'failed';
-									$detail_page_id = isset($detail['page_id']) ? absint($detail['page_id']) : 0;
-									$detail_images = isset($detail['images_downloaded']) ? absint($detail['images_downloaded']) : 0;
-									$detail_error = isset($detail['error']) ? (string) $detail['error'] : '';
-									?>
-									<tr>
-										<td><?php echo esc_html($detail_title); ?></td>
-										<td><?php echo esc_html(ucfirst($detail_status)); ?></td>
-										<td>
-											<?php if ($detail_page_id > 0) : ?>
-												<a href="<?php echo esc_url(get_edit_post_link($detail_page_id)); ?>" target="_blank" rel="noopener noreferrer">
-													<?php echo esc_html((string) $detail_page_id); ?>
-												</a>
-											<?php else : ?>
-												—
-											<?php endif; ?>
-										</td>
-										<td><?php echo esc_html((string) $detail_images); ?></td>
-										<td><?php echo esc_html($detail_error); ?></td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					<?php endif; ?>
 				</div>
+			</div>
+		</div>
+
+		<div class="um-admin-card" id="um-bulk-page-creator-run-card" style="margin-top:18px;<?php echo $enabled ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-edit-page"></span>
+				<h2><?php esc_html_e('Bulk Page Creator: Page Data', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<?php wp_nonce_field('user_manager_bulk_page_creator', 'user_manager_bulk_page_creator_nonce', false); ?>
+				<div class="um-form-field">
+					<label for="um-bulk-page-creator-page-data"><?php esc_html_e('Page Data', 'user-manager'); ?></label>
+					<textarea id="um-bulk-page-creator-page-data" name="bulk_page_creator_page_data" rows="8" class="large-text code" placeholder="<?php esc_attr_e("Test Page|Create a page with Lipsum Lorem...", 'user-manager'); ?>"><?php echo esc_textarea($page_data); ?></textarea>
+					<p class="description">
+						<?php esc_html_e('One line per page in this format: Title|Prompt', 'user-manager'); ?>
+					</p>
+				</div>
+				<p style="margin-top:12px;">
+					<button type="submit" class="button button-primary um-addon-action-submit" data-um-target-action="user_manager_bulk_page_creator" <?php disabled(!$has_api_key); ?>>
+						<?php esc_html_e('Create Pages', 'user-manager'); ?>
+					</button>
+				</p>
 			</div>
 		</div>
 

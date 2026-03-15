@@ -677,7 +677,9 @@ class User_Manager_Tab_Addons {
 				$('#um-cart-price-per-piece-fields').toggle($('#um-cart-price-per-piece-enabled').is(':checked'));
 			}
 			function toggleBulkPageCreatorFields() {
-				$('#um-bulk-page-creator-fields').toggle($('#um-bulk-page-creator-enabled').is(':checked'));
+				var enabled = $('#um-bulk-page-creator-enabled').is(':checked');
+				$('#um-bulk-page-creator-fields').toggle(enabled);
+				$('#um-bulk-page-creator-run-card').toggle(enabled);
 			}
 			function toggleDatabaseTableBrowserFields() {
 				$('#um-database-table-browser-fields').toggle($('#um-database-table-browser-enabled').is(':checked'));
