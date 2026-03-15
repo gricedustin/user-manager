@@ -15,6 +15,19 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 		$text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
 		$text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
 		$button_text = isset($settings['add_to_cart_variation_table_button_text']) ? (string) $settings['add_to_cart_variation_table_button_text'] : '';
+		$selected_category_ids = isset($settings['add_to_cart_variation_table_category_ids']) && is_array($settings['add_to_cart_variation_table_category_ids'])
+			? array_values(array_unique(array_filter(array_map('absint', $settings['add_to_cart_variation_table_category_ids']))))
+			: [];
+		$product_categories = [];
+		if (taxonomy_exists('product_cat')) {
+			$terms = get_terms([
+				'taxonomy'   => 'product_cat',
+				'hide_empty' => false,
+			]);
+			if (!is_wp_error($terms) && is_array($terms)) {
+				$product_categories = $terms;
+			}
+		}
 		$selected_hook = isset($settings['add_to_cart_variation_table_hook']) ? sanitize_key((string) $settings['add_to_cart_variation_table_hook']) : 'auto';
 		$hook_options = [
 			'auto'                         => __('Auto (try multiple WooCommerce hooks)', 'user-manager'),
@@ -90,6 +103,26 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						</label>
 						<p class="description">
 							<?php esc_html_e('When enabled, the variation table header row is hidden on the front end.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label class="um-label-block"><?php esc_html_e('Only display variation table for products in these categories', 'user-manager'); ?></label>
+						<div style="max-height:220px; overflow-y:auto; border:1px solid #dcdcde; background:#fff; padding:10px 12px;">
+							<?php if (!empty($product_categories)) : ?>
+								<?php foreach ($product_categories as $term) : ?>
+									<?php $term_id = isset($term->term_id) ? (int) $term->term_id : 0; ?>
+									<?php if ($term_id <= 0) { continue; } ?>
+									<label style="display:block; margin:0 0 6px;">
+										<input type="checkbox" name="add_to_cart_variation_table_category_ids[]" value="<?php echo esc_attr((string) $term_id); ?>" <?php checked(in_array($term_id, $selected_category_ids, true)); ?><?php echo $form_attr; ?> />
+										<?php echo esc_html((string) $term->name); ?>
+									</label>
+								<?php endforeach; ?>
+							<?php else : ?>
+								<p class="description" style="margin:0;"><?php esc_html_e('No product categories found.', 'user-manager'); ?></p>
+							<?php endif; ?>
+						</div>
+						<p class="description">
+							<?php esc_html_e('If no categories are selected, the variation table can display for all variable products.', 'user-manager'); ?>
 						</p>
 					</div>
 					<div class="um-form-field">

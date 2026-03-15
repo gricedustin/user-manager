@@ -131,6 +131,19 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			self::append_add_to_cart_variation_table_trace('Skip: variable product is not purchasable.');
 			return;
 		}
+		$settings = User_Manager_Core::get_settings();
+		$allowed_category_ids = self::get_add_to_cart_variation_table_allowed_category_ids($settings);
+		if (!empty($allowed_category_ids)) {
+			if (!function_exists('has_term')) {
+				self::append_add_to_cart_variation_table_trace('Skip: has_term() unavailable for category filtering.');
+				return;
+			}
+			$in_allowed_category = has_term($allowed_category_ids, 'product_cat', $product->get_id());
+			if (is_wp_error($in_allowed_category) || !$in_allowed_category) {
+				self::append_add_to_cart_variation_table_trace('Skip: product is not in selected variation-table categories.');
+				return;
+			}
+		}
 		static $rendered_product_ids = [];
 		$product_id = (int) $product->get_id();
 		if (isset($rendered_product_ids[$product_id])) {
@@ -144,7 +157,6 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			self::append_add_to_cart_variation_table_trace('Skip: no available variations found.');
 			return;
 		}
-		$settings = User_Manager_Core::get_settings();
 		$prefix_variation_labels = !empty($settings['add_to_cart_variation_table_prefix_labels']);
 
 		$rows = [];
@@ -757,6 +769,20 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		delete_transient($key);
 
 		return is_array($data) ? $data : [];
+	}
+
+	/**
+	 * Parse and sanitize selected product categories for the variation table filter.
+	 *
+	 * @param array<string,mixed> $settings Settings array.
+	 * @return array<int,int>
+	 */
+	private static function get_add_to_cart_variation_table_allowed_category_ids(array $settings): array {
+		$raw = isset($settings['add_to_cart_variation_table_category_ids']) && is_array($settings['add_to_cart_variation_table_category_ids'])
+			? $settings['add_to_cart_variation_table_category_ids']
+			: [];
+
+		return array_values(array_unique(array_filter(array_map('absint', $raw))));
 	}
 
 	/**

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Manager
  * Description: WooCommerce User Manager with tabs for Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, and Documentation; plus add-ons for Add to Cart Bulk Import, Add to Cart Variation Table, Checkout Address Selector, Coupon Creator, New User Coupons, User Coupon Notifications, User Coupon Remaining Balances, Fatal Error Debugger, Front-End URL Parameter Debugger, My Account Coupons Page, My Account Admin, Post Meta Viewer, Post Content Generator, Post Idea Generator, User Role Switching, WP-Admin Bar Menu Items, WP-Admin Bar Quick Search, WP-Admin CSS, and WP-Admin Notifications.
- * Version: 2.3.12
+ * Version: 2.3.13
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.3.13 - March 8, 2026
+ * - Add to Cart Variation Table: added a category filter setting "Only display variation table for products in these categories" with a scrollable checkbox list of product categories.
+ * - Add to Cart Variation Table front-end rendering now respects selected product categories; when no categories are selected, it remains available to all variable products.
+ *
  * 2.3.12 - March 8, 2026
  * - Add to Cart Variation Table: added a new checkbox setting to remove the table header row (Variation / Qty) on the front end.
  * - Add to Cart Variation Table now conditionally renders the header row based on the new hide-header setting.

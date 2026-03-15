@@ -1792,6 +1792,10 @@ class User_Manager_Actions {
 				$settings['add_to_cart_variation_table_show_price_column'] = isset($_POST['add_to_cart_variation_table_show_price_column']) && $_POST['add_to_cart_variation_table_show_price_column'] === '1';
 				$settings['add_to_cart_variation_table_prefix_labels'] = isset($_POST['add_to_cart_variation_table_prefix_labels']) && $_POST['add_to_cart_variation_table_prefix_labels'] === '1';
 				$settings['add_to_cart_variation_table_hide_header_row'] = isset($_POST['add_to_cart_variation_table_hide_header_row']) && $_POST['add_to_cart_variation_table_hide_header_row'] === '1';
+				$variation_table_category_ids = isset($_POST['add_to_cart_variation_table_category_ids']) && is_array($_POST['add_to_cart_variation_table_category_ids'])
+					? array_values(array_unique(array_filter(array_map('absint', wp_unslash($_POST['add_to_cart_variation_table_category_ids'])))))
+					: [];
+				$settings['add_to_cart_variation_table_category_ids'] = $variation_table_category_ids;
 				$settings['add_to_cart_variation_table_button_text'] = isset($_POST['add_to_cart_variation_table_button_text']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_button_text'])) : '';
 				$settings['add_to_cart_variation_table_text_above'] = isset($_POST['add_to_cart_variation_table_text_above']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_above'])) : '';
 				$settings['add_to_cart_variation_table_text_below'] = isset($_POST['add_to_cart_variation_table_text_below']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_below'])) : '';
