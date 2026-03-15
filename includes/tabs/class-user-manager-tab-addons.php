@@ -18,6 +18,7 @@ require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php'
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
 require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
+require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
@@ -159,6 +160,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="coupon-remaining-balances">
 					<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="security-hardening">
+					<?php User_Manager_Addon_Security_Hardening::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="fatal-error-debugger">
 					<?php User_Manager_Addon_Fatal_Error_Debugger::render($settings, $settings_form_id); ?>
@@ -636,6 +640,9 @@ class User_Manager_Tab_Addons {
 			function toggleMyAccountCouponScreenFields() {
 				$('#um-my-account-coupon-screen-fields').toggle($('#um-my-account-coupon-screen-enabled').is(':checked'));
 			}
+			function toggleSecurityHardeningFields() {
+				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
+			}
 			function toggleFatalErrorDebuggerFields() {
 				$('#um-fatal-error-debugger-fields').toggle($('#um-fatal-error-debugger-enabled').is(':checked'));
 			}
@@ -647,6 +654,7 @@ class User_Manager_Tab_Addons {
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
 			toggleMyAccountCouponScreenFields();
+			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
@@ -774,6 +782,10 @@ class User_Manager_Tab_Addons {
 			$('#um-coupon-remainder-enabled').on('change', function() {
 				toggleCouponRemainderAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
+			});
+			$('#um-security-hardening-enabled').on('change', function() {
+				toggleSecurityHardeningFields();
+				refreshAddonCardAutoState($('#um-addon-card-security-hardening'));
 			});
 			$('#um-fatal-error-debugger-enabled').on('change', function() {
 				toggleFatalErrorDebuggerFields();
@@ -916,6 +928,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('User Coupon Remaining Balances', 'user-manager'),
 				'description' => __('Create a replacement coupon when a qualifying balance remains after checkout.', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
+			],
+			'security-hardening' => [
+				'label'  => __('Security Hardening', 'user-manager'),
+				'description' => __('Apply optional hardening controls for REST, WP-Admin file access, SSL admin, and version visibility.', 'user-manager'),
+				'active' => !empty($settings['security_hardening_enabled']),
 			],
 			'fatal-error-debugger' => [
 				'label'  => __('Fatal Error Debugger', 'user-manager'),

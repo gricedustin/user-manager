@@ -191,6 +191,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Capture front-end fatal errors for administrators and optionally send alert emails to speed up production issue response.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-shield',
+				'title'   => __('Security Hardening', 'user-manager'),
+				'summary' => __('Enable optional hardening controls for REST user endpoints, admin file modification restrictions, SSL admin enforcement, and version output reduction.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-tickets',
 				'title'   => __('My Account Coupons Page', 'user-manager'),
 				'summary' => __('Add a dedicated My Account coupons endpoint so customers can view available coupon notices in one place.', 'user-manager'),
@@ -266,6 +271,10 @@ class User_Manager_Tab_Documentation {
 			[
 				'title'       => __('Create Role-Specific Admin Experiences', 'user-manager'),
 				'description' => __('Use WP-Admin CSS, WP-Admin Notifications, and WP-Admin Bar Menu Items to simplify interfaces and highlight the exact tools each team needs.', 'user-manager'),
+			],
+			[
+				'title'       => __('Harden Common WordPress Exposure Points', 'user-manager'),
+				'description' => __('Use the Security Hardening add-on to reduce public endpoint exposure and tighten WP-Admin file-change controls while documenting any operational tradeoffs.', 'user-manager'),
 			],
 			[
 				'title'       => __('Improve Checkout Consistency', 'user-manager'),

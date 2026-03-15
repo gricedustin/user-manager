@@ -1624,6 +1624,12 @@ class User_Manager_Actions {
 				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
 				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
+				$settings['security_hardening_enabled'] = isset($_POST['security_hardening_enabled']) && $_POST['security_hardening_enabled'] === '1';
+				$settings['security_hardening_block_rest_user_enumeration'] = isset($_POST['security_hardening_block_rest_user_enumeration']) && $_POST['security_hardening_block_rest_user_enumeration'] === '1';
+				$settings['security_hardening_disallow_file_edit'] = isset($_POST['security_hardening_disallow_file_edit']) && $_POST['security_hardening_disallow_file_edit'] === '1';
+				$settings['security_hardening_disallow_file_mods'] = isset($_POST['security_hardening_disallow_file_mods']) && $_POST['security_hardening_disallow_file_mods'] === '1';
+				$settings['security_hardening_force_ssl_admin'] = isset($_POST['security_hardening_force_ssl_admin']) && $_POST['security_hardening_force_ssl_admin'] === '1';
+				$settings['security_hardening_hide_wp_version'] = isset($_POST['security_hardening_hide_wp_version']) && $_POST['security_hardening_hide_wp_version'] === '1';
 				$settings['fatal_error_debugger_enabled'] = isset($_POST['fatal_error_debugger_enabled']) && $_POST['fatal_error_debugger_enabled'] === '1';
 				$settings['fatal_error_debugger_email'] = isset($_POST['fatal_error_debugger_email']) ? sanitize_email(wp_unslash($_POST['fatal_error_debugger_email'])) : '';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
