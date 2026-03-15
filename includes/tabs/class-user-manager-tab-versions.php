@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.40 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Plugin Tags & Notes: fixed the "Tags & Notes" row action to reliably open the inline tags/notes text box editor on Plugins screen rows.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.39 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Bulk Page Creator: moved the Page Data + Create Pages action into its own card above History and removed the "Latest Run Details" section.', 'user-manager'); ?></li>

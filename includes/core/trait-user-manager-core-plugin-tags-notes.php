@@ -233,10 +233,82 @@ trait User_Manager_Core_Plugin_Tags_Notes_Trait {
 (function() {
 	function q(sel, ctx) { return (ctx || document).querySelector(sel); }
 	function qa(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
-	function editorRow(plugin) { return q('tr.um-ptn-editor[data-plugin="' + plugin + '"]'); }
-
-	function toggleEditor(plugin, show) {
+	function escAttr(value) {
+		return String(value || '')
+			.replace(/&/g, '&amp;')
+			.replace(/"/g, '&quot;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	}
+	function escHtml(value) {
+		return String(value || '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	}
+	function editorRow(plugin) {
+		var match = null;
+		qa('tr.um-ptn-editor').some(function(row) {
+			if ((row.getAttribute('data-plugin') || '') === plugin) {
+				match = row;
+				return true;
+			}
+			return false;
+		});
+		return match;
+	}
+	function buildEditorRowHtml(plugin) {
+		var store = (window.UMPluginTagsNotes && window.UMPluginTagsNotes.store) || {};
+		var allTags = (window.UMPluginTagsNotes && window.UMPluginTagsNotes.allTags) || [];
+		var item = store[plugin] || {};
+		var tags = Array.isArray(item.tags) ? item.tags.join(', ') : '';
+		var note = item.note || '';
+		var chips = '';
+		if (Array.isArray(allTags) && allTags.length) {
+			allTags.slice().sort(function(a, b) {
+				return String(a).localeCompare(String(b), undefined, { sensitivity: 'base' });
+			}).forEach(function(tag) {
+				if (!tag) return;
+				chips += '<button type="button" class="button button-small um-ptn-tag-chip" data-tag="' + escAttr(tag) + '" style="margin:0 6px 6px 0;">' + escHtml(tag) + '</button>';
+			});
+		}
+		return ''
+			+ '<td colspan="3" class="plugin-update colspanchange">'
+			+   '<div class="um-ptn-editor-wrap">'
+			+     '<p style="margin:0 0 10px 0;"><strong>Plugin Tags &amp; Notes</strong></p>'
+			+     '<div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">'
+			+       '<label style="min-width:260px; max-width:420px; flex:1 1 260px;">'
+			+         '<span style="display:block; font-weight:600; margin-bottom:4px;">Tags (comma-separated)</span>'
+			+         '<input type="text" class="regular-text" name="um_ptn_tags[' + escAttr(plugin) + ']" value="' + escAttr(tags) + '" form="um-plugin-tags-notes-form" />'
+			+         (chips ? '<div class="um-ptn-suggested-tags" style="margin-top:6px;"><span style="font-size:11px;color:#666;margin-right:6px;">Suggested:</span>' + chips + '</div>' : '')
+			+       '</label>'
+			+       '<label style="min-width:260px; max-width:620px; flex:2 1 260px;">'
+			+         '<span style="display:block; font-weight:600; margin-bottom:4px;">Note</span>'
+			+         '<textarea name="um_ptn_note[' + escAttr(plugin) + ']" rows="3" style="width:100%;" form="um-plugin-tags-notes-form">' + escHtml(note) + '</textarea>'
+			+       '</label>'
+			+     '</div>'
+			+     '<p style="margin-top:10px;">'
+			+       '<button type="button" class="button um-ptn-cancel">Close</button> '
+			+       '<span class="um-ptn-light-note" style="margin-left:6px; color:#666;">Use “Save All Tags &amp; Notes” above the table to save changes.</span>'
+			+     '</p>'
+			+   '</div>'
+			+ '</td>';
+	}
+	function ensureEditorRow(plugin, sourceRow) {
 		var row = editorRow(plugin);
+		if (row) return row;
+		if (!sourceRow || !sourceRow.parentNode) return null;
+		row = document.createElement('tr');
+		row.className = 'um-ptn-editor plugin-update-tr';
+		row.setAttribute('data-plugin', plugin);
+		row.style.display = 'none';
+		row.innerHTML = buildEditorRowHtml(plugin);
+		sourceRow.parentNode.insertBefore(row, sourceRow.nextSibling);
+		return row;
+	}
+
+	function toggleEditor(plugin, show, sourceRow) {
+		var row = ensureEditorRow(plugin, sourceRow || null);
 		if (!row) return;
 		row.style.display = show ? '' : 'none';
 	}
@@ -249,7 +321,7 @@ trait User_Manager_Core_Plugin_Tags_Notes_Trait {
 		qa('#the-list tr[data-plugin]:not(.um-ptn-editor)').forEach(function(row) {
 			if (row.style.display === 'none') return;
 			var plugin = row.getAttribute('data-plugin');
-			if (plugin) toggleEditor(plugin, true);
+			if (plugin) toggleEditor(plugin, true, row);
 		});
 	}
 
@@ -292,9 +364,10 @@ trait User_Manager_Core_Plugin_Tags_Notes_Trait {
 			e.preventDefault();
 			var plugin = toggle.getAttribute('data-plugin') || '';
 			if (!plugin) return;
-			var row = editorRow(plugin);
+			var hostRow = toggle.closest('tr[data-plugin]');
+			var row = ensureEditorRow(plugin, hostRow);
 			if (!row) return;
-			toggleEditor(plugin, row.style.display === 'none');
+			toggleEditor(plugin, row.style.display === 'none', hostRow);
 			return;
 		}
 
