@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.20 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('WP-Admin top bar shortcut: changed the User Experience Manager link target to open the Add-ons tab by default instead of Settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.19 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a JavaScript confirmation alert before submitting the cart-screen "Empty cart" button.', 'user-manager'); ?></li>

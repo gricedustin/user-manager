@@ -22,7 +22,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.19';
+	const VERSION = '2.3.20';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -1493,7 +1493,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Add "User Experience Manager" link to the wp-admin top bar (links to plugin Settings tab).
+	 * Add "User Experience Manager" link to the wp-admin top bar (links to plugin Add-ons tab).
 	 *
 	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
 	 */
@@ -1504,10 +1504,10 @@ html body .woocommerce-layout__header {
 		$wp_admin_bar->add_node([
 			'id'     => 'user-manager-settings',
 			'title'  => __('User Experience Manager', 'user-manager'),
-			'href'   => self::get_page_url(self::TAB_SETTINGS),
+			'href'   => self::get_page_url(self::TAB_ADDONS),
 			'parent' => 'top-secondary',
 			'meta'   => [
-				'title' => __('User Experience Manager Settings', 'user-manager'),
+				'title' => __('User Experience Manager Add-ons', 'user-manager'),
 			],
 		]);
 	}
