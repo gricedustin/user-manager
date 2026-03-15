@@ -152,9 +152,9 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 					</div>
 					<div class="um-form-field">
 						<label for="um-add-to-cart-variation-table-button-text"><?php esc_html_e('Add to Cart Variation Table Button Text', 'user-manager'); ?></label>
-						<input type="text" id="um-add-to-cart-variation-table-button-text" name="add_to_cart_variation_table_button_text" class="regular-text" value="<?php echo esc_attr($button_text); ?>" placeholder="<?php esc_attr_e('Add All Variations', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<input type="text" id="um-add-to-cart-variation-table-button-text" name="add_to_cart_variation_table_button_text" class="regular-text" value="<?php echo esc_attr($button_text); ?>" placeholder="<?php esc_attr_e('Add to Cart', 'user-manager'); ?>"<?php echo $form_attr; ?> />
 						<p class="description">
-							<?php esc_html_e('Optional override for the front-end submit button text. Leave blank to use "Add All Variations".', 'user-manager'); ?>
+							<?php esc_html_e('Optional override for the front-end submit button text. Leave blank to use "Add to Cart".', 'user-manager'); ?>
 						</p>
 					</div>
 					<div class="um-form-field">
@@ -177,7 +177,7 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 							<?php esc_html_e('Enable debug mode for Add to Cart Variation Table', 'user-manager'); ?>
 						</label>
 						<p class="description">
-							<?php esc_html_e('When enabled, a front-end debug panel displays per-variation processing details after submitting Add All Variations.', 'user-manager'); ?>
+							<?php esc_html_e('When enabled, a front-end debug panel displays per-variation processing details after submitting Add to Cart.', 'user-manager'); ?>
 						</p>
 						<p class="description">
 							<?php esc_html_e('Front-end trace URL (admin only): append ?um_variation_table_trace=1 to a variable product URL to see runtime hook/debug diagnostics even if the table does not render.', 'user-manager'); ?>

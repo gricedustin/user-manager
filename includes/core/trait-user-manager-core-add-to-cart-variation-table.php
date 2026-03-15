@@ -212,7 +212,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		$table_text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
 		$button_text = isset($settings['add_to_cart_variation_table_button_text']) ? trim((string) $settings['add_to_cart_variation_table_button_text']) : '';
 		if ($button_text === '') {
-			$button_text = __('Add All Variations', 'user-manager');
+			$button_text = __('Add to Cart', 'user-manager');
 		}
 		$currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '$';
 		$currency_position = (string) get_option('woocommerce_currency_pos', 'left');
@@ -369,7 +369,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 					<?php if (!empty($debug_payload)) : ?>
 						<pre style="white-space:pre-wrap; margin:8px 0 0;"><?php echo esc_html(wp_json_encode($debug_payload, JSON_PRETTY_PRINT)); ?></pre>
 					<?php else : ?>
-						<p style="margin:8px 0 0;"><?php esc_html_e('Submit Add All Variations to see debug details for each variation.', 'user-manager'); ?></p>
+						<p style="margin:8px 0 0;"><?php esc_html_e('Submit Add to Cart to see debug details for each variation.', 'user-manager'); ?></p>
 					<?php endif; ?>
 				</div>
 			<?php endif; ?>
