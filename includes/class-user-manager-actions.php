@@ -1792,6 +1792,8 @@ class User_Manager_Actions {
 				$settings['add_to_cart_variation_table_show_price_column'] = isset($_POST['add_to_cart_variation_table_show_price_column']) && $_POST['add_to_cart_variation_table_show_price_column'] === '1';
 				$settings['add_to_cart_variation_table_prefix_labels'] = isset($_POST['add_to_cart_variation_table_prefix_labels']) && $_POST['add_to_cart_variation_table_prefix_labels'] === '1';
 				$settings['add_to_cart_variation_table_hide_header_row'] = isset($_POST['add_to_cart_variation_table_hide_header_row']) && $_POST['add_to_cart_variation_table_hide_header_row'] === '1';
+				$settings['add_to_cart_variation_table_header_variation_label'] = isset($_POST['add_to_cart_variation_table_header_variation_label']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_header_variation_label'])) : '';
+				$settings['add_to_cart_variation_table_header_qty_label'] = isset($_POST['add_to_cart_variation_table_header_qty_label']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_header_qty_label'])) : '';
 				$variation_table_category_ids = isset($_POST['add_to_cart_variation_table_category_ids']) && is_array($_POST['add_to_cart_variation_table_category_ids'])
 					? array_values(array_unique(array_filter(array_map('absint', wp_unslash($_POST['add_to_cart_variation_table_category_ids'])))))
 					: [];

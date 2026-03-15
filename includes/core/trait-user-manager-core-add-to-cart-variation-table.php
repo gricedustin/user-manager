@@ -200,6 +200,14 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 		$show_price_column = !empty($settings['add_to_cart_variation_table_show_price_column']);
 		$hide_header_row = !empty($settings['add_to_cart_variation_table_hide_header_row']);
+		$header_variation_label = isset($settings['add_to_cart_variation_table_header_variation_label']) ? trim((string) $settings['add_to_cart_variation_table_header_variation_label']) : '';
+		$header_qty_label = isset($settings['add_to_cart_variation_table_header_qty_label']) ? trim((string) $settings['add_to_cart_variation_table_header_qty_label']) : '';
+		if ($header_variation_label === '') {
+			$header_variation_label = __('Variation', 'user-manager');
+		}
+		if ($header_qty_label === '') {
+			$header_qty_label = __('Qty', 'user-manager');
+		}
 		$table_text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
 		$table_text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
 		$button_text = isset($settings['add_to_cart_variation_table_button_text']) ? trim((string) $settings['add_to_cart_variation_table_button_text']) : '';
@@ -236,8 +244,8 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 					<?php if (!$hide_header_row) : ?>
 						<thead>
 							<tr>
-								<th><?php esc_html_e('Variation', 'user-manager'); ?></th>
-								<th style="width:120px;"><?php esc_html_e('Qty', 'user-manager'); ?></th>
+								<th><?php echo esc_html($header_variation_label); ?></th>
+								<th style="width:120px;"><?php echo esc_html($header_qty_label); ?></th>
 								<?php if ($show_price_column) : ?>
 									<th style="width:160px;"><?php esc_html_e('Price', 'user-manager'); ?></th>
 								<?php endif; ?>

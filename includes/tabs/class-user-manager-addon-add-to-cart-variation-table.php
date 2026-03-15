@@ -15,6 +15,8 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 		$text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
 		$text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
 		$button_text = isset($settings['add_to_cart_variation_table_button_text']) ? (string) $settings['add_to_cart_variation_table_button_text'] : '';
+		$header_variation_label = isset($settings['add_to_cart_variation_table_header_variation_label']) ? (string) $settings['add_to_cart_variation_table_header_variation_label'] : '';
+		$header_qty_label = isset($settings['add_to_cart_variation_table_header_qty_label']) ? (string) $settings['add_to_cart_variation_table_header_qty_label'] : '';
 		$selected_category_ids = isset($settings['add_to_cart_variation_table_category_ids']) && is_array($settings['add_to_cart_variation_table_category_ids'])
 			? array_values(array_unique(array_filter(array_map('absint', $settings['add_to_cart_variation_table_category_ids']))))
 			: [];
@@ -103,6 +105,20 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						</label>
 						<p class="description">
 							<?php esc_html_e('When enabled, the variation table header row is hidden on the front end.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label for="um-add-to-cart-variation-table-header-variation-label"><?php esc_html_e('Variation Header Label', 'user-manager'); ?></label>
+						<input type="text" id="um-add-to-cart-variation-table-header-variation-label" name="add_to_cart_variation_table_header_variation_label" class="regular-text" value="<?php echo esc_attr($header_variation_label); ?>" placeholder="<?php esc_attr_e('Variation', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<p class="description">
+							<?php esc_html_e('Optional override for the Variation column header. Leave blank to use "Variation".', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label for="um-add-to-cart-variation-table-header-qty-label"><?php esc_html_e('Qty Header Label', 'user-manager'); ?></label>
+						<input type="text" id="um-add-to-cart-variation-table-header-qty-label" name="add_to_cart_variation_table_header_qty_label" class="regular-text" value="<?php echo esc_attr($header_qty_label); ?>" placeholder="<?php esc_attr_e('Qty', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<p class="description">
+							<?php esc_html_e('Optional override for the Qty column header. Leave blank to use "Qty".', 'user-manager'); ?>
 						</p>
 					</div>
 					<div class="um-form-field">

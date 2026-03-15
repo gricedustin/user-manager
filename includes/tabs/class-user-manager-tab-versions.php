@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.16 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added two new settings to override the header labels for the Variation and Qty columns.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table header row now uses custom Variation/Qty labels when provided, and falls back to defaults when blank.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.15 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons UI: added top margin above the "Add to Cart Variation Table History" card for clearer visual spacing.', 'user-manager'); ?></li>
