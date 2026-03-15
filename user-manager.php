@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation) and add-ons: Add to Cart Bulk Import, Add to Cart Variation Table, Checkout Address Selector, Coupon Creator, New User Coupons, User Coupon Notifications, User Coupon Remaining Balances, Fatal Error Debugger, Front-End URL Parameter Debugger, My Account Coupons Page, My Account Admin, Post Meta Viewer, Post Content Generator, Post Idea Generator, User Role Switching, WP-Admin Bar Menu Items, WP-Admin Bar Quick Search, WP-Admin CSS, and WP-Admin Notifications.
- * Version: 2.3.20
+ * Version: 2.3.21
  * Author: Dustin Grice
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.21 - March 15, 2026
+ * - Documentation tab: replaced legacy cards with a fully refreshed Tabs Reference, Add-ons Reference, and updated platform overview.
+ * - Documentation tab: added a new "Use Cases" card with practical B2B/B2C scenarios (including welcome-coupon onboarding) to highlight how tools can be combined.
+ *
  * 2.3.20 - March 15, 2026
  * - WP-Admin top bar shortcut: changed the User Experience Manager link target to open the Add-ons tab by default instead of Settings.
  *
