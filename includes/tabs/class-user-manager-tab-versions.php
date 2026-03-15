@@ -19,42 +19,42 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.3.14 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.14 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a new checkbox setting "Add an Empty Cart button on Cart Screen".', 'user-manager'); ?></li>
 							<li><?php esc_html_e('When enabled, an Empty Cart button now renders in WooCommerce cart actions and empties the cart via nonce-protected submission.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.13 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.13 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a category filter setting "Only display variation table for products in these categories" with a scrollable checkbox list of product categories.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table front-end rendering now respects selected product categories; when no categories are selected, it remains available to all variable products.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.12 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.12 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a new checkbox setting to remove the table header row (Variation / Qty) on the front end.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table now conditionally renders the header row based on the new hide-header setting.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.11 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.11 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a new text setting to override the front-end "Add All Variations" button label.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table button now uses the custom label when set, and falls back to "Add All Variations" when blank.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.10 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.10 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a new setting "Prefix all variations with the variation label" (default off) to control label formatting like "Size: Small" versus "Small".', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table front-end row rendering now respects the prefix-label setting for the Variation column.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.9 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.9 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: removed the default "Add Multiple Variations" heading/description copy from the front-end table output.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table: added "Add Text Above Variation Table" and "Add Text Below Variation Table" textarea settings (HTML supported) and render those blocks on the front end.', 'user-manager'); ?></li>
@@ -62,20 +62,20 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.8 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.8 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Fatal Error Debugger add-on with Activate toggle and an admin-only front-end fatal error panel.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Fatal Error Debugger now captures fatal shutdown errors, stores the latest payload, and can send email alerts only when "Sent Email To Address upon Fatal Errors" is filled.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.7 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.7 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table trace stability: added defensive function-exists guards for auth checks to prevent fatal errors during early plugin bootstrap.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.6 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.6 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: removed strict WooCommerce class-load gating so render/submission hooks are always registered when the add-on is active.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table: added safety fallback render hooks so the table still appears when a theme override skips the selected hook.', 'user-manager'); ?></li>
@@ -83,21 +83,21 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.5 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.5 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a backend "Single Product Page Hook" selector so the render location can be chosen per site/theme.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table: added Auto hook mode that tries multiple WooCommerce product hooks for better front-end compatibility when a single hook does not fire.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.4 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.4 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a new settings checkbox to optionally show a third Price column in the variation table.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table: Totals row now dynamically updates both total quantity and total amount when the Price column option is enabled.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.3 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.3 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: switched to a vertical two-column layout (Variation + Qty), removed price output, added a live Total row, and kept it as a separate alternative form under the native add-to-cart area.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add to Cart Variation Table: added setting to hide/show the native variable-product dropdown add-to-cart form when the bulk table is present.', 'user-manager'); ?></li>
@@ -105,14 +105,14 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.2 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.2 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Orders: added configurable button labels for Approve/Decline (default labels now "Move to Processing" and "Move to Canceled"), hid Approve when already Processing, and hid Decline when already Canceled.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('My Account Admin Orders action handling now blocks redundant approve/decline actions for already-Processing and already-Canceled orders, with corresponding notices.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.1 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.1 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: refactored as an alternative form under the default Add to Cart area with an "Add All Variations" submit flow and optional front-end debug mode.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('My Account Admin Orders: added status filter configuration, inline status filter links, optional hide-order-status toggle, approve/decline actions for all non-completed statuses, and internal order notes that record who performed each action and when.', 'user-manager'); ?></li>
