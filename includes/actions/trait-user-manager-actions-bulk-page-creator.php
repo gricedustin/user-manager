@@ -1,6 +1,6 @@
 <?php
 /**
- * Bulk Page Creator action handlers.
+ * Page Creator action handlers.
  */
 
 if (!defined('ABSPATH')) {
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 trait User_Manager_Actions_Bulk_Page_Creator_Trait {
 
 	/**
-	 * Handle Bulk Page Creator submit action.
+	 * Handle Page Creator submit action.
 	 */
 	public static function handle_bulk_page_creator(): void {
 		if (!current_user_can('manage_options')) {
@@ -45,7 +45,7 @@ trait User_Manager_Actions_Bulk_Page_Creator_Trait {
 		User_Manager_Core::add_activity_log(
 			'bulk_page_creator_run',
 			$current_user_id,
-			'Bulk Page Creator',
+			'Page Creator',
 			[
 				'total' => $results['total'],
 				'created' => $results['created'],
@@ -60,7 +60,7 @@ trait User_Manager_Actions_Bulk_Page_Creator_Trait {
 	}
 
 	/**
-	 * Build redirect URL back to Bulk Page Creator card.
+	 * Build redirect URL back to Page Creator card.
 	 *
 	 * @param array<string,string> $extra_args
 	 */

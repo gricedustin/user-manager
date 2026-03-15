@@ -990,7 +990,7 @@ class User_Manager_Tab_Addons {
 				'active' => !empty($settings['cart_price_per_piece_enabled']),
 			],
 			'bulk-page-creator' => [
-				'label'  => __('Bulk Page Creator', 'user-manager'),
+				'label'  => __('Page Creator', 'user-manager'),
 				'description' => __('Generate multiple AI-written pages from Title|Prompt rows using your configured OpenAI API key and optional images for page/post campaigns.', 'user-manager'),
 				'active' => !empty($settings['bulk_page_creator_enabled']),
 			],

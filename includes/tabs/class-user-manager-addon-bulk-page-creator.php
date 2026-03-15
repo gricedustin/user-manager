@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Bulk Page Creator.
+ * Add-on card: Page Creator.
  */
 
 if (!defined('ABSPATH')) {
@@ -43,7 +43,7 @@ class User_Manager_Addon_Bulk_Page_Creator {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-bulk-page-creator" data-um-active-selectors="#um-bulk-page-creator-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-admin-page"></span>
-				<h2><?php esc_html_e('Bulk Page Creator', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Page Creator', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
@@ -68,7 +68,7 @@ class User_Manager_Addon_Bulk_Page_Creator {
 
 					<?php if (!empty($_GET['um_msg']) && $_GET['um_msg'] === 'bulk_page_creator_no_api_key') : ?>
 						<div class="notice notice-error inline">
-							<p><?php esc_html_e('OpenAI API key is missing. Add your key in Settings > API Keys before running Bulk Page Creator.', 'user-manager'); ?></p>
+							<p><?php esc_html_e('OpenAI API key is missing. Add your key in Settings > API Keys before running Page Creator.', 'user-manager'); ?></p>
 						</div>
 					<?php endif; ?>
 
@@ -145,7 +145,7 @@ class User_Manager_Addon_Bulk_Page_Creator {
 		<div class="um-admin-card" id="um-bulk-page-creator-run-card" style="margin-top:18px;<?php echo $enabled ? '' : 'display:none;'; ?>">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-edit-page"></span>
-				<h2><?php esc_html_e('Bulk Page Creator: Page Data', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Page Creator: Page Data', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<?php wp_nonce_field('user_manager_bulk_page_creator', 'user_manager_bulk_page_creator_nonce', false); ?>
@@ -167,7 +167,7 @@ class User_Manager_Addon_Bulk_Page_Creator {
 		<div class="um-admin-card" style="margin-top:18px;">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-backup"></span>
-				<h2><?php esc_html_e('Bulk Page Creator History', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Page Creator History', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<?php if (empty($history)) : ?>

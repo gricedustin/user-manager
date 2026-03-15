@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation).
- * Version: 2.3.43
+ * Version: 2.3.44
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.44 - March 15, 2026
+ * - Retitled the "Bulk Page Creator" add-on to "Page Creator" across Add-ons labels, card headings, notices, documentation references, and related activity log naming.
+ *
  * 2.3.43 - March 15, 2026
  * - Order Invoice & Approval: added a live "currently allowed emails" list under approval-email settings, combining global list entries and user-profile checkbox-enabled emails with Edit User links when available.
  *
@@ -21,10 +24,10 @@
  * - Plugin Tags & Notes: fixed the "Tags & Notes" row action to reliably open the inline tags/notes text box editor on Plugins screen rows.
  *
  * 2.3.39 - March 15, 2026
- * - Bulk Page Creator: moved the Page Data + Create Pages action into its own card above History and removed the "Latest Run Details" section.
+ * - Page Creator: moved the Page Data + Create Pages action into its own card above History and removed the "Latest Run Details" section.
  *
  * 2.3.38 - March 15, 2026
- * - Bulk Page Creator: added top margin/breathing room above the "Bulk Page Creator History" card.
+ * - Page Creator: added top margin/breathing room above the "Page Creator History" card.
  *
  * 2.3.37 - March 15, 2026
  * - My Account Admin > Orders: ensured the Decline / "Move to Canceled" action button is shown next to other status action buttons on order views.
@@ -42,8 +45,8 @@
  * - Database Table Browser now lists all tables, supports secure table drill-down with nonce checks, and renders paginated table rows directly in Add-ons.
  *
  * 2.3.33 - March 15, 2026
- * - Added new "Bulk Page Creator" add-on with Activate toggle, OpenAI generation controls, bulk Title|Prompt input, and create action in the Add-ons tab.
- * - Bulk Page Creator now reuses the existing API key from Settings > API Keys, supports optional image downloads/featured image assignment, and stores run history.
+ * - Added new "Page Creator" add-on with Activate toggle, OpenAI generation controls, bulk Title|Prompt input, and create action in the Add-ons tab.
+ * - Page Creator now reuses the existing API key from Settings > API Keys, supports optional image downloads/featured image assignment, and stores run history.
  *
  * 2.3.32 - March 15, 2026
  * - Added new "Cart Price Per-Piece" add-on with Activate toggle and settings for cart/order display, suffix text, font size, and text color.

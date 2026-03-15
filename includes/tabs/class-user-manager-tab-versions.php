@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.44 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled the "Bulk Page Creator" add-on to "Page Creator" across Add-ons labels, card headings, notices, documentation references, and related activity log naming.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.43 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Order Invoice & Approval: added a live "currently allowed emails" list under approval-email settings, combining global list entries and user-profile checkbox-enabled emails with Edit User links when available.', 'user-manager'); ?></li>
@@ -65,13 +71,13 @@ class User_Manager_Tab_Versions {
 					<div class="um-changelog-item">
 						<h4>2.3.39 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Bulk Page Creator: moved the Page Data + Create Pages action into its own card above History and removed the "Latest Run Details" section.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Creator: moved the Page Data + Create Pages action into its own card above History and removed the "Latest Run Details" section.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
 						<h4>2.3.38 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Bulk Page Creator: added top margin/breathing room above the "Bulk Page Creator History" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Creator: added top margin/breathing room above the "Page Creator History" card.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
@@ -104,8 +110,8 @@ class User_Manager_Tab_Versions {
 					<div class="um-changelog-item">
 						<h4>2.3.33 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Added new "Bulk Page Creator" add-on with Activate toggle, OpenAI generation controls, bulk Title|Prompt input, and create action in the Add-ons tab.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Bulk Page Creator now reuses the existing API key from Settings > API Keys, supports optional image downloads/featured image assignment, and stores run history.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new "Page Creator" add-on with Activate toggle, OpenAI generation controls, bulk Title|Prompt input, and create action in the Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Creator now reuses the existing API key from Settings > API Keys, supports optional image downloads/featured image assignment, and stores run history.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

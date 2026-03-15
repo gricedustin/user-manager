@@ -167,7 +167,7 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'icon'    => 'dashicons-admin-page',
-				'title'   => __('Bulk Page Creator', 'user-manager'),
+				'title'   => __('Page Creator', 'user-manager'),
 				'summary' => __('Generate multiple AI-written pages from Title|Prompt rows using your saved OpenAI API key, with optional image downloads and history tracking.', 'user-manager'),
 			],
 			[
