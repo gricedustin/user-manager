@@ -182,7 +182,7 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'icon'    => 'dashicons-media-spreadsheet',
-				'title'   => __('Invoice Approval', 'user-manager'),
+				'title'   => __('Order Invoice & Approval', 'user-manager'),
 				'summary' => __('Render customer-facing invoice links/pages for WooCommerce orders with approval forms, PDF output, payment links, and approval access by email or user-profile checkbox.', 'user-manager'),
 			],
 			[

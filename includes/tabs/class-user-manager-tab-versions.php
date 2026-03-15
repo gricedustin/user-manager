@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.42 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled the "Invoice Approval" add-on to "Order Invoice & Approval" across Add-ons labels, documentation references, and related settings/profile headings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.41 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Webhook URLs add-on: expanded all Webhook Types notes with detailed field-level guidance and full sample URLs that include every currently supported field for each webhook type.', 'user-manager'); ?></li>
@@ -71,8 +77,8 @@ class User_Manager_Tab_Versions {
 					<div class="um-changelog-item">
 						<h4>2.3.36 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Added new "Invoice Approval" add-on with invoice branding/settings controls, invoice approval form settings, and WooCommerce order invoice links.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Invoice Approval now supports per-user invoice approval access via Edit User checkbox (email-match based), in addition to the global approval email list setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new "Order Invoice & Approval" add-on with invoice branding/settings controls, invoice approval form settings, and WooCommerce order invoice links.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Order Invoice & Approval now supports per-user invoice approval access via Edit User checkbox (email-match based), in addition to the global approval email list setting.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

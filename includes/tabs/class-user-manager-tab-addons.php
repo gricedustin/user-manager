@@ -1005,7 +1005,7 @@ class User_Manager_Tab_Addons {
 				'active' => !empty($settings['webhook_urls_enabled']),
 			],
 			'invoice-approval' => [
-				'label'  => __('Invoice Approval', 'user-manager'),
+				'label'  => __('Order Invoice & Approval', 'user-manager'),
 				'description' => __('Render customer-facing invoice pages with optional approvals, PDF download, payment links, and order-level invoice metadata.', 'user-manager'),
 				'active' => !empty($settings['invoice_approval_enabled']),
 			],

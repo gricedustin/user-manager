@@ -1,6 +1,6 @@
 <?php
 /**
- * Invoice Approval helpers.
+ * Order Invoice & Approval helpers.
  */
 
 if (!defined('ABSPATH')) {
@@ -411,18 +411,18 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		<div class="card" style="max-width:100%;margin-bottom:20px;padding:20px;background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,.04);">
 			<h2 style="margin-top:0;padding-bottom:10px;border-bottom:1px solid #eee;">
 				<span class="dashicons dashicons-media-spreadsheet" style="margin-right:5px;"></span>
-				<?php esc_html_e('Invoice Approval Access', 'user-manager'); ?>
+				<?php esc_html_e('Order Invoice & Approval Access', 'user-manager'); ?>
 			</h2>
 			<table class="form-table">
 				<tr>
-					<th scope="row"><?php esc_html_e('Allow Invoice Approval by Email', 'user-manager'); ?></th>
+					<th scope="row"><?php esc_html_e('Allow Order Invoice & Approval by Email', 'user-manager'); ?></th>
 					<td>
 						<label>
 							<input type="checkbox" name="um_invoice_approval_enabled" value="1" <?php checked($enabled); ?> />
-							<?php esc_html_e('Enable invoice approval access for this user email', 'user-manager'); ?>
+							<?php esc_html_e('Enable order invoice & approval access for this user email', 'user-manager'); ?>
 						</label>
 						<p class="description">
-							<?php esc_html_e('If checked, invoices whose billing email matches this user email will show the invoice approval form, even if not listed in the global "Email Addresses to Enable Invoice Approvals" setting.', 'user-manager'); ?>
+							<?php esc_html_e('If checked, invoices whose billing email matches this user email will show the invoice approval form, even if not listed in the global "Email Addresses to Enable Order Invoice & Approval" setting.', 'user-manager'); ?>
 						</p>
 					</td>
 				</tr>

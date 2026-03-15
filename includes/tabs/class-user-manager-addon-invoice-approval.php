@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Invoice Approval.
+ * Add-on card: Order Invoice & Approval.
  */
 
 if (!defined('ABSPATH')) {
@@ -37,7 +37,7 @@ class User_Manager_Addon_Invoice_Approval {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-invoice-approval" data-um-active-selectors="#um-invoice-approval-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-media-spreadsheet"></span>
-				<h2><?php esc_html_e('Invoice Approval', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Order Invoice & Approval', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
@@ -146,22 +146,22 @@ class User_Manager_Addon_Invoice_Approval {
 					</div>
 
 					<hr style="margin:16px 0;" />
-					<h3 style="margin:0 0 8px;"><?php esc_html_e('Invoice Approval Settings', 'user-manager'); ?></h3>
+					<h3 style="margin:0 0 8px;"><?php esc_html_e('Order Invoice & Approval Settings', 'user-manager'); ?></h3>
 					<div class="um-form-field">
-						<label for="um-invoice-approval-emails"><?php esc_html_e('Email Addresses to Enable Invoice Approvals', 'user-manager'); ?></label>
+						<label for="um-invoice-approval-emails"><?php esc_html_e('Email Addresses to Enable Order Invoice & Approval', 'user-manager'); ?></label>
 						<textarea id="um-invoice-approval-emails" name="invoice_approval_emails" rows="4" class="large-text"<?php echo $form_attr; ?>><?php echo esc_textarea($approval_emails); ?></textarea>
 						<p class="description"><?php esc_html_e('One email per line. If invoice billing email matches, approval form appears. Alternative access can be granted per user via Edit User screen checkbox.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field">
-						<label for="um-invoice-approval-title"><?php esc_html_e('Invoice Approval Form Title', 'user-manager'); ?></label>
+						<label for="um-invoice-approval-title"><?php esc_html_e('Order Invoice & Approval Form Title', 'user-manager'); ?></label>
 						<input type="text" id="um-invoice-approval-title" name="invoice_approval_title" class="regular-text" value="<?php echo esc_attr($approval_title); ?>"<?php echo $form_attr; ?> />
 					</div>
 					<div class="um-form-field">
-						<label for="um-invoice-approval-checkbox-text"><?php esc_html_e('Invoice Approval Checkbox Text', 'user-manager'); ?></label>
+						<label for="um-invoice-approval-checkbox-text"><?php esc_html_e('Order Invoice & Approval Checkbox Text', 'user-manager'); ?></label>
 						<textarea id="um-invoice-approval-checkbox-text" name="invoice_approval_checkbox_text" rows="4" class="large-text"<?php echo $form_attr; ?>><?php echo esc_textarea($approval_checkbox_text); ?></textarea>
 					</div>
 					<div class="um-form-field">
-						<label for="um-invoice-approval-button-text"><?php esc_html_e('Invoice Approval Button Text', 'user-manager'); ?></label>
+						<label for="um-invoice-approval-button-text"><?php esc_html_e('Order Invoice & Approval Button Text', 'user-manager'); ?></label>
 						<input type="text" id="um-invoice-approval-button-text" name="invoice_approval_button_text" class="regular-text" value="<?php echo esc_attr($approval_button_text); ?>"<?php echo $form_attr; ?> />
 					</div>
 
