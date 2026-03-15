@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.30 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Plugin Tags & Notes" add-on with an Activate toggle in the Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When active, wp-admin/plugins.php now includes per-plugin tags/notes badges, inline editors, a bulk Save All form, and client-side tag filtering tools.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.29 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Documentation tab: added a new "All Reports (Reports Tab Reference)" card listing every Reports section and all General Reports currently available.', 'user-manager'); ?></li>

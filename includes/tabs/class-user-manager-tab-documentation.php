@@ -221,6 +221,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Generate AI-assisted topic ideas based on site context to accelerate editorial planning and campaign ideation.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-tag',
+				'title'   => __('Plugin Tags & Notes', 'user-manager'),
+				'summary' => __('Add private per-plugin tags and notes on the Plugins screen, with inline editing and tag-based filtering for faster plugin stack organization.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-randomize',
 				'title'   => __('User Role Switching', 'user-manager'),
 				'summary' => __('Allow approved users to preview the site as alternate roles for UX validation, QA, and permission testing.', 'user-manager'),

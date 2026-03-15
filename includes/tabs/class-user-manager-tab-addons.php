@@ -18,6 +18,7 @@ require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php'
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
 require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
+require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
 require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
@@ -186,6 +187,9 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-addon-section" data-addon-section="post-idea-generator">
 				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="plugin-tags-notes">
+				<?php User_Manager_Addon_Plugin_Tags_Notes::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="user-role-switching">
 				<?php User_Manager_Addon_Role_Switching::render($settings_form_id); ?>
@@ -965,6 +969,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Post Idea Generator', 'user-manager'),
 				'description' => __('Generate AI-assisted post ideas based on your existing site content.', 'user-manager'),
 				'active' => !empty($settings['openai_blog_post_idea_generator_enabled']),
+			],
+			'plugin-tags-notes' => [
+				'label'  => __('Plugin Tags & Notes', 'user-manager'),
+				'description' => __('Add plugin tags, notes, and filtering tools directly on the WP-Admin Plugins screen.', 'user-manager'),
+				'active' => !empty($settings['plugin_tags_notes_enabled']),
 			],
 			'user-role-switching' => [
 				'label'  => __('User Role Switching', 'user-manager'),
