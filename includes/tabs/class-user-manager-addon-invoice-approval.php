@@ -33,6 +33,54 @@ class User_Manager_Addon_Invoice_Approval {
 		$approval_title = isset($settings['invoice_approval_title']) ? (string) $settings['invoice_approval_title'] : 'Approve & Pay Later';
 		$approval_checkbox_text = isset($settings['invoice_approval_checkbox_text']) ? (string) $settings['invoice_approval_checkbox_text'] : 'I hereby approve of placing this order and authorize payment for this order. I understand that by checking this box and submitting this form, I am providing my electronic signature and consent to proceed with the order and payment processing.';
 		$approval_button_text = isset($settings['invoice_approval_button_text']) ? (string) $settings['invoice_approval_button_text'] : 'Send to Production';
+
+		$allowed_invoice_approval_emails = [];
+		$global_email_entries = preg_split('/\r\n|\r|\n|,/', $approval_emails) ?: [];
+		foreach ($global_email_entries as $entry) {
+			$email = sanitize_email(trim((string) $entry));
+			if ($email === '') {
+				continue;
+			}
+			$key = strtolower($email);
+			if (!isset($allowed_invoice_approval_emails[$key])) {
+				$allowed_invoice_approval_emails[$key] = [
+					'email' => $email,
+					'sources' => [],
+					'user_id' => 0,
+				];
+			}
+			$allowed_invoice_approval_emails[$key]['sources']['global'] = __('Global list', 'user-manager');
+			$user_by_email = function_exists('get_user_by') ? get_user_by('email', $email) : false;
+			if ($user_by_email && isset($user_by_email->ID)) {
+				$allowed_invoice_approval_emails[$key]['user_id'] = absint($user_by_email->ID);
+			}
+		}
+
+		if (function_exists('get_users')) {
+			$enabled_users = get_users([
+				'meta_key' => '_um_invoice_approval_enabled',
+				'meta_value' => '1',
+				'fields' => ['ID', 'user_email'],
+				'number' => -1,
+			]);
+			foreach ($enabled_users as $enabled_user) {
+				$email = isset($enabled_user->user_email) ? sanitize_email((string) $enabled_user->user_email) : '';
+				if ($email === '') {
+					continue;
+				}
+				$key = strtolower($email);
+				if (!isset($allowed_invoice_approval_emails[$key])) {
+					$allowed_invoice_approval_emails[$key] = [
+						'email' => $email,
+						'sources' => [],
+						'user_id' => 0,
+					];
+				}
+				$allowed_invoice_approval_emails[$key]['sources']['profile'] = __('User checkbox enabled', 'user-manager');
+				$allowed_invoice_approval_emails[$key]['user_id'] = isset($enabled_user->ID) ? absint($enabled_user->ID) : 0;
+			}
+		}
+		ksort($allowed_invoice_approval_emails, SORT_NATURAL | SORT_FLAG_CASE);
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-invoice-approval" data-um-active-selectors="#um-invoice-approval-enabled">
 			<div class="um-admin-card-header">
@@ -151,6 +199,30 @@ class User_Manager_Addon_Invoice_Approval {
 						<label for="um-invoice-approval-emails"><?php esc_html_e('Email Addresses to Enable Order Invoice & Approval', 'user-manager'); ?></label>
 						<textarea id="um-invoice-approval-emails" name="invoice_approval_emails" rows="4" class="large-text"<?php echo $form_attr; ?>><?php echo esc_textarea($approval_emails); ?></textarea>
 						<p class="description"><?php esc_html_e('One email per line. If invoice billing email matches, approval form appears. Alternative access can be granted per user via Edit User screen checkbox.', 'user-manager'); ?></p>
+						<?php if (!empty($allowed_invoice_approval_emails)) : ?>
+							<p class="description" style="margin-top:8px;"><strong><?php esc_html_e('Currently allowed emails (global list + enabled user checkboxes):', 'user-manager'); ?></strong></p>
+							<ul style="margin:4px 0 0 18px; list-style:disc;">
+								<?php foreach ($allowed_invoice_approval_emails as $email_row) : ?>
+									<?php
+									$row_email = isset($email_row['email']) ? (string) $email_row['email'] : '';
+									$row_sources = isset($email_row['sources']) && is_array($email_row['sources']) ? array_values($email_row['sources']) : [];
+									$row_user_id = isset($email_row['user_id']) ? absint($email_row['user_id']) : 0;
+									$edit_url = $row_user_id > 0 ? get_edit_user_link($row_user_id) : '';
+									?>
+									<li style="margin:2px 0;">
+										<code><?php echo esc_html($row_email); ?></code>
+										<?php if (!empty($row_sources)) : ?>
+											<em style="color:#555;">(<?php echo esc_html(implode(' + ', $row_sources)); ?>)</em>
+										<?php endif; ?>
+										<?php if (!empty($edit_url)) : ?>
+											- <a href="<?php echo esc_url($edit_url); ?>"><?php esc_html_e('Edit User', 'user-manager'); ?></a>
+										<?php endif; ?>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						<?php else : ?>
+							<p class="description" style="margin-top:8px;"><?php esc_html_e('No emails are currently allowed. Add emails above or enable user-level access via the Edit User checkbox.', 'user-manager'); ?></p>
+						<?php endif; ?>
 					</div>
 					<div class="um-form-field">
 						<label for="um-invoice-approval-title"><?php esc_html_e('Order Invoice & Approval Form Title', 'user-manager'); ?></label>
