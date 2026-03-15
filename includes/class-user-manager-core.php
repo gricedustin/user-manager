@@ -10,17 +10,19 @@ if (!defined('ABSPATH')) {
 
 require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
+require_once __DIR__ . '/core/trait-user-manager-core-fatal-error-debugger.php';
 require_once __DIR__ . '/core/trait-user-manager-core-frontend-url-parameter-debugger.php';
 final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
 	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
+	use User_Manager_Core_Fatal_Error_Debugger_Trait;
 	use User_Manager_Core_Frontend_URL_Parameter_Debugger_Trait;
 	const OPTION_KEY = 'user_manager_settings';
 	const ACTIVITY_LOG_KEY = 'user_manager_activity_log';
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.7';
+	const VERSION = '2.3.8';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -217,6 +219,10 @@ final class User_Manager_Core {
 		}
 		if (!empty($settings['frontend_url_param_debugger_enabled'])) {
 			add_action('wp_footer', [__CLASS__, 'maybe_render_frontend_url_parameter_debugger'], 1002);
+		}
+		if (!empty($settings['fatal_error_debugger_enabled'])) {
+			self::register_fatal_error_debugger_shutdown_handler();
+			add_action('wp_footer', [__CLASS__, 'maybe_render_fatal_error_debugger_panel'], 1004);
 		}
 
 		// Role Switching feature (front-end role preview) – only when enabled and
