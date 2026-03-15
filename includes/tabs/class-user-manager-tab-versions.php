@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.45 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tag navigation: added a new "Pages" tag (A-Z sorted) and mapped Page Creator into this filter.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.44 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Retitled the "Bulk Page Creator" add-on to "Page Creator" across Add-ons labels, card headings, notices, documentation references, and related activity log naming.', 'user-manager'); ?></li>
