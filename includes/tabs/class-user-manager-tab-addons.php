@@ -21,6 +21,7 @@ require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
 require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
 require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
+require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
@@ -172,6 +173,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="my-account-coupon-screen">
 					<?php User_Manager_Addon_My_Account_Coupon_Screen::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="my-account-menu-tiles">
+					<?php User_Manager_Addon_My_Account_Menu_Tiles::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="my-account-site-admin">
 					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
@@ -646,6 +650,9 @@ class User_Manager_Tab_Addons {
 			function toggleMyAccountCouponScreenFields() {
 				$('#um-my-account-coupon-screen-fields').toggle($('#um-my-account-coupon-screen-enabled').is(':checked'));
 			}
+			function toggleMyAccountMenuTilesFields() {
+				$('#um-my-account-menu-tiles-fields').toggle($('#um-my-account-menu-tiles-enabled').is(':checked'));
+			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
 			}
@@ -660,6 +667,7 @@ class User_Manager_Tab_Addons {
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
 			toggleMyAccountCouponScreenFields();
+			toggleMyAccountMenuTilesFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
@@ -800,6 +808,10 @@ class User_Manager_Tab_Addons {
 			$('#um-my-account-coupon-screen-enabled').on('change', function() {
 				toggleMyAccountCouponScreenFields();
 				refreshAddonCardAutoState($('#um-addon-card-my-account-coupon-screen'));
+			});
+			$('#um-my-account-menu-tiles-enabled').on('change', function() {
+				toggleMyAccountMenuTilesFields();
+				refreshAddonCardAutoState($('#um-addon-card-my-account-menu-tiles'));
 			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
@@ -949,6 +961,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('My Account Coupons Page', 'user-manager'),
 				'description' => __('Add a My Account Coupons page that lists eligible coupon notices.', 'user-manager'),
 				'active' => !empty($settings['my_account_coupon_screen_enabled']),
+			],
+			'my-account-menu-tiles' => [
+				'label'  => __('My Account Menu Tiles', 'user-manager'),
+				'description' => __('Show My Account menu endpoints as clickable tile buttons on the account dashboard.', 'user-manager'),
+				'active' => !empty($settings['my_account_menu_tiles_enabled']),
 			],
 			'my-account-site-admin' => [
 				'label'  => __('My Account Admin', 'user-manager'),

@@ -1785,6 +1785,9 @@ class User_Manager_Actions {
 				$settings['my_account_coupon_screen_menu_title'] = $menu_title !== '' ? $menu_title : 'Coupons';
 				$settings['my_account_coupon_screen_page_title'] = $page_title !== '' ? $page_title : 'Coupons';
 				$settings['my_account_coupon_screen_page_description'] = isset($_POST['my_account_coupon_screen_page_description']) ? sanitize_textarea_field(wp_unslash($_POST['my_account_coupon_screen_page_description'])) : '';
+				$settings['my_account_menu_tiles_enabled'] = isset($_POST['my_account_menu_tiles_enabled']) && $_POST['my_account_menu_tiles_enabled'] === '1';
+				$settings['my_account_menu_tiles_per_row'] = isset($_POST['my_account_menu_tiles_per_row']) ? max(1, absint($_POST['my_account_menu_tiles_per_row'])) : 4;
+				$settings['my_account_menu_tiles_min_height'] = isset($_POST['my_account_menu_tiles_min_height']) ? max(1, absint($_POST['my_account_menu_tiles_min_height'])) : 80;
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';

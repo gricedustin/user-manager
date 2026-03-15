@@ -201,6 +201,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Add a dedicated My Account coupons endpoint so customers can view available coupon notices in one place.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-grid-view',
+				'title'   => __('My Account Menu Tiles', 'user-manager'),
+				'summary' => __('Display My Account menu items as responsive dashboard tile buttons with configurable columns and tile height.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-admin-site-alt3',
 				'title'   => __('My Account Admin', 'user-manager'),
 				'summary' => __('Add admin-style Orders, Products, Coupons, and Users viewers inside My Account with configurable access controls.', 'user-manager'),

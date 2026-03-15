@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.31 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "My Account Menu Tiles" add-on with an Activate toggle and settings for desktop tiles per row plus minimum tile height.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When active, My Account dashboard now renders menu endpoints as responsive tile buttons below the default dashboard text.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.30 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new "Plugin Tags & Notes" add-on with an Activate toggle in the Add-ons tab.', 'user-manager'); ?></li>
