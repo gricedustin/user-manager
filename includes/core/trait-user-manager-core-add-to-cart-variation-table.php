@@ -187,6 +187,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		self::append_add_to_cart_variation_table_trace(sprintf('Rendering table for product #%d with %d variation rows.', $product_id, count($rows)));
 
 		$show_price_column = !empty($settings['add_to_cart_variation_table_show_price_column']);
+		$hide_header_row = !empty($settings['add_to_cart_variation_table_hide_header_row']);
 		$table_text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
 		$table_text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
 		$button_text = isset($settings['add_to_cart_variation_table_button_text']) ? trim((string) $settings['add_to_cart_variation_table_button_text']) : '';
@@ -220,15 +221,17 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 				<input type="hidden" name="um_add_to_cart_variation_table_submit" value="1" />
 				<input type="hidden" name="um_add_to_cart_variation_table_product_id" value="<?php echo esc_attr((string) $product_id); ?>" />
 				<table class="shop_table shop_table_responsive um-add-to-cart-variation-vertical-table" style="margin-bottom:12px;">
-					<thead>
-						<tr>
-							<th><?php esc_html_e('Variation', 'user-manager'); ?></th>
-							<th style="width:120px;"><?php esc_html_e('Qty', 'user-manager'); ?></th>
-							<?php if ($show_price_column) : ?>
-								<th style="width:160px;"><?php esc_html_e('Price', 'user-manager'); ?></th>
-							<?php endif; ?>
-						</tr>
-					</thead>
+					<?php if (!$hide_header_row) : ?>
+						<thead>
+							<tr>
+								<th><?php esc_html_e('Variation', 'user-manager'); ?></th>
+								<th style="width:120px;"><?php esc_html_e('Qty', 'user-manager'); ?></th>
+								<?php if ($show_price_column) : ?>
+									<th style="width:160px;"><?php esc_html_e('Price', 'user-manager'); ?></th>
+								<?php endif; ?>
+							</tr>
+						</thead>
+					<?php endif; ?>
 					<tbody>
 						<?php foreach ($rows as $row) : ?>
 							<?php

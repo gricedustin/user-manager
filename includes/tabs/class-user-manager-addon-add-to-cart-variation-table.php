@@ -84,6 +84,15 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						</p>
 					</div>
 					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-add-to-cart-variation-table-hide-header-row" name="add_to_cart_variation_table_hide_header_row" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_hide_header_row'])); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Remove the header row (Variation / Qty)', 'user-manager'); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e('When enabled, the variation table header row is hidden on the front end.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
 						<label for="um-add-to-cart-variation-table-button-text"><?php esc_html_e('Add to Cart Variation Table Button Text', 'user-manager'); ?></label>
 						<input type="text" id="um-add-to-cart-variation-table-button-text" name="add_to_cart_variation_table_button_text" class="regular-text" value="<?php echo esc_attr($button_text); ?>" placeholder="<?php esc_attr_e('Add All Variations', 'user-manager'); ?>"<?php echo $form_attr; ?> />
 						<p class="description">
