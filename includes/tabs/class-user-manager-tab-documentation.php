@@ -161,6 +161,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Add a variable-product quantity table so shoppers can add multiple variations in one action with configurable display controls.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-cart',
+				'title'   => __('Cart Price Per-Piece', 'user-manager'),
+				'summary' => __('Display per-piece unit pricing under line subtotals for multi-quantity items across cart, checkout, and order views.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-location-alt',
 				'title'   => __('Checkout Address Selector', 'user-manager'),
 				'summary' => __('Streamline checkout with predefined address selections and conditional field behavior for faster, cleaner order submission.', 'user-manager'),

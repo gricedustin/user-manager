@@ -1788,6 +1788,15 @@ class User_Manager_Actions {
 				$settings['my_account_menu_tiles_enabled'] = isset($_POST['my_account_menu_tiles_enabled']) && $_POST['my_account_menu_tiles_enabled'] === '1';
 				$settings['my_account_menu_tiles_per_row'] = isset($_POST['my_account_menu_tiles_per_row']) ? max(1, absint($_POST['my_account_menu_tiles_per_row'])) : 4;
 				$settings['my_account_menu_tiles_min_height'] = isset($_POST['my_account_menu_tiles_min_height']) ? max(1, absint($_POST['my_account_menu_tiles_min_height'])) : 80;
+				$settings['cart_price_per_piece_enabled'] = isset($_POST['cart_price_per_piece_enabled']) && $_POST['cart_price_per_piece_enabled'] === '1';
+				$settings['cart_price_per_piece_enable_cart_display'] = isset($_POST['cart_price_per_piece_enable_cart_display']) && $_POST['cart_price_per_piece_enable_cart_display'] === '1';
+				$settings['cart_price_per_piece_enable_order_display'] = isset($_POST['cart_price_per_piece_enable_order_display']) && $_POST['cart_price_per_piece_enable_order_display'] === '1';
+				$settings['cart_price_per_piece_suffix_text'] = isset($_POST['cart_price_per_piece_suffix_text']) ? sanitize_text_field(wp_unslash($_POST['cart_price_per_piece_suffix_text'])) : '/ea';
+				$cart_price_per_piece_font_size = isset($_POST['cart_price_per_piece_font_size']) ? sanitize_text_field(wp_unslash($_POST['cart_price_per_piece_font_size'])) : '12px';
+				$allowed_cart_price_per_piece_font_sizes = ['10px', '11px', '12px', '13px', '14px'];
+				$settings['cart_price_per_piece_font_size'] = in_array($cart_price_per_piece_font_size, $allowed_cart_price_per_piece_font_sizes, true) ? $cart_price_per_piece_font_size : '12px';
+				$cart_price_per_piece_color = isset($_POST['cart_price_per_piece_text_color']) ? sanitize_hex_color(wp_unslash($_POST['cart_price_per_piece_text_color'])) : '#666666';
+				$settings['cart_price_per_piece_text_color'] = $cart_price_per_piece_color ? $cart_price_per_piece_color : '#666666';
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';

@@ -11,6 +11,7 @@ require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
 require_once __DIR__ . '/class-user-manager-addon-add-to-cart-variation-table.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
+require_once __DIR__ . '/class-user-manager-addon-cart-price-per-piece.php';
 require_once __DIR__ . '/class-user-manager-addon-blog-post-idea-generator.php';
 require_once __DIR__ . '/class-user-manager-addon-checkout-predefined-addresses.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users-with-coupons.php';
@@ -149,6 +150,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="add-to-cart-variation-table">
 					<?php User_Manager_Addon_Add_To_Cart_Variation_Table::render($settings, $settings_form_id); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="cart-price-per-piece">
+					<?php User_Manager_Addon_Cart_Price_Per_Piece::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="checkout-pre-defined-addresses">
 					<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
@@ -653,6 +657,9 @@ class User_Manager_Tab_Addons {
 			function toggleMyAccountMenuTilesFields() {
 				$('#um-my-account-menu-tiles-fields').toggle($('#um-my-account-menu-tiles-enabled').is(':checked'));
 			}
+			function toggleCartPricePerPieceFields() {
+				$('#um-cart-price-per-piece-fields').toggle($('#um-cart-price-per-piece-enabled').is(':checked'));
+			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
 			}
@@ -668,6 +675,7 @@ class User_Manager_Tab_Addons {
 			toggleCouponRemainderAddonFields();
 			toggleMyAccountCouponScreenFields();
 			toggleMyAccountMenuTilesFields();
+			toggleCartPricePerPieceFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
@@ -813,6 +821,10 @@ class User_Manager_Tab_Addons {
 				toggleMyAccountMenuTilesFields();
 				refreshAddonCardAutoState($('#um-addon-card-my-account-menu-tiles'));
 			});
+			$('#um-cart-price-per-piece-enabled').on('change', function() {
+				toggleCartPricePerPieceFields();
+				refreshAddonCardAutoState($('#um-addon-card-cart-price-per-piece'));
+			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
 				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
@@ -921,6 +933,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Add to Cart Variation Table', 'user-manager'),
 				'description' => __('Show variable product rows with quantities so multiple variations can be added at once.', 'user-manager'),
 				'active' => !empty($settings['add_to_cart_variation_table_enabled']),
+			],
+			'cart-price-per-piece' => [
+				'label'  => __('Cart Price Per-Piece', 'user-manager'),
+				'description' => __('Show per-piece unit pricing on cart, checkout, and order line subtotals when quantities exceed one.', 'user-manager'),
+				'active' => !empty($settings['cart_price_per_piece_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),
