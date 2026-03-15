@@ -19,6 +19,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.17 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Rebranded plugin title/author metadata to "User Experience Manager" by Dustin Grice (griceprojects.com) and refreshed the plugin description to emphasize B2B/B2C user experience outcomes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons activation defaults: removed default-on behavior so add-ons are not auto-activated on first install unless explicitly enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.16 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added two new settings to override the header labels for the Variation and Qty columns.', 'user-manager'); ?></li>

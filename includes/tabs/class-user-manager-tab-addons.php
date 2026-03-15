@@ -900,22 +900,22 @@ class User_Manager_Tab_Addons {
 			'wp-admin-bar-menu-items' => [
 				'label'  => __('WP-Admin Bar Menu Items', 'user-manager'),
 				'description' => __('Create custom WP-Admin bar shortcut menus for faster admin navigation.', 'user-manager'),
-				'active' => array_key_exists('admin_bar_menu_items_enabled', $settings) ? !empty($settings['admin_bar_menu_items_enabled']) : true,
+				'active' => !empty($settings['admin_bar_menu_items_enabled']),
 			],
 			'wp-admin-bar-quick-search' => [
 				'label'  => __('WP-Admin Bar Quick Search', 'user-manager'),
 				'description' => __('Add a WP-Admin quick search panel for posts, orders, and users.', 'user-manager'),
-				'active' => array_key_exists('um_quick_search_enabled', $settings) ? !empty($settings['um_quick_search_enabled']) : true,
+				'active' => !empty($settings['um_quick_search_enabled']),
 			],
 			'wp-admin-css' => [
 				'label'  => __('WP-Admin CSS', 'user-manager'),
 				'description' => __('Apply custom CSS in WP-Admin globally, by role, or by user.', 'user-manager'),
-				'active' => array_key_exists('wp_admin_css_enabled', $settings) ? !empty($settings['wp_admin_css_enabled']) : true,
+				'active' => !empty($settings['wp_admin_css_enabled']),
 			],
 			'wp-admin-notifications' => [
 				'label'  => __('WP-Admin Notifications', 'user-manager'),
 				'description' => __('Display WP-Admin notification banners with optional URL-based targeting rules.', 'user-manager'),
-				'active' => array_key_exists('custom_admin_notifications_enabled', $settings) ? !empty($settings['custom_admin_notifications_enabled']) : true,
+				'active' => !empty($settings['custom_admin_notifications_enabled']),
 			],
 		];
 	}

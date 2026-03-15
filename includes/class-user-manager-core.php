@@ -22,7 +22,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.16';
+	const VERSION = '2.3.17';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -142,8 +142,8 @@ final class User_Manager_Core {
 
 		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_admin_bar_link'], 98);
 		add_action('admin_bar_menu', [__CLASS__, 'add_custom_admin_bar_menu_items'], 99);
-		// Quick Search: default to enabled when setting is not yet saved.
-		$quick_search_enabled = !isset($settings['um_quick_search_enabled']) || !empty($settings['um_quick_search_enabled']);
+		// Quick Search add-on runs only when explicitly activated.
+		$quick_search_enabled = !empty($settings['um_quick_search_enabled']);
 		if ($quick_search_enabled) {
 			add_action('admin_bar_menu', [__CLASS__, 'add_quick_search_admin_bar_item'], 100);
 			add_action('admin_footer', [__CLASS__, 'render_quick_search_dropdown']);
@@ -1493,7 +1493,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Add "User Manager" link to the wp-admin top bar (links to plugin Settings tab).
+	 * Add "User Experience Manager" link to the wp-admin top bar (links to plugin Settings tab).
 	 *
 	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
 	 */
@@ -1503,11 +1503,11 @@ html body .woocommerce-layout__header {
 		}
 		$wp_admin_bar->add_node([
 			'id'     => 'user-manager-settings',
-			'title'  => __('User Manager', 'user-manager'),
+			'title'  => __('User Experience Manager', 'user-manager'),
 			'href'   => self::get_page_url(self::TAB_SETTINGS),
 			'parent' => 'top-secondary',
 			'meta'   => [
-				'title' => __('User Manager Settings', 'user-manager'),
+				'title' => __('User Experience Manager Settings', 'user-manager'),
 			],
 		]);
 	}
@@ -6287,8 +6287,8 @@ html body .woocommerce-layout__header {
 	public static function register_settings_page(): void {
 		add_submenu_page(
 			'users.php',
-			__('User Manager', 'user-manager'),
-			__('User Manager', 'user-manager'),
+			__('User Experience Manager', 'user-manager'),
+			__('User Experience Manager', 'user-manager'),
 			'manage_options',
 			self::SETTINGS_PAGE_SLUG,
 			[__CLASS__, 'render_settings_page']
@@ -7101,7 +7101,7 @@ html body .woocommerce-layout__header {
 		$message = isset($_GET['um_msg']) ? sanitize_key(wp_unslash($_GET['um_msg'])) : '';
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('User Manager', 'user-manager'); ?></h1>
+			<h1><?php echo esc_html__('User Experience Manager', 'user-manager'); ?></h1>
 			<h2 class="nav-tab-wrapper">
 				<a class="nav-tab <?php echo $active_tab === self::TAB_CREATE_USER ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_CREATE_USER)); ?>">
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
@@ -7272,7 +7272,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * On profile.php and user-edit.php, show a notice at the top with Open User Manager and Reset Password (email pre-filled).
+	 * On profile.php and user-edit.php, show a notice at the top with Open User Experience Manager and Reset Password (email pre-filled).
 	 */
 	public static function render_profile_user_manager_notice(): void {
 		global $pagenow;
@@ -7298,11 +7298,11 @@ html body .woocommerce-layout__header {
 		?>
 		<div class="notice notice-info um-profile-notice" style="margin: 15px 0 20px 0; padding: 20px 24px; border-left-width: 4px; font-size: 16px; line-height: 1.5;">
 			<p style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700;">
-				<?php esc_html_e('User Manager plugin is active and recommended for user management.', 'user-manager'); ?>
+				<?php esc_html_e('User Experience Manager plugin is active and recommended for user management.', 'user-manager'); ?>
 			</p>
 			<p style="margin: 0;">
 				<a href="<?php echo esc_url($url); ?>" class="button button-primary button-large" style="font-weight: 600;">
-					<?php esc_html_e('Open User Manager', 'user-manager'); ?>
+					<?php esc_html_e('Open User Experience Manager', 'user-manager'); ?>
 				</a>
 				<a href="<?php echo esc_url($reset_url); ?>" class="button button-large" style="font-weight: 600; margin-left: 8px;">
 					<?php esc_html_e('Reset Password', 'user-manager'); ?>
@@ -7313,7 +7313,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * On Add New User page (user-new.php), show a large notice recommending User Manager for creating users.
+	 * On Add New User page (user-new.php), show a large notice recommending User Experience Manager for creating users.
 	 * JS hides the default add-user form until the user clicks "No thanks, I want to use the default forms".
 	 */
 	public static function maybe_render_user_new_notice(): void {
@@ -7325,11 +7325,11 @@ html body .woocommerce-layout__header {
 		?>
 		<div id="um-user-new-notice" class="notice notice-info um-user-new-notice" style="margin: 15px 0 20px 0; padding: 20px 24px; border-left-width: 4px; font-size: 16px; line-height: 1.5;">
 			<p style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700;">
-				<?php esc_html_e('User Manager plugin is active and recommended for creating all new users.', 'user-manager'); ?>
+				<?php esc_html_e('User Experience Manager plugin is active and recommended for creating all new users.', 'user-manager'); ?>
 			</p>
 			<p style="margin: 0 0 12px 0;">
 				<a href="<?php echo esc_url($url); ?>" class="button button-primary button-large" style="font-weight: 600;">
-					<?php esc_html_e('Create user with User Manager', 'user-manager'); ?>
+					<?php esc_html_e('Create user with User Experience Manager', 'user-manager'); ?>
 				</a>
 			</p>
 			<p style="margin: 0; font-size: 14px;">

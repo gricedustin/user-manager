@@ -1,13 +1,17 @@
 <?php
 /**
- * Plugin Name: User Manager
- * Description: WooCommerce User Manager with tabs for Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, and Documentation; plus add-ons for Add to Cart Bulk Import, Add to Cart Variation Table, Checkout Address Selector, Coupon Creator, New User Coupons, User Coupon Notifications, User Coupon Remaining Balances, Fatal Error Debugger, Front-End URL Parameter Debugger, My Account Coupons Page, My Account Admin, Post Meta Viewer, Post Content Generator, Post Idea Generator, User Role Switching, WP-Admin Bar Menu Items, WP-Admin Bar Quick Search, WP-Admin CSS, and WP-Admin Notifications.
- * Version: 2.3.16
- * Author: Grice AI
- * Author URI: 
+ * Plugin Name: User Experience Manager
+ * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation) and add-ons: Add to Cart Bulk Import, Add to Cart Variation Table, Checkout Address Selector, Coupon Creator, New User Coupons, User Coupon Notifications, User Coupon Remaining Balances, Fatal Error Debugger, Front-End URL Parameter Debugger, My Account Coupons Page, My Account Admin, Post Meta Viewer, Post Content Generator, Post Idea Generator, User Role Switching, WP-Admin Bar Menu Items, WP-Admin Bar Quick Search, WP-Admin CSS, and WP-Admin Notifications.
+ * Version: 2.3.17
+ * Author: Dustin Grice
+ * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.17 - March 15, 2026
+ * - Rebranded plugin title/author metadata to "User Experience Manager" by Dustin Grice (griceprojects.com) and refreshed the plugin description to emphasize B2B/B2C user experience outcomes.
+ * - Add-ons activation defaults: removed default-on behavior so add-ons are not auto-activated on first install unless explicitly enabled.
+ *
  * 2.3.16 - March 15, 2026
  * - Add to Cart Variation Table: added two new settings to override the header labels for the Variation and Qty columns.
  * - Add to Cart Variation Table header row now uses custom Variation/Qty labels when provided, and falls back to defaults when blank.
