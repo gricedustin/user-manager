@@ -207,13 +207,6 @@ if (!defined('ABSPATH')) {
 							</label>
 							<p class="description"><?php esc_html_e('Change the reset password copy to set password intended for new users who should set a password when first logging into the site so it doesn\'t look like they are "resetting" for the first time. Also removes the username from the password changed email.', 'user-manager'); ?></p>
 						</div>
-						<div class="um-form-field">
-							<label>
-								<input type="checkbox" name="search_redirect_by_sku" value="1" <?php checked(!isset($settings['search_redirect_by_sku']) || !empty($settings['search_redirect_by_sku'])); ?> />
-								<?php esc_html_e('Allow WooCommerce front-end product search to include SKUs', 'user-manager'); ?>
-							</label>
-							<p class="description"><?php esc_html_e('When a search term (?s=) exactly matches a product or variation SKU, redirect directly to that product page instead of showing search results.', 'user-manager'); ?></p>
-						</div>
 					</div>
 				</div>
 

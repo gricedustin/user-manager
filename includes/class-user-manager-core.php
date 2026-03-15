@@ -32,7 +32,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.46';
+	const VERSION = '2.3.47';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -4527,7 +4527,7 @@ html body .woocommerce-layout__header {
 
 	/**
 	 * If search term (?s=) exactly matches a product or variation SKU, redirect to that product.
-	 * Only runs when "Allow WooCommerce front-end product search to include SKUs" is enabled.
+	 * Only runs when the "Product Search by SKU" add-on is enabled.
 	 */
 	public static function maybe_redirect_search_to_product_by_sku(): void {
 		if (is_admin() || !is_search()) {

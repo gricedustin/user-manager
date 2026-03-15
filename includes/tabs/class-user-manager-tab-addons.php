@@ -27,6 +27,7 @@ require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
+require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-webhook-urls.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
@@ -199,6 +200,9 @@ class User_Manager_Tab_Addons {
 		<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 			<div class="um-addon-section" data-addon-section="post-meta">
 				<?php User_Manager_Addon_Post_Meta::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="product-search-by-sku">
+				<?php User_Manager_Addon_Product_Search_By_SKU::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="post-content-generator">
 				<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
@@ -787,6 +791,9 @@ class User_Manager_Tab_Addons {
 				togglePostMetaAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-post-meta'));
 			});
+			$('#um-product-search-by-sku-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-product-search-by-sku'));
+			});
 			$('#um-add-to-cart-variation-table-enabled').on('change', function() {
 				toggleAddToCartVariationTableFields();
 				refreshAddonCardAutoState($('#um-addon-card-add-to-cart-variation-table'));
@@ -1073,6 +1080,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Post Meta Viewer', 'user-manager'),
 				'description' => __('Show all post meta keys and values in a dedicated editor box.', 'user-manager'),
 				'active' => !empty($settings['display_post_meta_meta_box']),
+			],
+			'product-search-by-sku' => [
+				'label'  => __('Product Search by SKU', 'user-manager'),
+				'description' => __('Redirect front-end WooCommerce searches directly to a product when the search term exactly matches a product or variation SKU.', 'user-manager'),
+				'active' => !array_key_exists('search_redirect_by_sku', $settings) || !empty($settings['search_redirect_by_sku']),
 			],
 			'post-content-generator' => [
 				'label'  => __('Post Content Generator', 'user-manager'),

@@ -271,6 +271,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Display and optionally edit post meta values from the editor to simplify debugging and content data operations.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-search',
+				'title'   => __('Product Search by SKU', 'user-manager'),
+				'summary' => __('When active, front-end WooCommerce search terms that exactly match a product or variation SKU redirect directly to that product page.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-edit-page',
 				'title'   => __('Post Content Generator', 'user-manager'),
 				'summary' => __('Generate and import AI-assisted post content drafts with template-oriented prompts for faster publishing workflows.', 'user-manager'),
