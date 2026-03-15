@@ -19,6 +19,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.6 <span>(March 8, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: removed strict WooCommerce class-load gating so render/submission hooks are always registered when the add-on is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added safety fallback render hooks so the table still appears when a theme override skips the selected hook.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added front-end trace diagnostics via URL parameter ?um_variation_table_trace=1 (admin-only), including hook registration state and render skip reasons.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.5 <span>(March 8, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added a backend "Single Product Page Hook" selector so the render location can be chosen per site/theme.', 'user-manager'); ?></li>

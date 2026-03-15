@@ -79,6 +79,9 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						<p class="description">
 							<?php esc_html_e('When enabled, a front-end debug panel displays per-variation processing details after submitting Add All Variations.', 'user-manager'); ?>
 						</p>
+						<p class="description">
+							<?php esc_html_e('Front-end trace URL (admin only): append ?um_variation_table_trace=1 to a variable product URL to see runtime hook/debug diagnostics even if the table does not render.', 'user-manager'); ?>
+						</p>
 					</div>
 				</div>
 			</div>

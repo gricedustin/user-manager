@@ -8,6 +8,19 @@ if (!defined('ABSPATH')) {
 }
 
 trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
+	/**
+	 * Whether the variation table actually rendered this request.
+	 *
+	 * @var bool
+	 */
+	private static bool $add_to_cart_variation_table_rendered = false;
+
+	/**
+	 * Runtime trace events for front-end debugging.
+	 *
+	 * @var array<int,string>
+	 */
+	private static array $add_to_cart_variation_table_trace_events = [];
 
 	/**
 	 * Register front-end render hooks for the variation table based on settings.
@@ -15,10 +28,14 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 	public static function register_add_to_cart_variation_table_render_hooks(): void {
 		$map = self::get_add_to_cart_variation_table_hook_map();
 		$selected = self::get_add_to_cart_variation_table_selected_hook_key();
+		$fallback_hooks = ['single_product_summary', 'after_single_product_summary'];
 
 		if ($selected === 'auto') {
 			foreach ($map as $hook_config) {
 				add_action($hook_config['hook'], [__CLASS__, 'maybe_render_add_to_cart_variation_table'], (int) $hook_config['priority']);
+				self::append_add_to_cart_variation_table_trace(
+					sprintf('Registered render hook: %s @ %d', $hook_config['hook'], (int) $hook_config['priority'])
+				);
 			}
 			return;
 		}
@@ -29,6 +46,21 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 		$hook_config = $map[$selected];
 		add_action($hook_config['hook'], [__CLASS__, 'maybe_render_add_to_cart_variation_table'], (int) $hook_config['priority']);
+		self::append_add_to_cart_variation_table_trace(
+			sprintf('Registered selected render hook: %s @ %d', $hook_config['hook'], (int) $hook_config['priority'])
+		);
+
+		// Safety fallback: some themes override the selected hook location.
+		foreach ($fallback_hooks as $fallback_key) {
+			if (!isset($map[$fallback_key]) || $fallback_key === $selected) {
+				continue;
+			}
+			$fallback = $map[$fallback_key];
+			add_action($fallback['hook'], [__CLASS__, 'maybe_render_add_to_cart_variation_table'], (int) $fallback['priority']);
+			self::append_add_to_cart_variation_table_trace(
+				sprintf('Registered fallback render hook: %s @ %d', $fallback['hook'], (int) $fallback['priority'])
+			);
+		}
 	}
 
 	/**
@@ -72,29 +104,44 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 	 * Render alternate variation quantity table under the default add-to-cart form.
 	 */
 	public static function maybe_render_add_to_cart_variation_table(): void {
+		self::append_add_to_cart_variation_table_trace('Render callback entered.');
 		if (!function_exists('is_product') || !is_product()) {
+			self::append_add_to_cart_variation_table_trace('Skip: not a single product page.');
 			return;
 		}
 		if (!function_exists('wc_get_product')) {
+			self::append_add_to_cart_variation_table_trace('Skip: wc_get_product() unavailable.');
 			return;
 		}
 
 		global $product;
+		if (!$product instanceof WC_Product && function_exists('get_queried_object_id')) {
+			$fallback_product_id = (int) get_queried_object_id();
+			$fallback_product = $fallback_product_id > 0 ? wc_get_product($fallback_product_id) : null;
+			if ($fallback_product instanceof WC_Product) {
+				$product = $fallback_product;
+				self::append_add_to_cart_variation_table_trace(sprintf('Global $product unavailable; using queried product #%d.', $fallback_product_id));
+			}
+		}
 		if (!$product instanceof WC_Product || !$product->is_type('variable')) {
+			self::append_add_to_cart_variation_table_trace('Skip: current product is not a variable product.');
 			return;
 		}
 		if (!$product->is_purchasable()) {
+			self::append_add_to_cart_variation_table_trace('Skip: variable product is not purchasable.');
 			return;
 		}
 		static $rendered_product_ids = [];
 		$product_id = (int) $product->get_id();
 		if (isset($rendered_product_ids[$product_id])) {
+			self::append_add_to_cart_variation_table_trace('Skip: variation table already rendered for this product in current request.');
 			return;
 		}
 		$rendered_product_ids[$product_id] = true;
 
 		$available_variations = $product->get_available_variations();
 		if (empty($available_variations) || !is_array($available_variations)) {
+			self::append_add_to_cart_variation_table_trace('Skip: no available variations found.');
 			return;
 		}
 
@@ -131,8 +178,11 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		}
 
 		if (empty($rows)) {
+			self::append_add_to_cart_variation_table_trace('Skip: no renderable variation rows after filtering.');
 			return;
 		}
+		self::$add_to_cart_variation_table_rendered = true;
+		self::append_add_to_cart_variation_table_trace(sprintf('Rendering table for product #%d with %d variation rows.', $product_id, count($rows)));
 
 		$settings = User_Manager_Core::get_settings();
 		$show_price_column = !empty($settings['add_to_cart_variation_table_show_price_column']);
@@ -289,6 +339,94 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Render front-end runtime trace panel with URL parameter support.
+	 */
+	public static function maybe_render_add_to_cart_variation_table_trace_panel(): void {
+		if (!self::is_add_to_cart_variation_table_trace_enabled()) {
+			return;
+		}
+		$selected = self::get_add_to_cart_variation_table_selected_hook_key();
+		$map = self::get_add_to_cart_variation_table_hook_map();
+		$is_product = function_exists('is_product') && is_product();
+		$product = null;
+		$product_type = '';
+		$product_id = 0;
+		$variation_count = 0;
+		if ($is_product && function_exists('wc_get_product')) {
+			$product_id = (int) get_queried_object_id();
+			$product = $product_id > 0 ? wc_get_product($product_id) : null;
+			if ($product instanceof WC_Product) {
+				$product_type = (string) $product->get_type();
+				if ($product->is_type('variable')) {
+					$available_variations = $product->get_available_variations();
+					$variation_count = is_array($available_variations) ? count($available_variations) : 0;
+				}
+			}
+		}
+		?>
+		<div style="position:fixed; right:12px; bottom:12px; z-index:999999; width:420px; max-width:calc(100vw - 24px); max-height:60vh; overflow:auto; background:#111; color:#fff; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.35); padding:12px;">
+			<strong style="display:block; margin-bottom:8px;"><?php esc_html_e('Add to Cart Variation Table Trace', 'user-manager'); ?></strong>
+			<div style="font-size:12px; line-height:1.45;">
+				<div><strong><?php esc_html_e('Selected hook setting:', 'user-manager'); ?></strong> <?php echo esc_html($selected); ?></div>
+				<div><strong><?php esc_html_e('is_product():', 'user-manager'); ?></strong> <?php echo esc_html($is_product ? 'yes' : 'no'); ?></div>
+				<div><strong><?php esc_html_e('Product ID:', 'user-manager'); ?></strong> <?php echo esc_html((string) $product_id); ?></div>
+				<div><strong><?php esc_html_e('Product type:', 'user-manager'); ?></strong> <?php echo esc_html($product_type !== '' ? $product_type : 'n/a'); ?></div>
+				<div><strong><?php esc_html_e('Variation count:', 'user-manager'); ?></strong> <?php echo esc_html((string) $variation_count); ?></div>
+				<div><strong><?php esc_html_e('Rendered this request:', 'user-manager'); ?></strong> <?php echo esc_html(self::$add_to_cart_variation_table_rendered ? 'yes' : 'no'); ?></div>
+				<div style="margin-top:8px;">
+					<strong><?php esc_html_e('Hook registration state:', 'user-manager'); ?></strong>
+					<ul style="margin:4px 0 0 18px;">
+						<?php foreach ($map as $key => $config) : ?>
+							<?php $priority = has_action($config['hook'], [__CLASS__, 'maybe_render_add_to_cart_variation_table']); ?>
+							<li>
+								<?php echo esc_html($key . ' => ' . $config['hook']); ?>
+								<?php echo esc_html($priority !== false ? (' (registered @ ' . (string) $priority . ')') : ' (not registered)'); ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+				<div style="margin-top:8px;">
+					<strong><?php esc_html_e('Trace events:', 'user-manager'); ?></strong>
+					<ul style="margin:4px 0 0 18px;">
+						<?php if (!empty(self::$add_to_cart_variation_table_trace_events)) : ?>
+							<?php foreach (self::$add_to_cart_variation_table_trace_events as $event_line) : ?>
+								<li><?php echo esc_html($event_line); ?></li>
+							<?php endforeach; ?>
+						<?php else : ?>
+							<li><?php esc_html_e('No events recorded yet. This indicates render callback did not execute on this request.', 'user-manager'); ?></li>
+						<?php endif; ?>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * URL/front-end trigger for variation-table trace output.
+	 */
+	private static function is_add_to_cart_variation_table_trace_enabled(): bool {
+		if (!is_user_logged_in() || !current_user_can('manage_options')) {
+			return false;
+		}
+		if (!isset($_GET['um_variation_table_trace'])) {
+			return false;
+		}
+		$raw = sanitize_text_field(wp_unslash($_GET['um_variation_table_trace']));
+		return in_array(strtolower($raw), ['1', 'true', 'yes', 'on'], true);
+	}
+
+	/**
+	 * Append one trace line for runtime diagnostics.
+	 */
+	private static function append_add_to_cart_variation_table_trace(string $line): void {
+		if (!self::is_add_to_cart_variation_table_trace_enabled()) {
+			return;
+		}
+		self::$add_to_cart_variation_table_trace_events[] = $line;
 	}
 
 	/**
