@@ -68,26 +68,28 @@ class User_Manager_Tab_Addons {
 		</ul>
 		<br class="clear" />
 
-		<div class="um-admin-card um-admin-card-full" style="margin-top: 20px;">
-			<div class="um-admin-card-header">
-				<span class="dashicons dashicons-filter"></span>
-				<h2><?php esc_html_e('Add-ons Filter', 'user-manager'); ?></h2>
-			</div>
-			<div class="um-admin-card-body">
-				<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-					<div style="min-width:280px; flex:1;">
-						<label for="um-addons-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
-						<input type="text" id="um-addons-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter add-ons by title, description, tag, or setting text...', 'user-manager'); ?>" />
-					</div>
-					<div>
-						<button type="button" class="button" id="um-addons-filter-clear"><?php esc_html_e('Clear Filter', 'user-manager'); ?></button>
-					</div>
+		<?php if ($current_addon_section === '') : ?>
+			<div class="um-admin-card um-admin-card-full" style="margin-top: 20px; margin-bottom: 16px;">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-filter"></span>
+					<h2><?php esc_html_e('Add-ons Filter', 'user-manager'); ?></h2>
 				</div>
-				<p class="description" id="um-addons-filter-empty" style="display:none; margin-top: 10px;">
-					<?php esc_html_e('No add-ons or settings match the current filter.', 'user-manager'); ?>
-				</p>
+				<div class="um-admin-card-body">
+					<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+						<div style="min-width:280px; flex:1;">
+							<label for="um-addons-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
+							<input type="text" id="um-addons-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter add-ons by title, description, tag, or setting text...', 'user-manager'); ?>" />
+						</div>
+						<div>
+							<button type="button" class="button" id="um-addons-filter-clear"><?php esc_html_e('Clear Filter', 'user-manager'); ?></button>
+						</div>
+					</div>
+					<p class="description" id="um-addons-filter-empty" style="display:none; margin-top: 10px;">
+						<?php esc_html_e('No add-ons or settings match the current filter.', 'user-manager'); ?>
+					</p>
+				</div>
 			</div>
-		</div>
+		<?php endif; ?>
 
 		<div class="um-addons-empty-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
 			<div class="um-admin-card um-admin-card-full">
