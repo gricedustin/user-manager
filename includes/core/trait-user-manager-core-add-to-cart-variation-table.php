@@ -10,6 +10,65 @@ if (!defined('ABSPATH')) {
 trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 	/**
+	 * Register front-end render hooks for the variation table based on settings.
+	 */
+	public static function register_add_to_cart_variation_table_render_hooks(): void {
+		$map = self::get_add_to_cart_variation_table_hook_map();
+		$selected = self::get_add_to_cart_variation_table_selected_hook_key();
+
+		if ($selected === 'auto') {
+			foreach ($map as $hook_config) {
+				add_action($hook_config['hook'], [__CLASS__, 'maybe_render_add_to_cart_variation_table'], (int) $hook_config['priority']);
+			}
+			return;
+		}
+
+		if (!isset($map[$selected])) {
+			$selected = 'after_add_to_cart_form';
+		}
+
+		$hook_config = $map[$selected];
+		add_action($hook_config['hook'], [__CLASS__, 'maybe_render_add_to_cart_variation_table'], (int) $hook_config['priority']);
+	}
+
+	/**
+	 * Hook map for render location options.
+	 *
+	 * @return array<string,array{hook:string,priority:int}>
+	 */
+	private static function get_add_to_cart_variation_table_hook_map(): array {
+		return [
+			'after_add_to_cart_form' => [
+				'hook' => 'woocommerce_after_add_to_cart_form',
+				'priority' => 20,
+			],
+			'single_product_summary' => [
+				'hook' => 'woocommerce_single_product_summary',
+				'priority' => 35,
+			],
+			'after_single_product_summary' => [
+				'hook' => 'woocommerce_after_single_product_summary',
+				'priority' => 5,
+			],
+			'before_add_to_cart_form' => [
+				'hook' => 'woocommerce_before_add_to_cart_form',
+				'priority' => 30,
+			],
+		];
+	}
+
+	/**
+	 * Get selected render hook key from settings.
+	 */
+	private static function get_add_to_cart_variation_table_selected_hook_key(): string {
+		$settings = User_Manager_Core::get_settings();
+		$selected = isset($settings['add_to_cart_variation_table_hook']) ? sanitize_key((string) $settings['add_to_cart_variation_table_hook']) : 'auto';
+		$allowed = ['auto', 'after_add_to_cart_form', 'single_product_summary', 'after_single_product_summary', 'before_add_to_cart_form'];
+
+		return in_array($selected, $allowed, true) ? $selected : 'auto';
+	}
+
+	/**
 	 * Render alternate variation quantity table under the default add-to-cart form.
 	 */
 	public static function maybe_render_add_to_cart_variation_table(): void {
