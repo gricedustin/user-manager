@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation).
- * Version: 2.3.37
+ * Version: 2.3.38
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.38 - March 15, 2026
+ * - Bulk Page Creator: added top margin/breathing room above the "Bulk Page Creator History" card.
+ *
  * 2.3.37 - March 15, 2026
  * - My Account Admin > Orders: ensured the Decline / "Move to Canceled" action button is shown next to other status action buttons on order views.
  *

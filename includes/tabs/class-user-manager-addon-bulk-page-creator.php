@@ -200,7 +200,7 @@ class User_Manager_Addon_Bulk_Page_Creator {
 			</div>
 		</div>
 
-		<div class="um-admin-card">
+		<div class="um-admin-card" style="margin-top:18px;">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-backup"></span>
 				<h2><?php esc_html_e('Bulk Page Creator History', 'user-manager'); ?></h2>
