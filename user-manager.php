@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Manager
  * Description: WooCommerce User Manager with tabs for Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, and Documentation; plus add-ons for Add to Cart Bulk Import, Add to Cart Variation Table, Checkout Address Selector, Coupon Creator, New User Coupons, User Coupon Notifications, User Coupon Remaining Balances, Fatal Error Debugger, Front-End URL Parameter Debugger, My Account Coupons Page, My Account Admin, Post Meta Viewer, Post Content Generator, Post Idea Generator, User Role Switching, WP-Admin Bar Menu Items, WP-Admin Bar Quick Search, WP-Admin CSS, and WP-Admin Notifications.
- * Version: 2.3.8
+ * Version: 2.3.9
  * Author: Grice AI
  * Author URI: 
  * 
  * Changelog:
  * 
+ * 2.3.9 - March 8, 2026
+ * - Add to Cart Variation Table: removed the default "Add Multiple Variations" heading/description copy from the front-end table output.
+ * - Add to Cart Variation Table: added "Add Text Above Variation Table" and "Add Text Below Variation Table" textarea settings (HTML supported) and render those blocks on the front end.
+ * - Add-ons: added a new "Add to Cart Variation Table History" card showing timestamp, who submitted, total items added, and variation/option details for each bulk add run.
+ *
  * 2.3.8 - March 8, 2026
  * - Added a new Fatal Error Debugger add-on with Activate toggle and an admin-only front-end fatal error panel.
  * - Fatal Error Debugger now captures fatal shutdown errors, stores the latest payload, and can send email alerts only when "Sent Email To Address upon Fatal Errors" is filled.

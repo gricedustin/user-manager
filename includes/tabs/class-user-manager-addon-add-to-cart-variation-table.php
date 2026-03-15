@@ -12,6 +12,8 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$enabled = !empty($settings['add_to_cart_variation_table_enabled']);
+		$text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
+		$text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
 		$selected_hook = isset($settings['add_to_cart_variation_table_hook']) ? sanitize_key((string) $settings['add_to_cart_variation_table_hook']) : 'auto';
 		$hook_options = [
 			'auto'                         => __('Auto (try multiple WooCommerce hooks)', 'user-manager'),
@@ -72,6 +74,20 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						</p>
 					</div>
 					<div class="um-form-field">
+						<label for="um-add-to-cart-variation-table-text-above"><?php esc_html_e('Add Text Above Variation Table', 'user-manager'); ?></label>
+						<textarea id="um-add-to-cart-variation-table-text-above" name="add_to_cart_variation_table_text_above" rows="4" class="large-text"<?php echo $form_attr; ?>><?php echo esc_textarea($text_above); ?></textarea>
+						<p class="description">
+							<?php esc_html_e('Optional content shown above the front-end variation table. Supports HTML tags.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label for="um-add-to-cart-variation-table-text-below"><?php esc_html_e('Add Text Below Variation Table', 'user-manager'); ?></label>
+						<textarea id="um-add-to-cart-variation-table-text-below" name="add_to_cart_variation_table_text_below" rows="4" class="large-text"<?php echo $form_attr; ?>><?php echo esc_textarea($text_below); ?></textarea>
+						<p class="description">
+							<?php esc_html_e('Optional content shown below the front-end variation table. Supports HTML tags.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
 						<label>
 							<input type="checkbox" id="um-add-to-cart-variation-table-debug-mode" name="add_to_cart_variation_table_debug_mode" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_debug_mode'])); ?><?php echo $form_attr; ?> />
 							<?php esc_html_e('Enable debug mode for Add to Cart Variation Table', 'user-manager'); ?>
@@ -86,7 +102,104 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 				</div>
 			</div>
 		</div>
+		<?php self::render_history_card(); ?>
 		<?php
+	}
+
+	/**
+	 * Render recent Add to Cart Variation Table history.
+	 */
+	private static function render_history_card(): void {
+		$history = get_option('add_to_cart_variation_table_history', []);
+		if (!is_array($history)) {
+			$history = [];
+		}
+		$history = array_slice($history, 0, 50);
+		?>
+		<div class="um-admin-card">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-list-view"></span>
+				<h2><?php esc_html_e('Add to Cart Variation Table History', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<?php if (empty($history)) : ?>
+					<p class="description"><?php esc_html_e('No Add to Cart Variation Table history yet.', 'user-manager'); ?></p>
+				<?php else : ?>
+					<table class="widefat striped">
+						<thead>
+							<tr>
+								<th><?php esc_html_e('Timestamp', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Who', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Items Added in Bulk', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Variations / Options', 'user-manager'); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ($history as $row) : ?>
+								<?php
+								$timestamp = isset($row['timestamp']) ? (string) $row['timestamp'] : '';
+								if ($timestamp !== '' && function_exists('mysql2date')) {
+									$timestamp = mysql2date('Y-m-d H:i:s', $timestamp, true);
+								}
+								$who = isset($row['who']) ? (string) $row['who'] : '';
+								$items_added = isset($row['items_added']) ? (int) $row['items_added'] : 0;
+								$product_name = isset($row['product_name']) ? (string) $row['product_name'] : '';
+								$variations = isset($row['variations']) && is_array($row['variations']) ? $row['variations'] : [];
+								?>
+								<tr>
+									<td><?php echo esc_html($timestamp !== '' ? $timestamp : '—'); ?></td>
+									<td><?php echo esc_html($who !== '' ? $who : '—'); ?></td>
+									<td><?php echo esc_html((string) $items_added); ?></td>
+									<td>
+										<?php if ($product_name !== '') : ?>
+											<div><strong><?php esc_html_e('Product:', 'user-manager'); ?></strong> <?php echo esc_html($product_name); ?></div>
+										<?php endif; ?>
+										<?php if (empty($variations)) : ?>
+											—
+										<?php else : ?>
+											<ul style="margin:0; padding-left:18px;">
+												<?php foreach ($variations as $variation_row) : ?>
+													<li><?php echo esc_html(self::format_history_variation_row($variation_row)); ?></li>
+												<?php endforeach; ?>
+											</ul>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Build a readable history line for one variation row.
+	 *
+	 * @param mixed $variation_row History row payload.
+	 */
+	private static function format_history_variation_row($variation_row): string {
+		if (!is_array($variation_row)) {
+			return (string) $variation_row;
+		}
+		$label = isset($variation_row['label']) ? trim((string) $variation_row['label']) : '';
+		$variation_id = isset($variation_row['variation_id']) ? (int) $variation_row['variation_id'] : 0;
+		$qty = isset($variation_row['qty']) ? (int) $variation_row['qty'] : 0;
+		$status = isset($variation_row['status']) ? trim((string) $variation_row['status']) : '';
+		$note = isset($variation_row['note']) ? trim((string) $variation_row['note']) : '';
+		$parts = [];
+		$parts[] = $label !== '' ? $label : ('#' . (string) $variation_id);
+		if ($qty > 0) {
+			$parts[] = 'x' . (string) $qty;
+		}
+		if ($status !== '') {
+			$parts[] = strtoupper($status);
+		}
+		if ($note !== '') {
+			$parts[] = $note;
+		}
+		return implode(' | ', $parts);
 	}
 }
 

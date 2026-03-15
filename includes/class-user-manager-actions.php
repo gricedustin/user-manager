@@ -1790,6 +1790,8 @@ class User_Manager_Actions {
 				$settings['add_to_cart_variation_table_hook'] = in_array($variation_table_hook, $allowed_variation_table_hooks, true) ? $variation_table_hook : 'auto';
 				$settings['add_to_cart_variation_table_hide_default_form'] = isset($_POST['add_to_cart_variation_table_hide_default_form']) && $_POST['add_to_cart_variation_table_hide_default_form'] === '1';
 				$settings['add_to_cart_variation_table_show_price_column'] = isset($_POST['add_to_cart_variation_table_show_price_column']) && $_POST['add_to_cart_variation_table_show_price_column'] === '1';
+				$settings['add_to_cart_variation_table_text_above'] = isset($_POST['add_to_cart_variation_table_text_above']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_above'])) : '';
+				$settings['add_to_cart_variation_table_text_below'] = isset($_POST['add_to_cart_variation_table_text_below']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_below'])) : '';
 				$settings['add_to_cart_variation_table_debug_mode'] = isset($_POST['add_to_cart_variation_table_debug_mode']) && $_POST['add_to_cart_variation_table_debug_mode'] === '1';
 				$settings['bulk_coupons_enabled'] = isset($_POST['bulk_coupons_enabled']) && $_POST['bulk_coupons_enabled'] === '1';
 				$settings['bulk_coupons_template_code'] = isset($_POST['bulk_coupons_template_code']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_template_code'])) : '';

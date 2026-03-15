@@ -186,6 +186,8 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 		$settings = User_Manager_Core::get_settings();
 		$show_price_column = !empty($settings['add_to_cart_variation_table_show_price_column']);
+		$table_text_above = isset($settings['add_to_cart_variation_table_text_above']) ? (string) $settings['add_to_cart_variation_table_text_above'] : '';
+		$table_text_below = isset($settings['add_to_cart_variation_table_text_below']) ? (string) $settings['add_to_cart_variation_table_text_below'] : '';
 		$currency_symbol = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '$';
 		$currency_position = (string) get_option('woocommerce_currency_pos', 'left');
 		$currency_decimals = function_exists('wc_get_price_decimals') ? (int) wc_get_price_decimals() : 2;
@@ -203,10 +205,11 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			data-currency-decimal-sep="<?php echo esc_attr($currency_decimal_sep); ?>"
 			data-currency-thousand-sep="<?php echo esc_attr($currency_thousand_sep); ?>"
 		>
-			<h3 style="margin:0 0 10px;"><?php esc_html_e('Add Multiple Variations', 'user-manager'); ?></h3>
-			<p class="description" style="margin:0 0 12px;">
-				<?php esc_html_e('Alternative tool: keep the normal Add to Cart flow, or use this table to add many variations at once.', 'user-manager'); ?>
-			</p>
+			<?php if (trim($table_text_above) !== '') : ?>
+				<div class="um-add-to-cart-variation-table-custom-text um-add-to-cart-variation-table-custom-text-above" style="margin:0 0 12px;">
+					<?php echo wp_kses_post($table_text_above); ?>
+				</div>
+			<?php endif; ?>
 			<form method="post" action="<?php echo esc_url($product->get_permalink()); ?>" class="um-add-to-cart-variation-table-form">
 				<?php wp_nonce_field('um_add_to_cart_variation_table_submit', 'um_add_to_cart_variation_table_nonce'); ?>
 				<input type="hidden" name="um_add_to_cart_variation_table_submit" value="1" />
@@ -263,6 +266,11 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 				</table>
 				<button type="submit" class="button alt"><?php esc_html_e('Add All Variations', 'user-manager'); ?></button>
 			</form>
+			<?php if (trim($table_text_below) !== '') : ?>
+				<div class="um-add-to-cart-variation-table-custom-text um-add-to-cart-variation-table-custom-text-below" style="margin:12px 0 0;">
+					<?php echo wp_kses_post($table_text_below); ?>
+				</div>
+			<?php endif; ?>
 			<script>
 				(function() {
 					var root = document.currentScript ? document.currentScript.closest('.um-add-to-cart-variation-table') : null;
@@ -483,6 +491,11 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		$rows_selected = 0;
 		$items_added = 0;
 		$error_messages = [];
+		$history_rows = [];
+		$current_user = function_exists('wp_get_current_user') ? wp_get_current_user() : null;
+		$current_user_id = ($current_user instanceof WP_User) ? (int) $current_user->ID : 0;
+		$current_user_email = ($current_user instanceof WP_User && !empty($current_user->user_email)) ? (string) $current_user->user_email : '';
+		$current_user_login = ($current_user instanceof WP_User && !empty($current_user->user_login)) ? (string) $current_user->user_login : '';
 
 		foreach ($qty_map as $variation_id_raw => $qty_raw) {
 			$variation_id = absint((string) $variation_id_raw);
@@ -505,6 +518,13 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			$variation = wc_get_product($variation_id);
 			if (!$variation instanceof WC_Product_Variation || $variation->get_parent_id() !== $product_id) {
 				$error_messages[] = sprintf(__('Variation #%d is not valid for this product.', 'user-manager'), $variation_id);
+				$history_rows[] = [
+					'variation_id' => $variation_id,
+					'label'        => '#' . (string) $variation_id,
+					'qty'          => $qty,
+					'status'       => 'error',
+					'note'         => 'Variation does not belong to this product.',
+				];
 				$debug_rows[] = [
 					'variation_id' => $variation_id,
 					'qty'          => $qty,
@@ -516,6 +536,13 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 			if (!$variation->is_purchasable() || !$variation->is_in_stock()) {
 				$error_messages[] = sprintf(__('Variation #%d is currently unavailable.', 'user-manager'), $variation_id);
+				$history_rows[] = [
+					'variation_id' => $variation_id,
+					'label'        => wc_get_formatted_variation($variation, true, true, false),
+					'qty'          => $qty,
+					'status'       => 'error',
+					'note'         => 'Variation unavailable.',
+				];
 				$debug_rows[] = [
 					'variation_id' => $variation_id,
 					'qty'          => $qty,
@@ -533,6 +560,13 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			}
 			if ($qty <= 0) {
 				$error_messages[] = sprintf(__('Variation #%d has no available stock.', 'user-manager'), $variation_id);
+				$history_rows[] = [
+					'variation_id' => $variation_id,
+					'label'        => wc_get_formatted_variation($variation, true, true, false),
+					'qty'          => 0,
+					'status'       => 'error',
+					'note'         => 'No stock after stock checks.',
+				];
 				$debug_rows[] = [
 					'variation_id' => $variation_id,
 					'status'       => 'error',
@@ -548,8 +582,16 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 				$variation->get_variation_attributes()
 			);
 
+			$variation_label = wc_get_formatted_variation($variation, true, true, false);
 			if ($added) {
 				$items_added += $qty;
+				$history_rows[] = [
+					'variation_id' => $variation_id,
+					'label'        => $variation_label,
+					'qty'          => $qty,
+					'status'       => 'added',
+					'note'         => 'Added to cart.',
+				];
 				$debug_rows[] = [
 					'variation_id' => $variation_id,
 					'qty'          => $qty,
@@ -558,6 +600,13 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 				];
 			} else {
 				$error_messages[] = sprintf(__('Variation #%d could not be added to cart.', 'user-manager'), $variation_id);
+				$history_rows[] = [
+					'variation_id' => $variation_id,
+					'label'        => $variation_label,
+					'qty'          => $qty,
+					'status'       => 'error',
+					'note'         => 'WC()->cart->add_to_cart returned false.',
+				];
 				$debug_rows[] = [
 					'variation_id' => $variation_id,
 					'qty'          => $qty,
@@ -595,6 +644,20 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 				$error_preview .= ' ' . __('Additional variation errors occurred.', 'user-manager');
 			}
 			wc_add_notice($error_preview, 'error');
+		}
+
+		if ($rows_selected > 0) {
+			$who = $current_user_email !== '' ? $current_user_email : ($current_user_login !== '' ? $current_user_login : __('Guest', 'user-manager'));
+			self::record_add_to_cart_variation_table_history([
+				'timestamp'    => current_time('mysql'),
+				'user_id'      => $current_user_id,
+				'who'          => $who,
+				'product_id'   => $product_id,
+				'product_name' => $product->get_name(),
+				'rows_selected'=> $rows_selected,
+				'items_added'  => $items_added,
+				'variations'   => $history_rows,
+			]);
 		}
 
 		self::redirect_add_to_cart_variation_table_request($product_id, self::build_add_to_cart_variation_table_debug_query_args($debug_enabled, [
@@ -686,6 +749,23 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		delete_transient($key);
 
 		return is_array($data) ? $data : [];
+	}
+
+	/**
+	 * Persist one history row for Add to Cart Variation Table runs.
+	 *
+	 * @param array<string,mixed> $entry History entry payload.
+	 */
+	private static function record_add_to_cart_variation_table_history(array $entry): void {
+		$history = get_option('add_to_cart_variation_table_history', []);
+		if (!is_array($history)) {
+			$history = [];
+		}
+		array_unshift($history, $entry);
+		if (count($history) > 200) {
+			$history = array_slice($history, 0, 200);
+		}
+		update_option('add_to_cart_variation_table_history', $history);
 	}
 
 	/**
