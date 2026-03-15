@@ -19,6 +19,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.19 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a JavaScript confirmation alert before submitting the cart-screen "Empty cart" button.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.18 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: changed the default "Add to Cart Variation Table Button Text" fallback from "Add All Variations" to "Add to Cart".', 'user-manager'); ?></li>

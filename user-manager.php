@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation) and add-ons: Add to Cart Bulk Import, Add to Cart Variation Table, Checkout Address Selector, Coupon Creator, New User Coupons, User Coupon Notifications, User Coupon Remaining Balances, Fatal Error Debugger, Front-End URL Parameter Debugger, My Account Coupons Page, My Account Admin, Post Meta Viewer, Post Content Generator, Post Idea Generator, User Role Switching, WP-Admin Bar Menu Items, WP-Admin Bar Quick Search, WP-Admin CSS, and WP-Admin Notifications.
- * Version: 2.3.18
+ * Version: 2.3.19
  * Author: Dustin Grice
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.19 - March 15, 2026
+ * - Add to Cart Variation Table: added a JavaScript confirmation alert before submitting the cart-screen "Empty cart" button.
+ *
  * 2.3.18 - March 15, 2026
  * - Add to Cart Variation Table: changed the default "Add to Cart Variation Table Button Text" fallback from "Add All Variations" to "Add to Cart".
  * - Add to Cart Variation Table: updated related settings/help text so blank button text now clearly defaults to "Add to Cart".

@@ -490,7 +490,14 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		}
 		wp_nonce_field('um_empty_cart_action', 'um_empty_cart_nonce');
 		?>
-		<button type="submit" class="button" name="um_empty_cart_submit" value="1" formnovalidate>
+		<button
+			type="submit"
+			class="button"
+			name="um_empty_cart_submit"
+			value="1"
+			formnovalidate
+			onclick="return window.confirm('<?php echo esc_js(__('Are you sure you want to empty your cart?', 'user-manager')); ?>');"
+		>
 			<?php esc_html_e('Empty cart', 'user-manager'); ?>
 		</button>
 		<?php
