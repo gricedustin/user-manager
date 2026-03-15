@@ -184,7 +184,7 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 		}
 		$history = array_slice($history, 0, 50);
 		?>
-		<div class="um-admin-card">
+		<div class="um-admin-card" style="margin-top:16px;">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-list-view"></span>
 				<h2><?php esc_html_e('Add to Cart Variation Table History', 'user-manager'); ?></h2>

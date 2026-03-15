@@ -22,7 +22,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.14';
+	const VERSION = '2.3.15';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
