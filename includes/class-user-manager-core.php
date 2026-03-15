@@ -20,7 +20,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.24';
+	const VERSION = '2.3.25';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -68,6 +68,9 @@ final class User_Manager_Core {
 	 */
 	public static function init(): void {
 		add_action('admin_menu', [__CLASS__, 'register_settings_page']);
+		$main_plugin_basename = self::get_main_plugin_basename();
+		add_filter('plugin_action_links_' . $main_plugin_basename, [__CLASS__, 'add_plugin_action_links']);
+		add_filter('plugin_row_meta', [__CLASS__, 'add_plugin_row_meta_links'], 10, 2);
 		add_action('admin_notices', [__CLASS__, 'maybe_render_user_new_notice']);
 		add_action('admin_notices', [__CLASS__, 'render_custom_admin_notifications'], 5);
 		add_action('admin_init', [__CLASS__, 'register_settings']);
@@ -6291,6 +6294,78 @@ html body .woocommerce-layout__header {
 		
 		// Keep submenu highlighted on all tabs
 		add_filter('submenu_file', [__CLASS__, 'keep_submenu_current']);
+	}
+
+	/**
+	 * Resolve plugin basename for plugin-list row hooks.
+	 */
+	private static function get_main_plugin_basename(): string {
+		$main_plugin_file = dirname(__DIR__) . '/user-manager.php';
+		if (function_exists('plugin_basename')) {
+			return plugin_basename($main_plugin_file);
+		}
+
+		return basename(dirname($main_plugin_file)) . '/' . basename($main_plugin_file);
+	}
+
+	/**
+	 * Add Settings shortcut on Plugins screen row actions.
+	 *
+	 * @param array<int|string,string> $links
+	 * @return array<int|string,string>
+	 */
+	public static function add_plugin_action_links(array $links): array {
+		if (!current_user_can('manage_options')) {
+			return $links;
+		}
+
+		$settings_link = sprintf(
+			'<a href="%1$s">%2$s</a>',
+			esc_url(self::get_page_url(self::TAB_SETTINGS)),
+			esc_html__('Settings', 'user-manager')
+		);
+		array_unshift($links, $settings_link);
+
+		return $links;
+	}
+
+	/**
+	 * Add quick links for each tab in plugin row meta.
+	 *
+	 * @param array<int,string> $links Existing plugin row meta links.
+	 * @param string            $file  Plugin file basename.
+	 * @return array<int,string>
+	 */
+	public static function add_plugin_row_meta_links(array $links, string $file): array {
+		if ($file !== self::get_main_plugin_basename()) {
+			return $links;
+		}
+		if (!current_user_can('manage_options')) {
+			return $links;
+		}
+
+		$tabs = [
+			self::TAB_CREATE_USER   => __('Create', 'user-manager'),
+			self::TAB_BULK_CREATE   => __('Bulk Create', 'user-manager'),
+			self::TAB_RESET_PASSWORD => __('Reset Password', 'user-manager'),
+			self::TAB_REMOVE_USER   => __('Remove User', 'user-manager'),
+			self::TAB_LOGIN_AS      => __('Login As', 'user-manager'),
+			self::TAB_EMAIL_USERS   => __('Email Users', 'user-manager'),
+			self::TAB_REPORTS       => __('Reports', 'user-manager'),
+			self::TAB_SETTINGS      => __('Settings', 'user-manager'),
+			self::TAB_ADDONS        => __('Add-ons', 'user-manager'),
+			self::TAB_DOCUMENTATION => __('Documentation', 'user-manager'),
+		];
+
+		foreach ($tabs as $tab => $label) {
+			$links[] = sprintf(
+				'<a href="%1$s">%2$s</a>',
+				esc_url(self::get_page_url($tab)),
+				esc_html($label)
+			);
+		}
+
+		return $links;
 	}
 	
 	/**
