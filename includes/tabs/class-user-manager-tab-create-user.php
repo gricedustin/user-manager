@@ -37,7 +37,7 @@ class User_Manager_Tab_Create_User {
 					<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="um-create-user-form">
 						<input type="hidden" name="action" value="user_manager_create_user" />
 						<?php wp_nonce_field('user_manager_create_user'); ?>
-						
+						<div class="um-create-user-fields-grid">
 						<div class="um-form-field">
 							<label for="um-email"><?php esc_html_e('Email Address', 'user-manager'); ?> <span style="color:red;">*</span></label>
 							<input type="email" name="email" id="um-email" class="regular-text" required />
@@ -110,6 +110,7 @@ class User_Manager_Tab_Create_User {
 							<p class="description">
 								<?php esc_html_e('Optional. When set, this user’s email will also be added to the “Allowed emails” / email restrictions on the selected WooCommerce coupon.', 'user-manager'); ?>
 							</p>
+						</div>
 						</div>
 						
 						<div class="um-send-email-option">
@@ -184,6 +185,27 @@ class User_Manager_Tab_Create_User {
 		}
 		@media (max-width: 1100px) {
 			.um-create-user-layout {
+				grid-template-columns: 1fr;
+			}
+		}
+		.um-create-user-fields-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 14px 18px;
+		}
+		.um-create-user-fields-grid .um-form-field {
+			margin: 0;
+		}
+		.um-create-user-fields-grid .um-password-input-row {
+			display: flex;
+			gap: 8px;
+			flex-wrap: wrap;
+		}
+		.um-create-user-fields-grid .um-password-input-row .regular-text {
+			flex: 1 1 220px;
+		}
+		@media (max-width: 900px) {
+			.um-create-user-fields-grid {
 				grid-template-columns: 1fr;
 			}
 		}
