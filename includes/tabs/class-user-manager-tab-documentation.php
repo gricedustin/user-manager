@@ -747,7 +747,7 @@ class User_Manager_Tab_Documentation {
 				<div class="um-admin-card-body">
 					<p><?php esc_html_e('We are happy to support your implementation and feature requests. User Experience Manager was developed in-house based on requests from hundreds of clients to manage thousands of ecommerce stores and customer/admin experiences in one place, and we would love to support your requests as well.', 'user-manager'); ?></p>
 					<p>
-						<a class="button button-primary" href="https://griceprojects.com/contact/?inquiry=uxm" target="_blank" rel="noopener noreferrer">
+						<a class="button button-primary" href="https://simplewebhelp.com/inquiries/?ref=uxm" target="_blank" rel="noopener noreferrer">
 							<?php esc_html_e('Contact Support', 'user-manager'); ?>
 						</a>
 					</p>

@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.51 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Documentation > Support: updated support request link to https://simplewebhelp.com/inquiries/?ref=uxm.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.50 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Documentation > About: expanded Long Description and Feature List to be significantly more detailed, including exhaustive core feature coverage and a complete add-on inventory.', 'user-manager'); ?></li>
