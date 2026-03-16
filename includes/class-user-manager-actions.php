@@ -1840,6 +1840,14 @@ class User_Manager_Actions {
 				$settings['cart_price_per_piece_font_size'] = in_array($cart_price_per_piece_font_size, $allowed_cart_price_per_piece_font_sizes, true) ? $cart_price_per_piece_font_size : '12px';
 				$cart_price_per_piece_color = isset($_POST['cart_price_per_piece_text_color']) ? sanitize_hex_color(wp_unslash($_POST['cart_price_per_piece_text_color'])) : '#666666';
 				$settings['cart_price_per_piece_text_color'] = $cart_price_per_piece_color ? $cart_price_per_piece_color : '#666666';
+				$settings['cart_total_items_enabled'] = isset($_POST['cart_total_items_enabled']) && $_POST['cart_total_items_enabled'] === '1';
+				$settings['cart_total_items_copy'] = isset($_POST['cart_total_items_copy']) ? sanitize_text_field(wp_unslash($_POST['cart_total_items_copy'])) : 'Total Items:';
+				$settings['cart_total_items_show_on_cart'] = isset($_POST['cart_total_items_show_on_cart']) && $_POST['cart_total_items_show_on_cart'] === '1';
+				$settings['cart_total_items_show_on_checkout'] = isset($_POST['cart_total_items_show_on_checkout']) && $_POST['cart_total_items_show_on_checkout'] === '1';
+				$settings['cart_total_items_cart_above'] = isset($_POST['cart_total_items_cart_above']) && $_POST['cart_total_items_cart_above'] === '1';
+				$settings['cart_total_items_cart_below'] = isset($_POST['cart_total_items_cart_below']) && $_POST['cart_total_items_cart_below'] === '1';
+				$settings['cart_total_items_checkout_above'] = isset($_POST['cart_total_items_checkout_above']) && $_POST['cart_total_items_checkout_above'] === '1';
+				$settings['cart_total_items_checkout_below'] = isset($_POST['cart_total_items_checkout_below']) && $_POST['cart_total_items_checkout_below'] === '1';
 				$settings['bulk_page_creator_enabled'] = isset($_POST['bulk_page_creator_enabled']) && $_POST['bulk_page_creator_enabled'] === '1';
 				$settings['bulk_page_creator_max_tokens'] = isset($_POST['bulk_page_creator_max_tokens']) ? max(100, min(8000, absint($_POST['bulk_page_creator_max_tokens']))) : 2000;
 				$bulk_page_creator_temperature = isset($_POST['bulk_page_creator_temperature']) ? (float) wp_unslash($_POST['bulk_page_creator_temperature']) : 0.7;
@@ -1893,6 +1901,9 @@ class User_Manager_Actions {
 				$settings['invoice_approval_title'] = isset($_POST['invoice_approval_title']) ? sanitize_text_field(wp_unslash($_POST['invoice_approval_title'])) : 'Approve & Pay Later';
 				$settings['invoice_approval_checkbox_text'] = isset($_POST['invoice_approval_checkbox_text']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_approval_checkbox_text'])) : '';
 				$settings['invoice_approval_button_text'] = isset($_POST['invoice_approval_button_text']) ? sanitize_text_field(wp_unslash($_POST['invoice_approval_button_text'])) : 'Send to Production';
+				$settings['order_received_page_customizer_enabled'] = isset($_POST['order_received_page_customizer_enabled']) && $_POST['order_received_page_customizer_enabled'] === '1';
+				$settings['order_received_page_customizer_heading_text'] = isset($_POST['order_received_page_customizer_heading_text']) ? sanitize_text_field(wp_unslash($_POST['order_received_page_customizer_heading_text'])) : 'Order received';
+				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
@@ -1912,6 +1923,9 @@ class User_Manager_Actions {
 					: [];
 				$settings['add_to_cart_variation_table_category_ids'] = $variation_table_category_ids;
 				$settings['add_to_cart_variation_table_empty_cart_button_on_cart'] = isset($_POST['add_to_cart_variation_table_empty_cart_button_on_cart']) && $_POST['add_to_cart_variation_table_empty_cart_button_on_cart'] === '1';
+				$settings['add_to_cart_variation_table_min_total_qty'] = isset($_POST['add_to_cart_variation_table_min_total_qty']) ? max(0, absint($_POST['add_to_cart_variation_table_min_total_qty'])) : 0;
+				$settings['add_to_cart_variation_table_min_total_qty_alert_message'] = isset($_POST['add_to_cart_variation_table_min_total_qty_alert_message']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_min_total_qty_alert_message'])) : '';
+				$settings['add_to_cart_variation_table_success_alert_message'] = isset($_POST['add_to_cart_variation_table_success_alert_message']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_success_alert_message'])) : '';
 				$settings['add_to_cart_variation_table_button_text'] = isset($_POST['add_to_cart_variation_table_button_text']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_button_text'])) : '';
 				$settings['add_to_cart_variation_table_text_above'] = isset($_POST['add_to_cart_variation_table_text_above']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_above'])) : '';
 				$settings['add_to_cart_variation_table_text_below'] = isset($_POST['add_to_cart_variation_table_text_below']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_below'])) : '';

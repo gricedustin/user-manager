@@ -13,6 +13,7 @@ require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-page-creator.php';
 require_once __DIR__ . '/class-user-manager-addon-cart-price-per-piece.php';
+require_once __DIR__ . '/class-user-manager-addon-cart-total-items.php';
 require_once __DIR__ . '/class-user-manager-addon-blog-post-idea-generator.php';
 require_once __DIR__ . '/class-user-manager-addon-checkout-predefined-addresses.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users-with-coupons.php';
@@ -29,6 +30,7 @@ require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
+require_once __DIR__ . '/class-user-manager-addon-order-received-page-customizer.php';
 require_once __DIR__ . '/class-user-manager-addon-webhook-urls.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
@@ -159,6 +161,9 @@ class User_Manager_Tab_Addons {
 				<div class="um-addon-section" data-addon-section="cart-price-per-piece">
 					<?php User_Manager_Addon_Cart_Price_Per_Piece::render($settings, $settings_form_id); ?>
 				</div>
+				<div class="um-addon-section" data-addon-section="cart-total-items">
+					<?php User_Manager_Addon_Cart_Total_Items::render($settings, $settings_form_id); ?>
+				</div>
 				<div class="um-addon-section" data-addon-section="checkout-pre-defined-addresses">
 					<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
 				</div>
@@ -230,6 +235,9 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-addon-section" data-addon-section="invoice-approval">
 				<?php User_Manager_Addon_Invoice_Approval::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="order-received-page-customizer">
+				<?php User_Manager_Addon_Order_Received_Page_Customizer::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="webhook-urls">
 				<?php User_Manager_Addon_Webhook_URLs::render($settings); ?>
@@ -713,6 +721,9 @@ class User_Manager_Tab_Addons {
 			function toggleCartPricePerPieceFields() {
 				$('#um-cart-price-per-piece-fields').toggle($('#um-cart-price-per-piece-enabled').is(':checked'));
 			}
+			function toggleCartTotalItemsFields() {
+				$('#um-cart-total-items-fields').toggle($('#um-cart-total-items-enabled').is(':checked'));
+			}
 			function toggleBulkPageCreatorFields() {
 				var enabled = $('#um-bulk-page-creator-enabled').is(':checked');
 				$('#um-bulk-page-creator-fields').toggle(enabled);
@@ -726,6 +737,9 @@ class User_Manager_Tab_Addons {
 			}
 			function toggleInvoiceApprovalFields() {
 				$('#um-invoice-approval-fields').toggle($('#um-invoice-approval-enabled').is(':checked'));
+			}
+			function toggleOrderReceivedPageCustomizerFields() {
+				$('#um-order-received-page-customizer-fields').toggle($('#um-order-received-page-customizer-enabled').is(':checked'));
 			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
@@ -743,10 +757,12 @@ class User_Manager_Tab_Addons {
 			toggleMyAccountCouponScreenFields();
 			toggleMyAccountMenuTilesFields();
 			toggleCartPricePerPieceFields();
+			toggleCartTotalItemsFields();
 			toggleBulkPageCreatorFields();
 			toggleDatabaseTableBrowserFields();
 			toggleWebhookUrlsFields();
 			toggleInvoiceApprovalFields();
+			toggleOrderReceivedPageCustomizerFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
@@ -899,6 +915,10 @@ class User_Manager_Tab_Addons {
 				toggleCartPricePerPieceFields();
 				refreshAddonCardAutoState($('#um-addon-card-cart-price-per-piece'));
 			});
+			$('#um-cart-total-items-enabled').on('change', function() {
+				toggleCartTotalItemsFields();
+				refreshAddonCardAutoState($('#um-addon-card-cart-total-items'));
+			});
 			$('#um-bulk-page-creator-enabled').on('change', function() {
 				toggleBulkPageCreatorFields();
 				refreshAddonCardAutoState($('#um-addon-card-bulk-page-creator'));
@@ -914,6 +934,10 @@ class User_Manager_Tab_Addons {
 			$('#um-invoice-approval-enabled').on('change', function() {
 				toggleInvoiceApprovalFields();
 				refreshAddonCardAutoState($('#um-addon-card-invoice-approval'));
+			});
+			$('#um-order-received-page-customizer-enabled').on('change', function() {
+				toggleOrderReceivedPageCustomizerFields();
+				refreshAddonCardAutoState($('#um-addon-card-order-received-page-customizer'));
 			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
@@ -1039,6 +1063,11 @@ class User_Manager_Tab_Addons {
 				'description' => __('Show per-piece unit pricing on cart, checkout, and order line subtotals when quantities exceed one.', 'user-manager'),
 				'active' => !empty($settings['cart_price_per_piece_enabled']),
 			],
+			'cart-total-items' => [
+				'label'  => __('Cart Total Items', 'user-manager'),
+				'description' => __('Display a centered total-items summary above and/or below cart and checkout review tables.', 'user-manager'),
+				'active' => !empty($settings['cart_total_items_enabled']),
+			],
 			'bulk-page-creator' => [
 				'label'  => __('Page Creator', 'user-manager'),
 				'description' => __('Generate multiple AI-written pages from Title|Prompt rows using your configured OpenAI API key and optional images for page/post campaigns.', 'user-manager'),
@@ -1058,6 +1087,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Order Invoice & Approval', 'user-manager'),
 				'description' => __('Render customer-facing invoice pages with optional approvals, PDF download, payment links, and order-level invoice metadata.', 'user-manager'),
 				'active' => !empty($settings['invoice_approval_enabled']),
+			],
+			'order-received-page-customizer' => [
+				'label'  => __('Order Received Page Customizer', 'user-manager'),
+				'description' => __('Customize the Order Received heading and success text after checkout.', 'user-manager'),
+				'active' => !empty($settings['order_received_page_customizer_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),

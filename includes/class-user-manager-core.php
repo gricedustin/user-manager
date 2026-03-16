@@ -11,9 +11,11 @@ if (!defined('ABSPATH')) {
 require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-price-per-piece.php';
+require_once __DIR__ . '/core/trait-user-manager-core-cart-total-items.php';
 require_once __DIR__ . '/core/trait-user-manager-core-fatal-error-debugger.php';
 require_once __DIR__ . '/core/trait-user-manager-core-invoice-approval.php';
 require_once __DIR__ . '/core/trait-user-manager-core-my-account-menu-tiles.php';
+require_once __DIR__ . '/core/trait-user-manager-core-order-received-page-customizer.php';
 require_once __DIR__ . '/core/trait-user-manager-core-plugin-tags-notes.php';
 require_once __DIR__ . '/core/trait-user-manager-core-security-hardening.php';
 require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
@@ -21,9 +23,11 @@ final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
 	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
 	use User_Manager_Core_Cart_Price_Per_Piece_Trait;
+	use User_Manager_Core_Cart_Total_Items_Trait;
 	use User_Manager_Core_Fatal_Error_Debugger_Trait;
 	use User_Manager_Core_Invoice_Approval_Trait;
 	use User_Manager_Core_My_Account_Menu_Tiles_Trait;
+	use User_Manager_Core_Order_Received_Page_Customizer_Trait;
 	use User_Manager_Core_Plugin_Tags_Notes_Trait;
 	use User_Manager_Core_Security_Hardening_Trait;
 	use User_Manager_Core_Webhook_URLs_Trait;
@@ -32,7 +36,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.3';
+	const VERSION = '2.4.4';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -127,8 +131,10 @@ final class User_Manager_Core {
 		// Coupon Email Converter meta box toggle + other settings-based behavior.
 		$settings = self::get_settings();
 		self::maybe_boot_cart_price_per_piece($settings);
+		self::maybe_boot_cart_total_items($settings);
 		self::maybe_boot_invoice_approval($settings);
 		self::maybe_boot_my_account_menu_tiles($settings);
+		self::maybe_boot_order_received_page_customizer($settings);
 		self::maybe_boot_plugin_tags_notes($settings);
 		self::maybe_apply_security_hardening($settings);
 		self::maybe_boot_webhook_urls($settings);
