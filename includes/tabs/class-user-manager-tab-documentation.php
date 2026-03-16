@@ -649,17 +649,55 @@ class User_Manager_Tab_Documentation {
 
 					<h3><?php esc_html_e('Long Description (HTML Supported)', 'user-manager'); ?></h3>
 					<div>
-						<p><?php esc_html_e('User Experience Manager was built to help teams manage complex ecommerce operations without stitching together dozens of disconnected tools. It combines user onboarding and account operations, reporting visibility, and high-impact WooCommerce user-experience add-ons in one platform.', 'user-manager'); ?></p>
-						<p><?php esc_html_e('From bulk account imports and customer communication to order approval workflows, cart tools, and admin UI customization, the plugin is designed to support both fast-moving support teams and long-term growth-focused ecommerce operations.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('User Experience Manager was built to replace fragmented, plugin-by-plugin admin workflows with one centralized operations layer for WordPress and WooCommerce teams. It combines user lifecycle tooling, communication templates, reporting visibility, and modular UX add-ons so support, operations, and growth teams can work from one interface.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('At the core level, the plugin includes account creation and import workflows, password operations, role and access controls, email communication utilities, and reporting surfaces designed for both day-to-day execution and long-term operational visibility. Teams can onboard users faster, reduce repeated manual admin tasks, and standardize customer/account experiences across storefronts.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('On top of core tooling, User Experience Manager includes an extensive add-on catalog that can be activated feature-by-feature. This allows you to turn on only what your store needs—from cart/checkout enhancements and coupon automation to My Account admin experiences, content-generation workflows, webhooks, invoice approvals, and WP-Admin UX customization—without forcing unnecessary complexity into every environment.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('The result is a scalable in-house operations platform for agencies, internal ecommerce teams, and multi-store organizations that need flexible UX controls, faster support resolution, and cleaner admin execution across thousands of products, users, orders, and customer journeys.', 'user-manager'); ?></p>
 					</div>
 
 					<h3><?php esc_html_e('Feature List', 'user-manager'); ?></h3>
+					<h4><?php esc_html_e('Core Tabs and Platform Features', 'user-manager'); ?></h4>
 					<ul>
-						<li><?php esc_html_e('Centralized user/account lifecycle tools (create, bulk import, remove, reset password).', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Template-driven email workflows and user communication controls.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Reports suite with Admin Log, user activity, and operational diagnostics.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Modular add-ons for checkout, cart, coupons, My Account, posts/pages, and wp-admin UX.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('WooCommerce-oriented functionality for store operations, approvals, and customer experience tuning.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Create User: create single users with role, password, login URL, coupon placeholders, and optional welcome email template sending.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Bulk Create: import users at scale through CSV/paste workflows with update controls and repeatable mapping defaults.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Reset Password: execute user password resets with optional email flow controls.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Remove User: remove/deactivate users with operational logging visibility.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Login As: generate temporary access workflows for support and troubleshooting.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Email Users: send targeted admin-generated communication using reusable templates.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Reports: includes General Reports, User Activity, Admin Log, and Coupon Lookup by Email.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Settings: global defaults, workflow controls, API keys, template utilities, and system behavior configuration.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Documentation: internal reference, onboarding, installation, support, marketing/about content, and versions/changelog access.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Admin logging and diagnostics: operational event logging with detailed row-level drill-down and filter controls.', 'user-manager'); ?></li>
+					</ul>
+					<h4><?php esc_html_e('Add-on Catalog (All Current Add-ons)', 'user-manager'); ?></h4>
+					<ul>
+						<li><?php esc_html_e('Add to Cart Bulk Import', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Add to Cart Variation Table', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Cart Price Per-Piece', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Page Creator', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Database Table Browser', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Webhook URLs', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Order Invoice & Approval', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Checkout Address Selector', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Coupon Creator', 'user-manager'); ?></li>
+						<li><?php esc_html_e('New User Coupons', 'user-manager'); ?></li>
+						<li><?php esc_html_e('User Coupon Notifications', 'user-manager'); ?></li>
+						<li><?php esc_html_e('User Coupon Remaining Balances', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Fatal Error Debugger', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Security Hardening', 'user-manager'); ?></li>
+						<li><?php esc_html_e('My Account Coupons Page', 'user-manager'); ?></li>
+						<li><?php esc_html_e('My Account Menu Tiles', 'user-manager'); ?></li>
+						<li><?php esc_html_e('My Account Admin', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Post Meta Viewer', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Product Search by SKU', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Post Content Generator', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Post Idea Generator', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Plugin Tags & Notes', 'user-manager'); ?></li>
+						<li><?php esc_html_e('User Role Switching', 'user-manager'); ?></li>
+						<li><?php esc_html_e('WP-Admin Bar Menu Items', 'user-manager'); ?></li>
+						<li><?php esc_html_e('WP-Admin Bar Quick Search', 'user-manager'); ?></li>
+						<li><?php esc_html_e('WP-Admin CSS', 'user-manager'); ?></li>
+						<li><?php esc_html_e('WP-Admin Notifications', 'user-manager'); ?></li>
 					</ul>
 
 					<h3><?php esc_html_e('Screenshots', 'user-manager'); ?></h3>
