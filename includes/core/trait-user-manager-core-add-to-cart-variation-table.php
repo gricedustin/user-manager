@@ -200,6 +200,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 
 		$show_price_column = !empty($settings['add_to_cart_variation_table_show_price_column']);
 		$hide_header_row = !empty($settings['add_to_cart_variation_table_hide_header_row']);
+		$hide_totals_row = !empty($settings['add_to_cart_variation_table_hide_totals_row']);
 		$header_variation_label = isset($settings['add_to_cart_variation_table_header_variation_label']) ? trim((string) $settings['add_to_cart_variation_table_header_variation_label']) : '';
 		$header_qty_label = isset($settings['add_to_cart_variation_table_header_qty_label']) ? trim((string) $settings['add_to_cart_variation_table_header_qty_label']) : '';
 		if ($header_variation_label === '') {
@@ -282,15 +283,17 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
-					<tfoot>
-						<tr>
-							<th><?php esc_html_e('Totals', 'user-manager'); ?></th>
-							<th><span class="um-add-to-cart-variation-table-total">0</span></th>
-							<?php if ($show_price_column) : ?>
-								<th><span class="um-add-to-cart-variation-table-total-amount"><?php echo wp_kses_post(wc_price(0)); ?></span></th>
-							<?php endif; ?>
-						</tr>
-					</tfoot>
+					<?php if (!$hide_totals_row) : ?>
+						<tfoot>
+							<tr>
+								<th><?php esc_html_e('Total', 'user-manager'); ?></th>
+								<th><span class="um-add-to-cart-variation-table-total">0</span></th>
+								<?php if ($show_price_column) : ?>
+									<th><span class="um-add-to-cart-variation-table-total-amount"><?php echo wp_kses_post(wc_price(0)); ?></span></th>
+								<?php endif; ?>
+							</tr>
+						</tfoot>
+					<?php endif; ?>
 				</table>
 				<button type="submit" class="button alt"><?php echo esc_html($button_text); ?></button>
 			</form>

@@ -83,10 +83,10 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 					<div class="um-form-field">
 						<label>
 							<input type="checkbox" id="um-add-to-cart-variation-table-show-price-column" name="add_to_cart_variation_table_show_price_column" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_show_price_column'])); ?><?php echo $form_attr; ?> />
-							<?php esc_html_e('Show Price column and line total amount in Totals row', 'user-manager'); ?>
+							<?php esc_html_e('Show Price column and line total amount in Total row', 'user-manager'); ?>
 						</label>
 						<p class="description">
-							<?php esc_html_e('Adds a third Price column and dynamically calculates the total amount for entered quantities in the bottom Totals row.', 'user-manager'); ?>
+							<?php esc_html_e('Adds a third Price column and dynamically calculates the total amount for entered quantities in the bottom Total row.', 'user-manager'); ?>
 						</p>
 					</div>
 					<div class="um-form-field">
@@ -105,6 +105,15 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						</label>
 						<p class="description">
 							<?php esc_html_e('When enabled, the variation table header row is hidden on the front end.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-add-to-cart-variation-table-hide-totals-row" name="add_to_cart_variation_table_hide_totals_row" value="1" <?php checked(!empty($settings['add_to_cart_variation_table_hide_totals_row'])); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Hide Totals Row', 'user-manager'); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e('When enabled, the bottom Total row is hidden on the front end.', 'user-manager'); ?>
 						</p>
 					</div>
 					<div class="um-form-field">
