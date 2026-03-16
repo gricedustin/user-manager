@@ -36,7 +36,9 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.4';
+	const VERSION = '2.4.5';
+	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
+	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -58,6 +60,18 @@ final class User_Manager_Core {
 	 * @var array<string,mixed>
 	 */
 	private static array $bulk_add_to_cart_media_upload_info = [];
+
+	/**
+	 * Cached runtime-disabled add-on slugs parsed from URL.
+	 *
+	 * @var array<int,string>|null
+	 */
+	private static ?array $runtime_disabled_addon_slugs = null;
+
+	/**
+	 * Cached runtime "disable all add-ons" URL flag.
+	 */
+	private static ?bool $runtime_disable_all_addons = null;
 
 	// Tab constants
 	const TAB_CREATE_USER     = 'create-user';
@@ -252,7 +266,7 @@ final class User_Manager_Core {
 		// Role Switching feature (front-end role preview) – only when enabled and
 		// the standalone plugin is not already providing the same functionality.
 		$role_settings = get_option('view_website_by_role_settings', []);
-		$role_enabled  = !empty($role_settings['enabled']);
+		$role_enabled  = !empty($role_settings['enabled']) && !self::is_addon_temporarily_disabled('user-role-switching');
 		if ($role_enabled) {
 			if (!function_exists('view_website_by_role_add_user_profile_fields')) {
 				add_action('show_user_profile', [__CLASS__, 'render_role_switching_profile_fields']);
@@ -1498,6 +1512,9 @@ html body .woocommerce-layout__header {
 	 * @return bool
 	 */
 	private static function is_wp_admin_css_addon_enabled(array $settings): bool {
+		if (self::is_addon_temporarily_disabled('wp-admin-css')) {
+			return false;
+		}
 		if (array_key_exists('wp_admin_css_enabled', $settings)) {
 			return !empty($settings['wp_admin_css_enabled']);
 		}
@@ -1620,6 +1637,9 @@ html body .woocommerce-layout__header {
 	 * @return bool
 	 */
 	private static function is_admin_bar_menu_items_addon_enabled(array $settings): bool {
+		if (self::is_addon_temporarily_disabled('wp-admin-bar-menu-items')) {
+			return false;
+		}
 		if (array_key_exists('admin_bar_menu_items_enabled', $settings)) {
 			return !empty($settings['admin_bar_menu_items_enabled']);
 		}
@@ -7397,6 +7417,9 @@ html body .woocommerce-layout__header {
 	 * @return bool
 	 */
 	private static function is_custom_admin_notifications_addon_enabled(array $settings): bool {
+		if (self::is_addon_temporarily_disabled('wp-admin-notifications')) {
+			return false;
+		}
 		if (array_key_exists('custom_admin_notifications_enabled', $settings)) {
 			return !empty($settings['custom_admin_notifications_enabled']);
 		}
@@ -8158,7 +8181,236 @@ html body .woocommerce-layout__header {
 	 */
 	public static function get_settings(): array {
 		$options = get_option(self::OPTION_KEY, []);
-		return is_array($options) ? $options : [];
+		$options = is_array($options) ? $options : [];
+		return self::apply_runtime_addon_disable_overrides($options);
+	}
+
+	/**
+	 * Runtime add-on map used by docs and URL disable-override support.
+	 *
+	 * @return array<string,array{label:string,settings_keys:array<int,string>}>
+	 */
+	public static function get_addon_runtime_toggle_map(): array {
+		return [
+			'add-to-cart-bulk-import' => [
+				'label' => __('Add to Cart Bulk Import', 'user-manager'),
+				'settings_keys' => ['bulk_add_to_cart_enabled'],
+			],
+			'add-to-cart-variation-table' => [
+				'label' => __('Add to Cart Variation Table', 'user-manager'),
+				'settings_keys' => ['add_to_cart_variation_table_enabled'],
+			],
+			'cart-price-per-piece' => [
+				'label' => __('Cart Price Per-Piece', 'user-manager'),
+				'settings_keys' => ['cart_price_per_piece_enabled'],
+			],
+			'cart-total-items' => [
+				'label' => __('Cart Total Items', 'user-manager'),
+				'settings_keys' => ['cart_total_items_enabled'],
+			],
+			'checkout-pre-defined-addresses' => [
+				'label' => __('Checkout Address Selector', 'user-manager'),
+				'settings_keys' => ['checkout_ship_to_predefined_enabled'],
+			],
+			'coupon-creator' => [
+				'label' => __('Coupon Creator', 'user-manager'),
+				'settings_keys' => ['bulk_coupons_enabled'],
+			],
+			'coupon-for-new-user' => [
+				'label' => __('New User Coupons', 'user-manager'),
+				'settings_keys' => ['nuc_enabled'],
+			],
+			'coupon-notifications-for-users-with-coupons' => [
+				'label' => __('User Coupon Notifications', 'user-manager'),
+				'settings_keys' => ['user_coupon_notifications_enabled'],
+			],
+			'coupon-remaining-balances' => [
+				'label' => __('User Coupon Remaining Balances', 'user-manager'),
+				'settings_keys' => ['coupon_remainder_enabled'],
+			],
+			'bulk-page-creator' => [
+				'label' => __('Page Creator', 'user-manager'),
+				'settings_keys' => ['bulk_page_creator_enabled'],
+			],
+			'database-table-browser' => [
+				'label' => __('Database Table Browser', 'user-manager'),
+				'settings_keys' => ['database_table_browser_enabled'],
+			],
+			'security-hardening' => [
+				'label' => __('Security Hardening', 'user-manager'),
+				'settings_keys' => ['security_hardening_enabled'],
+			],
+			'fatal-error-debugger' => [
+				'label' => __('Fatal Error Debugger', 'user-manager'),
+				'settings_keys' => ['fatal_error_debugger_enabled'],
+			],
+			'my-account-coupon-screen' => [
+				'label' => __('My Account Coupons Page', 'user-manager'),
+				'settings_keys' => ['my_account_coupon_screen_enabled'],
+			],
+			'my-account-menu-tiles' => [
+				'label' => __('My Account Menu Tiles', 'user-manager'),
+				'settings_keys' => ['my_account_menu_tiles_enabled'],
+			],
+			'my-account-site-admin' => [
+				'label' => __('My Account Admin', 'user-manager'),
+				'settings_keys' => [
+					'my_account_site_admin_enabled',
+					'my_account_admin_order_viewer_enabled',
+					'my_account_admin_product_viewer_enabled',
+					'my_account_admin_coupon_viewer_enabled',
+					'my_account_admin_user_viewer_enabled',
+				],
+			],
+			'post-meta' => [
+				'label' => __('Post Meta Viewer', 'user-manager'),
+				'settings_keys' => ['display_post_meta_meta_box'],
+			],
+			'product-search-by-sku' => [
+				'label' => __('Product Search by SKU', 'user-manager'),
+				'settings_keys' => ['search_redirect_by_sku'],
+			],
+			'post-content-generator' => [
+				'label' => __('Post Content Generator', 'user-manager'),
+				'settings_keys' => ['openai_content_generator_enabled'],
+			],
+			'post-idea-generator' => [
+				'label' => __('Post Idea Generator', 'user-manager'),
+				'settings_keys' => ['openai_blog_post_idea_generator_enabled'],
+			],
+			'plugin-tags-notes' => [
+				'label' => __('Plugin Tags & Notes', 'user-manager'),
+				'settings_keys' => ['plugin_tags_notes_enabled'],
+			],
+			'user-role-switching' => [
+				'label' => __('User Role Switching', 'user-manager'),
+				'settings_keys' => ['__role_switching_option_enabled'],
+			],
+			'wp-admin-bar-menu-items' => [
+				'label' => __('WP-Admin Bar Menu Items', 'user-manager'),
+				'settings_keys' => ['admin_bar_menu_items_enabled'],
+			],
+			'wp-admin-bar-quick-search' => [
+				'label' => __('WP-Admin Bar Quick Search', 'user-manager'),
+				'settings_keys' => ['um_quick_search_enabled'],
+			],
+			'wp-admin-css' => [
+				'label' => __('WP-Admin CSS', 'user-manager'),
+				'settings_keys' => ['wp_admin_css_enabled'],
+			],
+			'wp-admin-notifications' => [
+				'label' => __('WP-Admin Notifications', 'user-manager'),
+				'settings_keys' => ['custom_admin_notifications_enabled'],
+			],
+			'invoice-approval' => [
+				'label' => __('Order Invoice & Approval', 'user-manager'),
+				'settings_keys' => ['invoice_approval_enabled'],
+			],
+			'order-received-page-customizer' => [
+				'label' => __('Order Received Page Customizer', 'user-manager'),
+				'settings_keys' => ['order_received_page_customizer_enabled'],
+			],
+			'webhook-urls' => [
+				'label' => __('Webhook URLs', 'user-manager'),
+				'settings_keys' => ['webhook_urls_enabled'],
+			],
+		];
+	}
+
+	/**
+	 * Add-on slugs currently disabled by URL override.
+	 *
+	 * @return array<int,string>
+	 */
+	public static function get_temporarily_disabled_addons_from_url(): array {
+		if (self::$runtime_disabled_addon_slugs !== null) {
+			return self::$runtime_disabled_addon_slugs;
+		}
+
+		$map = self::get_addon_runtime_toggle_map();
+		$disabled = [];
+		$disable_all = self::is_disable_all_addons_requested_from_url();
+		if ($disable_all) {
+			$disabled = array_keys($map);
+			self::$runtime_disabled_addon_slugs = $disabled;
+			return $disabled;
+		}
+
+		$raw = isset($_GET[self::URL_PARAM_DISABLE_ADDONS]) ? sanitize_text_field(wp_unslash($_GET[self::URL_PARAM_DISABLE_ADDONS])) : '';
+		if ($raw === '') {
+			self::$runtime_disabled_addon_slugs = [];
+			return [];
+		}
+
+		$parts = array_filter(array_map('trim', explode(',', $raw)));
+		foreach ($parts as $slug) {
+			$slug = sanitize_key(str_replace(' ', '-', $slug));
+			if ($slug === '' || !isset($map[$slug])) {
+				continue;
+			}
+			$disabled[] = $slug;
+		}
+		$disabled = array_values(array_unique($disabled));
+		self::$runtime_disabled_addon_slugs = $disabled;
+		return $disabled;
+	}
+
+	/**
+	 * Determine if an add-on is temporarily disabled by URL parameter.
+	 */
+	public static function is_addon_temporarily_disabled(string $addon_slug): bool {
+		$addon_slug = sanitize_key($addon_slug);
+		if ($addon_slug === '') {
+			return false;
+		}
+		return in_array($addon_slug, self::get_temporarily_disabled_addons_from_url(), true);
+	}
+
+	/**
+	 * Apply URL-driven add-on disable overrides to current settings.
+	 *
+	 * @param array<string,mixed> $settings Settings array from option.
+	 * @return array<string,mixed>
+	 */
+	private static function apply_runtime_addon_disable_overrides(array $settings): array {
+		$disabled = self::get_temporarily_disabled_addons_from_url();
+		if (empty($disabled)) {
+			return $settings;
+		}
+
+		$map = self::get_addon_runtime_toggle_map();
+		foreach ($disabled as $slug) {
+			if (!isset($map[$slug]['settings_keys']) || !is_array($map[$slug]['settings_keys'])) {
+				continue;
+			}
+			foreach ($map[$slug]['settings_keys'] as $settings_key) {
+				$settings_key = (string) $settings_key;
+				if ($settings_key === '' || $settings_key === '__role_switching_option_enabled') {
+					continue;
+				}
+				$settings[$settings_key] = false;
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Whether URL parameter requested "disable all add-ons" mode.
+	 */
+	private static function is_disable_all_addons_requested_from_url(): bool {
+		if (self::$runtime_disable_all_addons !== null) {
+			return self::$runtime_disable_all_addons;
+		}
+
+		$all_flag = isset($_GET[self::URL_PARAM_DISABLE_ALL_ADDONS]) ? sanitize_text_field(wp_unslash($_GET[self::URL_PARAM_DISABLE_ALL_ADDONS])) : '';
+		$list_flag = isset($_GET[self::URL_PARAM_DISABLE_ADDONS]) ? sanitize_text_field(wp_unslash($_GET[self::URL_PARAM_DISABLE_ADDONS])) : '';
+		$all_flag = strtolower(trim($all_flag));
+		$list_flag = strtolower(trim($list_flag));
+		$truthy = ['1', 'true', 'yes', 'on', 'all'];
+
+		self::$runtime_disable_all_addons = in_array($all_flag, $truthy, true) || $list_flag === 'all';
+		return self::$runtime_disable_all_addons;
 	}
 
 	/**
@@ -8179,7 +8431,10 @@ html body .woocommerce-layout__header {
 		if (!current_user_can('manage_options')) {
 			return;
 		}
-		$settings = get_option(self::OPTION_KEY, []);
+		if (self::is_addon_temporarily_disabled('checkout-pre-defined-addresses')) {
+			return;
+		}
+		$settings = self::get_settings();
 		if (empty($settings['checkout_ship_to_show_debug'])) {
 			return;
 		}

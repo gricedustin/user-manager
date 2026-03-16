@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.5 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Documentation: added a new Troubleshooting sub-link with practical isolation steps and URL-parameter guidance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added temporary URL overrides to disable add-ons per request: ?um_disable_all_addons=1 for all add-ons, or ?um_disable_addons=slug1,slug2 for specific add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation > Troubleshooting now includes a checkbox URL builder to generate disable-all and comma-separated add-on-disable test URLs.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.4 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add to Cart Variation Table: added minimum total quantity validation with customizable JavaScript alert messaging and optional success alert before continuing.', 'user-manager'); ?></li>

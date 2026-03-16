@@ -13,7 +13,7 @@ class User_Manager_Tab_Documentation {
 		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_DOCUMENTATION);
 		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_DOCUMENTATION;
 		$docs_section = isset($_GET['docs_section']) ? sanitize_key(wp_unslash($_GET['docs_section'])) : '';
-		$valid_sections = ['documentation', 'installation', 'about', 'support', 'versions'];
+		$valid_sections = ['documentation', 'installation', 'about', 'troubleshooting', 'support', 'versions'];
 
 		// Backward compatibility: legacy Versions tab now lives under Docs sub links.
 		if ($docs_section === '' && $requested_tab === User_Manager_Core::TAB_VERSIONS) {
@@ -26,6 +26,7 @@ class User_Manager_Tab_Documentation {
 		$documentation_url = add_query_arg('docs_section', 'documentation', $base_url);
 		$installation_url = add_query_arg('docs_section', 'installation', $base_url);
 		$about_url = add_query_arg('docs_section', 'about', $base_url);
+		$troubleshooting_url = add_query_arg('docs_section', 'troubleshooting', $base_url);
 		$support_url = add_query_arg('docs_section', 'support', $base_url);
 		$versions_url = add_query_arg('docs_section', 'versions', $base_url);
 
@@ -44,6 +45,11 @@ class User_Manager_Tab_Documentation {
 			<li>
 				<a href="<?php echo esc_url($about_url); ?>" class="<?php echo $docs_section === 'about' ? 'current' : ''; ?>">
 					<?php esc_html_e('About', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($troubleshooting_url); ?>" class="<?php echo $docs_section === 'troubleshooting' ? 'current' : ''; ?>">
+					<?php esc_html_e('Troubleshooting', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
@@ -70,6 +76,10 @@ class User_Manager_Tab_Documentation {
 		}
 		if ($docs_section === 'about') {
 			self::render_about_section();
+			return;
+		}
+		if ($docs_section === 'troubleshooting') {
+			self::render_troubleshooting_section();
 			return;
 		}
 		if ($docs_section === 'support') {
@@ -177,6 +187,15 @@ class User_Manager_Tab_Documentation {
 					__('Helps teams quickly confirm when a behavior was added or updated.', 'user-manager'),
 				],
 			],
+			[
+				'icon'    => 'dashicons-admin-tools',
+				'title'   => __('Troubleshooting Section', 'user-manager'),
+				'summary' => __('Generate temporary URL overrides to disable all or selected add-ons while diagnosing conflicts or regressions.', 'user-manager'),
+				'details' => [
+					__('Includes direct parameter examples and a checkbox URL builder for single/multi add-on isolation tests.', 'user-manager'),
+					__('Overrides are temporary and only apply while the URL parameters are present.', 'user-manager'),
+				],
+			],
 		];
 
 		$addon_cards = [
@@ -194,6 +213,11 @@ class User_Manager_Tab_Documentation {
 				'icon'    => 'dashicons-cart',
 				'title'   => __('Cart Price Per-Piece', 'user-manager'),
 				'summary' => __('Display per-piece unit pricing under line subtotals for multi-quantity items across cart, checkout, and order views.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-cart',
+				'title'   => __('Cart Total Items', 'user-manager'),
+				'summary' => __('Display a centered total item count above and/or below cart and checkout review tables with configurable copy.', 'user-manager'),
 			],
 			[
 				'icon'    => 'dashicons-admin-page',
@@ -214,6 +238,11 @@ class User_Manager_Tab_Documentation {
 				'icon'    => 'dashicons-media-spreadsheet',
 				'title'   => __('Order Invoice & Approval', 'user-manager'),
 				'summary' => __('Render customer-facing invoice links/pages for WooCommerce orders with approval forms, PDF output, payment links, and approval access by email or user-profile checkbox.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-format-status',
+				'title'   => __('Order Received Page Customizer', 'user-manager'),
+				'summary' => __('Override the Order Received page heading and success paragraph message shown after checkout.', 'user-manager'),
 			],
 			[
 				'icon'    => 'dashicons-location-alt',
@@ -674,10 +703,12 @@ class User_Manager_Tab_Documentation {
 						<li><?php esc_html_e('Add to Cart Bulk Import', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Add to Cart Variation Table', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Cart Price Per-Piece', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Cart Total Items', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Page Creator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Database Table Browser', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Webhook URLs', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Order Invoice & Approval', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Order Received Page Customizer', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Checkout Address Selector', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Coupon Creator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('New User Coupons', 'user-manager'); ?></li>
@@ -730,6 +761,203 @@ class User_Manager_Tab_Documentation {
 				</div>
 			</div>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Render Troubleshooting subsection.
+	 */
+	private static function render_troubleshooting_section(): void {
+		$addon_map = User_Manager_Core::get_addon_runtime_toggle_map();
+		uasort($addon_map, static function (array $a, array $b): int {
+			$a_label = isset($a['label']) ? (string) $a['label'] : '';
+			$b_label = isset($b['label']) ? (string) $b['label'] : '';
+			return strcasecmp($a_label, $b_label);
+		});
+
+		$disable_all_param = User_Manager_Core::URL_PARAM_DISABLE_ALL_ADDONS;
+		$disable_addons_param = User_Manager_Core::URL_PARAM_DISABLE_ADDONS;
+		$disabled_slugs = User_Manager_Core::get_temporarily_disabled_addons_from_url();
+		$raw_disable_all = isset($_GET[$disable_all_param]) ? strtolower(trim(sanitize_text_field(wp_unslash($_GET[$disable_all_param])))) : '';
+		$raw_disable_addons = isset($_GET[$disable_addons_param]) ? strtolower(trim(sanitize_text_field(wp_unslash($_GET[$disable_addons_param])))) : '';
+		$disable_all_requested = in_array($raw_disable_all, ['1', 'true', 'yes', 'on', 'all'], true) || $raw_disable_addons === 'all';
+
+		$disabled_labels = [];
+		foreach ($disabled_slugs as $disabled_slug) {
+			if (!isset($addon_map[$disabled_slug]['label'])) {
+				continue;
+			}
+			$disabled_labels[] = (string) $addon_map[$disabled_slug]['label'];
+		}
+
+		$default_target_url = home_url('/');
+		?>
+		<div class="um-admin-grid um-admin-grid-single">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-admin-tools"></span>
+					<h2><?php esc_html_e('Troubleshooting', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p><?php esc_html_e('Use this section to quickly isolate add-on conflicts by temporarily disabling all add-ons (or specific add-ons) using URL parameters.', 'user-manager'); ?></p>
+					<ol>
+						<li><?php esc_html_e('Test with all add-ons disabled to confirm whether an add-on is involved.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('If the issue clears, re-enable add-ons one-by-one (or in small groups) until the issue returns.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Use the Versions section to confirm recent changes and release notes.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Use Reports > Admin Log and other debug add-ons as needed for deeper diagnostics.', 'user-manager'); ?></li>
+					</ol>
+
+					<h3><?php esc_html_e('URL Parameters', 'user-manager'); ?></h3>
+					<ul>
+						<li>
+							<code><?php echo esc_html($disable_all_param); ?>=1</code>
+							— <?php esc_html_e('Temporarily disable all add-ons for the current request URL.', 'user-manager'); ?>
+						</li>
+						<li>
+							<code><?php echo esc_html($disable_addons_param); ?>=add-to-cart-variation-table</code>
+							— <?php esc_html_e('Temporarily disable one specific add-on for the current request URL.', 'user-manager'); ?>
+						</li>
+						<li>
+							<code><?php echo esc_html($disable_addons_param); ?>=add-to-cart-variation-table,cart-total-items</code>
+							— <?php esc_html_e('Temporarily disable multiple add-ons using a comma-separated list.', 'user-manager'); ?>
+						</li>
+					</ul>
+					<p class="description">
+						<?php esc_html_e('These URL overrides are temporary and only apply while those parameters are present in the URL.', 'user-manager'); ?>
+					</p>
+
+					<?php if (!empty($disabled_labels)) : ?>
+						<div class="notice notice-warning inline" style="margin:12px 0 0; padding:8px 12px;">
+							<p style="margin:0;">
+								<strong><?php esc_html_e('Active URL override detected:', 'user-manager'); ?></strong>
+								<?php
+								if ($disable_all_requested) {
+									esc_html_e('All add-ons are currently disabled for this URL.', 'user-manager');
+								} else {
+									echo esc_html(implode(', ', $disabled_labels));
+								}
+								?>
+							</p>
+						</div>
+					<?php endif; ?>
+				</div>
+			</div>
+
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-admin-links"></span>
+					<h2><?php esc_html_e('Troubleshooting URL Builder', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<div class="um-form-field">
+						<label for="um-troubleshooting-target-url"><strong><?php esc_html_e('Target URL', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-troubleshooting-target-url" class="large-text" value="<?php echo esc_attr($default_target_url); ?>" placeholder="<?php echo esc_attr($default_target_url); ?>" />
+						<p class="description"><?php esc_html_e('Enter the front-end/admin URL you want to test, then choose disable options below.', 'user-manager'); ?></p>
+					</div>
+
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-troubleshooting-disable-all" <?php checked($disable_all_requested); ?> />
+							<?php esc_html_e('Disable all add-ons for this URL', 'user-manager'); ?>
+						</label>
+					</div>
+
+					<div class="um-form-field">
+						<label><strong><?php esc_html_e('Disable specific add-ons', 'user-manager'); ?></strong></label>
+						<div id="um-troubleshooting-addon-list" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:6px; margin-top:8px;">
+							<?php foreach ($addon_map as $addon_slug => $addon_meta) : ?>
+								<?php
+								$addon_label = isset($addon_meta['label']) ? (string) $addon_meta['label'] : $addon_slug;
+								$is_checked = in_array($addon_slug, $disabled_slugs, true);
+								?>
+								<label style="display:flex; gap:8px; align-items:flex-start; padding:6px 8px; border:1px solid #dcdcde; border-radius:4px; background:#fff;">
+									<input
+										type="checkbox"
+										class="um-troubleshooting-addon-checkbox"
+										value="<?php echo esc_attr($addon_slug); ?>"
+										<?php checked($is_checked); ?>
+									/>
+									<span>
+										<strong><?php echo esc_html($addon_label); ?></strong><br />
+										<code style="font-size:11px;"><?php echo esc_html($addon_slug); ?></code>
+									</span>
+								</label>
+							<?php endforeach; ?>
+						</div>
+					</div>
+
+					<div class="um-form-field" style="margin-top:12px;">
+						<label for="um-troubleshooting-generated-url"><strong><?php esc_html_e('Generated URL', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-troubleshooting-generated-url" class="large-text code" readonly value="" />
+						<p style="margin-top:8px;">
+							<button type="button" class="button" id="um-troubleshooting-copy-url"><?php esc_html_e('Copy URL', 'user-manager'); ?></button>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script>
+		jQuery(document).ready(function($) {
+			var disableAllParam = '<?php echo esc_js($disable_all_param); ?>';
+			var disableAddonsParam = '<?php echo esc_js($disable_addons_param); ?>';
+			var fallbackTarget = '<?php echo esc_js($default_target_url); ?>';
+
+			function buildTroubleshootingUrl() {
+				var rawTarget = ($.trim($('#um-troubleshooting-target-url').val()) || fallbackTarget);
+				var parsed;
+				try {
+					parsed = new URL(rawTarget);
+				} catch (e) {
+					parsed = new URL(rawTarget, window.location.origin);
+				}
+
+				parsed.searchParams.delete(disableAllParam);
+				parsed.searchParams.delete(disableAddonsParam);
+
+				var disableAll = $('#um-troubleshooting-disable-all').is(':checked');
+				if (disableAll) {
+					parsed.searchParams.set(disableAllParam, '1');
+				} else {
+					var selected = [];
+					$('.um-troubleshooting-addon-checkbox:checked').each(function() {
+						selected.push($(this).val());
+					});
+					if (selected.length > 0) {
+						parsed.searchParams.set(disableAddonsParam, selected.join(','));
+					}
+				}
+
+				$('#um-troubleshooting-generated-url').val(parsed.toString());
+			}
+
+			function toggleAddonCheckboxState() {
+				var disableAll = $('#um-troubleshooting-disable-all').is(':checked');
+				$('.um-troubleshooting-addon-checkbox').prop('disabled', disableAll);
+			}
+
+			$('#um-troubleshooting-target-url').on('input change', buildTroubleshootingUrl);
+			$('#um-troubleshooting-disable-all').on('change', function() {
+				toggleAddonCheckboxState();
+				buildTroubleshootingUrl();
+			});
+			$('.um-troubleshooting-addon-checkbox').on('change', buildTroubleshootingUrl);
+			$('#um-troubleshooting-copy-url').on('click', function() {
+				var value = $('#um-troubleshooting-generated-url').val();
+				if (!value) {
+					return;
+				}
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(value);
+				} else {
+					$('#um-troubleshooting-generated-url').trigger('focus').trigger('select');
+					document.execCommand('copy');
+				}
+			});
+
+			toggleAddonCheckboxState();
+			buildTroubleshootingUrl();
+		});
+		</script>
 		<?php
 	}
 
