@@ -1170,6 +1170,10 @@ class User_Manager_Tab_Addons {
 				'label'    => __('My Account', 'user-manager'),
 				'keywords' => ['my account', 'my-account'],
 			],
+			'order'      => [
+				'label'    => __('Orders', 'user-manager'),
+				'keywords' => ['order', 'orders', 'invoice'],
+			],
 			'page'       => [
 				'label'    => __('Pages', 'user-manager'),
 				'keywords' => ['page creator'],
