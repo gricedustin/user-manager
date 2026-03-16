@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Reports, Settings, Add-ons, Documentation).
- * Version: 2.3.51
+ * Version: 2.3.52
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.3.52 - March 15, 2026
+ * - Documentation sub-menu order updated so About appears before Versions.
+ *
  * 2.3.51 - March 15, 2026
  * - Documentation > Support: updated support request link to https://simplewebhelp.com/inquiries/?ref=uxm.
  *
