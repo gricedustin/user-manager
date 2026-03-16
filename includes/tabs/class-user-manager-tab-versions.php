@@ -11,6 +11,26 @@ class User_Manager_Tab_Versions {
 
 	public static function render(): void {
 		?>
+		<div class="um-admin-card um-admin-card-full" style="margin-top: 20px;">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-filter"></span>
+				<h2><?php esc_html_e('Versions Filter', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+					<div style="min-width:280px; flex:1;">
+						<label for="um-versions-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-versions-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter changelog versions or notes...', 'user-manager'); ?>" />
+					</div>
+					<div>
+						<button type="button" class="button" id="um-versions-filter-clear"><?php esc_html_e('Clear Filter', 'user-manager'); ?></button>
+					</div>
+				</div>
+				<p class="description" id="um-versions-filter-empty" style="display:none; margin-top: 10px;">
+					<?php esc_html_e('No changelog items match the current filter.', 'user-manager'); ?>
+				</p>
+			</div>
+		</div>
 		<div class="um-admin-grid">
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
@@ -19,83 +39,366 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.3.12 <span>(March 8, 2026)</span></h4>
+						<h4>2.4.0 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Post Content Generator and Post Idea Generator add-ons now require a saved ChatGPT / OpenAI API key before showing their full settings/tools after activation.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('When activated without an API key, each add-on now shows a requirement message with a direct link to Settings > API Keys.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Release 2.4.0: includes recent admin tab ordering and add-ons tag navigation updates.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.11 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.54 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add-ons empty-state "Choose an Add-on" tiles now highlight active add-ons with a green tile treatment for faster scanning.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons tag filter: added a new "Orders" tag in the sub-navigation for order-related add-ons.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.10 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.53 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add to Cart Bulk Import: added "Include private products (exclude by default)" and "Include draft products (exclude by default)" settings for "Download Sample CSV with Product Data".', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Product-data sample export now defaults to publish-only products unless those include toggles are enabled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Main tab order updated so Settings appears before Reports.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.9 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.52 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add-ons tab default state now shows no add-on cards when no add-on is selected.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Added a responsive tile-based add-on directory grid (rows/columns) for the default Add-ons view so users can pick an add-on before editing settings.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation sub-menu order updated so About appears before Versions.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.8 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.51 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add to Cart Bulk Import settings UI: moved "Front-end debug URL parameter" to the bottom of the settings block.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation > Support: updated support request link to https://simplewebhelp.com/inquiries/?ref=uxm.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.7 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.50 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add to Cart Bulk Import settings UI: moved "product_id Custom Column Header" above "Product Identifier Column".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation > About: expanded Long Description and Feature List to be significantly more detailed, including exhaustive core feature coverage and a complete add-on inventory.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.6 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.49 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add-ons tab UI: retitled the footer action button from "Save Add-ons" to "Save".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Create User tab: updated the "Create New User" card form to a two-column field layout to reduce vertical height while preserving all existing fields and behavior.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.5 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.48 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add-ons UI: added extra top spacing above the "Add to Cart Bulk Import History" card for clearer visual separation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation sub-menu order updated so Versions appears before About.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.4 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.47 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Bulk Add to Cart sample CSVs now force a product_id column first, and include Product Identifier Column as a second column when different.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Bulk Add to Cart upload now supports Product Identifier Column and/or product_id fallback (identifier first, then product_id fallback if needed).', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Add-on setting added: "product_id Custom Column Header" to rename the CSV product_id header while still processing it as product_id.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved "Allow WooCommerce front-end product search to include SKUs" from Settings into a new Add-ons card: "Product Search by SKU" with standard Activate toggle and description.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.3 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.46 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add to Cart Bulk Import add-on: added two new checkboxes to control visibility of "Download Sample CSV" and "Download Sample CSV with Product Data" links.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Bulk Add to Cart shortcode/download endpoints now respect these toggles (both default enabled for backward compatibility).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reports > Admin Log: added an "Add-ons Connected to Admin Log" panel that lists every add-on with status, quick links, and per-tool match counts, plus an add-on tool filter in the log table.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation tab: added new subsections before Versions (Installation, About, Support), including auto-loaded screenshots from /assets/documentation-screenshots when image files exist.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.2 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.45 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Settings: added a new default-enabled option to auto-add existing multisite network users to the current sub-site during user creation flows.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Create User, Bulk Create, and SFTP Import now add existing network users to the current sub-site (when enabled) instead of only skipping them.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons tag navigation: added a new "Pages" tag (A-Z sorted) and mapped Page Creator into this filter.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
-						<h4>2.3.1 <span>(March 8, 2026)</span></h4>
+						<h4>2.3.44 <span>(March 15, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Bulk Add to Cart sample downloads now honor the active Identifier Type when generating identifier values.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('When Identifier Type is "Custom Meta Field Value", both sample CSV downloads now use the configured meta field value in the identifier column instead of product ID.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Retitled the "Bulk Page Creator" add-on to "Page Creator" across Add-ons labels, card headings, notices, documentation references, and related activity log naming.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.43 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Order Invoice & Approval: added a live "currently allowed emails" list under approval-email settings, combining global list entries and user-profile checkbox-enabled emails with Edit User links when available.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.42 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled the "Invoice Approval" add-on to "Order Invoice & Approval" across Add-ons labels, documentation references, and related settings/profile headings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.41 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Webhook URLs add-on: expanded all Webhook Types notes with detailed field-level guidance and full sample URLs that include every currently supported field for each webhook type.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.40 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Plugin Tags & Notes: fixed the "Tags & Notes" row action to reliably open the inline tags/notes text box editor on Plugins screen rows.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.39 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Page Creator: moved the Page Data + Create Pages action into its own card above History and removed the "Latest Run Details" section.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.38 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Page Creator: added top margin/breathing room above the "Page Creator History" card.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.37 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin > Orders: ensured the Decline / "Move to Canceled" action button is shown next to other status action buttons on order views.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.36 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Order Invoice & Approval" add-on with invoice branding/settings controls, invoice approval form settings, and WooCommerce order invoice links.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Order Invoice & Approval now supports per-user invoice approval access via Edit User checkbox (email-match based), in addition to the global approval email list setting.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.35 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Webhook URLs" add-on with Activate toggle plus full settings for debug mode, URL parameter handling, and individual webhook type activation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added front-end webhook router/handlers for create/edit orders, create/edit coupons, reset password, send email, and placeholders for user/post/product/category hooks.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.34 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Database Table Browser" add-on with Activate toggle and records-per-page setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Database Table Browser now lists all tables, supports secure table drill-down with nonce checks, and renders paginated table rows directly in Add-ons.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.33 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Page Creator" add-on with Activate toggle, OpenAI generation controls, bulk Title|Prompt input, and create action in the Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Creator now reuses the existing API key from Settings > API Keys, supports optional image downloads/featured image assignment, and stores run history.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.32 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Cart Price Per-Piece" add-on with Activate toggle and settings for cart/order display, suffix text, font size, and text color.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When active, unit pricing now appears under WooCommerce line subtotals for multi-quantity items on cart, checkout, and customer order views.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.31 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "My Account Menu Tiles" add-on with an Activate toggle and settings for desktop tiles per row plus minimum tile height.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When active, My Account dashboard now renders menu endpoints as responsive tile buttons below the default dashboard text.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.30 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Plugin Tags & Notes" add-on with an Activate toggle in the Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When active, wp-admin/plugins.php now includes per-plugin tags/notes badges, inline editors, a bulk Save All form, and client-side tag filtering tools.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.29 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Documentation tab: added a new "All Reports (Reports Tab Reference)" card listing every Reports section and all General Reports currently available.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.28 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons UI: Add-ons Filter now has extra spacing below it and only displays on the all add-on tiles view (not inside individual add-on settings screens).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.27 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new "Security Hardening" add-on with an Activate toggle and granular hardening checkboxes for REST user endpoint blocking, file-edit/file-mod restrictions, forced SSL admin, and WordPress version hiding.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Security Hardening coverage to Add-ons metadata, settings persistence, and documentation/use-case references.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.26 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Simplified plugin description by removing the long inline add-ons list from the header metadata.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.25 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a Settings shortcut link to the plugin row actions on the WordPress Plugins screen.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added quick shortcut links for each main tab in the plugin row meta area next to version/author details.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.24 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the Front-End URL Parameter Debugger add-on and its related add-on settings/UI references.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.23 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated plugin author metadata from "Dustin Grice" to "Grice Projects".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.22 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Add-ons Filter card on tab=addons with keyword filtering and clear/reset behavior for add-on tiles and add-on settings screens.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new Documentation Filter card on tab=documentation with keyword filtering across documentation cards and use cases.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new Versions Filter card on docs_section=versions with keyword filtering across changelog items.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.21 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Documentation tab: replaced legacy cards with a fully refreshed Tabs Reference, Add-ons Reference, and updated platform overview.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation tab: added a new "Use Cases" card with practical B2B/B2C scenarios (including welcome-coupon onboarding) to highlight how tools can be combined.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.20 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('WP-Admin top bar shortcut: changed the User Experience Manager link target to open the Add-ons tab by default instead of Settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.19 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a JavaScript confirmation alert before submitting the cart-screen "Empty cart" button.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.18 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: changed the default "Add to Cart Variation Table Button Text" fallback from "Add All Variations" to "Add to Cart".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: updated related settings/help text so blank button text now clearly defaults to "Add to Cart".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.17 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Rebranded plugin title/author metadata to "User Experience Manager" by Dustin Grice (griceprojects.com) and refreshed the plugin description to emphasize B2B/B2C user experience outcomes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons activation defaults: removed default-on behavior so add-ons are not auto-activated on first install unless explicitly enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.16 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added two new settings to override the header labels for the Variation and Qty columns.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table header row now uses custom Variation/Qty labels when provided, and falls back to defaults when blank.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.15 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons UI: added top margin above the "Add to Cart Variation Table History" card for clearer visual spacing.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.14 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a new checkbox setting "Add an Empty Cart button on Cart Screen".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, an Empty Cart button now renders in WooCommerce cart actions and empties the cart via nonce-protected submission.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.13 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a category filter setting "Only display variation table for products in these categories" with a scrollable checkbox list of product categories.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table front-end rendering now respects selected product categories; when no categories are selected, it remains available to all variable products.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.12 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a new checkbox setting to remove the table header row (Variation / Qty) on the front end.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table now conditionally renders the header row based on the new hide-header setting.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.11 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a new text setting to override the front-end "Add All Variations" button label.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table button now uses the custom label when set, and falls back to "Add All Variations" when blank.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.10 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a new setting "Prefix all variations with the variation label" (default off) to control label formatting like "Size: Small" versus "Small".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table front-end row rendering now respects the prefix-label setting for the Variation column.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.9 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: removed the default "Add Multiple Variations" heading/description copy from the front-end table output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added "Add Text Above Variation Table" and "Add Text Below Variation Table" textarea settings (HTML supported) and render those blocks on the front end.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons: added a new "Add to Cart Variation Table History" card showing timestamp, who submitted, total items added, and variation/option details for each bulk add run.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.8 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Fatal Error Debugger add-on with Activate toggle and an admin-only front-end fatal error panel.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fatal Error Debugger now captures fatal shutdown errors, stores the latest payload, and can send email alerts only when "Sent Email To Address upon Fatal Errors" is filled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.7 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table trace stability: added defensive function-exists guards for auth checks to prevent fatal errors during early plugin bootstrap.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.6 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: removed strict WooCommerce class-load gating so render/submission hooks are always registered when the add-on is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added safety fallback render hooks so the table still appears when a theme override skips the selected hook.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added front-end trace diagnostics via URL parameter ?um_variation_table_trace=1 (admin-only), including hook registration state and render skip reasons.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.5 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a backend "Single Product Page Hook" selector so the render location can be chosen per site/theme.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added Auto hook mode that tries multiple WooCommerce product hooks for better front-end compatibility when a single hook does not fire.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.4 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added a new settings checkbox to optionally show a third Price column in the variation table.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: Totals row now dynamically updates both total quantity and total amount when the Price column option is enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.3 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: switched to a vertical two-column layout (Variation + Qty), removed price output, added a live Total row, and kept it as a separate alternative form under the native add-to-cart area.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added setting to hide/show the native variable-product dropdown add-to-cart form when the bulk table is present.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add to Cart Variation Table: added debug mode setting and front-end debug output for Add All Variations processing details.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.2 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders: added configurable button labels for Approve/Decline (default labels now "Move to Processing" and "Move to Canceled"), hid Approve when already Processing, and hid Decline when already Canceled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('My Account Admin Orders action handling now blocks redundant approve/decline actions for already-Processing and already-Canceled orders, with corresponding notices.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.3.1 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: refactored as an alternative form under the default Add to Cart area with an "Add All Variations" submit flow and optional front-end debug mode.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('My Account Admin Orders: added status filter configuration, inline status filter links, optional hide-order-status toggle, approve/decline actions for all non-completed statuses, and internal order notes that record who performed each action and when.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('My Account Admin Order additional meta field format now supports "meta_field:Label:prefix_before_value", with URL auto-linking and "Open File" link text for prefixed file URLs.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
@@ -1101,6 +1404,35 @@ class User_Manager_Tab_Versions {
 				</div>
 			</div>
 		</div>
+		<script>
+		jQuery(document).ready(function($) {
+			function normalizeVersionsFilterText(str) {
+				return (str || '').toString().toLowerCase().trim();
+			}
+
+			function applyVersionsFilter() {
+				var keyword = normalizeVersionsFilterText($('#um-versions-filter-text').val());
+				var anyVisible = false;
+				$('.um-changelog-item').each(function() {
+					var $item = $(this);
+					var itemText = normalizeVersionsFilterText($item.text());
+					var matched = keyword === '' || itemText.indexOf(keyword) !== -1;
+					$item.toggle(matched);
+					if (matched) {
+						anyVisible = true;
+					}
+				});
+				$('#um-versions-filter-empty').toggle(keyword !== '' && !anyVisible);
+			}
+
+			$('#um-versions-filter-text').on('input', applyVersionsFilter);
+			$('#um-versions-filter-clear').on('click', function() {
+				$('#um-versions-filter-text').val('');
+				applyVersionsFilter();
+			});
+			applyVersionsFilter();
+		});
+		</script>
 		<?php
 	}
 }

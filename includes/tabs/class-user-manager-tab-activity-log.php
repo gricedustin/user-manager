@@ -15,34 +15,118 @@ class User_Manager_Tab_Activity_Log {
 		$paged = isset($_GET['paged']) ? max(1, absint($_GET['paged'])) : 1;
 		$offset = ($paged - 1) * $per_page;
 		$action_filter = isset($_GET['action_filter']) ? sanitize_text_field(wp_unslash($_GET['action_filter'])) : '';
-		
+		$tool_filter = isset($_GET['tool_filter']) ? sanitize_text_field(wp_unslash($_GET['tool_filter'])) : '';
+
 		// Get activity log with pagination and filtering
-		$result = User_Manager_Core::get_activity_log($per_page, $offset, $action_filter ?: null);
+		$result = User_Manager_Core::get_activity_log($per_page, $offset, $action_filter ?: null, $tool_filter ?: null);
 		$log = $result['entries'];
 		$total = $result['total'];
 		$total_pages = max(1, (int) ceil($total / $per_page));
-		$current_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ACTIVITY_LOG);
+		$is_reports_context = (isset($_GET['tab']) && sanitize_key(wp_unslash($_GET['tab'])) === User_Manager_Core::TAB_REPORTS)
+			|| (isset($_GET['reports_section']) && sanitize_key(wp_unslash($_GET['reports_section'])) === 'admin-log');
+		$current_url = $is_reports_context
+			? add_query_arg('reports_section', 'admin-log', User_Manager_Core::get_page_url(User_Manager_Core::TAB_REPORTS))
+			: User_Manager_Core::get_page_url(User_Manager_Core::TAB_ACTIVITY_LOG);
+		$settings = User_Manager_Core::get_settings();
+		$addon_sections = class_exists('User_Manager_Tab_Addons')
+			? User_Manager_Tab_Addons::get_addon_sections_for_reports($settings)
+			: [];
+		uasort($addon_sections, static function (array $a, array $b): int {
+			$a_label = isset($a['label']) ? (string) $a['label'] : '';
+			$b_label = isset($b['label']) ? (string) $b['label'] : '';
+			return strcasecmp($a_label, $b_label);
+		});
 		
 		// Get all unique actions for filter dropdown
 		$table = $wpdb->prefix . 'um_admin_activity';
 		$all_actions = $wpdb->get_col("SELECT DISTINCT action FROM {$table} ORDER BY action ASC");
+		$tool_counts = $wpdb->get_results("SELECT tool, COUNT(*) AS total FROM {$table} GROUP BY tool", ARRAY_A);
+		$tool_count_map = [];
+		if (is_array($tool_counts)) {
+			foreach ($tool_counts as $tool_count_row) {
+				$tool_name = isset($tool_count_row['tool']) ? trim((string) $tool_count_row['tool']) : '';
+				if ($tool_name === '') {
+					continue;
+				}
+				$tool_count_map[strtolower($tool_name)] = isset($tool_count_row['total']) ? (int) $tool_count_row['total'] : 0;
+			}
+		}
 		
 		?>
 		<div class="um-admin-grid">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-admin-plugins"></span>
+					<h2><?php esc_html_e('Add-ons Connected to Admin Log', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p><?php esc_html_e('Every add-on is listed here with its active status and quick links to both Add-ons settings and filtered Admin Log results.', 'user-manager'); ?></p>
+					<?php if (empty($addon_sections)) : ?>
+						<p><?php esc_html_e('No add-ons metadata found.', 'user-manager'); ?></p>
+					<?php else : ?>
+						<table class="widefat striped">
+							<thead>
+								<tr>
+									<th><?php esc_html_e('Add-on', 'user-manager'); ?></th>
+									<th><?php esc_html_e('Status', 'user-manager'); ?></th>
+									<th><?php esc_html_e('Tool Matches', 'user-manager'); ?></th>
+									<th><?php esc_html_e('Links', 'user-manager'); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ($addon_sections as $addon_key => $addon_meta) : ?>
+									<?php
+									$addon_label = isset($addon_meta['label']) ? (string) $addon_meta['label'] : '';
+									$addon_active = !empty($addon_meta['active']);
+									$addon_settings_url = add_query_arg('addon_section', sanitize_key((string) $addon_key), User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS));
+									$addon_log_url = add_query_arg(
+										[
+											'tool_filter' => $addon_label,
+											'action_filter' => '',
+											'paged' => 1,
+										],
+										$current_url
+									);
+									$tool_match_total = isset($tool_count_map[strtolower($addon_label)]) ? (int) $tool_count_map[strtolower($addon_label)] : 0;
+									?>
+									<tr>
+										<td><strong><?php echo esc_html($addon_label); ?></strong></td>
+										<td>
+											<?php if ($addon_active) : ?>
+												<span class="um-status-badge um-status-success"><?php esc_html_e('Active', 'user-manager'); ?></span>
+											<?php else : ?>
+												<span class="um-status-badge um-status-secondary"><?php esc_html_e('Inactive', 'user-manager'); ?></span>
+											<?php endif; ?>
+										</td>
+										<td><?php echo esc_html(number_format_i18n($tool_match_total)); ?></td>
+										<td>
+											<a class="button button-small" href="<?php echo esc_url($addon_settings_url); ?>"><?php esc_html_e('Open Add-on', 'user-manager'); ?></a>
+											<a class="button button-small" href="<?php echo esc_url($addon_log_url); ?>"><?php esc_html_e('View in Admin Log', 'user-manager'); ?></a>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					<?php endif; ?>
+				</div>
+			</div>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-list-view"></span>
 					<h2><?php esc_html_e('Activity Log', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
-					<?php if (empty($log) && empty($action_filter)) : ?>
+					<?php if (empty($log) && empty($action_filter) && empty($tool_filter)) : ?>
 						<p><?php esc_html_e('No activity logged yet.', 'user-manager'); ?></p>
 					<?php else : ?>
 						<!-- Action Filter -->
 						<div style="margin-bottom: 20px;">
 							<form method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>" style="display: inline-block;">
 								<input type="hidden" name="page" value="<?php echo esc_attr(User_Manager_Core::SETTINGS_PAGE_SLUG); ?>" />
-								<input type="hidden" name="tab" value="<?php echo esc_attr(User_Manager_Core::TAB_ACTIVITY_LOG); ?>" />
+								<input type="hidden" name="tab" value="<?php echo esc_attr($is_reports_context ? User_Manager_Core::TAB_REPORTS : User_Manager_Core::TAB_ACTIVITY_LOG); ?>" />
+								<?php if ($is_reports_context) : ?>
+									<input type="hidden" name="reports_section" value="admin-log" />
+								<?php endif; ?>
 								<label for="um-action-filter" style="margin-right: 8px;">
 									<strong><?php esc_html_e('Filter by Action:', 'user-manager'); ?></strong>
 								</label>
@@ -56,7 +140,23 @@ class User_Manager_Tab_Activity_Log {
 										</option>
 									<?php endforeach; ?>
 								</select>
-								<?php if ($action_filter) : ?>
+								<label for="um-tool-filter" style="margin: 0 8px 0 12px;">
+									<strong><?php esc_html_e('Filter by Add-on Tool:', 'user-manager'); ?></strong>
+								</label>
+								<select name="tool_filter" id="um-tool-filter" onchange="this.form.submit();" style="min-width: 220px;">
+									<option value=""><?php esc_html_e('All Add-on Tools', 'user-manager'); ?></option>
+									<?php foreach ($addon_sections as $addon_meta) :
+										$addon_label = isset($addon_meta['label']) ? (string) $addon_meta['label'] : '';
+										if ($addon_label === '') {
+											continue;
+										}
+										?>
+										<option value="<?php echo esc_attr($addon_label); ?>" <?php selected($tool_filter, $addon_label); ?>>
+											<?php echo esc_html($addon_label); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<?php if ($action_filter || $tool_filter) : ?>
 									<a href="<?php echo esc_url($current_url); ?>" class="button" style="margin-left: 8px;">
 										<?php esc_html_e('Clear Filter', 'user-manager'); ?>
 									</a>
@@ -64,7 +164,7 @@ class User_Manager_Tab_Activity_Log {
 							</form>
 						</div>
 						
-						<?php if (empty($log)) : ?>
+					<?php if (empty($log)) : ?>
 							<p><?php esc_html_e('No activity found for the selected filter.', 'user-manager'); ?></p>
 						<?php else : ?>
 						<table class="um-activity-table">
@@ -263,7 +363,7 @@ class User_Manager_Tab_Activity_Log {
 						</table>
 						
 						<?php if ($total_pages > 1) : ?>
-							<?php self::render_pagination($paged, $total_pages, $total, $current_url, $action_filter); ?>
+							<?php self::render_pagination($paged, $total_pages, $total, $current_url, $action_filter, $tool_filter); ?>
 						<?php endif; ?>
 					<?php endif; ?>
 					<?php endif; ?>
@@ -400,11 +500,14 @@ class User_Manager_Tab_Activity_Log {
 	/**
 	 * Render pagination controls.
 	 */
-	private static function render_pagination(int $paged, int $total_pages, int $total, string $current_url, string $action_filter = ''): void {
+	private static function render_pagination(int $paged, int $total_pages, int $total, string $current_url, string $action_filter = '', string $tool_filter = ''): void {
 		// Preserve action filter in pagination URLs
 		$base_url = $current_url;
 		if ($action_filter) {
 			$base_url = add_query_arg('action_filter', $action_filter, $base_url);
+		}
+		if ($tool_filter) {
+			$base_url = add_query_arg('tool_filter', $tool_filter, $base_url);
 		}
 		?>
 		<div class="tablenav" style="margin-top:12px;">

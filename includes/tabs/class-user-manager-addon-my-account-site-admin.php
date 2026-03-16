@@ -11,6 +11,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 
 	public static function render(array $settings): void {
 		$available_roles = self::get_available_roles();
+		$order_status_note = self::get_order_statuses_note();
 		$is_enabled = array_key_exists('my_account_site_admin_enabled', $settings)
 			? !empty($settings['my_account_site_admin_enabled'])
 			: (
@@ -46,18 +47,35 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<input type="text" name="my_account_admin_order_viewer_usernames" id="um-my-account-admin-order-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_order_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
 						<p class="description"><?php esc_html_e('Usernames allowed to view the Admin: Orders My Account area.', 'user-manager'); ?></p>
 						<?php self::render_role_checkboxes('my_account_admin_order_viewer_roles', $settings['my_account_admin_order_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Orders', 'user-manager')); ?>
+						<label for="um-my-account-admin-order-status-filters"><?php esc_html_e('Order Status Filters (Comma, Separated)', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_order_status_filters" id="um-my-account-admin-order-status-filters" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_order_status_filters'] ?? ''); ?>" placeholder="wc_completed:Complete,wc_failed:Failed" />
+						<p class="description"><?php esc_html_e('Use wc_status keys, separated by commas. If a colon is included, the value after the colon is used as the filter title/label.', 'user-manager'); ?></p>
+						<p class="description"><?php echo esc_html($order_status_note); ?></p>
+						<label>
+							<input type="checkbox" name="my_account_admin_order_hide_status" id="um-my-account-admin-order-hide-status" value="1" <?php checked($settings['my_account_admin_order_hide_status'] ?? false); ?> />
+							<?php esc_html_e('Hide Order Status', 'user-manager'); ?>
+						</label>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-approver-users-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label for="um-my-account-admin-order-approval-usernames"><?php esc_html_e('Order approval allowed usernames (comma-separated)', 'user-manager'); ?></label>
 						<input type="text" name="my_account_admin_order_approval_usernames" id="um-my-account-admin-order-approval-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_order_approval_usernames'] ?? ''); ?>" placeholder="approver1, approver2" />
-						<p class="description"><?php esc_html_e('These users can see an "Approve" button for pending payment orders, which moves the order to Processing.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('These users can see action buttons for any order that is not Completed. Approve is hidden when an order is already Processing, and Decline is hidden when an order is already Canceled.', 'user-manager'); ?></p>
 						<?php self::render_role_checkboxes('my_account_admin_order_approval_roles', $settings['my_account_admin_order_approval_roles'] ?? [], $available_roles, __('Order approval allowed roles', 'user-manager')); ?>
+						<label for="um-my-account-admin-order-approve-button-label"><?php esc_html_e('Approve Button Label', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_order_approve_button_label" id="um-my-account-admin-order-approve-button-label" class="regular-text" value="<?php echo esc_attr($settings['my_account_admin_order_approve_button_label'] ?? 'Move to Processing'); ?>" />
+						<label for="um-my-account-admin-order-decline-button-label" style="margin-top:8px;"><?php esc_html_e('Decline Button Label', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_order_decline_button_label" id="um-my-account-admin-order-decline-button-label" class="regular-text" value="<?php echo esc_attr($settings['my_account_admin_order_decline_button_label'] ?? 'Move to Canceled'); ?>" />
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-default-pending-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label>
 							<input type="checkbox" name="my_account_admin_order_default_pending_enabled" id="um-my-account-admin-order-default-pending-enabled" value="1" <?php checked($settings['my_account_admin_order_default_pending_enabled'] ?? false); ?> />
 							<?php esc_html_e('Default all new orders into a payment pending status', 'user-manager'); ?>
 						</label>
+					</div>
+					<div class="um-form-field" id="um-my-account-admin-order-additional-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label for="um-my-account-admin-order-additional-meta-fields"><?php esc_html_e('Additional Meta Fields to Display Under Order', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_order_additional_meta_fields" id="um-my-account-admin-order-additional-meta-fields" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_order_additional_meta_fields'] ?? ''); ?>" placeholder="_tracking_number:Tracking Number, _invoice_url:Invoice URL" />
+						<p class="description"><?php esc_html_e('Format: meta_field:Label:prefix_before_value', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label>
@@ -209,6 +227,33 @@ class User_Manager_Addon_My_Account_Site_Admin {
 			<p class="description"><?php esc_html_e('If any selected role matches the current user, access is granted even if the username is not listed above.', 'user-manager'); ?></p>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Build a human-readable note of current order statuses.
+	 */
+	private static function get_order_statuses_note(): string {
+		if (!function_exists('wc_get_order_statuses')) {
+			return __('Available statuses could not be loaded because WooCommerce is unavailable.', 'user-manager');
+		}
+
+		$statuses = wc_get_order_statuses();
+		if (!is_array($statuses) || empty($statuses)) {
+			return __('Available statuses could not be loaded.', 'user-manager');
+		}
+
+		$chunks = [];
+		foreach ($statuses as $status_key => $status_label) {
+			$key = strtolower((string) $status_key);
+			$key = str_replace('-', '_', $key);
+			$chunks[] = $key . ' (' . wp_strip_all_tags((string) $status_label) . ')';
+		}
+
+		return sprintf(
+			/* translators: %s: comma-separated status key list */
+			__('Available statuses in this store: %s', 'user-manager'),
+			implode(', ', $chunks)
+		);
 	}
 }
 

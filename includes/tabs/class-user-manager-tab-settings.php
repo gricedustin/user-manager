@@ -88,37 +88,6 @@ if (!defined('ABSPATH')) {
 			<input type="hidden" name="settings_section" value="general" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single">
-				<!-- User & Login -->
-				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="user-login" data-title="<?php echo esc_attr__('User & Login', 'user-manager'); ?>">
-					<div class="um-admin-card-header">
-						<span class="dashicons dashicons-admin-users"></span>
-						<h2><?php esc_html_e('User & Login', 'user-manager'); ?></h2>
-					</div>
-					<div class="um-admin-card-body">
-						<div class="um-form-field">
-							<label for="um-default-role"><?php esc_html_e('Default User Role', 'user-manager'); ?></label>
-							<select name="default_role" id="um-default-role" class="regular-text">
-								<?php foreach (User_Manager_Core::get_user_roles() as $key => $name) : ?>
-									<option value="<?php echo esc_attr($key); ?>" <?php selected($settings['default_role'] ?? 'customer', $key); ?>><?php echo esc_html($name); ?></option>
-								<?php endforeach; ?>
-							</select>
-						</div>
-						<div class="um-form-field">
-							<label for="um-default-login-url"><?php esc_html_e('Default Login URL', 'user-manager'); ?></label>
-							<select name="default_login_url" id="um-default-login-url" class="regular-text">
-								<option value="/my-account/" <?php selected($settings['default_login_url'] ?? '/my-account/', '/my-account/'); ?>><?php esc_html_e('My Account', 'user-manager'); ?></option>
-								<option value="/wp-admin/" <?php selected($settings['default_login_url'] ?? '', '/wp-admin/'); ?>><?php esc_html_e('WP Admin', 'user-manager'); ?></option>
-								<option value="/wp-login.php?saml_sso=false" <?php selected($settings['default_login_url'] ?? '', '/wp-login.php?saml_sso=false'); ?>><?php esc_html_e('WP Admin SSO Bypass', 'user-manager'); ?></option>
-							</select>
-						</div>
-						<div class="um-form-field">
-							<label for="um-paste-default-columns"><?php esc_html_e('Paste from Spreadsheet: default column order', 'user-manager'); ?></label>
-							<input type="text" name="paste_default_columns" id="um-paste-default-columns" class="large-text code" value="<?php echo esc_attr($settings['paste_default_columns'] ?? 'email,first_name,last_name,role,username,password'); ?>" placeholder="email,first_name,last_name,role,username,password" />
-							<p class="description"><?php esc_html_e('When pasted data has no header row, columns are interpreted in this order (comma-separated). The first column should be email. You can add or remove columns (e.g. coupon_email_append). Used by the Paste from Spreadsheet tool on the Bulk Create tab.', 'user-manager'); ?></p>
-						</div>
-					</div>
-				</div>
-
 				<!-- Email Settings -->
 				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="email-settings" data-title="<?php echo esc_attr__('Email Settings', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
@@ -238,13 +207,6 @@ if (!defined('ABSPATH')) {
 							</label>
 							<p class="description"><?php esc_html_e('Change the reset password copy to set password intended for new users who should set a password when first logging into the site so it doesn\'t look like they are "resetting" for the first time. Also removes the username from the password changed email.', 'user-manager'); ?></p>
 						</div>
-						<div class="um-form-field">
-							<label>
-								<input type="checkbox" name="search_redirect_by_sku" value="1" <?php checked(!isset($settings['search_redirect_by_sku']) || !empty($settings['search_redirect_by_sku'])); ?> />
-								<?php esc_html_e('Allow WooCommerce front-end product search to include SKUs', 'user-manager'); ?>
-							</label>
-							<p class="description"><?php esc_html_e('When a search term (?s=) exactly matches a product or variation SKU, redirect directly to that product page instead of showing search results.', 'user-manager'); ?></p>
-						</div>
 					</div>
 				</div>
 
@@ -284,30 +246,6 @@ if (!defined('ABSPATH')) {
 					</div>
 				</div>
 
-				<!-- Post Meta -->
-				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="post-meta" data-title="<?php echo esc_attr__('Post Meta', 'user-manager'); ?>">
-					<div class="um-admin-card-header">
-						<span class="dashicons dashicons-editor-code"></span>
-						<h2><?php esc_html_e('Post Meta', 'user-manager'); ?></h2>
-					</div>
-					<div class="um-admin-card-body">
-						<div class="um-form-field">
-							<label>
-								<input type="checkbox" name="display_post_meta_meta_box" value="1" <?php checked($settings['display_post_meta_meta_box'] ?? false); ?> />
-								<?php esc_html_e('Display all post meta fields & values in a meta box when editing posts', 'user-manager'); ?>
-							</label>
-							<p class="description"><?php esc_html_e('Shows a meta box on the edit screen for all post types listing every post meta key and its value(s).', 'user-manager'); ?></p>
-						</div>
-						<div class="um-form-field">
-							<label>
-								<input type="checkbox" name="allow_edit_post_meta" value="1" <?php checked($settings['allow_edit_post_meta'] ?? false); ?> />
-								<?php esc_html_e('Allow editing of post meta values', 'user-manager'); ?>
-							</label>
-							<p class="description"><?php esc_html_e('When the post meta meta box is enabled, allow changing meta values directly from the meta box. Save the post to apply changes.', 'user-manager'); ?></p>
-						</div>
-					</div>
-				</div>
-
 				<!-- User Creation & Import -->
 				<div class="um-admin-card um-settings-filter-card um-settings-collapsible-card" data-card="user-import" data-title="<?php echo esc_attr__('User Creation & Import', 'user-manager'); ?>">
 					<div class="um-admin-card-header">
@@ -315,6 +253,27 @@ if (!defined('ABSPATH')) {
 						<h2><?php esc_html_e('User Creation & Import', 'user-manager'); ?></h2>
 					</div>
 					<div class="um-admin-card-body">
+						<div class="um-form-field">
+							<label for="um-default-role"><?php esc_html_e('Default User Role', 'user-manager'); ?></label>
+							<select name="default_role" id="um-default-role" class="regular-text">
+								<?php foreach (User_Manager_Core::get_user_roles() as $key => $name) : ?>
+									<option value="<?php echo esc_attr($key); ?>" <?php selected($settings['default_role'] ?? 'customer', $key); ?>><?php echo esc_html($name); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+						<div class="um-form-field">
+							<label for="um-default-login-url"><?php esc_html_e('Default Login URL', 'user-manager'); ?></label>
+							<select name="default_login_url" id="um-default-login-url" class="regular-text">
+								<option value="/my-account/" <?php selected($settings['default_login_url'] ?? '/my-account/', '/my-account/'); ?>><?php esc_html_e('My Account', 'user-manager'); ?></option>
+								<option value="/wp-admin/" <?php selected($settings['default_login_url'] ?? '', '/wp-admin/'); ?>><?php esc_html_e('WP Admin', 'user-manager'); ?></option>
+								<option value="/wp-login.php?saml_sso=false" <?php selected($settings['default_login_url'] ?? '', '/wp-login.php?saml_sso=false'); ?>><?php esc_html_e('WP Admin SSO Bypass', 'user-manager'); ?></option>
+							</select>
+						</div>
+						<div class="um-form-field">
+							<label for="um-paste-default-columns"><?php esc_html_e('Paste from Spreadsheet: default column order', 'user-manager'); ?></label>
+							<input type="text" name="paste_default_columns" id="um-paste-default-columns" class="large-text code" value="<?php echo esc_attr($settings['paste_default_columns'] ?? 'email,first_name,last_name,role,username,password'); ?>" placeholder="email,first_name,last_name,role,username,password" />
+							<p class="description"><?php esc_html_e('When pasted data has no header row, columns are interpreted in this order (comma-separated). The first column should be email. You can add or remove columns (e.g. coupon_email_append). Used by the Paste from Spreadsheet tool on the Bulk Create tab.', 'user-manager'); ?></p>
+						</div>
 						<div class="um-form-field">
 							<label>
 								<input type="checkbox" name="update_existing_users" value="1" <?php checked($settings['update_existing_users'] ?? false); ?> />

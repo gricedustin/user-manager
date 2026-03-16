@@ -8,19 +8,30 @@ if (!defined('ABSPATH')) {
 }
 
 trait User_Manager_Core_Activity_Log_Trait {
-		public static function get_activity_log(int $per_page = 0, int $offset = 0, ?string $action_filter = null): array {
+		public static function get_activity_log(int $per_page = 0, int $offset = 0, ?string $action_filter = null, ?string $tool_filter = null): array {
 			global $wpdb;
 			$table = $wpdb->prefix . 'um_admin_activity';
-			
-			// Build WHERE clause for action filter
+
+			$has_action_filter = !empty($action_filter);
+			$has_tool_filter = !empty($tool_filter);
 			$where = '';
-			if (!empty($action_filter)) {
+			if ($has_action_filter && $has_tool_filter) {
+				$where = $wpdb->prepare(
+					' WHERE action = %s AND tool LIKE %s',
+					$action_filter,
+					'%' . $wpdb->esc_like((string) $tool_filter) . '%'
+				);
+			} elseif ($has_action_filter) {
 				$where = $wpdb->prepare(' WHERE action = %s', $action_filter);
+			} elseif ($has_tool_filter) {
+				$where = $wpdb->prepare(
+					' WHERE tool LIKE %s',
+					'%' . $wpdb->esc_like((string) $tool_filter) . '%'
+				);
 			}
-			
-			// Get total count
+
 			$total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}{$where}");
-			
+
 			// Build query with pagination
 			$query = "SELECT id, action, user_id, tool, extra, created_by, created_at FROM {$table}{$where} ORDER BY created_at DESC";
 			if ($per_page > 0) {
@@ -224,6 +235,18 @@ trait User_Manager_Core_Activity_Log_Trait {
 					$notification_msg = $plugin_name 
 						? sprintf(__('Plugin "%s" deactivated.', 'user-manager'), $plugin_name)
 						: __('Plugin deactivated.', 'user-manager');
+					break;
+				case 'settings_updated':
+					$action_label = __('Settings Updated', 'user-manager');
+					$badge_class = 'um-status-warning';
+					$changed_count = isset($extra['changed_count']) ? (int) $extra['changed_count'] : 0;
+					$section_label = isset($extra['settings_section']) ? (string) $extra['settings_section'] : __('general', 'user-manager');
+					$notification_msg = sprintf(
+						/* translators: 1: section key, 2: number of changed settings */
+						__('Updated "%1$s" settings (%2$d change(s)).', 'user-manager'),
+						$section_label,
+						$changed_count
+					);
 					break;
 				case 'coupon_lookup':
 					$action_label = __('Coupon Lookup by Email', 'user-manager');
@@ -496,6 +519,33 @@ trait User_Manager_Core_Activity_Log_Trait {
 							</strong>
 						</td>
 					</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<?php endif; ?>
+
+			<?php if ($entry['action'] === 'settings_updated' && !empty($extra['changed_fields']) && is_array($extra['changed_fields'])) : ?>
+			<h4 style="margin: 16px 0 8px;"><?php esc_html_e('Settings Changes', 'user-manager'); ?></h4>
+			<table class="widefat striped">
+				<thead>
+					<tr>
+						<th><?php esc_html_e('Field', 'user-manager'); ?></th>
+						<th><?php esc_html_e('Old Value', 'user-manager'); ?></th>
+						<th><?php esc_html_e('New Value', 'user-manager'); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ($extra['changed_fields'] as $change_row) : ?>
+						<?php
+						$field = isset($change_row['field']) ? (string) $change_row['field'] : '';
+						$old_value = $change_row['old'] ?? '';
+						$new_value = $change_row['new'] ?? '';
+						?>
+						<tr style="background: #fff8e5;">
+							<td><code><?php echo esc_html($field); ?></code></td>
+							<td><?php echo esc_html(self::format_activity_detail_scalar($old_value)); ?></td>
+							<td><strong style="color: #0073aa;"><?php echo esc_html(self::format_activity_detail_scalar($new_value)); ?></strong></td>
+						</tr>
 					<?php endforeach; ?>
 				</tbody>
 			</table>

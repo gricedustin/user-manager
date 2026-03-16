@@ -9,8 +9,10 @@ if (!defined('ABSPATH')) {
 
 
 require_once __DIR__ . '/actions/trait-user-manager-actions-content-generator.php';
+require_once __DIR__ . '/actions/trait-user-manager-actions-bulk-page-creator.php';
 class User_Manager_Actions {
 	use User_Manager_Actions_Content_Generator_Trait;
+	use User_Manager_Actions_Bulk_Page_Creator_Trait;
 
 	/**
 	 * Initialize action hooks.
@@ -41,6 +43,7 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_create_basic_coupon_template', [__CLASS__, 'handle_create_basic_coupon_template']);
 		add_action('admin_post_user_manager_reset_view_reports', [__CLASS__, 'handle_reset_view_reports']);
 		add_action('admin_post_user_manager_blog_post_importer', [__CLASS__, 'handle_blog_post_importer']);
+		add_action('admin_post_user_manager_bulk_page_creator', [__CLASS__, 'handle_bulk_page_creator']);
 		add_action('wp_ajax_user_manager_blog_chatgpt', [__CLASS__, 'ajax_blog_chatgpt']);
 		add_action('wp_ajax_user_manager_set_post_thumbnail', [__CLASS__, 'ajax_set_post_thumbnail']);
 		add_action('wp_ajax_user_manager_set_post_date', [__CLASS__, 'ajax_set_post_date']);
@@ -1543,6 +1546,17 @@ class User_Manager_Actions {
 		if (!is_array($settings)) {
 			$settings = [];
 		}
+		$settings_before = $settings;
+		$bulk_settings_before = get_option('bulk_add_to_cart_settings', []);
+		if (!is_array($bulk_settings_before)) {
+			$bulk_settings_before = [];
+		}
+		$role_switch_settings_before = get_option('view_website_by_role_settings', []);
+		if (!is_array($role_switch_settings_before)) {
+			$role_switch_settings_before = [];
+		}
+		$bulk_settings_after = $bulk_settings_before;
+		$role_switch_settings_after = $role_switch_settings_before;
 
 		$redirect_tab = User_Manager_Core::TAB_SETTINGS;
 
@@ -1635,12 +1649,9 @@ class User_Manager_Actions {
 				$settings['rebrand_reset_password_copy'] = isset($_POST['rebrand_reset_password_copy']) && $_POST['rebrand_reset_password_copy'] === '1';
 				$settings['coupon_email_converter'] = isset($_POST['coupon_email_converter']) && $_POST['coupon_email_converter'] === '1';
 				$settings['coupon_show_email_column'] = isset($_POST['coupon_show_email_column']) && $_POST['coupon_show_email_column'] === '1';
-				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
 				$settings['coupon_code_url_param_enabled'] = isset($_POST['coupon_code_url_param_enabled']) && $_POST['coupon_code_url_param_enabled'] === '1';
 				$param_name = isset($_POST['coupon_code_url_param_name']) ? sanitize_key(str_replace(' ', '-', wp_unslash($_POST['coupon_code_url_param_name']))) : 'coupon-code';
 				$settings['coupon_code_url_param_name'] = $param_name !== '' ? $param_name : 'coupon-code';
-				$settings['display_post_meta_meta_box'] = isset($_POST['display_post_meta_meta_box']) && $_POST['display_post_meta_meta_box'] === '1';
-				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 				$settings['sftp_directories'] = isset($_POST['sftp_directories']) ? sanitize_textarea_field(wp_unslash($_POST['sftp_directories'])) : '';
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';
@@ -1654,9 +1665,21 @@ class User_Manager_Actions {
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
 				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
+				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
+				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
+				$settings['security_hardening_enabled'] = isset($_POST['security_hardening_enabled']) && $_POST['security_hardening_enabled'] === '1';
+				$settings['security_hardening_block_rest_user_enumeration'] = isset($_POST['security_hardening_block_rest_user_enumeration']) && $_POST['security_hardening_block_rest_user_enumeration'] === '1';
+				$settings['security_hardening_disallow_file_edit'] = isset($_POST['security_hardening_disallow_file_edit']) && $_POST['security_hardening_disallow_file_edit'] === '1';
+				$settings['security_hardening_disallow_file_mods'] = isset($_POST['security_hardening_disallow_file_mods']) && $_POST['security_hardening_disallow_file_mods'] === '1';
+				$settings['security_hardening_force_ssl_admin'] = isset($_POST['security_hardening_force_ssl_admin']) && $_POST['security_hardening_force_ssl_admin'] === '1';
+				$settings['security_hardening_hide_wp_version'] = isset($_POST['security_hardening_hide_wp_version']) && $_POST['security_hardening_hide_wp_version'] === '1';
+				$settings['fatal_error_debugger_enabled'] = isset($_POST['fatal_error_debugger_enabled']) && $_POST['fatal_error_debugger_enabled'] === '1';
+				$settings['fatal_error_debugger_email'] = isset($_POST['fatal_error_debugger_email']) ? sanitize_email(wp_unslash($_POST['fatal_error_debugger_email'])) : '';
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
+				$settings['display_post_meta_meta_box'] = isset($_POST['display_post_meta_meta_box']) && $_POST['display_post_meta_meta_box'] === '1';
+				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 
 				// Coupons for New Users.
 				$settings['nuc_enabled'] = isset($_POST['nuc_enabled']) && $_POST['nuc_enabled'] === '1';
@@ -1753,13 +1776,26 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_viewer_roles'] = self::sanitize_role_keys_array(
 					isset($_POST['my_account_admin_order_viewer_roles']) ? wp_unslash($_POST['my_account_admin_order_viewer_roles']) : []
 				);
+				$settings['my_account_admin_order_status_filters'] = isset($_POST['my_account_admin_order_status_filters'])
+					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_status_filters']))
+					: '';
+				$settings['my_account_admin_order_hide_status'] = isset($_POST['my_account_admin_order_hide_status']) && $_POST['my_account_admin_order_hide_status'] === '1';
 				$settings['my_account_admin_order_approval_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_order_approval_usernames']) ? wp_unslash($_POST['my_account_admin_order_approval_usernames']) : ''
 				);
 				$settings['my_account_admin_order_approval_roles'] = self::sanitize_role_keys_array(
 					isset($_POST['my_account_admin_order_approval_roles']) ? wp_unslash($_POST['my_account_admin_order_approval_roles']) : []
 				);
+				$settings['my_account_admin_order_approve_button_label'] = isset($_POST['my_account_admin_order_approve_button_label'])
+					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_approve_button_label']))
+					: 'Move to Processing';
+				$settings['my_account_admin_order_decline_button_label'] = isset($_POST['my_account_admin_order_decline_button_label'])
+					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_decline_button_label']))
+					: 'Move to Canceled';
 				$settings['my_account_admin_order_default_pending_enabled'] = isset($_POST['my_account_admin_order_default_pending_enabled']) && $_POST['my_account_admin_order_default_pending_enabled'] === '1';
+				$settings['my_account_admin_order_additional_meta_fields'] = isset($_POST['my_account_admin_order_additional_meta_fields'])
+					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_additional_meta_fields']))
+					: '';
 				$settings['my_account_admin_order_viewer_show_meta'] = isset($_POST['my_account_admin_order_viewer_show_meta']) && $_POST['my_account_admin_order_viewer_show_meta'] === '1';
 				$settings['my_account_admin_product_viewer_enabled'] = isset($_POST['my_account_admin_product_viewer_enabled']) && $_POST['my_account_admin_product_viewer_enabled'] === '1';
 				$settings['my_account_admin_product_viewer_usernames'] = self::sanitize_username_csv(
@@ -1792,9 +1828,93 @@ class User_Manager_Actions {
 				$settings['my_account_coupon_screen_menu_title'] = $menu_title !== '' ? $menu_title : 'Coupons';
 				$settings['my_account_coupon_screen_page_title'] = $page_title !== '' ? $page_title : 'Coupons';
 				$settings['my_account_coupon_screen_page_description'] = isset($_POST['my_account_coupon_screen_page_description']) ? sanitize_textarea_field(wp_unslash($_POST['my_account_coupon_screen_page_description'])) : '';
+				$settings['my_account_menu_tiles_enabled'] = isset($_POST['my_account_menu_tiles_enabled']) && $_POST['my_account_menu_tiles_enabled'] === '1';
+				$settings['my_account_menu_tiles_per_row'] = isset($_POST['my_account_menu_tiles_per_row']) ? max(1, absint($_POST['my_account_menu_tiles_per_row'])) : 4;
+				$settings['my_account_menu_tiles_min_height'] = isset($_POST['my_account_menu_tiles_min_height']) ? max(1, absint($_POST['my_account_menu_tiles_min_height'])) : 80;
+				$settings['cart_price_per_piece_enabled'] = isset($_POST['cart_price_per_piece_enabled']) && $_POST['cart_price_per_piece_enabled'] === '1';
+				$settings['cart_price_per_piece_enable_cart_display'] = isset($_POST['cart_price_per_piece_enable_cart_display']) && $_POST['cart_price_per_piece_enable_cart_display'] === '1';
+				$settings['cart_price_per_piece_enable_order_display'] = isset($_POST['cart_price_per_piece_enable_order_display']) && $_POST['cart_price_per_piece_enable_order_display'] === '1';
+				$settings['cart_price_per_piece_suffix_text'] = isset($_POST['cart_price_per_piece_suffix_text']) ? sanitize_text_field(wp_unslash($_POST['cart_price_per_piece_suffix_text'])) : '/ea';
+				$cart_price_per_piece_font_size = isset($_POST['cart_price_per_piece_font_size']) ? sanitize_text_field(wp_unslash($_POST['cart_price_per_piece_font_size'])) : '12px';
+				$allowed_cart_price_per_piece_font_sizes = ['10px', '11px', '12px', '13px', '14px'];
+				$settings['cart_price_per_piece_font_size'] = in_array($cart_price_per_piece_font_size, $allowed_cart_price_per_piece_font_sizes, true) ? $cart_price_per_piece_font_size : '12px';
+				$cart_price_per_piece_color = isset($_POST['cart_price_per_piece_text_color']) ? sanitize_hex_color(wp_unslash($_POST['cart_price_per_piece_text_color'])) : '#666666';
+				$settings['cart_price_per_piece_text_color'] = $cart_price_per_piece_color ? $cart_price_per_piece_color : '#666666';
+				$settings['bulk_page_creator_enabled'] = isset($_POST['bulk_page_creator_enabled']) && $_POST['bulk_page_creator_enabled'] === '1';
+				$settings['bulk_page_creator_max_tokens'] = isset($_POST['bulk_page_creator_max_tokens']) ? max(100, min(8000, absint($_POST['bulk_page_creator_max_tokens']))) : 2000;
+				$bulk_page_creator_temperature = isset($_POST['bulk_page_creator_temperature']) ? (float) wp_unslash($_POST['bulk_page_creator_temperature']) : 0.7;
+				if ($bulk_page_creator_temperature < 0) {
+					$bulk_page_creator_temperature = 0;
+				}
+				if ($bulk_page_creator_temperature > 1) {
+					$bulk_page_creator_temperature = 1;
+				}
+				$settings['bulk_page_creator_temperature'] = $bulk_page_creator_temperature;
+				$settings['bulk_page_creator_image_search_count'] = isset($_POST['bulk_page_creator_image_search_count']) ? max(1, min(10, absint($_POST['bulk_page_creator_image_search_count']))) : 3;
+				$settings['bulk_page_creator_auto_publish'] = isset($_POST['bulk_page_creator_auto_publish']) && $_POST['bulk_page_creator_auto_publish'] === '1';
+				$settings['bulk_page_creator_download_images'] = isset($_POST['bulk_page_creator_download_images']) && $_POST['bulk_page_creator_download_images'] === '1';
+				$settings['bulk_page_creator_set_featured_image'] = isset($_POST['bulk_page_creator_set_featured_image']) && $_POST['bulk_page_creator_set_featured_image'] === '1';
+				$settings['bulk_page_creator_include_with_every_prompt'] = isset($_POST['bulk_page_creator_include_with_every_prompt']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_page_creator_include_with_every_prompt'])) : '';
+				$settings['bulk_page_creator_page_data'] = isset($_POST['bulk_page_creator_page_data']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_page_creator_page_data'])) : '';
+				$settings['database_table_browser_enabled'] = isset($_POST['database_table_browser_enabled']) && $_POST['database_table_browser_enabled'] === '1';
+				$settings['database_table_browser_per_page_limit'] = isset($_POST['database_table_browser_per_page_limit']) ? max(1, min(1000, absint($_POST['database_table_browser_per_page_limit']))) : 100;
+				$settings['webhook_urls_enabled'] = isset($_POST['webhook_urls_enabled']) && $_POST['webhook_urls_enabled'] === '1';
+				$settings['webhook_urls_debug_mode'] = isset($_POST['webhook_urls_debug_mode']) && $_POST['webhook_urls_debug_mode'] === '1';
+				$settings['webhook_urls_allow_url_params'] = isset($_POST['webhook_urls_allow_url_params']) && $_POST['webhook_urls_allow_url_params'] === '1';
+				$settings['webhook_urls_activate_order_webhook'] = isset($_POST['webhook_urls_activate_order_webhook']) && $_POST['webhook_urls_activate_order_webhook'] === '1';
+				$settings['webhook_urls_activate_user_webhook'] = isset($_POST['webhook_urls_activate_user_webhook']) && $_POST['webhook_urls_activate_user_webhook'] === '1';
+				$settings['webhook_urls_activate_post_webhook'] = isset($_POST['webhook_urls_activate_post_webhook']) && $_POST['webhook_urls_activate_post_webhook'] === '1';
+				$settings['webhook_urls_activate_coupon_webhook'] = isset($_POST['webhook_urls_activate_coupon_webhook']) && $_POST['webhook_urls_activate_coupon_webhook'] === '1';
+				$settings['webhook_urls_activate_product_webhook'] = isset($_POST['webhook_urls_activate_product_webhook']) && $_POST['webhook_urls_activate_product_webhook'] === '1';
+				$settings['webhook_urls_activate_product_cat_webhook'] = isset($_POST['webhook_urls_activate_product_cat_webhook']) && $_POST['webhook_urls_activate_product_cat_webhook'] === '1';
+				$settings['webhook_urls_activate_user_password_reset_webhook'] = isset($_POST['webhook_urls_activate_user_password_reset_webhook']) && $_POST['webhook_urls_activate_user_password_reset_webhook'] === '1';
+				$settings['webhook_urls_activate_send_email_webhook'] = isset($_POST['webhook_urls_activate_send_email_webhook']) && $_POST['webhook_urls_activate_send_email_webhook'] === '1';
+				$settings['invoice_approval_enabled'] = isset($_POST['invoice_approval_enabled']) && $_POST['invoice_approval_enabled'] === '1';
+				$settings['invoice_primary_color'] = isset($_POST['invoice_primary_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_primary_color'])) : '#4B2E83';
+				$settings['invoice_hide_logo_in_pdf'] = isset($_POST['invoice_hide_logo_in_pdf']) && $_POST['invoice_hide_logo_in_pdf'] === '1';
+				$settings['invoice_hide_buttons_in_pdf'] = isset($_POST['invoice_hide_buttons_in_pdf']) && $_POST['invoice_hide_buttons_in_pdf'] === '1';
+				$settings['invoice_button_color'] = isset($_POST['invoice_button_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_button_color'])) : '#4B2E83';
+				$settings['invoice_button_text_color'] = isset($_POST['invoice_button_text_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_button_text_color'])) : '#ffffff';
+				$settings['invoice_font_family'] = isset($_POST['invoice_font_family']) ? sanitize_text_field(wp_unslash($_POST['invoice_font_family'])) : 'Poppins, sans-serif';
+				$settings['invoice_logo_url'] = isset($_POST['invoice_logo_url']) ? esc_url_raw(wp_unslash($_POST['invoice_logo_url'])) : '';
+				$settings['invoice_logo_max_width'] = isset($_POST['invoice_logo_max_width']) ? sanitize_text_field(wp_unslash($_POST['invoice_logo_max_width'])) : '160px';
+				$settings['invoice_company_name'] = isset($_POST['invoice_company_name']) ? sanitize_text_field(wp_unslash($_POST['invoice_company_name'])) : get_bloginfo('name');
+				$settings['invoice_company_address'] = isset($_POST['invoice_company_address']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_company_address'])) : '';
+				$settings['invoice_company_email'] = isset($_POST['invoice_company_email']) ? sanitize_email(wp_unslash($_POST['invoice_company_email'])) : get_bloginfo('admin_email');
+				$settings['invoice_company_phone'] = isset($_POST['invoice_company_phone']) ? sanitize_text_field(wp_unslash($_POST['invoice_company_phone'])) : '';
+				$settings['invoice_header_note'] = isset($_POST['invoice_header_note']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_header_note'])) : '';
+				$settings['invoice_footer_note'] = isset($_POST['invoice_footer_note']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_footer_note'])) : '';
+				$settings['invoice_footer_note_below_buttons'] = isset($_POST['invoice_footer_note_below_buttons']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_footer_note_below_buttons'])) : '';
+				$settings['invoice_order_label'] = isset($_POST['invoice_order_label']) ? sanitize_text_field(wp_unslash($_POST['invoice_order_label'])) : 'Order';
+				$settings['invoice_show_hidden_meta_fields'] = isset($_POST['invoice_show_hidden_meta_fields']) && $_POST['invoice_show_hidden_meta_fields'] === '1';
+				$settings['invoice_enable_enhancements'] = isset($_POST['invoice_enable_enhancements']) && $_POST['invoice_enable_enhancements'] === '1';
+				$settings['invoice_scrollable_items_threshold'] = isset($_POST['invoice_scrollable_items_threshold']) ? sanitize_text_field(wp_unslash($_POST['invoice_scrollable_items_threshold'])) : '';
+				$settings['invoice_approval_emails'] = isset($_POST['invoice_approval_emails']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_approval_emails'])) : '';
+				$settings['invoice_approval_title'] = isset($_POST['invoice_approval_title']) ? sanitize_text_field(wp_unslash($_POST['invoice_approval_title'])) : 'Approve & Pay Later';
+				$settings['invoice_approval_checkbox_text'] = isset($_POST['invoice_approval_checkbox_text']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_approval_checkbox_text'])) : '';
+				$settings['invoice_approval_button_text'] = isset($_POST['invoice_approval_button_text']) ? sanitize_text_field(wp_unslash($_POST['invoice_approval_button_text'])) : 'Send to Production';
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
+				$settings['add_to_cart_variation_table_enabled'] = isset($_POST['add_to_cart_variation_table_enabled']) && $_POST['add_to_cart_variation_table_enabled'] === '1';
+				$variation_table_hook = isset($_POST['add_to_cart_variation_table_hook']) ? sanitize_key(wp_unslash($_POST['add_to_cart_variation_table_hook'])) : 'auto';
+				$allowed_variation_table_hooks = ['auto', 'after_add_to_cart_form', 'single_product_summary', 'after_single_product_summary', 'before_add_to_cart_form'];
+				$settings['add_to_cart_variation_table_hook'] = in_array($variation_table_hook, $allowed_variation_table_hooks, true) ? $variation_table_hook : 'auto';
+				$settings['add_to_cart_variation_table_hide_default_form'] = isset($_POST['add_to_cart_variation_table_hide_default_form']) && $_POST['add_to_cart_variation_table_hide_default_form'] === '1';
+				$settings['add_to_cart_variation_table_show_price_column'] = isset($_POST['add_to_cart_variation_table_show_price_column']) && $_POST['add_to_cart_variation_table_show_price_column'] === '1';
+				$settings['add_to_cart_variation_table_prefix_labels'] = isset($_POST['add_to_cart_variation_table_prefix_labels']) && $_POST['add_to_cart_variation_table_prefix_labels'] === '1';
+				$settings['add_to_cart_variation_table_hide_header_row'] = isset($_POST['add_to_cart_variation_table_hide_header_row']) && $_POST['add_to_cart_variation_table_hide_header_row'] === '1';
+				$settings['add_to_cart_variation_table_header_variation_label'] = isset($_POST['add_to_cart_variation_table_header_variation_label']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_header_variation_label'])) : '';
+				$settings['add_to_cart_variation_table_header_qty_label'] = isset($_POST['add_to_cart_variation_table_header_qty_label']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_header_qty_label'])) : '';
+				$variation_table_category_ids = isset($_POST['add_to_cart_variation_table_category_ids']) && is_array($_POST['add_to_cart_variation_table_category_ids'])
+					? array_values(array_unique(array_filter(array_map('absint', wp_unslash($_POST['add_to_cart_variation_table_category_ids'])))))
+					: [];
+				$settings['add_to_cart_variation_table_category_ids'] = $variation_table_category_ids;
+				$settings['add_to_cart_variation_table_empty_cart_button_on_cart'] = isset($_POST['add_to_cart_variation_table_empty_cart_button_on_cart']) && $_POST['add_to_cart_variation_table_empty_cart_button_on_cart'] === '1';
+				$settings['add_to_cart_variation_table_button_text'] = isset($_POST['add_to_cart_variation_table_button_text']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_button_text'])) : '';
+				$settings['add_to_cart_variation_table_text_above'] = isset($_POST['add_to_cart_variation_table_text_above']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_above'])) : '';
+				$settings['add_to_cart_variation_table_text_below'] = isset($_POST['add_to_cart_variation_table_text_below']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_below'])) : '';
+				$settings['add_to_cart_variation_table_debug_mode'] = isset($_POST['add_to_cart_variation_table_debug_mode']) && $_POST['add_to_cart_variation_table_debug_mode'] === '1';
 				$settings['bulk_coupons_enabled'] = isset($_POST['bulk_coupons_enabled']) && $_POST['bulk_coupons_enabled'] === '1';
 				$settings['bulk_coupons_template_code'] = isset($_POST['bulk_coupons_template_code']) ? sanitize_text_field(wp_unslash($_POST['bulk_coupons_template_code'])) : '';
 				$settings['bulk_coupons_total'] = isset($_POST['bulk_coupons_total']) ? max(0, absint($_POST['bulk_coupons_total'])) : 0;
@@ -1819,6 +1939,9 @@ class User_Manager_Actions {
 					'identifier_type'    => isset($_POST['bulk_add_to_cart_identifier_type']) ? sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_identifier_type'])) : 'product_id',
 					'meta_field_name'    => isset($_POST['bulk_add_to_cart_meta_field_name']) ? sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_meta_field_name'])) : '',
 					'product_id_custom_column_header' => isset($_POST['bulk_add_to_cart_product_id_custom_column_header']) ? sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_product_id_custom_column_header'])) : 'product_id',
+					'sku_custom_column_header' => isset($_POST['bulk_add_to_cart_sku_custom_column_header']) ? sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_sku_custom_column_header'])) : '_sku',
+					'hide_product_id_column' => isset($_POST['bulk_add_to_cart_hide_product_id_column']) && $_POST['bulk_add_to_cart_hide_product_id_column'] === '1' ? '1' : '0',
+					'hide_sku_column' => isset($_POST['bulk_add_to_cart_hide_sku_column']) && $_POST['bulk_add_to_cart_hide_sku_column'] === '1' ? '1' : '0',
 					'quantity_column'    => isset($_POST['bulk_add_to_cart_quantity_column']) ? sanitize_text_field(wp_unslash($_POST['bulk_add_to_cart_quantity_column'])) : 'quantity',
 					'debug_mode'         => isset($_POST['bulk_add_to_cart_debug_mode']) && $_POST['bulk_add_to_cart_debug_mode'] === '1' ? '1' : '0',
 					'show_sample_csv'    => isset($_POST['bulk_add_to_cart_show_sample_csv']) && $_POST['bulk_add_to_cart_show_sample_csv'] === '1' ? '1' : '0',
@@ -1829,10 +1952,14 @@ class User_Manager_Actions {
 				if (trim((string) $bulk_settings['product_id_custom_column_header']) === '') {
 					$bulk_settings['product_id_custom_column_header'] = 'product_id';
 				}
+				if (trim((string) $bulk_settings['sku_custom_column_header']) === '') {
+					$bulk_settings['sku_custom_column_header'] = '_sku';
+				}
+				$bulk_settings_after = $bulk_settings;
 				update_option('bulk_add_to_cart_settings', $bulk_settings);
 
 				// Role Switching settings.
-				$role_switch_settings    = get_option('view_website_by_role_settings', []);
+				$role_switch_settings    = $role_switch_settings_before;
 				$old_role_switch_enabled = !empty($role_switch_settings['enabled']);
 				$old_hidden_roles        = isset($role_switch_settings['hidden_roles']) && is_array($role_switch_settings['hidden_roles']) ? $role_switch_settings['hidden_roles'] : [];
 				$old_allow_reset         = !empty($role_switch_settings['allow_reset']);
@@ -1841,14 +1968,12 @@ class User_Manager_Actions {
 				$new_hidden_roles        = isset($_POST['hidden_roles']) ? array_map('sanitize_text_field', (array) wp_unslash($_POST['hidden_roles'])) : [];
 				$new_allow_reset         = isset($_POST['allow_reset']) && $_POST['allow_reset'] === '1';
 
-				update_option(
-					'view_website_by_role_settings',
-					[
-						'enabled'      => $new_role_switch_enabled,
-						'hidden_roles' => $new_hidden_roles,
-						'allow_reset'  => $new_allow_reset,
-					]
-				);
+				$role_switch_settings_after = [
+					'enabled'      => $new_role_switch_enabled,
+					'hidden_roles' => $new_hidden_roles,
+					'allow_reset'  => $new_allow_reset,
+				];
+				update_option('view_website_by_role_settings', $role_switch_settings_after);
 
 				$role_switch_changes = [];
 				if ($old_role_switch_enabled !== $new_role_switch_enabled) {
@@ -1955,16 +2080,177 @@ class User_Manager_Actions {
 		update_option(User_Manager_Core::OPTION_KEY, $settings);
 		User_Manager_Core::sync_coupon_notification_settings($settings);
 
+		$changed_fields = self::collect_changed_values($settings_before, $settings, 'settings');
+		if ($section === 'addons') {
+			$changed_fields = array_merge(
+				$changed_fields,
+				self::collect_changed_values($bulk_settings_before, $bulk_settings_after, 'bulk_add_to_cart_settings'),
+				self::collect_changed_values($role_switch_settings_before, $role_switch_settings_after, 'role_switch_settings')
+			);
+		}
+		if (!empty($changed_fields)) {
+			$log_extra = [
+				'settings_section' => $section,
+				'changed_count'    => count($changed_fields),
+				'changed_fields'   => $changed_fields,
+			];
+			if (isset($_POST['addon_section'])) {
+				$addon_section = sanitize_key(wp_unslash($_POST['addon_section']));
+				if ($addon_section !== '') {
+					$log_extra['addon_section'] = $addon_section;
+				}
+			}
+			User_Manager_Core::add_activity_log('settings_updated', get_current_user_id(), 'Settings', $log_extra);
+		}
+
 		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, 'settings_saved');
 		if ($redirect_tab === User_Manager_Core::TAB_ADDONS && isset($_POST['addon_section'])) {
 			$addon_section = sanitize_key(wp_unslash($_POST['addon_section']));
 			if ($addon_section !== '') {
 				$redirect_url = add_query_arg('addon_section', $addon_section, $redirect_url);
 			}
+			if (isset($_POST['addon_tag'])) {
+				$addon_tag = sanitize_title(wp_unslash($_POST['addon_tag']));
+				if ($addon_tag !== '') {
+					$redirect_url = add_query_arg('addon_tag', $addon_tag, $redirect_url);
+				}
+			}
 		}
 
 		wp_safe_redirect($redirect_url);
 		exit;
+	}
+
+	/**
+	 * Build changed field rows between old/new values.
+	 *
+	 * @param mixed  $before Previous value.
+	 * @param mixed  $after  New value.
+	 * @param string $path   Current field path.
+	 * @return array<int,array{field:string,old:mixed,new:mixed}>
+	 */
+	private static function collect_changed_values($before, $after, string $path = ''): array {
+		if (is_object($before)) {
+			$before = (array) $before;
+		}
+		if (is_object($after)) {
+			$after = (array) $after;
+		}
+
+		if (is_array($before) && is_array($after)) {
+			$keys = array_values(array_unique(array_merge(array_keys($before), array_keys($after))));
+			sort($keys, SORT_STRING);
+			$changes = [];
+			foreach ($keys as $key) {
+				$key_string = (string) $key;
+				$child_path = $path === '' ? $key_string : $path . '[' . $key_string . ']';
+				$child_before = array_key_exists($key, $before) ? $before[$key] : null;
+				$child_after  = array_key_exists($key, $after) ? $after[$key] : null;
+				$changes = array_merge($changes, self::collect_changed_values($child_before, $child_after, $child_path));
+			}
+			return $changes;
+		}
+
+		if (self::normalize_value_for_change_compare($before) === self::normalize_value_for_change_compare($after)) {
+			return [];
+		}
+
+		$field = $path !== '' ? $path : 'value';
+		return [[
+			'field' => $field,
+			'old'   => self::format_changed_value_for_log($field, $before),
+			'new'   => self::format_changed_value_for_log($field, $after),
+		]];
+	}
+
+	/**
+	 * Normalize values for stable change comparison.
+	 *
+	 * @param mixed $value
+	 */
+	private static function normalize_value_for_change_compare($value): string {
+		if (is_object($value)) {
+			$value = (array) $value;
+		}
+		if (is_array($value)) {
+			$normalized = [];
+			foreach ($value as $key => $child) {
+				$normalized[(string) $key] = self::normalize_value_for_change_compare($child);
+			}
+			if (self::is_assoc_array($normalized)) {
+				ksort($normalized, SORT_STRING);
+			}
+			$encoded = wp_json_encode($normalized);
+			return is_string($encoded) ? $encoded : '';
+		}
+		if (is_bool($value)) {
+			return $value ? 'true' : 'false';
+		}
+		if ($value === null) {
+			return 'null';
+		}
+		return (string) $value;
+	}
+
+	/**
+	 * Convert changed values into safe log payload values.
+	 *
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	private static function format_changed_value_for_log(string $field, $value) {
+		if (self::is_sensitive_change_field($field)) {
+			return '[redacted]';
+		}
+		if (is_object($value)) {
+			$value = (array) $value;
+		}
+		if (is_array($value)) {
+			$encoded = wp_json_encode($value);
+			return is_string($encoded) ? $encoded : '';
+		}
+		if (is_bool($value)) {
+			return $value;
+		}
+		if ($value === null) {
+			return null;
+		}
+		return (string) $value;
+	}
+
+	/**
+	 * Check if an array is associative.
+	 *
+	 * @param array<mixed> $array
+	 */
+	private static function is_assoc_array(array $array): bool {
+		if ($array === []) {
+			return false;
+		}
+		return array_keys($array) !== range(0, count($array) - 1);
+	}
+
+	/**
+	 * Determine whether field path contains sensitive data.
+	 */
+	private static function is_sensitive_change_field(string $field): bool {
+		$needle = strtolower($field);
+		$sensitive_tokens = [
+			'password',
+			'user_pass',
+			'api_key',
+			'token',
+			'secret',
+			'nonce',
+			'authorization',
+			'cookie',
+		];
+		foreach ($sensitive_tokens as $token) {
+			if ($token !== '' && strpos($needle, $token) !== false) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

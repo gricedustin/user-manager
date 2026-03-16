@@ -82,19 +82,29 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			$endpoint     = 'admin_orders';
 			$current_page = self::get_current_page();
 			$search       = self::get_search_query();
+			$status_filters = self::get_configured_order_status_filters();
+			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
 			if ($search !== '') {
-				$all_orders = self::search_orders($search);
+				$all_orders = self::search_orders($search, $selected_status_key);
 				$paged      = self::paginate_items($all_orders, $current_page, self::PER_PAGE);
 				$orders     = $paged['items'];
 				$pages      = $paged['total_pages'];
 			} else {
-				$result = wc_get_orders([
+				$query_args = [
 					'limit'    => self::PER_PAGE,
 					'page'     => $current_page,
 					'paginate' => true,
 					'orderby'  => 'date',
 					'order'    => 'DESC',
-				]);
+				];
+				if ($selected_status_key !== '') {
+					$status_slug = preg_replace('/^wc-/', '', $selected_status_key);
+					$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+					if ($status_slug !== '') {
+						$query_args['status'] = [$status_slug];
+					}
+				}
+				$result = wc_get_orders($query_args);
 				$orders = [];
 				$pages  = 1;
 	
@@ -108,10 +118,14 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			}
 	
 			$can_approve = self::current_user_can_approve_orders();
+			$hide_order_status = self::should_hide_order_status();
+			$approve_label = self::get_order_approve_button_label();
+			$decline_label = self::get_order_decline_button_label();
 	
 			echo '<h3 class="swh_order_history_title">' . esc_html__('Admin: Orders', 'user-manager') . '</h3>';
 			echo '<p class="swh_order_history_desc"></p>';
 			self::render_search_form($endpoint, __('Search orders...', 'user-manager'));
+			self::render_order_status_filter_links($endpoint, $status_filters, $selected_status_key, $search);
 	
 			echo '<table class="express_checkout_order_approvals woocommerce_my_account_admin_tools woocommerce_my_account_admin_tools_orders">';
 			echo '<thead><tr>';
@@ -157,15 +171,21 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					if ($billing_email !== '') {
 						echo '<br />' . esc_html($billing_email);
 					}
-					echo '<br /><span class="um-my-account-admin-status">' . esc_html($status_label) . '</span>';
+					if (!$hide_order_status) {
+						echo '<br /><span class="um-my-account-admin-status">' . esc_html($status_label) . '</span>';
+					}
 					echo '</td>';
 					echo '<td>' . wp_kses_post($address_html) . '</td>';
 					echo '<td class="center">';
 					echo '<a class="button breathing_room full_width" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
 					echo '<a class="button breathing_room full_width" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
-					if ($can_approve && $order->has_status('pending')) {
-						$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());
-						echo ' <a class="button breathing_room full_width" href="' . esc_url($approve_url) . '">' . esc_html__('Approve', 'user-manager') . '</a>';
+					if ($can_approve && !$order->has_status('completed')) {
+						if (!$order->has_status('processing')) {
+							$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());
+							echo ' <a class="button breathing_room full_width" href="' . esc_url($approve_url) . '">' . esc_html($approve_label) . '</a>';
+						}
+						$decline_url = self::get_decline_order_url($order_id, self::get_list_context_query_args());
+						echo ' <a class="button breathing_room full_width" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
 					}
 					echo '</td>';
 					echo '</tr>';
@@ -186,7 +206,9 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			}
 	
 			$back_url = self::get_list_url('admin_orders');
-			$can_approve = self::current_user_can_approve_orders() && $order->has_status('pending');
+			$can_approve = self::current_user_can_approve_orders() && !$order->has_status('completed');
+			$approve_label = self::get_order_approve_button_label();
+			$decline_label = self::get_order_decline_button_label();
 			echo '<h3 class="swh_order_history_title">' . esc_html__('Admin: Orders', 'user-manager') . '</h3>';
 			echo '<p class="swh_order_history_desc"></p>';
 			echo '<a class="button" href="' . esc_url($back_url) . '">' . esc_html__('Back', 'user-manager') . '</a>';
@@ -196,8 +218,12 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 				if (isset($_GET['print']) && $_GET['print'] === '1') {
 					$approve_args['print'] = '1';
 				}
-				$approve_url = self::get_approve_order_url((int) $order->get_id(), $approve_args);
-				echo ' <a class="button" href="' . esc_url($approve_url) . '">' . esc_html__('Approve', 'user-manager') . '</a>';
+				if (!$order->has_status('processing')) {
+					$approve_url = self::get_approve_order_url((int) $order->get_id(), $approve_args);
+					echo ' <a class="button" href="' . esc_url($approve_url) . '">' . esc_html($approve_label) . '</a>';
+				}
+				$decline_url = self::get_decline_order_url((int) $order->get_id(), $approve_args);
+				echo ' <a class="button" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
 			}
 			echo '<br><br>';
 	
@@ -266,6 +292,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			echo $shipping !== '' ? wp_kses_post($shipping) : '&ndash;';
 			echo '</address>';
 			echo '</section>';
+
+			self::render_order_additional_meta_fields($order);
 	
 			if (self::should_show_meta_for_area('orders')) {
 				self::render_meta_table_from_post((int) $order->get_id());

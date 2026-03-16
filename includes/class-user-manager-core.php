@@ -9,14 +9,30 @@ if (!defined('ABSPATH')) {
 
 
 require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
+require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
+require_once __DIR__ . '/core/trait-user-manager-core-cart-price-per-piece.php';
+require_once __DIR__ . '/core/trait-user-manager-core-fatal-error-debugger.php';
+require_once __DIR__ . '/core/trait-user-manager-core-invoice-approval.php';
+require_once __DIR__ . '/core/trait-user-manager-core-my-account-menu-tiles.php';
+require_once __DIR__ . '/core/trait-user-manager-core-plugin-tags-notes.php';
+require_once __DIR__ . '/core/trait-user-manager-core-security-hardening.php';
+require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
 final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
+	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
+	use User_Manager_Core_Cart_Price_Per_Piece_Trait;
+	use User_Manager_Core_Fatal_Error_Debugger_Trait;
+	use User_Manager_Core_Invoice_Approval_Trait;
+	use User_Manager_Core_My_Account_Menu_Tiles_Trait;
+	use User_Manager_Core_Plugin_Tags_Notes_Trait;
+	use User_Manager_Core_Security_Hardening_Trait;
+	use User_Manager_Core_Webhook_URLs_Trait;
 	const OPTION_KEY = 'user_manager_settings';
 	const ACTIVITY_LOG_KEY = 'user_manager_activity_log';
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.12';
+	const VERSION = '2.4.0';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -64,6 +80,9 @@ final class User_Manager_Core {
 	 */
 	public static function init(): void {
 		add_action('admin_menu', [__CLASS__, 'register_settings_page']);
+		$main_plugin_basename = self::get_main_plugin_basename();
+		add_filter('plugin_action_links_' . $main_plugin_basename, [__CLASS__, 'add_plugin_action_links']);
+		add_filter('plugin_row_meta', [__CLASS__, 'add_plugin_row_meta_links'], 10, 2);
 		add_action('admin_notices', [__CLASS__, 'maybe_render_user_new_notice']);
 		add_action('admin_notices', [__CLASS__, 'render_custom_admin_notifications'], 5);
 		add_action('admin_init', [__CLASS__, 'register_settings']);
@@ -107,6 +126,12 @@ final class User_Manager_Core {
 		
 		// Coupon Email Converter meta box toggle + other settings-based behavior.
 		$settings = self::get_settings();
+		self::maybe_boot_cart_price_per_piece($settings);
+		self::maybe_boot_invoice_approval($settings);
+		self::maybe_boot_my_account_menu_tiles($settings);
+		self::maybe_boot_plugin_tags_notes($settings);
+		self::maybe_apply_security_hardening($settings);
+		self::maybe_boot_webhook_urls($settings);
 		if (!empty($settings['coupon_email_converter'])) {
 			add_action('add_meta_boxes', [__CLASS__, 'add_coupon_email_converter_meta_box']);
 		}
@@ -136,8 +161,8 @@ final class User_Manager_Core {
 
 		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_admin_bar_link'], 98);
 		add_action('admin_bar_menu', [__CLASS__, 'add_custom_admin_bar_menu_items'], 99);
-		// Quick Search: default to enabled when setting is not yet saved.
-		$quick_search_enabled = !isset($settings['um_quick_search_enabled']) || !empty($settings['um_quick_search_enabled']);
+		// Quick Search add-on runs only when explicitly activated.
+		$quick_search_enabled = !empty($settings['um_quick_search_enabled']);
 		if ($quick_search_enabled) {
 			add_action('admin_bar_menu', [__CLASS__, 'add_quick_search_admin_bar_item'], 100);
 			add_action('admin_footer', [__CLASS__, 'render_quick_search_dropdown']);
@@ -204,6 +229,18 @@ final class User_Manager_Core {
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_maybe_download_sample_csv']);
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_maybe_download_sample_with_product_data']);
 			add_action('template_redirect', [__CLASS__, 'bulk_add_to_cart_process_upload']);
+		}
+		if (!empty($settings['add_to_cart_variation_table_enabled'])) {
+			self::register_add_to_cart_variation_table_render_hooks();
+			add_action('woocommerce_cart_actions', [__CLASS__, 'maybe_render_empty_cart_button_on_cart_screen'], 15);
+			add_action('template_redirect', [__CLASS__, 'maybe_handle_empty_cart_button_submission'], 14);
+			add_action('template_redirect', [__CLASS__, 'handle_add_to_cart_variation_table_submission'], 15);
+			add_action('wp_head', [__CLASS__, 'maybe_hide_default_add_to_cart_variation_form'], 20);
+			add_action('wp_footer', [__CLASS__, 'maybe_render_add_to_cart_variation_table_trace_panel'], 1003);
+		}
+		if (!empty($settings['fatal_error_debugger_enabled'])) {
+			self::register_fatal_error_debugger_shutdown_handler();
+			add_action('wp_footer', [__CLASS__, 'maybe_render_fatal_error_debugger_panel'], 1004);
 		}
 
 		// Role Switching feature (front-end role preview) – only when enabled and
@@ -1472,7 +1509,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Add "User Manager" link to the wp-admin top bar (links to plugin Settings tab).
+	 * Add "User Experience Manager" link to the wp-admin top bar (links to plugin Add-ons tab).
 	 *
 	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
 	 */
@@ -1482,11 +1519,11 @@ html body .woocommerce-layout__header {
 		}
 		$wp_admin_bar->add_node([
 			'id'     => 'user-manager-settings',
-			'title'  => __('User Manager', 'user-manager'),
-			'href'   => self::get_page_url(self::TAB_SETTINGS),
+			'title'  => __('User Experience Manager', 'user-manager'),
+			'href'   => self::get_page_url(self::TAB_ADDONS),
 			'parent' => 'top-secondary',
 			'meta'   => [
-				'title' => __('User Manager Settings', 'user-manager'),
+				'title' => __('User Experience Manager Add-ons', 'user-manager'),
 			],
 		]);
 	}
@@ -2071,10 +2108,11 @@ html body .woocommerce-layout__header {
 		$options           = get_option('bulk_add_to_cart_settings', []);
 		$identifier_column = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
-		$product_id_column_header = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$product_id_column = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$sku_column        = self::bulk_add_to_cart_get_sku_column_header($options);
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
-		$show_sample_csv   = !array_key_exists('show_sample_csv', $options) || (string) ($options['show_sample_csv'] ?? '1') === '1';
-		$show_sample_with_data = !array_key_exists('show_sample_with_product_data', $options) || (string) ($options['show_sample_with_product_data'] ?? '1') === '1';
+		$hide_product_id_column = isset($options['hide_product_id_column']) && (string) $options['hide_product_id_column'] === '1';
+		$hide_sku_column = isset($options['hide_sku_column']) && (string) $options['hide_sku_column'] === '1';
 		$force_debug       = self::is_bulk_add_to_cart_debug_requested();
 		$debug_enabled     = (isset($options['debug_mode']) && (string) $options['debug_mode'] === '1') || $force_debug;
 		$sample_csv_url    = add_query_arg('um_bulk_add_to_cart_sample', '1', remove_query_arg(['um_bulk_add_to_cart_sample', 'um_bulk_add_to_cart_sample_data']));
@@ -2184,6 +2222,10 @@ html body .woocommerce-layout__header {
 			$output .= '<ul>';
 			$output .= '<li>' . esc_html__('Identifier Column:', 'user-manager') . ' ' . esc_html($identifier_column) . '</li>';
 			$output .= '<li>' . esc_html__('Identifier Type:', 'user-manager') . ' ' . esc_html($identifier_type) . '</li>';
+			$output .= '<li>' . esc_html__('Product ID Column Header:', 'user-manager') . ' ' . esc_html($product_id_column) . '</li>';
+			$output .= '<li>' . esc_html__('SKU Column Header:', 'user-manager') . ' ' . esc_html($sku_column) . '</li>';
+			$output .= '<li>' . esc_html__('Hide Product ID Column in Samples:', 'user-manager') . ' ' . ($hide_product_id_column ? esc_html__('Yes', 'user-manager') : esc_html__('No', 'user-manager')) . '</li>';
+			$output .= '<li>' . esc_html__('Hide SKU Column in Samples:', 'user-manager') . ' ' . ($hide_sku_column ? esc_html__('Yes', 'user-manager') : esc_html__('No', 'user-manager')) . '</li>';
 			$output .= '<li>' . esc_html__('Quantity Column:', 'user-manager') . ' ' . esc_html($quantity_column) . '</li>';
 			$output .= '</ul>';
 
@@ -2291,6 +2333,7 @@ html body .woocommerce-layout__header {
 			esc_html__('For variations, use the variation %s', 'user-manager'),
 			$label
 		) . '</li>';
+		$output .= '<li>' . esc_html__('Importer can also identify products using the Product ID and/or _sku columns when those columns are present.', 'user-manager') . '</li>';
 		$output .= '<li>' . esc_html__('Rows with blank or 0 quantity are ignored.', 'user-manager') . '</li>';
 		$output .= '<li>' . esc_html__('Upload your CSV file and click "Add to Cart"', 'user-manager') . '</li>';
 		$output .= '</ol>';
@@ -2388,14 +2431,9 @@ html body .woocommerce-layout__header {
 		$options          = get_option('bulk_add_to_cart_settings', []);
 		$identifier_col   = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
 		$identifier_type  = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
-		$product_id_col_header = self::bulk_add_to_cart_get_product_id_column_header($options);
-		$quantity_col     = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
-		if ($identifier_col === '') {
-			$identifier_col = 'product_id';
-		}
-		if ($quantity_col === '') {
-			$quantity_col = 'quantity';
-		}
+		$product_id_col   = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$sku_col          = self::bulk_add_to_cart_get_sku_column_header($options);
+		$quantity_col     = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
 		$debug_mode       = isset($options['debug_mode']) ? (string) $options['debug_mode'] : '0';
 		$debug_enabled    = $debug_mode === '1' || self::is_bulk_add_to_cart_debug_requested();
 		$debug_trace      = [];
@@ -2536,11 +2574,11 @@ html body .woocommerce-layout__header {
 		}
 
 		$normalized_headers = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], $headers);
-		$normalized_lookup  = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], [$identifier_col, $quantity_col, $product_id_col_header, 'product_id']);
+		$normalized_lookup  = array_map([__CLASS__, 'bulk_add_to_cart_normalize_header'], [$identifier_col, $product_id_col, $sku_col, $quantity_col]);
 		$identifier_lookup  = $normalized_lookup[0] ?? 'product_id';
-		$quantity_lookup    = $normalized_lookup[1] ?? 'quantity';
-		$product_id_lookup  = $normalized_lookup[2] ?? 'product_id';
-		$product_id_builtin_lookup = $normalized_lookup[3] ?? 'product_id';
+		$product_id_lookup  = $normalized_lookup[1] ?? 'product_id';
+		$sku_lookup         = $normalized_lookup[2] ?? '_sku';
+		$quantity_lookup    = $normalized_lookup[3] ?? 'quantity';
 
 		if ($debug_enabled) {
 			wc_add_notice('CSV Headers: ' . implode(', ', $headers), 'notice');
@@ -2548,14 +2586,17 @@ html body .woocommerce-layout__header {
 			wc_add_notice(
 				'Using settings - Identifier Column: ' . $identifier_col .
 				', Type: ' . $identifier_type .
-				', Quantity Column: ' . $quantity_col .
-				', product_id fallback column: ' . $product_id_col_header,
+				', Product ID Column: ' . $product_id_col .
+				', SKU Column: ' . $sku_col .
+				', Quantity Column: ' . $quantity_col,
 				'notice'
 			);
 			wc_add_notice('Leading blank rows skipped before header: ' . $leading_blank_rows, 'notice');
 		}
 
 		$identifier_index = array_search($identifier_lookup, $normalized_headers, true);
+		$product_id_index = array_search($product_id_lookup, $normalized_headers, true);
+		$sku_index        = array_search($sku_lookup, $normalized_headers, true);
 		$quantity_index   = array_search($quantity_lookup, $normalized_headers, true);
 		$product_id_index = array_search($product_id_lookup, $normalized_headers, true);
 		if ($product_id_index === false && $product_id_builtin_lookup !== $product_id_lookup) {
@@ -2567,20 +2608,23 @@ html body .woocommerce-layout__header {
 			0,
 			'column_lookup',
 			'Identifier column index: ' . ($identifier_index !== false ? (string) $identifier_index : 'not found') .
-			'; product_id fallback index: ' . ($product_id_index !== false ? (string) $product_id_index : 'not found') .
+			'; Product ID column index: ' . ($product_id_index !== false ? (string) $product_id_index : 'not found') .
+			'; SKU column index: ' . ($sku_index !== false ? (string) $sku_index : 'not found') .
 			'; Quantity column index: ' . ($quantity_index !== false ? (string) $quantity_index : 'not found') . '.'
 		);
 
 		if ($debug_enabled) {
 			wc_add_notice(
 				'Column indices - Identifier: ' . ($identifier_index !== false ? $identifier_index : 'not found') .
-				', product_id fallback: ' . ($product_id_index !== false ? $product_id_index : 'not found') .
+				', Product ID: ' . ($product_id_index !== false ? $product_id_index : 'not found') .
+				', SKU: ' . ($sku_index !== false ? $sku_index : 'not found') .
 				', Quantity: ' . ($quantity_index !== false ? $quantity_index : 'not found'),
 				'notice'
 			);
 		}
 
-		if (($identifier_index === false && $product_id_index === false) || $quantity_index === false) {
+		$has_any_identifier_column = ($identifier_index !== false || $product_id_index !== false || $sku_index !== false);
+		if (!$has_any_identifier_column || $quantity_index === false) {
 			fclose($handle);
 			self::bulk_add_to_cart_append_debug_trace($debug_trace, 0, 'error_missing_columns', 'Required columns were not found in header.');
 			if ($debug_enabled) {
@@ -2588,10 +2632,11 @@ html body .woocommerce-layout__header {
 			}
 			wc_add_notice(
 				sprintf(
-					esc_html__('Required columns not found. Need quantity "%1$s" and at least one identifier column ("%2$s" or "%3$s").', 'user-manager'),
+					esc_html__('Required columns not found. Need quantity column "%1$s" plus at least one identifier column ("%2$s", "%3$s", or "%4$s").', 'user-manager'),
 					$quantity_col,
 					$identifier_col,
-					$product_id_col_header
+					$product_id_col,
+					$sku_col
 				),
 				'error'
 			);
@@ -2620,6 +2665,8 @@ html body .woocommerce-layout__header {
 			$row_number++;
 			$identifier_primary = ($identifier_index !== false && isset($row[$identifier_index])) ? trim((string) $row[$identifier_index]) : '';
 			$product_id_fallback_identifier = ($product_id_index !== false && isset($row[$product_id_index])) ? trim((string) $row[$product_id_index]) : '';
+			$sku_fallback_identifier = ($sku_index !== false && isset($row[$sku_index])) ? trim((string) $row[$sku_index]) : '';
+			$identifier = $identifier_primary !== '' ? $identifier_primary : ($product_id_fallback_identifier !== '' ? $product_id_fallback_identifier : $sku_fallback_identifier);
 			$quantity_raw = isset($row[$quantity_index]) ? (string) $row[$quantity_index] : '';
 			$quantity   = self::bulk_add_to_cart_parse_quantity($quantity_raw);
 
@@ -2633,28 +2680,31 @@ html body .woocommerce-layout__header {
 				);
 				continue;
 			}
-
 			$lookup_attempts = [];
 			if ($identifier_primary !== '') {
 				$lookup_attempts[] = [
 					'value'  => $identifier_primary,
 					'type'   => $identifier_type,
-					'source' => 'identifier',
+					'source' => $identifier_col,
 				];
 			}
 			if ($product_id_fallback_identifier !== '') {
-				$is_duplicate = false;
-				foreach ($lookup_attempts as $attempt) {
-					if ((string) $attempt['value'] === $product_id_fallback_identifier && (string) $attempt['type'] === 'product_id') {
-						$is_duplicate = true;
-						break;
-					}
-				}
-				if (!$is_duplicate) {
+				$already_covered_by_identifier = ($identifier_type === 'product_id' && $identifier_primary !== '' && $identifier_primary === $product_id_fallback_identifier);
+				if (!$already_covered_by_identifier) {
 					$lookup_attempts[] = [
 						'value'  => $product_id_fallback_identifier,
 						'type'   => 'product_id',
-						'source' => 'product_id',
+						'source' => $product_id_col,
+					];
+				}
+			}
+			if ($sku_fallback_identifier !== '') {
+				$already_covered_by_identifier = ($identifier_type === 'product_sku' && $identifier_primary !== '' && $identifier_primary === $sku_fallback_identifier);
+				if (!$already_covered_by_identifier) {
+					$lookup_attempts[] = [
+						'value'  => $sku_fallback_identifier,
+						'type'   => 'product_sku',
+						'source' => $sku_col,
 					];
 				}
 			}
@@ -2662,10 +2712,11 @@ html body .woocommerce-layout__header {
 			if (empty($lookup_attempts)) {
 				$error_count++;
 				$message = sprintf(
-					esc_html__('Row %1$d: Missing identifier columns "%2$s" and "%3$s" (Quantity: "%4$s")', 'user-manager'),
+					esc_html__('Row %1$d: Missing identifier (checked "%2$s", "%3$s", and "%4$s"; Quantity: "%5$s")', 'user-manager'),
 					$row_number,
 					esc_html($identifier_col),
-					esc_html($product_id_col_header),
+					esc_html($product_id_col),
+					esc_html($sku_col),
 					esc_html($quantity_raw)
 				);
 				$errors[] = $message;
@@ -2676,25 +2727,18 @@ html body .woocommerce-layout__header {
 					'product_title' => '',
 					'variation'     => '',
 					'qty_added'     => 0,
-					'note'          => (string) __('Missing identifier; row not added.', 'user-manager'),
+					'note'          => (string) __('Missing identifier across all identifier columns; row not added.', 'user-manager'),
 				];
 				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_missing_identifier', wp_strip_all_tags($message));
 				continue;
 			}
 
 			$product = null;
-			$identifier_used = '';
-			$identifier_source = '';
-			$attempted_descriptions = [];
+			$attempted_lookup_text = [];
 			foreach ($lookup_attempts as $attempt) {
-				$attempt_value = (string) ($attempt['value'] ?? '');
-				$attempt_type  = (string) ($attempt['type'] ?? 'product_id');
-				$attempt_source = (string) ($attempt['source'] ?? 'identifier');
-				$attempted_descriptions[] = $attempt_source . ':' . $attempt_value;
-				$product = self::bulk_add_to_cart_find_product($attempt_value, $attempt_type, $options);
+				$attempted_lookup_text[] = (string) $attempt['source'] . '=' . (string) $attempt['value'] . ' (' . (string) $attempt['type'] . ')';
+				$product = self::bulk_add_to_cart_find_product((string) $attempt['value'], (string) $attempt['type'], $options);
 				if ($product) {
-					$identifier_used = $attempt_value;
-					$identifier_source = $attempt_source;
 					break;
 				}
 			}
@@ -2702,20 +2746,20 @@ html body .woocommerce-layout__header {
 				$error_count++;
 				$attempted_label = !empty($attempted_descriptions) ? implode(' | ', $attempted_descriptions) : __('(none)', 'user-manager');
 				$message = sprintf(
-					esc_html__('Row %1$d: Product not found by identifier values: %2$s (Quantity: %3$s)', 'user-manager'),
+					esc_html__('Row %1$d: Product not found using identifiers: %2$s (Quantity: %3$s)', 'user-manager'),
 					$row_number,
-					esc_html($attempted_label),
+					esc_html(implode(' | ', $attempted_lookup_text)),
 					esc_html((string) $quantity)
 				);
 				$errors[] = $message;
 				$line_item_results[] = [
 					'line'          => $csv_line_number,
 					'status'        => 'error',
-					'product_id'    => $identifier_primary !== '' ? $identifier_primary : $product_id_fallback_identifier,
+					'product_id'    => $identifier !== '' ? $identifier : '—',
 					'product_title' => '',
 					'variation'     => '',
 					'qty_added'     => 0,
-					'note'          => (string) __('Product not found; row not added.', 'user-manager'),
+					'note'          => (string) __('Product not found from identifier/product_id/_sku values; row not added.', 'user-manager'),
 				];
 				self::bulk_add_to_cart_append_debug_trace($debug_trace, $csv_line_number, 'error_product_not_found', wp_strip_all_tags($message));
 				continue;
@@ -2961,11 +3005,10 @@ html body .woocommerce-layout__header {
 			wp_die(esc_html__('Download Sample CSV is disabled in Add-on settings.', 'user-manager'));
 		}
 		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
-		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
-		$product_id_column_header = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$product_id_column = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$sku_column        = self::bulk_add_to_cart_get_sku_column_header($options);
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
-		$include_private_products = (string) ($options['sample_with_data_include_private_products'] ?? '0') === '1';
-		$include_draft_products   = (string) ($options['sample_with_data_include_draft_products'] ?? '0') === '1';
+		$identifier_type   = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
 		if ($identifier_column === '') {
 			$identifier_column = 'product_id';
 		}
@@ -2977,6 +3020,8 @@ html body .woocommerce-layout__header {
 		}
 		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column_header);
 
+		$headers = self::bulk_add_to_cart_build_sample_csv_headers($options, $identifier_column, $product_id_column, $sku_column, $quantity_column);
+
 		nocache_headers();
 		header('Content-Type: text/csv; charset=utf-8');
 		header('Content-Disposition: attachment; filename=bulk-add-to-cart-sample.csv');
@@ -2986,94 +3031,26 @@ html body .woocommerce-layout__header {
 			exit;
 		}
 
-		$header_row = [$product_id_column_header];
-		if ($include_identifier_column) {
-			$header_row[] = $identifier_column;
-		}
-		$header_row[] = $quantity_column;
-		$header_row[] = 'product_title';
-		$header_row[] = 'product_variation';
-		fputcsv($out, $header_row);
+		fputcsv($out, $headers);
 		fwrite($out, "\r\n");
-
-		$rows = [];
-		$ids  = get_posts([
-			'post_type'              => ['product', 'product_variation'],
-			'post_status'            => ['publish', 'private'],
-			'posts_per_page'         => 2,
-			'orderby'                => 'ID',
-			'order'                  => 'ASC',
-			'fields'                 => 'ids',
-			'no_found_rows'          => true,
-			'update_post_meta_cache' => false,
-			'update_post_term_cache' => false,
-		]);
-		foreach ($ids as $product_id) {
-			$product_id = absint($product_id);
-			if ($product_id <= 0) {
-				continue;
-			}
-			$identifier_value = self::bulk_add_to_cart_get_identifier_value_for_product($product_id, $identifier_type, $options);
-			$rows[] = [
-				'product_id'     => (string) $product_id,
-				'identifier'     => $identifier_value,
-				'quantity'       => '0',
-				'product_title'  => (string) get_the_title($product_id),
-				'variation'      => self::bulk_add_to_cart_get_variation_summary_for_product($product_id),
-			];
-		}
-
-		if (empty($rows)) {
-			$meta_field_name = isset($options['meta_field_name']) ? trim((string) $options['meta_field_name']) : '';
-			$sample_one      = '123';
-			$sample_two      = '456';
-			switch ($identifier_type) {
-				case 'product_sku':
-					$sample_one = 'SAMPLE-SKU-001';
-					$sample_two = 'SAMPLE-SKU-002';
-					break;
-				case 'product_slug':
-					$sample_one = 'sample-product-1';
-					$sample_two = 'sample-product-2';
-					break;
-				case 'product_title':
-					$sample_one = 'Sample Product 1';
-					$sample_two = 'Sample Product 2';
-					break;
-				case 'meta_field':
-					$sample_one = ($meta_field_name !== '' ? $meta_field_name : 'meta_value') . '_001';
-					$sample_two = ($meta_field_name !== '' ? $meta_field_name : 'meta_value') . '_002';
-					break;
-			}
-			$rows[] = [
-				'product_id'    => '123',
-				'identifier'    => $sample_one,
-				'quantity'      => '1',
-				'product_title' => 'Sample Product',
-				'variation'     => '',
-			];
-			$rows[] = [
-				'product_id'    => '456',
-				'identifier'    => $sample_two,
-				'quantity'      => '2',
-				'product_title' => 'Sample Variation Product',
-				'variation'     => 'Size: M | Color: Blue',
-			];
-		}
-
-		foreach ($rows as $row) {
-			if (!is_array($row)) {
-				continue;
-			}
-			$out_row = [(string) ($row['product_id'] ?? '')];
-			if ($include_identifier_column) {
-				$out_row[] = (string) ($row['identifier'] ?? '');
-			}
-			$out_row[] = (string) ($row['quantity'] ?? '0');
-			$out_row[] = (string) ($row['product_title'] ?? '');
-			$out_row[] = (string) ($row['variation'] ?? '');
-			fputcsv($out, $out_row);
-		}
+		$row_1_map = [
+			self::bulk_add_to_cart_normalize_header($product_id_column) => '123',
+			self::bulk_add_to_cart_normalize_header($sku_column)        => 'sample-sku-123',
+			self::bulk_add_to_cart_normalize_header($identifier_column) => self::bulk_add_to_cart_get_sample_identifier_value('123', 'sample-sku-123', 'sample-product-123', 'Sample Product', 'sample-meta-123', $identifier_type),
+			self::bulk_add_to_cart_normalize_header($quantity_column)   => '1',
+			self::bulk_add_to_cart_normalize_header('product_title')    => 'Sample Product',
+			self::bulk_add_to_cart_normalize_header('product_variation') => '',
+		];
+		$row_2_map = [
+			self::bulk_add_to_cart_normalize_header($product_id_column) => '456',
+			self::bulk_add_to_cart_normalize_header($sku_column)        => 'sample-sku-456',
+			self::bulk_add_to_cart_normalize_header($identifier_column) => self::bulk_add_to_cart_get_sample_identifier_value('456', 'sample-sku-456', 'sample-variation-product-456', 'Sample Variation Product', 'sample-meta-456', $identifier_type),
+			self::bulk_add_to_cart_normalize_header($quantity_column)   => '2',
+			self::bulk_add_to_cart_normalize_header('product_title')    => 'Sample Variation Product',
+			self::bulk_add_to_cart_normalize_header('product_variation') => 'Size: M | Color: Blue',
+		];
+		fputcsv($out, self::bulk_add_to_cart_build_csv_row_from_headers($headers, $row_1_map));
+		fputcsv($out, self::bulk_add_to_cart_build_csv_row_from_headers($headers, $row_2_map));
 		fclose($out);
 		exit;
 	}
@@ -3104,9 +3081,10 @@ html body .woocommerce-layout__header {
 			wp_die(esc_html__('Download Sample CSV with Product Data is disabled in Add-on settings.', 'user-manager'));
 		}
 		$identifier_column = isset($options['identifier_column']) ? trim((string) $options['identifier_column']) : 'product_id';
-		$identifier_type   = isset($options['identifier_type']) ? trim((string) $options['identifier_type']) : 'product_id';
-		$product_id_column_header = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$product_id_column = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$sku_column        = self::bulk_add_to_cart_get_sku_column_header($options);
 		$quantity_column   = isset($options['quantity_column']) ? trim((string) $options['quantity_column']) : 'quantity';
+		$identifier_type   = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
 		if ($identifier_column === '') {
 			$identifier_column = 'product_id';
 		}
@@ -3124,6 +3102,8 @@ html body .woocommerce-layout__header {
 		if ($include_draft_products) {
 			$post_statuses[] = 'draft';
 		}
+
+		$headers = self::bulk_add_to_cart_build_sample_csv_headers($options, $identifier_column, $product_id_column, $sku_column, $quantity_column);
 
 		$ids = get_posts([
 			'post_type'              => ['product', 'product_variation'],
@@ -3146,29 +3126,35 @@ html body .woocommerce-layout__header {
 			exit;
 		}
 
-		$header_row = [$product_id_column_header];
-		if ($include_identifier_column) {
-			$header_row[] = $identifier_column;
-		}
-		$header_row[] = $quantity_column;
-		$header_row[] = 'product_title';
-		$header_row[] = 'product_variation';
-		fputcsv($out, $header_row);
+		fputcsv($out, $headers);
 		foreach ($ids as $product_id) {
 			$product_id = absint($product_id);
 			if ($product_id <= 0) {
 				continue;
 			}
-
-			$identifier_value = self::bulk_add_to_cart_get_identifier_value_for_product($product_id, $identifier_type, $options);
-			$out_row = [(string) $product_id];
-			if ($include_identifier_column) {
-				$out_row[] = $identifier_value;
+			$product = wc_get_product($product_id);
+			if (!$product) {
+				continue;
 			}
-			$out_row[] = '0';
-			$out_row[] = (string) get_the_title($product_id);
-			$out_row[] = self::bulk_add_to_cart_get_variation_summary_for_product($product_id);
-			fputcsv($out, $out_row);
+			[$title, $variation_summary] = self::bulk_add_to_cart_get_product_title_and_variation($product);
+			$sku_value = '';
+			if (method_exists($product, 'get_sku')) {
+				$sku_value = trim((string) $product->get_sku());
+			}
+			if ($sku_value === '') {
+				$sku_value = trim((string) get_post_meta($product_id, '_sku', true));
+			}
+			$identifier_value = self::bulk_add_to_cart_get_identifier_value_for_product($product_id, $identifier_type, $options, $title, $sku_value);
+
+			$row_map = [
+				self::bulk_add_to_cart_normalize_header($product_id_column) => (string) $product_id,
+				self::bulk_add_to_cart_normalize_header($sku_column)        => $sku_value,
+				self::bulk_add_to_cart_normalize_header($identifier_column) => $identifier_value,
+				self::bulk_add_to_cart_normalize_header($quantity_column)   => '0',
+				self::bulk_add_to_cart_normalize_header('product_title')    => $title,
+				self::bulk_add_to_cart_normalize_header('product_variation') => $variation_summary,
+			];
+			fputcsv($out, self::bulk_add_to_cart_build_csv_row_from_headers($headers, $row_map));
 		}
 
 		fclose($out);
@@ -3176,70 +3162,141 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Get identifier value for a product according to configured identifier type.
+	 * Resolve Product ID CSV column header.
 	 */
-	private static function bulk_add_to_cart_get_identifier_value_for_product(int $product_id, string $identifier_type, array $options): string {
-		if ($product_id <= 0) {
-			return '';
-		}
-
-		switch ($identifier_type) {
-			case 'product_id':
-				return (string) $product_id;
-
-			case 'product_sku':
-				$product = wc_get_product($product_id);
-				if (!$product || !method_exists($product, 'get_sku')) {
-					return '';
-				}
-				return trim((string) $product->get_sku());
-
-			case 'product_slug':
-				return trim((string) get_post_field('post_name', $product_id));
-
-			case 'product_title':
-				return trim((string) get_the_title($product_id));
-
-			case 'meta_field':
-				$meta_field_name = isset($options['meta_field_name']) ? trim((string) $options['meta_field_name']) : '';
-				if ($meta_field_name === '') {
-					return '';
-				}
-				$raw_meta = get_post_meta($product_id, $meta_field_name, true);
-				if (!is_scalar($raw_meta)) {
-					return '';
-				}
-				return trim((string) $raw_meta);
-		}
-
-		return (string) $product_id;
+	private static function bulk_add_to_cart_get_product_id_column_header(array $options): string {
+		$header = isset($options['product_id_custom_column_header']) ? trim((string) $options['product_id_custom_column_header']) : 'product_id';
+		return $header !== '' ? $header : 'product_id';
 	}
 
 	/**
-	 * Build readable variation summary text for CSV informational column.
+	 * Resolve SKU CSV column header.
 	 */
-	private static function bulk_add_to_cart_get_variation_summary_for_product(int $product_id): string {
-		if (get_post_type($product_id) !== 'product_variation') {
-			return '';
-		}
+	private static function bulk_add_to_cart_get_sku_column_header(array $options): string {
+		$header = isset($options['sku_custom_column_header']) ? trim((string) $options['sku_custom_column_header']) : '_sku';
+		return $header !== '' ? $header : '_sku';
+	}
 
-		$variation_product = wc_get_product($product_id);
-		if (!$variation_product || !method_exists($variation_product, 'get_variation_attributes')) {
-			return '';
-		}
+	/**
+	 * Build sample CSV headers based on visibility + configured columns.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function bulk_add_to_cart_build_sample_csv_headers(
+		array $options,
+		string $identifier_column,
+		string $product_id_column,
+		string $sku_column,
+		string $quantity_column
+	): array {
+		$headers = [];
+		$hide_product_id_column = isset($options['hide_product_id_column']) && (string) $options['hide_product_id_column'] === '1';
+		$hide_sku_column = isset($options['hide_sku_column']) && (string) $options['hide_sku_column'] === '1';
 
-		$pairs = [];
-		foreach ((array) $variation_product->get_variation_attributes() as $attr_key => $attr_value) {
-			$clean_key = str_replace('attribute_', '', (string) $attr_key);
-			$label     = function_exists('wc_attribute_label') ? wc_attribute_label($clean_key) : $clean_key;
-			$value     = (string) $attr_value;
-			if ($value === '' || $value === '0') {
-				continue;
+		if (!$hide_product_id_column) {
+			self::bulk_add_to_cart_add_header_if_missing($headers, $product_id_column);
+		}
+		if (!$hide_sku_column) {
+			self::bulk_add_to_cart_add_header_if_missing($headers, $sku_column);
+		}
+		self::bulk_add_to_cart_add_header_if_missing($headers, $identifier_column);
+		self::bulk_add_to_cart_add_header_if_missing($headers, $quantity_column);
+		self::bulk_add_to_cart_add_header_if_missing($headers, 'product_title');
+		self::bulk_add_to_cart_add_header_if_missing($headers, 'product_variation');
+
+		return $headers;
+	}
+
+	/**
+	 * Add a header to CSV header list if missing (case-insensitive).
+	 *
+	 * @param array<int,string> $headers
+	 */
+	private static function bulk_add_to_cart_add_header_if_missing(array &$headers, string $header): void {
+		$header = trim($header);
+		if ($header === '') {
+			return;
+		}
+		$normalized = self::bulk_add_to_cart_normalize_header($header);
+		foreach ($headers as $existing) {
+			if (self::bulk_add_to_cart_normalize_header((string) $existing) === $normalized) {
+				return;
 			}
-			$pairs[] = $label . ': ' . $value;
 		}
+		$headers[] = $header;
+	}
 
-		return !empty($pairs) ? implode(' | ', $pairs) : '';
+	/**
+	 * Build one CSV row using header order + normalized values map.
+	 *
+	 * @param array<int,string>        $headers
+	 * @param array<string,string> $values_by_normalized_header
+	 * @return array<int,string>
+	 */
+	private static function bulk_add_to_cart_build_csv_row_from_headers(array $headers, array $values_by_normalized_header): array {
+		$row = [];
+		foreach ($headers as $header) {
+			$key = self::bulk_add_to_cart_normalize_header((string) $header);
+			$row[] = isset($values_by_normalized_header[$key]) ? (string) $values_by_normalized_header[$key] : '';
+		}
+		return $row;
+	}
+
+	/**
+	 * Build demo identifier value based on identifier type.
+	 */
+	private static function bulk_add_to_cart_get_sample_identifier_value(
+		string $product_id,
+		string $sku,
+		string $slug,
+		string $title,
+		string $meta_value,
+		string $identifier_type
+	): string {
+		switch ($identifier_type) {
+			case 'product_sku':
+				return $sku;
+			case 'product_slug':
+				return $slug;
+			case 'product_title':
+				return $title;
+			case 'meta_field':
+				return $meta_value;
+			case 'product_id':
+			default:
+				return $product_id;
+		}
+	}
+
+	/**
+	 * Build identifier value for a real product row in sample-with-data CSV.
+	 *
+	 */
+	private static function bulk_add_to_cart_get_identifier_value_for_product(
+		int $product_id,
+		string $identifier_type,
+		array $options,
+		string $title,
+		string $sku_value
+	): string {
+		switch ($identifier_type) {
+			case 'product_sku':
+				return $sku_value;
+			case 'product_slug':
+				$post = get_post($product_id);
+				return $post ? (string) $post->post_name : '';
+			case 'product_title':
+				return $title;
+			case 'meta_field':
+				$meta_field_name = isset($options['meta_field_name']) ? (string) $options['meta_field_name'] : '';
+				if ($meta_field_name === '') {
+					return '';
+				}
+				return (string) get_post_meta($product_id, $meta_field_name, true);
+			case 'product_id':
+			default:
+				return (string) $product_id;
+		}
 	}
 
 	/**
@@ -4529,7 +4586,7 @@ html body .woocommerce-layout__header {
 
 	/**
 	 * If search term (?s=) exactly matches a product or variation SKU, redirect to that product.
-	 * Only runs when "Allow WooCommerce front-end product search to include SKUs" is enabled.
+	 * Only runs when the "Product Search by SKU" add-on is enabled.
 	 */
 	public static function maybe_redirect_search_to_product_by_sku(): void {
 		if (is_admin() || !is_search()) {
@@ -6305,8 +6362,8 @@ html body .woocommerce-layout__header {
 	public static function register_settings_page(): void {
 		add_submenu_page(
 			'users.php',
-			__('User Manager', 'user-manager'),
-			__('User Manager', 'user-manager'),
+			__('User Experience Manager', 'user-manager'),
+			__('User Experience Manager', 'user-manager'),
 			'manage_options',
 			self::SETTINGS_PAGE_SLUG,
 			[__CLASS__, 'render_settings_page']
@@ -6314,6 +6371,78 @@ html body .woocommerce-layout__header {
 		
 		// Keep submenu highlighted on all tabs
 		add_filter('submenu_file', [__CLASS__, 'keep_submenu_current']);
+	}
+
+	/**
+	 * Resolve plugin basename for plugin-list row hooks.
+	 */
+	private static function get_main_plugin_basename(): string {
+		$main_plugin_file = dirname(__DIR__) . '/user-manager.php';
+		if (function_exists('plugin_basename')) {
+			return plugin_basename($main_plugin_file);
+		}
+
+		return basename(dirname($main_plugin_file)) . '/' . basename($main_plugin_file);
+	}
+
+	/**
+	 * Add Settings shortcut on Plugins screen row actions.
+	 *
+	 * @param array<int|string,string> $links
+	 * @return array<int|string,string>
+	 */
+	public static function add_plugin_action_links(array $links): array {
+		if (!current_user_can('manage_options')) {
+			return $links;
+		}
+
+		$settings_link = sprintf(
+			'<a href="%1$s">%2$s</a>',
+			esc_url(self::get_page_url(self::TAB_SETTINGS)),
+			esc_html__('Settings', 'user-manager')
+		);
+		array_unshift($links, $settings_link);
+
+		return $links;
+	}
+
+	/**
+	 * Add quick links for each tab in plugin row meta.
+	 *
+	 * @param array<int,string> $links Existing plugin row meta links.
+	 * @param string            $file  Plugin file basename.
+	 * @return array<int,string>
+	 */
+	public static function add_plugin_row_meta_links(array $links, string $file): array {
+		if ($file !== self::get_main_plugin_basename()) {
+			return $links;
+		}
+		if (!current_user_can('manage_options')) {
+			return $links;
+		}
+
+		$tabs = [
+			self::TAB_CREATE_USER   => __('Create', 'user-manager'),
+			self::TAB_BULK_CREATE   => __('Bulk Create', 'user-manager'),
+			self::TAB_RESET_PASSWORD => __('Reset Password', 'user-manager'),
+			self::TAB_REMOVE_USER   => __('Remove User', 'user-manager'),
+			self::TAB_LOGIN_AS      => __('Login As', 'user-manager'),
+			self::TAB_EMAIL_USERS   => __('Email Users', 'user-manager'),
+			self::TAB_SETTINGS      => __('Settings', 'user-manager'),
+			self::TAB_REPORTS       => __('Reports', 'user-manager'),
+			self::TAB_ADDONS        => __('Add-ons', 'user-manager'),
+			self::TAB_DOCUMENTATION => __('Documentation', 'user-manager'),
+		];
+
+		foreach ($tabs as $tab => $label) {
+			$links[] = sprintf(
+				'<a href="%1$s">%2$s</a>',
+				esc_url(self::get_page_url($tab)),
+				esc_html($label)
+			);
+		}
+
+		return $links;
 	}
 	
 	/**
@@ -7119,7 +7248,7 @@ html body .woocommerce-layout__header {
 		$message = isset($_GET['um_msg']) ? sanitize_key(wp_unslash($_GET['um_msg'])) : '';
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('User Manager', 'user-manager'); ?></h1>
+			<h1><?php echo esc_html__('User Experience Manager', 'user-manager'); ?></h1>
 			<h2 class="nav-tab-wrapper">
 				<a class="nav-tab <?php echo $active_tab === self::TAB_CREATE_USER ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_CREATE_USER)); ?>">
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
@@ -7145,13 +7274,13 @@ html body .woocommerce-layout__header {
 					<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Send Email', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_REPORTS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REPORTS)); ?>">
-					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Reports', 'user-manager'); ?>
-				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_SETTINGS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_SETTINGS)); ?>">
 					<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Settings', 'user-manager'); ?>
+				</a>
+				<a class="nav-tab <?php echo $active_tab === self::TAB_REPORTS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REPORTS)); ?>">
+					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
+					<?php esc_html_e('Reports', 'user-manager'); ?>
 				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
 					<span class="dashicons dashicons-admin-plugins" style="font-size:16px;line-height:1.4;"></span>
@@ -7290,7 +7419,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * On profile.php and user-edit.php, show a notice at the top with Open User Manager and Reset Password (email pre-filled).
+	 * On profile.php and user-edit.php, show a notice at the top with Open User Experience Manager and Reset Password (email pre-filled).
 	 */
 	public static function render_profile_user_manager_notice(): void {
 		global $pagenow;
@@ -7316,11 +7445,11 @@ html body .woocommerce-layout__header {
 		?>
 		<div class="notice notice-info um-profile-notice" style="margin: 15px 0 20px 0; padding: 20px 24px; border-left-width: 4px; font-size: 16px; line-height: 1.5;">
 			<p style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700;">
-				<?php esc_html_e('User Manager plugin is active and recommended for user management.', 'user-manager'); ?>
+				<?php esc_html_e('User Experience Manager plugin is active and recommended for user management.', 'user-manager'); ?>
 			</p>
 			<p style="margin: 0;">
 				<a href="<?php echo esc_url($url); ?>" class="button button-primary button-large" style="font-weight: 600;">
-					<?php esc_html_e('Open User Manager', 'user-manager'); ?>
+					<?php esc_html_e('Open User Experience Manager', 'user-manager'); ?>
 				</a>
 				<a href="<?php echo esc_url($reset_url); ?>" class="button button-large" style="font-weight: 600; margin-left: 8px;">
 					<?php esc_html_e('Reset Password', 'user-manager'); ?>
@@ -7331,7 +7460,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * On Add New User page (user-new.php), show a large notice recommending User Manager for creating users.
+	 * On Add New User page (user-new.php), show a large notice recommending User Experience Manager for creating users.
 	 * JS hides the default add-user form until the user clicks "No thanks, I want to use the default forms".
 	 */
 	public static function maybe_render_user_new_notice(): void {
@@ -7343,11 +7472,11 @@ html body .woocommerce-layout__header {
 		?>
 		<div id="um-user-new-notice" class="notice notice-info um-user-new-notice" style="margin: 15px 0 20px 0; padding: 20px 24px; border-left-width: 4px; font-size: 16px; line-height: 1.5;">
 			<p style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700;">
-				<?php esc_html_e('User Manager plugin is active and recommended for creating all new users.', 'user-manager'); ?>
+				<?php esc_html_e('User Experience Manager plugin is active and recommended for creating all new users.', 'user-manager'); ?>
 			</p>
 			<p style="margin: 0 0 12px 0;">
 				<a href="<?php echo esc_url($url); ?>" class="button button-primary button-large" style="font-weight: 600;">
-					<?php esc_html_e('Create user with User Manager', 'user-manager'); ?>
+					<?php esc_html_e('Create user with User Experience Manager', 'user-manager'); ?>
 				</a>
 			</p>
 			<p style="margin: 0; font-size: 14px;">

@@ -8,16 +8,28 @@ if (!defined('ABSPATH')) {
 }
 
 require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
+require_once __DIR__ . '/class-user-manager-addon-add-to-cart-variation-table.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
+require_once __DIR__ . '/class-user-manager-addon-bulk-page-creator.php';
+require_once __DIR__ . '/class-user-manager-addon-cart-price-per-piece.php';
 require_once __DIR__ . '/class-user-manager-addon-blog-post-idea-generator.php';
 require_once __DIR__ . '/class-user-manager-addon-checkout-predefined-addresses.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users-with-coupons.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php';
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
+require_once __DIR__ . '/class-user-manager-addon-database-table-browser.php';
+require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
+require_once __DIR__ . '/class-user-manager-addon-invoice-approval.php';
+require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
+require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
+require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
+require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
+require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
+require_once __DIR__ . '/class-user-manager-addon-webhook-urls.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
 require_once __DIR__ . '/class-user-manager-addon-api.php';
@@ -30,41 +42,102 @@ class User_Manager_Tab_Addons {
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		$settings_form_id = 'um-addons-settings-form';
 		$addon_sections = self::get_addon_sections($settings);
+		$sorted_addon_sections = $addon_sections;
+		uasort($sorted_addon_sections, static function (array $a, array $b): int {
+			$a_label = isset($a['label']) ? (string) $a['label'] : '';
+			$b_label = isset($b['label']) ? (string) $b['label'] : '';
+			return strcasecmp($a_label, $b_label);
+		});
+		$addon_tags = self::get_addon_tags($addon_sections);
+		$current_addon_tag = isset($_GET['addon_tag']) ? sanitize_title(wp_unslash($_GET['addon_tag'])) : '';
+		if ($current_addon_tag !== '' && !isset($addon_tags[$current_addon_tag])) {
+			$current_addon_tag = '';
+		}
 		$current_addon_section = isset($_GET['addon_section']) ? sanitize_key(wp_unslash($_GET['addon_section'])) : '';
-		if ($current_addon_section !== '' && $current_addon_section !== 'all' && !isset($addon_sections[$current_addon_section])) {
+		if ($current_addon_section !== '' && !isset($addon_sections[$current_addon_section])) {
 			$current_addon_section = '';
 		}
 		$addons_base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
 		?>
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
-			<?php $addon_total = count($addon_sections); $addon_index = 0; ?>
-			<?php foreach ($addon_sections as $section_key => $section_meta) : $addon_index++; ?>
+			<?php $tag_total = count($addon_tags); $tag_index = 0; ?>
+			<li>
+				<a href="<?php echo esc_url($addons_base_url); ?>" class="<?php echo $current_addon_tag === '' ? 'current' : ''; ?>">
+					<?php esc_html_e('All Add-ons', 'user-manager'); ?>
+				</a> |
+			</li>
+			<?php foreach ($addon_tags as $tag_key => $tag_label) : $tag_index++; ?>
 				<li>
-					<a href="<?php echo esc_url(add_query_arg('addon_section', $section_key, $addons_base_url)); ?>" class="<?php echo $current_addon_section === $section_key ? 'current' : ''; ?>">
-						<?php if (!empty($section_meta['active'])) : ?><strong><?php endif; ?>
-						<?php echo esc_html((string) $section_meta['label']); ?>
-						<?php if (!empty($section_meta['active'])) : ?></strong><?php endif; ?>
-					</a><?php echo $addon_index < $addon_total ? ' |' : ''; ?>
+					<a href="<?php echo esc_url(add_query_arg('addon_tag', $tag_key, $addons_base_url)); ?>" class="<?php echo $current_addon_tag === $tag_key ? 'current' : ''; ?>">
+						<?php echo esc_html($tag_label); ?>
+					</a><?php echo $tag_index < $tag_total ? ' |' : ''; ?>
 				</li>
 			<?php endforeach; ?>
 		</ul>
 		<br class="clear" />
 
+		<?php if ($current_addon_section === '') : ?>
+			<div class="um-admin-card um-admin-card-full" style="margin-top: 20px; margin-bottom: 16px;">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-filter"></span>
+					<h2><?php esc_html_e('Add-ons Filter', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+						<div style="min-width:280px; flex:1;">
+							<label for="um-addons-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
+							<input type="text" id="um-addons-filter-text" class="regular-text" style="width:100%; max-width:560px;" placeholder="<?php esc_attr_e('Type to filter add-ons by title, description, tag, or setting text...', 'user-manager'); ?>" />
+						</div>
+						<div>
+							<button type="button" class="button" id="um-addons-filter-clear"><?php esc_html_e('Clear Filter', 'user-manager'); ?></button>
+						</div>
+					</div>
+					<p class="description" id="um-addons-filter-empty" style="display:none; margin-top: 10px;">
+						<?php esc_html_e('No add-ons or settings match the current filter.', 'user-manager'); ?>
+					</p>
+				</div>
+			</div>
+		<?php endif; ?>
+
 		<div class="um-addons-empty-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
-					<span class="dashicons dashicons-grid-view"></span>
+					<span class="dashicons dashicons-screenoptions"></span>
 					<h2><?php esc_html_e('Choose an Add-on', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
-					<p class="description" style="margin-top:0;"><?php esc_html_e('Select an add-on tile below to open its settings.', 'user-manager'); ?></p>
 					<div class="um-addon-tile-grid">
-						<?php foreach ($addon_sections as $section_key => $section_meta) : ?>
-							<a class="um-addon-tile<?php echo !empty($section_meta['active']) ? ' um-addon-tile-active' : ''; ?>" href="<?php echo esc_url(add_query_arg('addon_section', $section_key, $addons_base_url)); ?>">
+						<?php
+						$visible_tiles = 0;
+						foreach ($sorted_addon_sections as $section_key => $section_meta) :
+							$section_tags = self::get_addon_section_tags($section_meta);
+							if ($current_addon_tag !== '' && !isset($section_tags[$current_addon_tag])) {
+								continue;
+							}
+							$visible_tiles++;
+							?>
+							<?php $is_active = !empty($section_meta['active']); ?>
+							<a
+								class="um-addon-tile<?php echo $is_active ? ' um-addon-tile-active' : ''; ?>"
+								href="<?php echo esc_url(add_query_arg(['addon_section' => $section_key, 'addon_tag' => $current_addon_tag], $addons_base_url)); ?>"
+							>
 								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
-								<span class="um-addon-tile-state"><?php echo !empty($section_meta['active']) ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
+								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
+								<?php if (!empty($section_meta['description'])) : ?>
+									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
+								<?php endif; ?>
+								<?php if (!empty($section_tags)) : ?>
+									<span class="um-addon-tile-tags">
+										<?php foreach ($section_tags as $section_tag_key => $section_tag_label) : ?>
+											<span class="um-addon-tile-tag um-addon-tile-tag-<?php echo esc_attr($section_tag_key); ?>"><?php echo esc_html($section_tag_label); ?></span>
+										<?php endforeach; ?>
+									</span>
+								<?php endif; ?>
 							</a>
 						<?php endforeach; ?>
+						<?php if ($visible_tiles === 0) : ?>
+							<p class="description"><?php esc_html_e('No add-ons match this tag.', 'user-manager'); ?></p>
+						<?php endif; ?>
 					</div>
 				</div>
 			</div>
@@ -74,10 +147,17 @@ class User_Manager_Tab_Addons {
 			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
 			<input type="hidden" name="settings_section" value="addons" />
 			<input type="hidden" name="addon_section" value="<?php echo esc_attr($current_addon_section); ?>" />
+			<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
 			<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 				<div class="um-addon-section" data-addon-section="add-to-cart-bulk-import">
 					<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="add-to-cart-variation-table">
+					<?php User_Manager_Addon_Add_To_Cart_Variation_Table::render($settings, $settings_form_id); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="cart-price-per-piece">
+					<?php User_Manager_Addon_Cart_Price_Per_Piece::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="checkout-pre-defined-addresses">
 					<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
@@ -94,8 +174,23 @@ class User_Manager_Tab_Addons {
 				<div class="um-addon-section" data-addon-section="coupon-remaining-balances">
 					<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
 				</div>
+				<div class="um-addon-section" data-addon-section="bulk-page-creator">
+					<?php User_Manager_Addon_Bulk_Page_Creator::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="database-table-browser">
+					<?php User_Manager_Addon_Database_Table_Browser::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="security-hardening">
+					<?php User_Manager_Addon_Security_Hardening::render($settings, $settings_form_id); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="fatal-error-debugger">
+					<?php User_Manager_Addon_Fatal_Error_Debugger::render($settings, $settings_form_id); ?>
+				</div>
 				<div class="um-addon-section" data-addon-section="my-account-coupon-screen">
 					<?php User_Manager_Addon_My_Account_Coupon_Screen::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="my-account-menu-tiles">
+					<?php User_Manager_Addon_My_Account_Menu_Tiles::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="my-account-site-admin">
 					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
@@ -103,11 +198,20 @@ class User_Manager_Tab_Addons {
 			</div>
 		</form>
 		<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
+			<div class="um-addon-section" data-addon-section="post-meta">
+				<?php User_Manager_Addon_Post_Meta::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="product-search-by-sku">
+				<?php User_Manager_Addon_Product_Search_By_SKU::render($settings, $settings_form_id); ?>
+			</div>
 			<div class="um-addon-section" data-addon-section="post-content-generator">
 				<?php User_Manager_Addon_API::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="post-idea-generator">
 				<?php User_Manager_Addon_Blog_Post_Idea_Generator::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="plugin-tags-notes">
+				<?php User_Manager_Addon_Plugin_Tags_Notes::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="user-role-switching">
 				<?php User_Manager_Addon_Role_Switching::render($settings_form_id); ?>
@@ -124,6 +228,12 @@ class User_Manager_Tab_Addons {
 			<div class="um-addon-section" data-addon-section="wp-admin-notifications">
 				<?php User_Manager_Addon_Custom_Admin_Notifications::render($settings, $settings_form_id); ?>
 			</div>
+			<div class="um-addon-section" data-addon-section="invoice-approval">
+				<?php User_Manager_Addon_Invoice_Approval::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="webhook-urls">
+				<?php User_Manager_Addon_Webhook_URLs::render($settings); ?>
+			</div>
 			<div class="um-admin-card um-admin-card-full um-addon-save-card">
 				<div class="um-admin-card-body">
 					<p style="margin:0;">
@@ -137,6 +247,79 @@ class User_Manager_Tab_Addons {
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template($settings_form_id); ?>
 
 		<style>
+		.um-addon-tile-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(240px, 240px));
+			grid-auto-rows: 1fr;
+			gap: 12px;
+			justify-content: start;
+			align-items: stretch;
+		}
+		.um-addon-tile {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+			box-sizing: border-box;
+			min-height: 180px;
+			padding: 12px;
+			border: 1px solid #dcdcde;
+			border-radius: 6px;
+			background: #fff;
+			text-decoration: none;
+			color: #1d2327;
+			transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+		}
+		.um-addon-tile:hover,
+		.um-addon-tile:focus {
+			border-color: #72aee6;
+			box-shadow: 0 0 0 1px rgba(34, 113, 177, 0.18);
+			outline: none;
+		}
+		.um-addon-tile.um-addon-tile-active {
+			background: #e7f1ff;
+			border-color: #72aee6;
+		}
+		.um-addon-tile-title {
+			display: block;
+			font-weight: 600;
+			margin-bottom: 4px;
+		}
+		.um-addon-tile-description {
+			display: block;
+			font-size: 12px;
+			line-height: 1.4;
+			color: #50575e;
+			margin-bottom: 6px;
+		}
+		.um-addon-tile-tags {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+			padding-top: 6px;
+			margin-top: auto;
+		}
+		.um-addon-tile-tag {
+			display: inline-block;
+			padding: 1px 7px;
+			border-radius: 999px;
+			background: #f0f6fc;
+			border: 1px solid #c5d9ed;
+			color: #0a4b78;
+			font-size: 11px;
+			line-height: 1.5;
+			font-weight: 500;
+		}
+		.um-addon-tile-status {
+			display: block;
+			font-size: 12px;
+			color: #50575e;
+			margin-bottom: 6px;
+		}
+		@media (max-width: 600px) {
+			.um-addon-tile-grid {
+				grid-template-columns: minmax(220px, 1fr);
+			}
+		}
 		.um-addon-collapsible .um-admin-card-header {
 			display: flex;
 			align-items: center;
@@ -164,13 +347,13 @@ class User_Manager_Tab_Addons {
 			box-shadow: 0 0 0 2px rgba(140, 143, 148, 0.2);
 		}
 		.um-addon-collapsible.um-addon-active .um-addon-active-indicator {
-			background: #edfaef;
-			border-color: #7ad07f;
-			color: #137333;
+			background: #e7f1ff;
+			border-color: #72aee6;
+			color: #0a4b78;
 		}
 		.um-addon-collapsible.um-addon-active .um-addon-active-dot {
-			background: #2ea043;
-			box-shadow: 0 0 0 2px rgba(46, 160, 67, 0.25);
+			background: #2271b1;
+			box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.25);
 		}
 		.um-addon-collapse-indicator {
 			margin-left: 8px;
@@ -281,22 +464,63 @@ class User_Manager_Tab_Addons {
 			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
 			var addonInactiveText = '<?php echo esc_js(__('Inactive', 'user-manager')); ?>';
 			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
+			function normalizeAddonFilterText(str) {
+				return (str || '').toString().toLowerCase().trim();
+			}
+
+			function addonFilterHaystack($root) {
+				var text = [];
+				text.push($root.text());
+				text.push($root.attr('data-addon-section'));
+				text.push($root.attr('href'));
+				$root.find('input, select, textarea').each(function() {
+					var $input = $(this);
+					text.push($input.val());
+					text.push($input.attr('placeholder'));
+					text.push($input.attr('name'));
+				});
+				return normalizeAddonFilterText(text.join(' '));
+			}
+
+			function applyAddonsFilter() {
+				var keyword = normalizeAddonFilterText($('#um-addons-filter-text').val());
+				var anyVisible = false;
+
+				if (!currentAddonSection) {
+					$('.um-addons-empty-state .um-addon-tile').each(function() {
+						var $tile = $(this);
+						var matched = keyword === '' || addonFilterHaystack($tile).indexOf(keyword) !== -1;
+						$tile.toggle(matched);
+						if (matched) {
+							anyVisible = true;
+						}
+					});
+				} else {
+					$('.um-addon-section[data-addon-section="' + currentAddonSection + '"] .um-admin-card').each(function() {
+						var $card = $(this);
+						var matched = keyword === '' || addonFilterHaystack($card).indexOf(keyword) !== -1;
+						$card.toggle(matched);
+						if (matched) {
+							anyVisible = true;
+						}
+					});
+					$('.um-addon-save-card').show();
+				}
+
+				$('#um-addons-filter-empty').toggle(keyword !== '' && !anyVisible);
+			}
 
 			function applyAddonSectionFilter() {
 				if (!currentAddonSection) {
-					$('.um-addon-section').hide();
 					$('.um-addons-empty-state').show();
+					$('.um-addon-section').hide();
 					$('.um-addon-save-card').hide();
 					return;
 				}
 				$('.um-addons-empty-state').hide();
-				$('.um-addon-save-card').show();
-				if (currentAddonSection === 'all') {
-					$('.um-addon-section').show();
-					return;
-				}
 				$('.um-addon-section').hide();
 				$('.um-addon-section[data-addon-section="' + currentAddonSection + '"]').show();
+				$('.um-addon-save-card').show();
 			}
 
 			function isAddonCardActive($card) {
@@ -414,15 +638,21 @@ class User_Manager_Tab_Addons {
 						setAddonCardCollapsed($card, !$card.hasClass('um-addon-collapsed'));
 					});
 
-					// Keep cards collapsed by default in "all" view,
+					// Keep cards collapsed by default in choose/add-on index view,
 					// but auto-expand when user is focused on a single add-on section.
-					setAddonCardCollapsed($card, !currentAddonSection || currentAddonSection === 'all', true);
+					setAddonCardCollapsed($card, currentAddonSection === '', true);
 					refreshAddonCardAutoState($card);
 				});
 			}
 
 			applyAddonSectionFilter();
+			$('#um-addons-filter-text').on('input', applyAddonsFilter);
+			$('#um-addons-filter-clear').on('click', function() {
+				$('#um-addons-filter-text').val('');
+				applyAddonsFilter();
+			});
 			initAddonCollapsibleCards();
+			applyAddonsFilter();
 
 			function umToggleBulkMetaFieldRow() {
 				var type = $('#um-bulk-identifier-type').val();
@@ -474,6 +704,9 @@ class User_Manager_Tab_Addons {
 					umToggleBulkMetaFieldRow();
 				}
 			}
+			function togglePostMetaAddonFields() {
+				$('#um-post-meta-edit-fields').toggle($('#um-post-meta-enabled').is(':checked'));
+			}
 			function toggleNewUserCouponAddonFields() {
 				var enabled = $('#um-nuc-enabled').is(':checked');
 				$('#um-nuc-fields').toggle(enabled);
@@ -490,13 +723,48 @@ class User_Manager_Tab_Addons {
 			function toggleMyAccountCouponScreenFields() {
 				$('#um-my-account-coupon-screen-fields').toggle($('#um-my-account-coupon-screen-enabled').is(':checked'));
 			}
+			function toggleMyAccountMenuTilesFields() {
+				$('#um-my-account-menu-tiles-fields').toggle($('#um-my-account-menu-tiles-enabled').is(':checked'));
+			}
+			function toggleCartPricePerPieceFields() {
+				$('#um-cart-price-per-piece-fields').toggle($('#um-cart-price-per-piece-enabled').is(':checked'));
+			}
+			function toggleBulkPageCreatorFields() {
+				var enabled = $('#um-bulk-page-creator-enabled').is(':checked');
+				$('#um-bulk-page-creator-fields').toggle(enabled);
+				$('#um-bulk-page-creator-run-card').toggle(enabled);
+			}
+			function toggleDatabaseTableBrowserFields() {
+				$('#um-database-table-browser-fields').toggle($('#um-database-table-browser-enabled').is(':checked'));
+			}
+			function toggleWebhookUrlsFields() {
+				$('#um-webhook-urls-fields').toggle($('#um-webhook-urls-enabled').is(':checked'));
+			}
+			function toggleInvoiceApprovalFields() {
+				$('#um-invoice-approval-fields').toggle($('#um-invoice-approval-enabled').is(':checked'));
+			}
+			function toggleSecurityHardeningFields() {
+				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
+			}
+			function toggleFatalErrorDebuggerFields() {
+				$('#um-fatal-error-debugger-fields').toggle($('#um-fatal-error-debugger-enabled').is(':checked'));
+			}
 			$('#um-bulk-coupons-enabled').on('change', toggleBulkCouponsFields);
 			toggleBulkCouponsFields();
 			toggleBulkAddToCartAddonFields();
+			togglePostMetaAddonFields();
 			toggleNewUserCouponAddonFields();
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
 			toggleMyAccountCouponScreenFields();
+			toggleMyAccountMenuTilesFields();
+			toggleCartPricePerPieceFields();
+			toggleBulkPageCreatorFields();
+			toggleDatabaseTableBrowserFields();
+			toggleWebhookUrlsFields();
+			toggleInvoiceApprovalFields();
+			toggleSecurityHardeningFields();
+			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
 				$('#um-addons-form-action').val(targetAction);
@@ -530,6 +798,7 @@ class User_Manager_Tab_Addons {
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-viewer-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-approver-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-default-pending-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-additional-meta-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-meta-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-product-viewer-enabled', '#um-my-account-admin-product-viewer-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-product-viewer-enabled', '#um-my-account-admin-product-meta-field');
@@ -554,6 +823,9 @@ class User_Manager_Tab_Addons {
 			function toggleRoleSwitchingFields() {
 				$('#um-role-switching-fields').toggle($('#um-role-switching-enabled').is(':checked'));
 			}
+			function toggleAddToCartVariationTableFields() {
+				$('#um-add-to-cart-variation-table-fields').toggle($('#um-add-to-cart-variation-table-enabled').is(':checked'));
+			}
 
 			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
 			toggleMyAccountAdminViewerFields();
@@ -563,6 +835,17 @@ class User_Manager_Tab_Addons {
 			$("input[name='bulk_add_to_cart_enabled']").on('change', function() {
 				toggleBulkAddToCartAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-bulk-add-to-cart'));
+			});
+			$('#um-post-meta-enabled').on('change', function() {
+				togglePostMetaAddonFields();
+				refreshAddonCardAutoState($('#um-addon-card-post-meta'));
+			});
+			$('#um-product-search-by-sku-enabled').on('change', function() {
+				refreshAddonCardAutoState($('#um-addon-card-product-search-by-sku'));
+			});
+			$('#um-add-to-cart-variation-table-enabled').on('change', function() {
+				toggleAddToCartVariationTableFields();
+				refreshAddonCardAutoState($('#um-addon-card-add-to-cart-variation-table'));
 			});
 			$('#um-bulk-coupons-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-bulk-coupons'));
@@ -612,9 +895,41 @@ class User_Manager_Tab_Addons {
 				toggleCouponRemainderAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
 			});
+			$('#um-security-hardening-enabled').on('change', function() {
+				toggleSecurityHardeningFields();
+				refreshAddonCardAutoState($('#um-addon-card-security-hardening'));
+			});
+			$('#um-fatal-error-debugger-enabled').on('change', function() {
+				toggleFatalErrorDebuggerFields();
+				refreshAddonCardAutoState($('#um-addon-card-fatal-error-debugger'));
+			});
 			$('#um-my-account-coupon-screen-enabled').on('change', function() {
 				toggleMyAccountCouponScreenFields();
 				refreshAddonCardAutoState($('#um-addon-card-my-account-coupon-screen'));
+			});
+			$('#um-my-account-menu-tiles-enabled').on('change', function() {
+				toggleMyAccountMenuTilesFields();
+				refreshAddonCardAutoState($('#um-addon-card-my-account-menu-tiles'));
+			});
+			$('#um-cart-price-per-piece-enabled').on('change', function() {
+				toggleCartPricePerPieceFields();
+				refreshAddonCardAutoState($('#um-addon-card-cart-price-per-piece'));
+			});
+			$('#um-bulk-page-creator-enabled').on('change', function() {
+				toggleBulkPageCreatorFields();
+				refreshAddonCardAutoState($('#um-addon-card-bulk-page-creator'));
+			});
+			$('#um-database-table-browser-enabled').on('change', function() {
+				toggleDatabaseTableBrowserFields();
+				refreshAddonCardAutoState($('#um-addon-card-database-table-browser'));
+			});
+			$('#um-webhook-urls-enabled').on('change', function() {
+				toggleWebhookUrlsFields();
+				refreshAddonCardAutoState($('#um-addon-card-webhook-urls'));
+			});
+			$('#um-invoice-approval-enabled').on('change', function() {
+				toggleInvoiceApprovalFields();
+				refreshAddonCardAutoState($('#um-addon-card-invoice-approval'));
 			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
@@ -632,6 +947,7 @@ class User_Manager_Tab_Addons {
 			toggleAdminBarMenuItemsFields();
 			toggleWpAdminCssFields();
 			toggleRoleSwitchingFields();
+			toggleAddToCartVariationTableFields();
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;
@@ -693,10 +1009,20 @@ class User_Manager_Tab_Addons {
 	}
 
 	/**
+	 * Expose add-on section metadata for other tabs (Reports/Admin Log).
+	 *
+	 * @param array $settings Plugin settings.
+	 * @return array<string,array{label:string,description:string,active:bool}>
+	 */
+	public static function get_addon_sections_for_reports(array $settings): array {
+		return self::get_addon_sections($settings);
+	}
+
+	/**
 	 * Build Add-ons sub-navigation metadata.
 	 *
 	 * @param array $settings Plugin settings.
-	 * @return array<string,array{label:string,active:bool}>
+	 * @return array<string,array{label:string,description:string,active:bool}>
 	 */
 	private static function get_addon_sections(array $settings): array {
 		$role_switch_settings = get_option('view_website_by_role_settings', []);
@@ -716,65 +1042,239 @@ class User_Manager_Tab_Addons {
 		return [
 			'add-to-cart-bulk-import' => [
 				'label'  => __('Add to Cart Bulk Import', 'user-manager'),
+				'description' => __('Upload a product CSV so users can add many items before checkout.', 'user-manager'),
 				'active' => !empty($settings['bulk_add_to_cart_enabled']),
+			],
+			'add-to-cart-variation-table' => [
+				'label'  => __('Add to Cart Variation Table', 'user-manager'),
+				'description' => __('Show variable product rows with quantities so multiple variations can be added at once.', 'user-manager'),
+				'active' => !empty($settings['add_to_cart_variation_table_enabled']),
+			],
+			'cart-price-per-piece' => [
+				'label'  => __('Cart Price Per-Piece', 'user-manager'),
+				'description' => __('Show per-piece unit pricing on cart, checkout, and order line subtotals when quantities exceed one.', 'user-manager'),
+				'active' => !empty($settings['cart_price_per_piece_enabled']),
+			],
+			'bulk-page-creator' => [
+				'label'  => __('Page Creator', 'user-manager'),
+				'description' => __('Generate multiple AI-written pages from Title|Prompt rows using your configured OpenAI API key and optional images for page/post campaigns.', 'user-manager'),
+				'active' => !empty($settings['bulk_page_creator_enabled']),
+			],
+			'database-table-browser' => [
+				'label'  => __('Database Table Browser', 'user-manager'),
+				'description' => __('Browse database tables, review structure, and view paginated row data directly in WP-Admin for troubleshooting and QA.', 'user-manager'),
+				'active' => !empty($settings['database_table_browser_enabled']),
+			],
+			'webhook-urls' => [
+				'label'  => __('Webhook URLs', 'user-manager'),
+				'description' => __('Handle create/edit webhook requests for orders, coupons, password resets, and email sending with optional debug responses.', 'user-manager'),
+				'active' => !empty($settings['webhook_urls_enabled']),
+			],
+			'invoice-approval' => [
+				'label'  => __('Order Invoice & Approval', 'user-manager'),
+				'description' => __('Render customer-facing invoice pages with optional approvals, PDF download, payment links, and order-level invoice metadata.', 'user-manager'),
+				'active' => !empty($settings['invoice_approval_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),
+				'description' => __('Offer a checkout selector that pre-fills and controls address details.', 'user-manager'),
 				'active' => !empty($settings['checkout_ship_to_predefined_enabled']),
 			],
 			'coupon-creator' => [
 				'label'  => __('Coupon Creator', 'user-manager'),
+				'description' => __('Create many coupons at once with templates, email, and usage options.', 'user-manager'),
 				'active' => !empty($settings['bulk_coupons_enabled']),
 			],
 			'coupon-for-new-user' => [
 				'label'  => __('New User Coupons', 'user-manager'),
+				'description' => __('Automatically issue template coupons to new users and optionally email them.', 'user-manager'),
 				'active' => !empty($settings['nuc_enabled']),
 			],
 			'coupon-notifications-for-users-with-coupons' => [
 				'label'  => __('User Coupon Notifications', 'user-manager'),
+				'description' => __('Display reminder notices for each eligible user coupon on selected pages.', 'user-manager'),
 				'active' => !empty($settings['user_coupon_notifications_enabled']),
 			],
 			'coupon-remaining-balances' => [
 				'label'  => __('User Coupon Remaining Balances', 'user-manager'),
+				'description' => __('Create a replacement coupon when a qualifying balance remains after checkout.', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
+			],
+			'security-hardening' => [
+				'label'  => __('Security Hardening', 'user-manager'),
+				'description' => __('Apply optional hardening controls for REST, WP-Admin file access, SSL admin, and version visibility.', 'user-manager'),
+				'active' => !empty($settings['security_hardening_enabled']),
+			],
+			'fatal-error-debugger' => [
+				'label'  => __('Fatal Error Debugger', 'user-manager'),
+				'description' => __('Capture front-end fatal errors for WP-Admin administrators and optionally email alerts.', 'user-manager'),
+				'active' => !empty($settings['fatal_error_debugger_enabled']),
 			],
 			'my-account-coupon-screen' => [
 				'label'  => __('My Account Coupons Page', 'user-manager'),
+				'description' => __('Add a My Account Coupons page that lists eligible coupon notices.', 'user-manager'),
 				'active' => !empty($settings['my_account_coupon_screen_enabled']),
+			],
+			'my-account-menu-tiles' => [
+				'label'  => __('My Account Menu Tiles', 'user-manager'),
+				'description' => __('Show My Account menu endpoints as clickable tile buttons on the account dashboard.', 'user-manager'),
+				'active' => !empty($settings['my_account_menu_tiles_enabled']),
 			],
 			'my-account-site-admin' => [
 				'label'  => __('My Account Admin', 'user-manager'),
+				'description' => __('Add admin-style Orders, Products, Coupons, and Users tools in My Account.', 'user-manager'),
 				'active' => $my_account_site_admin_enabled,
+			],
+			'post-meta' => [
+				'label'  => __('Post Meta Viewer', 'user-manager'),
+				'description' => __('Show all post meta keys and values in a dedicated editor box.', 'user-manager'),
+				'active' => !empty($settings['display_post_meta_meta_box']),
+			],
+			'product-search-by-sku' => [
+				'label'  => __('Product Search by SKU', 'user-manager'),
+				'description' => __('Redirect front-end WooCommerce searches directly to a product when the search term exactly matches a product or variation SKU.', 'user-manager'),
+				'active' => !array_key_exists('search_redirect_by_sku', $settings) || !empty($settings['search_redirect_by_sku']),
 			],
 			'post-content-generator' => [
 				'label'  => __('Post Content Generator', 'user-manager'),
+				'description' => __('Generate AI post content and import drafts with configurable prompt options.', 'user-manager'),
 				'active' => !empty($settings['openai_content_generator_enabled']),
 			],
 			'post-idea-generator' => [
 				'label'  => __('Post Idea Generator', 'user-manager'),
+				'description' => __('Generate AI-assisted post ideas based on your existing site content.', 'user-manager'),
 				'active' => !empty($settings['openai_blog_post_idea_generator_enabled']),
+			],
+			'plugin-tags-notes' => [
+				'label'  => __('Plugin Tags & Notes', 'user-manager'),
+				'description' => __('Add plugin tags, notes, and filtering tools directly on the WP-Admin Plugins screen.', 'user-manager'),
+				'active' => !empty($settings['plugin_tags_notes_enabled']),
 			],
 			'user-role-switching' => [
 				'label'  => __('User Role Switching', 'user-manager'),
+				'description' => __('Enable front-end role switching controls with profile permission support.', 'user-manager'),
 				'active' => !empty($role_switch_settings['enabled']),
 			],
 			'wp-admin-bar-menu-items' => [
 				'label'  => __('WP-Admin Bar Menu Items', 'user-manager'),
-				'active' => array_key_exists('admin_bar_menu_items_enabled', $settings) ? !empty($settings['admin_bar_menu_items_enabled']) : true,
+				'description' => __('Create custom WP-Admin bar shortcut menus for faster admin navigation.', 'user-manager'),
+				'active' => !empty($settings['admin_bar_menu_items_enabled']),
 			],
 			'wp-admin-bar-quick-search' => [
 				'label'  => __('WP-Admin Bar Quick Search', 'user-manager'),
-				'active' => array_key_exists('um_quick_search_enabled', $settings) ? !empty($settings['um_quick_search_enabled']) : true,
+				'description' => __('Add a WP-Admin quick search panel for posts, orders, and users.', 'user-manager'),
+				'active' => !empty($settings['um_quick_search_enabled']),
 			],
 			'wp-admin-css' => [
 				'label'  => __('WP-Admin CSS', 'user-manager'),
-				'active' => array_key_exists('wp_admin_css_enabled', $settings) ? !empty($settings['wp_admin_css_enabled']) : true,
+				'description' => __('Apply custom CSS in WP-Admin globally, by role, or by user.', 'user-manager'),
+				'active' => !empty($settings['wp_admin_css_enabled']),
 			],
 			'wp-admin-notifications' => [
 				'label'  => __('WP-Admin Notifications', 'user-manager'),
-				'active' => array_key_exists('custom_admin_notifications_enabled', $settings) ? !empty($settings['custom_admin_notifications_enabled']) : true,
+				'description' => __('Display WP-Admin notification banners with optional URL-based targeting rules.', 'user-manager'),
+				'active' => !empty($settings['custom_admin_notifications_enabled']),
 			],
 		];
+	}
+
+	/**
+	 * Build a sorted map of add-on tags.
+	 *
+	 * @param array<string,array<string,mixed>> $addon_sections
+	 * @return array<string,string>
+	 */
+	private static function get_addon_tags(array $addon_sections): array {
+		$tags = [];
+		foreach ($addon_sections as $section_meta) {
+			foreach (self::get_addon_section_tags($section_meta) as $tag_key => $tag_label) {
+				$tags[$tag_key] = $tag_label;
+			}
+		}
+
+		asort($tags, SORT_NATURAL | SORT_FLAG_CASE);
+		return $tags;
+	}
+
+	/**
+	 * Master add-on tags and keyword triggers.
+	 *
+	 * @return array<string,array{label:string,keywords:array<int,string>}>
+	 */
+	private static function get_master_addon_tags(): array {
+		return [
+			'cart'       => [
+				'label'    => __('Cart', 'user-manager'),
+				'keywords' => ['cart'],
+			],
+			'checkout'   => [
+				'label'    => __('Checkout', 'user-manager'),
+				'keywords' => ['checkout'],
+			],
+			'coupon'     => [
+				'label'    => __('Coupons', 'user-manager'),
+				'keywords' => ['coupon'],
+			],
+			'my-account' => [
+				'label'    => __('My Account', 'user-manager'),
+				'keywords' => ['my account', 'my-account'],
+			],
+			'order'      => [
+				'label'    => __('Orders', 'user-manager'),
+				'keywords' => ['order', 'orders', 'invoice'],
+			],
+			'page'       => [
+				'label'    => __('Pages', 'user-manager'),
+				'keywords' => ['page creator'],
+			],
+			'post'       => [
+				'label'    => __('Posts', 'user-manager'),
+				'keywords' => ['post'],
+			],
+			'user'       => [
+				'label'    => __('Users', 'user-manager'),
+				'keywords' => ['user'],
+			],
+			'wp-admin'   => [
+				'label'    => __('WP-Admin', 'user-manager'),
+				'keywords' => ['wp-admin', 'wp admin'],
+			],
+		];
+	}
+
+	/**
+	 * Derive add-on tags by checking label/description against master keywords.
+	 *
+	 * @param array<string,mixed> $section_meta
+	 * @return array<string,string>
+	 */
+	private static function get_addon_section_tags(array $section_meta): array {
+		$label = isset($section_meta['label']) ? trim((string) $section_meta['label']) : '';
+		$description = isset($section_meta['description']) ? trim((string) $section_meta['description']) : '';
+		$search_text = trim($label . ' ' . $description);
+		if ($search_text === '') {
+			return [];
+		}
+
+		$matches = [];
+		foreach (self::get_master_addon_tags() as $tag_key => $tag_meta) {
+			$tag_label = isset($tag_meta['label']) ? trim((string) $tag_meta['label']) : '';
+			$keywords = isset($tag_meta['keywords']) && is_array($tag_meta['keywords']) ? $tag_meta['keywords'] : [];
+			if ($tag_label === '' || empty($keywords)) {
+				continue;
+			}
+
+			foreach ($keywords as $keyword) {
+				$keyword = trim((string) $keyword);
+				if ($keyword !== '' && stripos($search_text, $keyword) !== false) {
+					$matches[$tag_key] = $tag_label;
+					break;
+				}
+			}
+		}
+
+		asort($matches, SORT_NATURAL | SORT_FLAG_CASE);
+		return $matches;
 	}
 }
 
