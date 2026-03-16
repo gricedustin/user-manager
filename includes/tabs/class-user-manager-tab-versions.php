@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.3.53 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Main tab order updated so Settings appears before Reports.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.3.52 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Documentation sub-menu order updated so About appears before Versions.', 'user-manager'); ?></li>

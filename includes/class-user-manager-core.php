@@ -32,7 +32,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.3.52';
+	const VERSION = '2.3.53';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -6369,8 +6369,8 @@ html body .woocommerce-layout__header {
 			self::TAB_REMOVE_USER   => __('Remove User', 'user-manager'),
 			self::TAB_LOGIN_AS      => __('Login As', 'user-manager'),
 			self::TAB_EMAIL_USERS   => __('Email Users', 'user-manager'),
-			self::TAB_REPORTS       => __('Reports', 'user-manager'),
 			self::TAB_SETTINGS      => __('Settings', 'user-manager'),
+			self::TAB_REPORTS       => __('Reports', 'user-manager'),
 			self::TAB_ADDONS        => __('Add-ons', 'user-manager'),
 			self::TAB_DOCUMENTATION => __('Documentation', 'user-manager'),
 		];
@@ -7215,13 +7215,13 @@ html body .woocommerce-layout__header {
 					<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Send Email', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_REPORTS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REPORTS)); ?>">
-					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Reports', 'user-manager'); ?>
-				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_SETTINGS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_SETTINGS)); ?>">
 					<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Settings', 'user-manager'); ?>
+				</a>
+				<a class="nav-tab <?php echo $active_tab === self::TAB_REPORTS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REPORTS)); ?>">
+					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
+					<?php esc_html_e('Reports', 'user-manager'); ?>
 				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
 					<span class="dashicons dashicons-admin-plugins" style="font-size:16px;line-height:1.4;"></span>
