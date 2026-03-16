@@ -32,7 +32,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.0';
+	const VERSION = '2.4.1';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -3518,14 +3518,6 @@ html body .woocommerce-layout__header {
 			}
 		}
 		return $lines;
-	}
-
-	/**
-	 * Resolve the configurable CSV header label for the forced product_id column.
-	 */
-	private static function bulk_add_to_cart_get_product_id_column_header(array $options): string {
-		$header = isset($options['product_id_custom_column_header']) ? trim((string) $options['product_id_custom_column_header']) : 'product_id';
-		return $header !== '' ? $header : 'product_id';
 	}
 
 	/**

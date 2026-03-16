@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.1 <span>(March 15, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hotfix: removed duplicate bulk_add_to_cart_get_product_id_column_header() declaration to prevent fatal redeclare error.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.0 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Release 2.4.0: includes recent admin tab ordering and add-ons tag navigation updates.', 'user-manager'); ?></li>
