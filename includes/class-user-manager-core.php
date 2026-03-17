@@ -36,7 +36,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.5';
+	const VERSION = '2.4.6';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 
@@ -351,8 +351,10 @@ final class User_Manager_Core {
 			$user_meta = [];
 		}
 
-		$default_roles = $user_meta['default_roles'] ?? [];
-		$roles         = wp_roles()->get_names();
+		$roles                = wp_roles()->get_names();
+		$default_roles        = self::get_user_role_switch_default_roles($user_meta);
+		$default_role         = isset($default_roles[0]) ? (string) $default_roles[0] : '';
+		$user_hidden_roles    = self::normalize_role_list($user_meta['hidden_roles'] ?? []);
 		?>
 		<div class="card" style="max-width:100%;margin-bottom:20px;padding:20px;background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,.04);">
 			<h2 style="margin-top:0;padding-bottom:10px;border-bottom:1px solid #eee;">
@@ -384,17 +386,35 @@ final class User_Manager_Core {
 				</tr>
 				<tr>
 					<th scope="row">
-						<label><?php esc_html_e('Default Roles', 'user-manager'); ?></label>
+						<label for="um_role_switch_default_role"><?php esc_html_e('Default Role', 'user-manager'); ?></label>
+					</th>
+					<td>
+						<select name="um_role_switch_default_role" id="um_role_switch_default_role">
+							<option value=""><?php esc_html_e('— No default role —', 'user-manager'); ?></option>
+							<?php foreach ($roles as $role_key => $role_name) : ?>
+								<option value="<?php echo esc_attr($role_key); ?>" <?php selected($default_role, $role_key); ?>>
+									<?php echo esc_html($role_name); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description">
+							<?php esc_html_e('Select one default role to restore when using the "Reset to Default Roles" button.', 'user-manager'); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label><?php esc_html_e('Roles to Hide', 'user-manager'); ?></label>
 					</th>
 					<td>
 						<?php foreach ($roles as $role_key => $role_name) : ?>
 							<label style="display:block;margin-bottom:5px;">
-								<input type="checkbox" name="um_role_switch_default_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $default_roles, true)); ?> />
+								<input type="checkbox" name="um_role_switch_hidden_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $user_hidden_roles, true)); ?> />
 								<?php echo esc_html($role_name); ?>
 							</label>
 						<?php endforeach; ?>
 						<p class="description">
-							<?php esc_html_e('Select the default roles that will be restored when using the "Reset to Default Roles" button.', 'user-manager'); ?>
+							<?php esc_html_e('Hidden roles are removed from this user\'s front-end role switcher so they cannot view or select them.', 'user-manager'); ?>
 						</p>
 					</td>
 				</tr>
@@ -412,6 +432,7 @@ final class User_Manager_Core {
 		if (!current_user_can('manage_options')) {
 			return;
 		}
+		$roles = wp_roles()->get_names();
 
 		$old_meta = get_user_meta($user_id, 'view_website_by_role_permissions', true);
 		if (!is_array($old_meta)) {
@@ -441,12 +462,28 @@ final class User_Manager_Core {
 			$changes[] = 'Disabled admin role preview';
 		}
 
-		// Default roles.
-		if (!empty($_POST['um_role_switch_default_roles'])) {
-			$user_meta['default_roles'] = array_map('sanitize_text_field', (array) wp_unslash($_POST['um_role_switch_default_roles']));
-			if (empty($old_meta['default_roles']) || $old_meta['default_roles'] !== $user_meta['default_roles']) {
-				$changes[] = 'Updated default roles';
-			}
+		// Default role (single selection).
+		$old_default_roles = self::get_user_role_switch_default_roles($old_meta);
+		$new_default_role = isset($_POST['um_role_switch_default_role']) ? sanitize_key(wp_unslash($_POST['um_role_switch_default_role'])) : '';
+		if ($new_default_role !== '' && isset($roles[$new_default_role])) {
+			$user_meta['default_roles'] = [$new_default_role];
+		}
+		$new_default_roles = self::get_user_role_switch_default_roles($user_meta);
+		if ($old_default_roles !== $new_default_roles) {
+			$changes[] = 'Updated default role';
+		}
+
+		// Roles to hide for this user.
+		$old_hidden_roles = self::normalize_role_list($old_meta['hidden_roles'] ?? []);
+		$new_hidden_roles = isset($_POST['um_role_switch_hidden_roles']) ? self::normalize_role_list(wp_unslash($_POST['um_role_switch_hidden_roles'])) : [];
+		$new_hidden_roles = array_values(array_filter($new_hidden_roles, static function (string $role_key) use ($roles): bool {
+			return isset($roles[$role_key]);
+		}));
+		if (!empty($new_hidden_roles)) {
+			$user_meta['hidden_roles'] = $new_hidden_roles;
+		}
+		if ($old_hidden_roles !== $new_hidden_roles) {
+			$changes[] = 'Updated per-user roles to hide';
 		}
 
 		if (!empty($changes)) {
@@ -481,7 +518,7 @@ final class User_Manager_Core {
 			return;
 		}
 
-		$hidden_roles = $role_settings['hidden_roles'] ?? [];
+		$hidden_roles = self::get_effective_role_switch_hidden_roles($role_settings, $user_meta);
 		$allow_reset  = !empty($role_settings['allow_reset']);
 
 		$roles        = wp_roles()->get_names();
@@ -516,7 +553,21 @@ final class User_Manager_Core {
 		}
 		$current_roles_text = implode(', ', $current_label);
 
-		$has_default_roles = !empty($user_meta['default_roles']) && is_array($user_meta['default_roles']);
+		$default_roles     = self::get_user_role_switch_default_roles($user_meta);
+		$reset_roles       = [];
+		foreach ($default_roles as $default_role_key) {
+			if (!isset($roles[$default_role_key])) {
+				continue;
+			}
+			if (in_array($default_role_key, $hidden_roles, true)) {
+				continue;
+			}
+			if (!self::role_switch_user_can_select_role($default_role_key, $user_meta)) {
+				continue;
+			}
+			$reset_roles[] = $default_role_key;
+		}
+		$has_default_roles = !empty($reset_roles);
 		?>
 		<div id="um-role-switcher-bar" style="position:fixed;bottom:0;left:0;right:0;background:#1d2327;padding:10px 16px;box-shadow:0 -2px 4px rgba(0,0,0,0.2);z-index:999999;">
 			<form method="post" action="" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;max-width:1200px;margin:0 auto;">
@@ -587,21 +638,39 @@ final class User_Manager_Core {
 		$roles       = wp_roles()->get_names();
 		$old_roles   = (array) $current_user->roles;
 		$old_label   = implode(', ', $old_roles);
+		$hidden_roles = self::get_effective_role_switch_hidden_roles($role_settings, $user_meta);
 
 		// Handle reset to default roles.
-		if (!empty($_POST['um_role_switch_reset']) && !empty($user_meta['default_roles']) && is_array($user_meta['default_roles'])) {
+		$default_roles = self::get_user_role_switch_default_roles($user_meta);
+		if (!empty($_POST['um_role_switch_reset']) && !empty($default_roles)) {
+			$reset_roles = [];
+			foreach ($default_roles as $role) {
+				if (!isset($roles[$role])) {
+					continue;
+				}
+				if (in_array($role, $hidden_roles, true)) {
+					continue;
+				}
+				if (!self::role_switch_user_can_select_role($role, $user_meta)) {
+					continue;
+				}
+				$reset_roles[] = $role;
+			}
+			if (empty($reset_roles)) {
+				return;
+			}
 			// Remove all current roles.
 			foreach ($current_user->roles as $role) {
 				$current_user->remove_role($role);
 			}
 			// Add back default roles.
-			foreach ($user_meta['default_roles'] as $role) {
+			foreach ($reset_roles as $role) {
 				if (isset($roles[$role])) {
 					$current_user->add_role($role);
 				}
 			}
 
-			self::add_role_switch_change('Role Reset', $old_label, implode(', ', (array) $user_meta['default_roles']), $current_user);
+			self::add_role_switch_change('Role Reset', $old_label, implode(', ', $reset_roles), $current_user);
 			return;
 		}
 
@@ -614,17 +683,72 @@ final class User_Manager_Core {
 		if (!isset($roles[$new_role])) {
 			return;
 		}
-
-		// Permission checks.
-		if ($new_role === 'administrator' && empty($user_meta['admin'])) {
+		if (in_array($new_role, $hidden_roles, true)) {
 			return;
 		}
-		if ($new_role !== 'administrator' && empty($user_meta['active'])) {
+
+		// Permission checks.
+		if (!self::role_switch_user_can_select_role($new_role, $user_meta)) {
 			return;
 		}
 
 		$current_user->set_role($new_role);
 		self::add_role_switch_change('Role Change', $old_label, $new_role, $current_user);
+	}
+
+	/**
+	 * Normalize and dedupe role keys from mixed input.
+	 *
+	 * @param mixed $roles Raw role list.
+	 * @return array<int,string>
+	 */
+	private static function normalize_role_list($roles): array {
+		$roles = is_array($roles) ? $roles : [$roles];
+		$roles = array_map(static function ($role): string {
+			return sanitize_key((string) $role);
+		}, $roles);
+		$roles = array_values(array_unique(array_filter($roles)));
+		return $roles;
+	}
+
+	/**
+	 * Read user default role(s) with backward compatibility support.
+	 *
+	 * @param array<string,mixed> $user_meta Role switch user meta.
+	 * @return array<int,string>
+	 */
+	private static function get_user_role_switch_default_roles(array $user_meta): array {
+		$default_roles = self::normalize_role_list($user_meta['default_roles'] ?? []);
+		// Keep only first role because UI now supports a single default role.
+		if (count($default_roles) > 1) {
+			$default_roles = [reset($default_roles)];
+		}
+		return $default_roles;
+	}
+
+	/**
+	 * Combine global hidden roles with per-user hidden roles.
+	 *
+	 * @param array<string,mixed> $role_settings Global role-switch settings.
+	 * @param array<string,mixed> $user_meta User role-switch meta.
+	 * @return array<int,string>
+	 */
+	private static function get_effective_role_switch_hidden_roles(array $role_settings, array $user_meta): array {
+		$global_hidden_roles = self::normalize_role_list($role_settings['hidden_roles'] ?? []);
+		$user_hidden_roles = self::normalize_role_list($user_meta['hidden_roles'] ?? []);
+		return array_values(array_unique(array_merge($global_hidden_roles, $user_hidden_roles)));
+	}
+
+	/**
+	 * Check whether user permissions allow selecting a role.
+	 *
+	 * @param array<string,mixed> $user_meta User role-switch meta.
+	 */
+	private static function role_switch_user_can_select_role(string $role_key, array $user_meta): bool {
+		if ($role_key === 'administrator') {
+			return !empty($user_meta['admin']);
+		}
+		return !empty($user_meta['active']);
 	}
 
 	/**

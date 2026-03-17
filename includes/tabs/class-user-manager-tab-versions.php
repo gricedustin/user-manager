@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.6 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('View Website by Role Permission: changed "Default Roles" to a single-selection "Default Role" dropdown on user profile permissions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('View Website by Role Permission: added a new per-user "Roles to Hide" checkbox list so selected roles are hidden from that user\'s front-end role switcher.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Role Switching enforcement: hidden roles are now blocked in both switcher display and POST handling (including reset-to-default behavior).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.5 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Documentation: added a new Troubleshooting sub-link with practical isolation steps and URL-parameter guidance.', 'user-manager'); ?></li>
