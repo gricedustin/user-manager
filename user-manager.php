@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.10
+ * Version: 2.4.11
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.11 - March 16, 2026
+ * - Fixed an early translation-loading notice by preventing add-on runtime labels from being translated during pre-init settings bootstrap.
+ * - Add-on runtime toggle labels are now translated only when needed in UI contexts, avoiding _load_textdomain_just_in_time warnings.
+ *
  * 2.4.10 - March 16, 2026
  * - Settings > API Keys: added a new "Simple Texting API Token" setting for SMS sending.
  * - Settings sub-navigation: added "SMS Text Templates" next to Email Templates, including full SMS template management.

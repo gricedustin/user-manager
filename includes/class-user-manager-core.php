@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.10';
+	const VERSION = '2.4.11';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 
@@ -8472,72 +8472,73 @@ html body .woocommerce-layout__header {
 	/**
 	 * Runtime add-on map used by docs and URL disable-override support.
 	 *
+	 * @param bool $translate_labels Whether to translate the label values.
 	 * @return array<string,array{label:string,settings_keys:array<int,string>}>
 	 */
-	public static function get_addon_runtime_toggle_map(): array {
-		return [
+	public static function get_addon_runtime_toggle_map(bool $translate_labels = true): array {
+		$map = [
 			'add-to-cart-bulk-import' => [
-				'label' => __('Add to Cart Bulk Import', 'user-manager'),
+				'label' => 'Add to Cart Bulk Import',
 				'settings_keys' => ['bulk_add_to_cart_enabled'],
 			],
 			'add-to-cart-variation-table' => [
-				'label' => __('Add to Cart Variation Table', 'user-manager'),
+				'label' => 'Add to Cart Variation Table',
 				'settings_keys' => ['add_to_cart_variation_table_enabled'],
 			],
 			'cart-price-per-piece' => [
-				'label' => __('Cart Price Per-Piece', 'user-manager'),
+				'label' => 'Cart Price Per-Piece',
 				'settings_keys' => ['cart_price_per_piece_enabled'],
 			],
 			'cart-total-items' => [
-				'label' => __('Cart Total Items', 'user-manager'),
+				'label' => 'Cart Total Items',
 				'settings_keys' => ['cart_total_items_enabled'],
 			],
 			'checkout-pre-defined-addresses' => [
-				'label' => __('Checkout Address Selector', 'user-manager'),
+				'label' => 'Checkout Address Selector',
 				'settings_keys' => ['checkout_ship_to_predefined_enabled'],
 			],
 			'coupon-creator' => [
-				'label' => __('Coupon Creator', 'user-manager'),
+				'label' => 'Coupon Creator',
 				'settings_keys' => ['bulk_coupons_enabled'],
 			],
 			'coupon-for-new-user' => [
-				'label' => __('New User Coupons', 'user-manager'),
+				'label' => 'New User Coupons',
 				'settings_keys' => ['nuc_enabled'],
 			],
 			'coupon-notifications-for-users-with-coupons' => [
-				'label' => __('User Coupon Notifications', 'user-manager'),
+				'label' => 'User Coupon Notifications',
 				'settings_keys' => ['user_coupon_notifications_enabled'],
 			],
 			'coupon-remaining-balances' => [
-				'label' => __('User Coupon Remaining Balances', 'user-manager'),
+				'label' => 'User Coupon Remaining Balances',
 				'settings_keys' => ['coupon_remainder_enabled'],
 			],
 			'bulk-page-creator' => [
-				'label' => __('Page Creator', 'user-manager'),
+				'label' => 'Page Creator',
 				'settings_keys' => ['bulk_page_creator_enabled'],
 			],
 			'database-table-browser' => [
-				'label' => __('Database Table Browser', 'user-manager'),
+				'label' => 'Database Table Browser',
 				'settings_keys' => ['database_table_browser_enabled'],
 			],
 			'security-hardening' => [
-				'label' => __('Security Hardening', 'user-manager'),
+				'label' => 'Security Hardening',
 				'settings_keys' => ['security_hardening_enabled'],
 			],
 			'fatal-error-debugger' => [
-				'label' => __('Fatal Error Debugger', 'user-manager'),
+				'label' => 'Fatal Error Debugger',
 				'settings_keys' => ['fatal_error_debugger_enabled'],
 			],
 			'my-account-coupon-screen' => [
-				'label' => __('My Account Coupons Page', 'user-manager'),
+				'label' => 'My Account Coupons Page',
 				'settings_keys' => ['my_account_coupon_screen_enabled'],
 			],
 			'my-account-menu-tiles' => [
-				'label' => __('My Account Menu Tiles', 'user-manager'),
+				'label' => 'My Account Menu Tiles',
 				'settings_keys' => ['my_account_menu_tiles_enabled'],
 			],
 			'my-account-site-admin' => [
-				'label' => __('My Account Admin', 'user-manager'),
+				'label' => 'My Account Admin',
 				'settings_keys' => [
 					'my_account_site_admin_enabled',
 					'my_account_admin_order_viewer_enabled',
@@ -8547,62 +8548,73 @@ html body .woocommerce-layout__header {
 				],
 			],
 			'post-meta' => [
-				'label' => __('Post Meta Viewer', 'user-manager'),
+				'label' => 'Post Meta Viewer',
 				'settings_keys' => ['display_post_meta_meta_box'],
 			],
 			'product-search-by-sku' => [
-				'label' => __('Product Search by SKU', 'user-manager'),
+				'label' => 'Product Search by SKU',
 				'settings_keys' => ['search_redirect_by_sku'],
 			],
 			'post-content-generator' => [
-				'label' => __('Post Content Generator', 'user-manager'),
+				'label' => 'Post Content Generator',
 				'settings_keys' => ['openai_content_generator_enabled'],
 			],
 			'post-idea-generator' => [
-				'label' => __('Post Idea Generator', 'user-manager'),
+				'label' => 'Post Idea Generator',
 				'settings_keys' => ['openai_blog_post_idea_generator_enabled'],
 			],
 			'plugin-tags-notes' => [
-				'label' => __('Plugin Tags & Notes', 'user-manager'),
+				'label' => 'Plugin Tags & Notes',
 				'settings_keys' => ['plugin_tags_notes_enabled'],
 			],
 			'user-role-switching' => [
-				'label' => __('User Role Switching', 'user-manager'),
+				'label' => 'User Role Switching',
 				'settings_keys' => ['__role_switching_option_enabled'],
 			],
 			'wp-admin-bar-menu-items' => [
-				'label' => __('WP-Admin Bar Menu Items', 'user-manager'),
+				'label' => 'WP-Admin Bar Menu Items',
 				'settings_keys' => ['admin_bar_menu_items_enabled'],
 			],
 			'wp-admin-bar-quick-search' => [
-				'label' => __('WP-Admin Bar Quick Search', 'user-manager'),
+				'label' => 'WP-Admin Bar Quick Search',
 				'settings_keys' => ['um_quick_search_enabled'],
 			],
 			'wp-admin-css' => [
-				'label' => __('WP-Admin CSS', 'user-manager'),
+				'label' => 'WP-Admin CSS',
 				'settings_keys' => ['wp_admin_css_enabled'],
 			],
 			'wp-admin-notifications' => [
-				'label' => __('WP-Admin Notifications', 'user-manager'),
+				'label' => 'WP-Admin Notifications',
 				'settings_keys' => ['custom_admin_notifications_enabled'],
 			],
 			'invoice-approval' => [
-				'label' => __('Order Invoice & Approval', 'user-manager'),
+				'label' => 'Order Invoice & Approval',
 				'settings_keys' => ['invoice_approval_enabled'],
 			],
 			'order-received-page-customizer' => [
-				'label' => __('Order Received Page Customizer', 'user-manager'),
+				'label' => 'Order Received Page Customizer',
 				'settings_keys' => ['order_received_page_customizer_enabled'],
 			],
 			'webhook-urls' => [
-				'label' => __('Webhook URLs', 'user-manager'),
+				'label' => 'Webhook URLs',
 				'settings_keys' => ['webhook_urls_enabled'],
 			],
 			'send-sms-text' => [
-				'label' => __('Send SMS Text', 'user-manager'),
+				'label' => 'Send SMS Text',
 				'settings_keys' => ['send_sms_text_enabled'],
 			],
 		];
+
+		if (!$translate_labels) {
+			return $map;
+		}
+
+		foreach ($map as &$meta) {
+			$meta['label'] = __((string) $meta['label'], 'user-manager');
+		}
+		unset($meta);
+
+		return $map;
 	}
 
 	/**
@@ -8615,7 +8627,7 @@ html body .woocommerce-layout__header {
 			return self::$runtime_disabled_addon_slugs;
 		}
 
-		$map = self::get_addon_runtime_toggle_map();
+		$map = self::get_addon_runtime_toggle_map(false);
 		$disabled = [];
 		$disable_all = self::is_disable_all_addons_requested_from_url();
 		if ($disable_all) {
@@ -8666,7 +8678,7 @@ html body .woocommerce-layout__header {
 			return $settings;
 		}
 
-		$map = self::get_addon_runtime_toggle_map();
+		$map = self::get_addon_runtime_toggle_map(false);
 		foreach ($disabled as $slug) {
 			if (!isset($map[$slug]['settings_keys']) || !is_array($map[$slug]['settings_keys'])) {
 				continue;

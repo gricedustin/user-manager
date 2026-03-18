@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.11 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed an early translation-loading notice by preventing add-on runtime labels from being translated during pre-init settings bootstrap.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-on runtime toggle labels are now translated only when needed in UI contexts, avoiding _load_textdomain_just_in_time warnings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.10 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings > API Keys: added a new "Simple Texting API Token" setting for SMS sending.', 'user-manager'); ?></li>
