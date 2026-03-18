@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.7
+ * Version: 2.4.8
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.8 - March 16, 2026
+ * - Navigation: added a new top-level "Login Tools" tab and moved Create, Bulk Create, Reset Pass, Remove, and Login As into a sub-navigation under it.
+ * - Login Tools now defaults to the Create screen when opening the plugin (Login Tools -> Create).
+ * - Added two Login Tools sub-links at the end: "Recent Logins" and "More Reports", both linking to Reports > User Logins.
+ *
  * 2.4.7 - March 16, 2026
  * - Reports: added a new "Orders Still Processing but have a Tracking Number" report in tab=reports.
  * - New report filters order notes to only processing orders whose notes contain "with tracking number", helping surface potentially stuck orders that already have tracking details.

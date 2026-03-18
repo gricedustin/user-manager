@@ -34,6 +34,9 @@ class User_Manager_Tabs {
 	 */
 	public static function render_tab(string $tab): void {
 		switch ($tab) {
+			case User_Manager_Core::TAB_LOGIN_TOOLS:
+				self::render_tab(User_Manager_Core::get_current_login_tools_tab());
+				break;
 			case User_Manager_Core::TAB_CREATE_USER:
 				User_Manager_Tab_Create_User::render();
 				break;

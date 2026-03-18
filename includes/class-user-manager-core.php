@@ -36,7 +36,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.7';
+	const VERSION = '2.4.8';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 
@@ -74,6 +74,7 @@ final class User_Manager_Core {
 	private static ?bool $runtime_disable_all_addons = null;
 
 	// Tab constants
+	const TAB_LOGIN_TOOLS     = 'login-tools';
 	const TAB_CREATE_USER     = 'create-user';
 	const TAB_RESET_PASSWORD  = 'reset-password';
 	const TAB_REMOVE_USER     = 'remove-user';
@@ -6564,11 +6565,7 @@ html body .woocommerce-layout__header {
 		}
 
 		$tabs = [
-			self::TAB_CREATE_USER   => __('Create', 'user-manager'),
-			self::TAB_BULK_CREATE   => __('Bulk Create', 'user-manager'),
-			self::TAB_RESET_PASSWORD => __('Reset Password', 'user-manager'),
-			self::TAB_REMOVE_USER   => __('Remove User', 'user-manager'),
-			self::TAB_LOGIN_AS      => __('Login As', 'user-manager'),
+			self::TAB_LOGIN_TOOLS   => __('Login Tools', 'user-manager'),
 			self::TAB_EMAIL_USERS   => __('Email Users', 'user-manager'),
 			self::TAB_SETTINGS      => __('Settings', 'user-manager'),
 			self::TAB_REPORTS       => __('Reports', 'user-manager'),
@@ -7394,25 +7391,9 @@ html body .woocommerce-layout__header {
 		<div class="wrap">
 			<h1><?php echo esc_html__('User Experience Manager', 'user-manager'); ?></h1>
 			<h2 class="nav-tab-wrapper">
-				<a class="nav-tab <?php echo $active_tab === self::TAB_CREATE_USER ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_CREATE_USER)); ?>">
+				<a class="nav-tab <?php echo $active_tab === self::TAB_LOGIN_TOOLS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_LOGIN_TOOLS)); ?>">
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Create', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_BULK_CREATE ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_BULK_CREATE)); ?>">
-					<span class="dashicons dashicons-upload" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Bulk Create', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_RESET_PASSWORD ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_RESET_PASSWORD)); ?>">
-					<span class="dashicons dashicons-lock" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Reset Pass', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_REMOVE_USER ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REMOVE_USER)); ?>">
-					<span class="dashicons dashicons-trash" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Remove', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_LOGIN_AS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_LOGIN_AS)); ?>">
-					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Login As', 'user-manager'); ?>
+					<?php esc_html_e('Login Tools', 'user-manager'); ?>
 				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_EMAIL_USERS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_EMAIL_USERS)); ?>">
 					<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
@@ -7435,6 +7416,9 @@ html body .woocommerce-layout__header {
 					<?php esc_html_e('Docs', 'user-manager'); ?>
 				</a>
 			</h2>
+			<?php if ($active_tab === self::TAB_LOGIN_TOOLS) : ?>
+				<?php self::render_login_tools_sub_navigation(); ?>
+			<?php endif; ?>
 			<?php self::render_admin_notice($message); ?>
 			<?php User_Manager_Tabs::render_tab($active_tab); ?>
 		</div>
@@ -7445,7 +7429,10 @@ html body .woocommerce-layout__header {
 	 * Get current active tab.
 	 */
 	public static function get_current_tab(): string {
-		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : self::TAB_CREATE_USER;
+		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : self::TAB_LOGIN_TOOLS;
+		if (in_array($tab, [self::TAB_CREATE_USER, self::TAB_BULK_CREATE, self::TAB_RESET_PASSWORD, self::TAB_REMOVE_USER, self::TAB_LOGIN_AS], true)) {
+			return self::TAB_LOGIN_TOOLS;
+		}
 		if ($tab === self::TAB_ROLE_SWITCHING) {
 			return self::TAB_ADDONS;
 		}
@@ -7468,6 +7455,7 @@ html body .woocommerce-layout__header {
 			return self::TAB_DOCUMENTATION;
 		}
 		$allowed = [
+			self::TAB_LOGIN_TOOLS,
 			self::TAB_CREATE_USER,
 			self::TAB_RESET_PASSWORD,
 			self::TAB_REMOVE_USER,
@@ -7487,7 +7475,105 @@ html body .woocommerce-layout__header {
 			self::TAB_VERSIONS,
 		];
 
-		return in_array($tab, $allowed, true) ? $tab : self::TAB_CREATE_USER;
+		return in_array($tab, $allowed, true) ? $tab : self::TAB_LOGIN_TOOLS;
+	}
+
+	/**
+	 * Resolve the active child screen for Login Tools.
+	 *
+	 * Supports legacy ?tab=create-user style URLs and the new
+	 * ?tab=login-tools&login_tools_section=create-user format.
+	 */
+	public static function get_current_login_tools_tab(): string {
+		$valid_login_tool_tabs = [
+			self::TAB_CREATE_USER,
+			self::TAB_BULK_CREATE,
+			self::TAB_RESET_PASSWORD,
+			self::TAB_REMOVE_USER,
+			self::TAB_LOGIN_AS,
+		];
+
+		$legacy_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : '';
+		if (in_array($legacy_tab, $valid_login_tool_tabs, true)) {
+			return $legacy_tab;
+		}
+
+		$section = isset($_GET['login_tools_section']) ? sanitize_key(wp_unslash($_GET['login_tools_section'])) : '';
+		if (in_array($section, $valid_login_tool_tabs, true)) {
+			return $section;
+		}
+
+		return self::TAB_CREATE_USER;
+	}
+
+	/**
+	 * Render Login Tools sub navigation.
+	 */
+	private static function render_login_tools_sub_navigation(): void {
+		$active_login_tool_tab = self::get_current_login_tools_tab();
+		$base_login_tools_url  = self::get_page_url(self::TAB_LOGIN_TOOLS);
+
+		$create_url = add_query_arg('login_tools_section', self::TAB_CREATE_USER, $base_login_tools_url);
+		$bulk_create_url = add_query_arg('login_tools_section', self::TAB_BULK_CREATE, $base_login_tools_url);
+		$reset_url = add_query_arg('login_tools_section', self::TAB_RESET_PASSWORD, $base_login_tools_url);
+		$remove_url = add_query_arg('login_tools_section', self::TAB_REMOVE_USER, $base_login_tools_url);
+		$login_as_url = add_query_arg('login_tools_section', self::TAB_LOGIN_AS, $base_login_tools_url);
+		$recent_logins_url = add_query_arg(
+			[
+				'page'   => self::SETTINGS_PAGE_SLUG,
+				'tab'    => self::TAB_REPORTS,
+				'report' => 'user-logins',
+			],
+			admin_url('admin.php')
+		);
+		$more_reports_url = add_query_arg(
+			[
+				'page'   => self::SETTINGS_PAGE_SLUG,
+				'tab'    => self::TAB_REPORTS,
+				'report' => 'user-logins',
+			],
+			admin_url('admin.php')
+		);
+		?>
+		<ul class="subsubsub" style="margin: 12px 0 14px;">
+			<li>
+				<a href="<?php echo esc_url($create_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_CREATE_USER ? 'current' : ''; ?>">
+					<?php esc_html_e('Create', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($bulk_create_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_BULK_CREATE ? 'current' : ''; ?>">
+					<?php esc_html_e('Bulk Create', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($reset_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_RESET_PASSWORD ? 'current' : ''; ?>">
+					<?php esc_html_e('Reset Pass', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($remove_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_REMOVE_USER ? 'current' : ''; ?>">
+					<?php esc_html_e('Remove', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($login_as_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_LOGIN_AS ? 'current' : ''; ?>">
+					<?php esc_html_e('Login As', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($recent_logins_url); ?>">
+					<?php esc_html_e('Recent Logins', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($more_reports_url); ?>">
+					<?php esc_html_e('More Reports', 'user-manager'); ?>
+				</a>
+			</li>
+		</ul>
+		<br class="clear" />
+		<?php
 	}
 
 	/**
@@ -7709,7 +7795,7 @@ html body .woocommerce-layout__header {
 	 * Build page URL for tab.
 	 */
 	public static function get_page_url(string $tab = ''): string {
-		$tab = $tab ?: self::TAB_CREATE_USER;
+		$tab = $tab ?: self::TAB_LOGIN_TOOLS;
 		return add_query_arg(
 			[
 				'page' => self::SETTINGS_PAGE_SLUG,
