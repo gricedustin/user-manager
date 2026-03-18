@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.11';
+	const VERSION = '2.4.12';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 
@@ -7540,27 +7540,27 @@ html body .woocommerce-layout__header {
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
 			<li>
 				<a href="<?php echo esc_url($create_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_CREATE_USER ? 'current' : ''; ?>">
-					<?php esc_html_e('Create', 'user-manager'); ?>
+					<?php esc_html_e('Create Single User', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
 				<a href="<?php echo esc_url($bulk_create_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_BULK_CREATE ? 'current' : ''; ?>">
-					<?php esc_html_e('Bulk Create', 'user-manager'); ?>
+					<?php esc_html_e('Create Multiple Users', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
 				<a href="<?php echo esc_url($reset_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_RESET_PASSWORD ? 'current' : ''; ?>">
-					<?php esc_html_e('Reset Pass', 'user-manager'); ?>
+					<?php esc_html_e('Reset Password(s)', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
 				<a href="<?php echo esc_url($remove_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_REMOVE_USER ? 'current' : ''; ?>">
-					<?php esc_html_e('Remove', 'user-manager'); ?>
+					<?php esc_html_e('Remove User(s)', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
 				<a href="<?php echo esc_url($login_as_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_LOGIN_AS ? 'current' : ''; ?>">
-					<?php esc_html_e('Login As', 'user-manager'); ?>
+					<?php esc_html_e('Login As a User', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
