@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.14 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Tools: added a new "Import Demo SMS Text Templates" card next to "Import Demo Email Templates".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added backend import handler and action for demo SMS templates with nonce and capability checks.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added success notice feedback after importing demo SMS text templates.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.13 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Login Tools: added a new "Deactivate User(s)" sub-menu next to Remove User(s) with bulk email-based deactivation workflow.', 'user-manager'); ?></li>

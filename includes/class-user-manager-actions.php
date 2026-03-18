@@ -44,6 +44,7 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_create_directory', [__CLASS__, 'handle_create_directory']);
 		add_action('admin_post_user_manager_download_sample_csv', [__CLASS__, 'handle_download_sample_csv']);
 		add_action('admin_post_user_manager_import_demo_templates', [__CLASS__, 'handle_import_demo_templates']);
+		add_action('admin_post_user_manager_import_demo_sms_text_templates', [__CLASS__, 'handle_import_demo_sms_text_templates']);
 		add_action('admin_post_user_manager_clear_activity_log', [__CLASS__, 'handle_clear_activity_log']);
 		add_action('admin_post_user_manager_clear_user_activity_log', [__CLASS__, 'handle_clear_user_activity_log']);
 		add_action('admin_post_user_manager_move_template', [__CLASS__, 'handle_move_template']);
@@ -4456,6 +4457,96 @@ class User_Manager_Actions {
 		self::import_demo_templates();
 
 		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'demo_templates_imported'));
+		exit;
+	}
+
+	/**
+	 * Import demo SMS text templates (core logic, can be called directly).
+	 */
+	public static function import_demo_sms_text_templates(): void {
+		$existing = get_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, []);
+		if (!is_array($existing)) {
+			$existing = [];
+		}
+
+		$desired = [
+			'sms_tpl_demo_login_info' => [
+				'title' => __('Send login information', 'user-manager'),
+				'description' => __('Send website login link plus username and clear text password by SMS', 'user-manager'),
+				'body' => "Login: %SITEURL%%LOGINURL%\nEmail: %EMAIL%\nPassword: %PASSWORD%",
+			],
+			'sms_tpl_demo_activate_account' => [
+				'title' => __('Activate your new account', 'user-manager'),
+				'description' => __('Send temporary login details and a direct set-password path by SMS', 'user-manager'),
+				'body' => "Welcome! Login: %SITEURL%%LOGINURL%\nUsername: %EMAIL%\nTemp password: %PASSWORD%\nSet password: %SITEURL%/my-account/edit-account/",
+			],
+			'sms_tpl_demo_new_password' => [
+				'title' => __('Send new password', 'user-manager'),
+				'description' => __('Send updated login credentials after password changes by SMS', 'user-manager'),
+				'body' => "Your password was updated.\nLogin: %SITEURL%%LOGINURL%\nEmail: %EMAIL%\nNew password: %PASSWORD%",
+			],
+			'sms_tpl_demo_password_reset' => [
+				'title' => __('Force password reset', 'user-manager'),
+				'description' => __('Send a password reset link by SMS', 'user-manager'),
+				'body' => "Reset your password here: %PASSWORDRESETURL%\nAccount email: %EMAIL%",
+			],
+		];
+
+		foreach ($desired as $key => $data) {
+			$existing[$key] = array_merge($existing[$key] ?? [], $data);
+		}
+
+		$remaining = [];
+		$order_seed = 1000;
+		foreach ($existing as $id => &$tpl) {
+			if (!isset($tpl['order']) || !is_numeric($tpl['order'])) {
+				$tpl['order'] = $order_seed++;
+			}
+		}
+		unset($tpl);
+
+		$sorted_existing = $existing;
+		uasort($sorted_existing, static function ($a, $b) {
+			$oa = isset($a['order']) ? (int) $a['order'] : 0;
+			$ob = isset($b['order']) ? (int) $b['order'] : 0;
+			if ($oa === $ob) {
+				return 0;
+			}
+			return $oa < $ob ? -1 : 1;
+		});
+		foreach ($sorted_existing as $id => $tpl) {
+			if (!isset($desired[$id])) {
+				$remaining[$id] = $tpl;
+			}
+		}
+
+		$new = [];
+		$ord = 1;
+		foreach (array_keys($desired) as $id) {
+			$new[$id] = $existing[$id];
+			$new[$id]['order'] = $ord++;
+		}
+		foreach ($remaining as $id => $tpl) {
+			$new[$id] = $tpl;
+			$new[$id]['order'] = $ord++;
+		}
+
+		update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $new);
+	}
+
+	/**
+	 * Handle import demo SMS text templates.
+	 */
+	public static function handle_import_demo_sms_text_templates(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_import_demo_sms_text_templates');
+
+		self::import_demo_sms_text_templates();
+
+		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'demo_sms_templates_imported'));
 		exit;
 	}
 	
