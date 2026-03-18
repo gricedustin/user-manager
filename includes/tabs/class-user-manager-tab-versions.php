@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.9 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Email Users > Saved Lists: added a CSV button in each list row to download that entire saved list as a CSV file.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a secure admin-post export handler for Saved Lists CSV downloads (capability check + nonce validation).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.8 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Navigation: added a new top-level "Login Tools" tab and moved Create, Bulk Create, Reset Pass, Remove, and Login As into a sub-navigation under it.', 'user-manager'); ?></li>

@@ -32,6 +32,7 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_email_users_next_batch', [__CLASS__, 'handle_email_users_next_batch']);
 		add_action('admin_post_user_manager_save_email_list', [__CLASS__, 'handle_save_email_list']);
 		add_action('admin_post_user_manager_delete_email_list', [__CLASS__, 'handle_delete_email_list']);
+		add_action('admin_post_user_manager_download_email_list_csv', [__CLASS__, 'handle_download_email_list_csv']);
 		add_action('admin_post_user_manager_create_directory', [__CLASS__, 'handle_create_directory']);
 		add_action('admin_post_user_manager_download_sample_csv', [__CLASS__, 'handle_download_sample_csv']);
 		add_action('admin_post_user_manager_import_demo_templates', [__CLASS__, 'handle_import_demo_templates']);
@@ -3142,6 +3143,61 @@ class User_Manager_Actions {
 		} else {
 			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_USERS, 'list_not_found'));
 		}
+		exit;
+	}
+
+	/**
+	 * Download a saved custom email list as CSV.
+	 */
+	public static function handle_download_email_list_csv(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		$list_id = isset($_POST['list_id']) ? sanitize_text_field(wp_unslash($_POST['list_id'])) : '';
+		if ($list_id === '') {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_USERS, 'list_not_found'));
+			exit;
+		}
+
+		check_admin_referer('user_manager_download_email_list_csv_' . $list_id);
+
+		$lists = get_option('um_custom_email_lists', []);
+		if (!is_array($lists) || !isset($lists[$list_id]) || !is_array($lists[$list_id])) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_USERS, 'list_not_found'));
+			exit;
+		}
+
+		$list_data = $lists[$list_id];
+		$title     = isset($list_data['title']) ? sanitize_text_field((string) $list_data['title']) : '';
+		$filename_base = sanitize_file_name($title !== '' ? $title : 'email-list');
+		if ($filename_base === '') {
+			$filename_base = 'email-list';
+		}
+
+		$emails = isset($list_data['emails']) && is_array($list_data['emails']) ? $list_data['emails'] : [];
+
+		nocache_headers();
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename="' . $filename_base . '-emails.csv"');
+		header('Pragma: no-cache');
+		header('Expires: 0');
+
+		$output = fopen('php://output', 'w');
+		if ($output === false) {
+			exit;
+		}
+
+		fputcsv($output, ['email']);
+		foreach ($emails as $email_raw) {
+			$email = sanitize_email((string) $email_raw);
+			if ($email === '' || !is_email($email)) {
+				continue;
+			}
+			fputcsv($output, [$email]);
+		}
+
+		fclose($output);
 		exit;
 	}
 

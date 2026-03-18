@@ -307,6 +307,12 @@ class User_Manager_Tab_Email_Users {
 											<td><?php echo esc_html(number_format(count($list_data['emails'] ?? []))); ?></td>
 											<td style="text-align: center;">
 												<a href="<?php echo esc_url(add_query_arg('edit_list', $list_id, User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_USERS))); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
+												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display: inline;">
+													<input type="hidden" name="action" value="user_manager_download_email_list_csv" />
+													<input type="hidden" name="list_id" value="<?php echo esc_attr($list_id); ?>" />
+													<?php wp_nonce_field('user_manager_download_email_list_csv_' . $list_id); ?>
+													<?php submit_button(__('CSV', 'user-manager'), 'button-small', 'submit', false, ['style' => 'margin-left: 5px;']); ?>
+												</form>
 												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display: inline;" onsubmit="return confirm('<?php echo esc_js(__('Are you sure you want to delete this list?', 'user-manager')); ?>');">
 													<input type="hidden" name="action" value="user_manager_delete_email_list" />
 													<input type="hidden" name="list_id" value="<?php echo esc_attr($list_id); ?>" />
