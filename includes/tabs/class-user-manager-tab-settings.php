@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS);
 		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_SETTINGS;
 		$settings_section = isset($_GET['settings_section']) ? sanitize_key(wp_unslash($_GET['settings_section'])) : '';
-		$valid_sections = ['general', 'email-templates', 'tools'];
+		$valid_sections = ['general', 'email-templates', 'sms-text-templates', 'tools'];
 
 		// Backward compatibility: legacy tabs now live under Settings sub links.
 		if ($settings_section === '') {
@@ -29,6 +29,7 @@ if (!defined('ABSPATH')) {
 
 		$general_url = add_query_arg('settings_section', 'general', $base_url);
 		$email_templates_url = add_query_arg('settings_section', 'email-templates', $base_url);
+		$sms_templates_url = add_query_arg('settings_section', 'sms-text-templates', $base_url);
 		$tools_url = add_query_arg('settings_section', 'tools', $base_url);
 
 		?>
@@ -44,6 +45,11 @@ if (!defined('ABSPATH')) {
 				</a> |
 			</li>
 			<li>
+				<a href="<?php echo esc_url($sms_templates_url); ?>" class="<?php echo $settings_section === 'sms-text-templates' ? 'current' : ''; ?>">
+					<?php esc_html_e('SMS Text Templates', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
 				<a href="<?php echo esc_url($tools_url); ?>" class="<?php echo $settings_section === 'tools' ? 'current' : ''; ?>">
 					<?php esc_html_e('Tools', 'user-manager'); ?>
 				</a>
@@ -54,6 +60,10 @@ if (!defined('ABSPATH')) {
 
 		if ($settings_section === 'email-templates') {
 			User_Manager_Tab_Email_Templates::render();
+			return;
+		}
+		if ($settings_section === 'sms-text-templates') {
+			User_Manager_Tab_SMS_Text_Templates::render();
 			return;
 		}
 		if ($settings_section === 'tools') {
@@ -113,14 +123,14 @@ if (!defined('ABSPATH')) {
 						<div class="um-form-field">
 							<label>
 								<input type="checkbox" name="throttle_emails_enabled" id="um-throttle-emails-enabled" value="1" <?php checked($settings['throttle_emails_enabled'] ?? false); ?> />
-								<?php esc_html_e('Throttle Sending Emails to X Emails Per Page Load', 'user-manager'); ?>
+								<?php esc_html_e('Throttle Sending Emails to X Emails/Texts Per Page Load', 'user-manager'); ?>
 							</label>
-							<p class="description"><?php esc_html_e('When enabled, only the specified number of emails will be sent per page load to avoid triggering spam filters. Remaining emails will be queued for the next batch.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('When enabled, only the specified number of emails/texts will be sent per page load to avoid provider limits and spam filters. Remaining items are queued for the next batch.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field" id="um-throttle-emails-count-field" style="<?php echo empty($settings['throttle_emails_enabled']) ? 'display:none;' : ''; ?>">
-							<label for="um-throttle-emails-count"><?php esc_html_e('Emails Per Batch', 'user-manager'); ?></label>
+							<label for="um-throttle-emails-count"><?php esc_html_e('Texts Per Batch', 'user-manager'); ?></label>
 							<input type="number" name="throttle_emails_count" id="um-throttle-emails-count" class="small-text" min="1" value="<?php echo esc_attr($settings['throttle_emails_count'] ?? 50); ?>" />
-							<p class="description"><?php esc_html_e('Number of emails to send per batch. After sending a batch, a button will appear to send the next batch.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('Number used per batch for both Email Users and Send SMS Texts. After sending a batch, a button appears to send the next batch.', 'user-manager'); ?></p>
 						</div>
 					</div>
 				</div>
@@ -318,6 +328,11 @@ if (!defined('ABSPATH')) {
 							<label for="um-openai-api-key"><?php esc_html_e('ChatGPT / OpenAI API Key', 'user-manager'); ?></label>
 							<input type="password" name="openai_api_key" id="um-openai-api-key" class="regular-text" value="<?php echo esc_attr($settings['openai_api_key'] ?? ''); ?>" autocomplete="off" />
 							<p class="description"><?php esc_html_e('Used for ChatGPT-powered content tools. Leave empty to disable ChatGPT requests. Get an API key from platform.openai.com.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label for="um-simple-texting-api-token"><?php esc_html_e('Simple Texting API Token', 'user-manager'); ?></label>
+							<input type="password" name="simple_texting_api_token" id="um-simple-texting-api-token" class="regular-text" value="<?php echo esc_attr($settings['simple_texting_api_token'] ?? ''); ?>" autocomplete="off" />
+							<p class="description"><?php esc_html_e('Used by the Send SMS Text add-on to send SMS messages through SimpleTexting. Store your bearer API token here.', 'user-manager'); ?></p>
 						</div>
 					</div>
 				</div>

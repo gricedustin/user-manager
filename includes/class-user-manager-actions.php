@@ -10,6 +10,7 @@ if (!defined('ABSPATH')) {
 
 require_once __DIR__ . '/actions/trait-user-manager-actions-content-generator.php';
 require_once __DIR__ . '/actions/trait-user-manager-actions-bulk-page-creator.php';
+require_once __DIR__ . '/class-user-manager-sms.php';
 class User_Manager_Actions {
 	use User_Manager_Actions_Content_Generator_Trait;
 	use User_Manager_Actions_Bulk_Page_Creator_Trait;
@@ -26,10 +27,16 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_save_template', [__CLASS__, 'handle_save_template']);
 		add_action('admin_post_user_manager_delete_template', [__CLASS__, 'handle_delete_template']);
 		add_action('admin_post_user_manager_duplicate_template', [__CLASS__, 'handle_duplicate_template']);
+		add_action('admin_post_user_manager_save_sms_text_template', [__CLASS__, 'handle_save_sms_text_template']);
+		add_action('admin_post_user_manager_delete_sms_text_template', [__CLASS__, 'handle_delete_sms_text_template']);
+		add_action('admin_post_user_manager_duplicate_sms_text_template', [__CLASS__, 'handle_duplicate_sms_text_template']);
+		add_action('admin_post_user_manager_move_sms_text_template', [__CLASS__, 'handle_move_sms_text_template']);
 		add_action('admin_post_user_manager_save_settings', [__CLASS__, 'handle_save_settings']);
 		add_action('admin_post_user_manager_import_sftp_file', [__CLASS__, 'handle_import_sftp_file']);
 		add_action('admin_post_user_manager_email_users', [__CLASS__, 'handle_email_users']);
 		add_action('admin_post_user_manager_email_users_next_batch', [__CLASS__, 'handle_email_users_next_batch']);
+		add_action('admin_post_user_manager_send_sms_texts', [__CLASS__, 'handle_send_sms_texts']);
+		add_action('admin_post_user_manager_send_sms_texts_next_batch', [__CLASS__, 'handle_send_sms_texts_next_batch']);
 		add_action('admin_post_user_manager_save_email_list', [__CLASS__, 'handle_save_email_list']);
 		add_action('admin_post_user_manager_delete_email_list', [__CLASS__, 'handle_delete_email_list']);
 		add_action('admin_post_user_manager_download_email_list_csv', [__CLASS__, 'handle_download_email_list_csv']);
@@ -1533,6 +1540,211 @@ class User_Manager_Actions {
 	}
 
 	/**
+	 * Build URL for Settings > SMS Text Templates section.
+	 */
+	private static function get_sms_text_templates_section_url(array $extra = []): string {
+		$url = add_query_arg(
+			'settings_section',
+			'sms-text-templates',
+			User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS)
+		);
+		if (!empty($extra)) {
+			$url = add_query_arg($extra, $url);
+		}
+		return $url;
+	}
+
+	/**
+	 * Handle save SMS text template action.
+	 */
+	public static function handle_save_sms_text_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_save_sms_text_template');
+
+		$template_id = isset($_POST['template_id']) ? sanitize_key(wp_unslash($_POST['template_id'])) : '';
+		$title = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
+		$description = isset($_POST['description']) ? sanitize_textarea_field(wp_unslash($_POST['description'])) : '';
+		$body = isset($_POST['body']) ? sanitize_textarea_field(wp_unslash($_POST['body'])) : '';
+
+		if ($title === '' || $body === '') {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$templates = User_Manager_Core::get_sms_text_templates();
+		$template_data = [
+			'title'       => $title,
+			'description' => $description,
+			'body'        => $body,
+		];
+
+		$saved_id = null;
+		if ($template_id !== '' && isset($templates[$template_id])) {
+			if (isset($templates[$template_id]['order'])) {
+				$template_data['order'] = (int) $templates[$template_id]['order'];
+			}
+			$templates[$template_id] = $template_data;
+			$saved_id = $template_id;
+		} else {
+			$new_id = 'sms_tpl_' . uniqid();
+			$max_order = 0;
+			foreach ($templates as $tpl) {
+				$max_order = max($max_order, isset($tpl['order']) ? (int) $tpl['order'] : 0);
+			}
+			$template_data['order'] = $max_order + 1;
+			$templates[$new_id] = $template_data;
+			$saved_id = $new_id;
+		}
+
+		update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $templates);
+		$redirect_url = self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_saved']);
+		if ($saved_id) {
+			$redirect_url = add_query_arg('edit_sms_template', $saved_id, $redirect_url);
+		}
+
+		wp_safe_redirect($redirect_url);
+		exit;
+	}
+
+	/**
+	 * Handle move SMS text template action.
+	 */
+	public static function handle_move_sms_text_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_move_sms_text_template');
+
+		$template_id = isset($_POST['template_id']) ? sanitize_key(wp_unslash($_POST['template_id'])) : '';
+		$direction = isset($_POST['direction']) ? sanitize_key(wp_unslash($_POST['direction'])) : '';
+		if ($template_id === '' || !in_array($direction, ['up', 'down'], true)) {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$templates = get_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, []);
+		if (!is_array($templates) || !isset($templates[$template_id])) {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$order = 1;
+		foreach ($templates as &$tpl) {
+			if (!is_array($tpl)) {
+				$tpl = [];
+			}
+			if (!isset($tpl['order']) || !is_numeric($tpl['order'])) {
+				$tpl['order'] = $order;
+			}
+			$order++;
+		}
+		unset($tpl);
+
+		uasort($templates, static function ($a, $b) {
+			$oa = isset($a['order']) ? (int) $a['order'] : 0;
+			$ob = isset($b['order']) ? (int) $b['order'] : 0;
+			if ($oa === $ob) {
+				return 0;
+			}
+			return $oa < $ob ? -1 : 1;
+		});
+		$ids = array_keys($templates);
+		$index = array_search($template_id, $ids, true);
+		if ($index === false) {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		if ($direction === 'up' && $index > 0) {
+			$swap_with = $index - 1;
+		} elseif ($direction === 'down' && $index < count($ids) - 1) {
+			$swap_with = $index + 1;
+		} else {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_saved']));
+			exit;
+		}
+
+		$id_a = $ids[$index];
+		$id_b = $ids[$swap_with];
+		$tmp = $templates[$id_a]['order'];
+		$templates[$id_a]['order'] = $templates[$id_b]['order'];
+		$templates[$id_b]['order'] = $tmp;
+
+		update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $templates);
+		wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_saved']));
+		exit;
+	}
+
+	/**
+	 * Handle delete SMS text template action.
+	 */
+	public static function handle_delete_sms_text_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_delete_sms_text_template');
+
+		$template_id = isset($_POST['template_id']) ? sanitize_key(wp_unslash($_POST['template_id'])) : '';
+		if ($template_id === '') {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$templates = User_Manager_Core::get_sms_text_templates();
+		if (isset($templates[$template_id])) {
+			unset($templates[$template_id]);
+			update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $templates);
+		}
+
+		wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_deleted']));
+		exit;
+	}
+
+	/**
+	 * Handle duplicate SMS text template action.
+	 */
+	public static function handle_duplicate_sms_text_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_duplicate_sms_text_template');
+
+		$template_id = isset($_POST['template_id']) ? sanitize_key(wp_unslash($_POST['template_id'])) : '';
+		if ($template_id === '') {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$templates = User_Manager_Core::get_sms_text_templates();
+		if (!isset($templates[$template_id])) {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$source = $templates[$template_id];
+		$max_order = 0;
+		foreach ($templates as $tpl) {
+			$max_order = max($max_order, isset($tpl['order']) ? (int) $tpl['order'] : 0);
+		}
+
+		$new_id = 'sms_tpl_' . uniqid();
+		$copy = is_array($source) ? $source : [];
+		$copy['title'] = ((string) ($copy['title'] ?? 'Template')) . ' (Copy)';
+		$copy['order'] = $max_order + 1;
+		$templates[$new_id] = $copy;
+		update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $templates);
+
+		wp_safe_redirect(self::get_sms_text_templates_section_url([
+			'edit_sms_template' => $new_id,
+			'um_msg'            => 'sms_template_saved',
+		]));
+		exit;
+	}
+
+	/**
 	 * Handle saving settings.
 	 */
 	public static function handle_save_settings(): void {
@@ -1655,6 +1867,7 @@ class User_Manager_Actions {
 				$settings['coupon_code_url_param_name'] = $param_name !== '' ? $param_name : 'coupon-code';
 				$settings['sftp_directories'] = isset($_POST['sftp_directories']) ? sanitize_textarea_field(wp_unslash($_POST['sftp_directories'])) : '';
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
+				$settings['simple_texting_api_token'] = isset($_POST['simple_texting_api_token']) ? sanitize_text_field(wp_unslash($_POST['simple_texting_api_token'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';
 				$settings['send_from_email'] = isset($_POST['send_from_email']) ? sanitize_email(wp_unslash($_POST['send_from_email'])) : '';
 				$settings['reply_to_email'] = isset($_POST['reply_to_email']) ? sanitize_email(wp_unslash($_POST['reply_to_email'])) : '';
@@ -1905,6 +2118,7 @@ class User_Manager_Actions {
 				$settings['order_received_page_customizer_enabled'] = isset($_POST['order_received_page_customizer_enabled']) && $_POST['order_received_page_customizer_enabled'] === '1';
 				$settings['order_received_page_customizer_heading_text'] = isset($_POST['order_received_page_customizer_heading_text']) ? sanitize_text_field(wp_unslash($_POST['order_received_page_customizer_heading_text'])) : 'Order received';
 				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
+				$settings['send_sms_text_enabled'] = isset($_POST['send_sms_text_enabled']) && $_POST['send_sms_text_enabled'] === '1';
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
@@ -3008,6 +3222,336 @@ class User_Manager_Actions {
 				'total' => $batch_data['total_original'] ?? 0,
 			]));
 		}
+		exit;
+	}
+
+	/**
+	 * Build redirect URL back to Add-ons > Send SMS Text section.
+	 */
+	private static function get_send_sms_text_redirect_url(string $message, array $extra = []): string {
+		$extra['addon_section'] = 'send-sms-text';
+		return User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, $message, $extra);
+	}
+
+	/**
+	 * Build a map of normalized phone => user context.
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	private static function get_user_phone_directory(): array {
+		$directory = [];
+		$users = get_users(['fields' => 'all']);
+		foreach ($users as $user) {
+			if (!$user instanceof WP_User) {
+				continue;
+			}
+			$user_id = (int) $user->ID;
+			$phones = User_Manager_SMS::get_user_phone_numbers($user_id);
+			if (empty($phones)) {
+				continue;
+			}
+			$context = [
+				'user_id'    => $user_id,
+				'email'      => (string) $user->user_email,
+				'username'   => (string) $user->user_login,
+				'first_name' => (string) $user->first_name,
+				'last_name'  => (string) $user->last_name,
+			];
+			foreach ($phones as $phone) {
+				if (!isset($directory[$phone])) {
+					$directory[$phone] = $context;
+				}
+			}
+		}
+
+		return $directory;
+	}
+
+	/**
+	 * Handle Send SMS Text action.
+	 */
+	public static function handle_send_sms_texts(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_send_sms_texts');
+
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['send_sms_text_enabled'])) {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('send_sms_disabled'));
+			exit;
+		}
+
+		$api_token = isset($settings['simple_texting_api_token']) ? trim((string) $settings['simple_texting_api_token']) : '';
+		if ($api_token === '') {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('sms_token_missing'));
+			exit;
+		}
+
+		$phone_numbers_raw = isset($_POST['phone_numbers']) ? sanitize_textarea_field(wp_unslash($_POST['phone_numbers'])) : '';
+		$template_id = isset($_POST['sms_template']) ? sanitize_key(wp_unslash($_POST['sms_template'])) : '';
+		$login_url = isset($_POST['login_url']) ? sanitize_text_field(wp_unslash($_POST['login_url'])) : '/my-account/';
+		$coupon_code = isset($_POST['coupon_code_for_template']) ? sanitize_text_field(wp_unslash($_POST['coupon_code_for_template'])) : '';
+		$send_to_all_phone_numbers = isset($_POST['send_to_all_phone_numbers']) && $_POST['send_to_all_phone_numbers'] === '1';
+		$selected_roles = isset($_POST['selected_roles']) ? sanitize_text_field(wp_unslash($_POST['selected_roles'])) : '';
+		$selected_lists = isset($_POST['selected_lists']) ? sanitize_text_field(wp_unslash($_POST['selected_lists'])) : '';
+
+		$phone_numbers = User_Manager_SMS::parse_phone_numbers($phone_numbers_raw);
+		if (empty($phone_numbers)) {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_phone_numbers'));
+			exit;
+		}
+
+		if ($template_id === '') {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_sms_template'));
+			exit;
+		}
+
+		$throttle_enabled = !empty($settings['throttle_emails_enabled']);
+		$throttle_count = !empty($settings['throttle_emails_count']) ? (int) $settings['throttle_emails_count'] : 50;
+		$throttle_count = max(1, $throttle_count);
+
+		$total_original = count($phone_numbers);
+		$batch_phone_numbers = $phone_numbers;
+		$remaining_phone_numbers = [];
+		if ($throttle_enabled && $total_original > $throttle_count) {
+			$batch_phone_numbers = array_slice($phone_numbers, 0, $throttle_count);
+			$remaining_phone_numbers = array_slice($phone_numbers, $throttle_count);
+		}
+
+		$phone_directory = self::get_user_phone_directory();
+		$sent_count = 0;
+		$not_found_count = 0;
+		$failed_count = 0;
+
+		foreach ($batch_phone_numbers as $phone_number) {
+			$phone_number = User_Manager_SMS::normalize_phone_number((string) $phone_number);
+			if (!User_Manager_SMS::is_valid_phone_number($phone_number)) {
+				$failed_count++;
+				continue;
+			}
+
+			$user_context = $phone_directory[$phone_number] ?? null;
+			if (!$send_to_all_phone_numbers && !is_array($user_context)) {
+				$not_found_count++;
+				continue;
+			}
+
+			if (!is_array($user_context)) {
+				$user_context = [
+					'user_id'    => 0,
+					'email'      => '',
+					'username'   => ltrim($phone_number, '+'),
+					'first_name' => '',
+					'last_name'  => '',
+				];
+			}
+
+			$sent = User_Manager_SMS::send_sms_to_phone($phone_number, $template_id, $login_url, $coupon_code, $user_context);
+			if (!$sent) {
+				$failed_count++;
+				continue;
+			}
+
+			$sent_count++;
+			$user_id = isset($user_context['user_id']) ? (int) $user_context['user_id'] : 0;
+			$log_data = [
+				'sms_template' => $template_id,
+				'login_url'    => $login_url,
+				'phone_number' => $phone_number,
+				'is_non_user'  => $user_id <= 0,
+			];
+			if ($coupon_code !== '') {
+				$log_data['coupon_code'] = $coupon_code;
+			}
+			if ($selected_roles !== '') {
+				$log_data['selected_roles'] = $selected_roles;
+			}
+			if ($selected_lists !== '') {
+				$log_data['selected_lists'] = $selected_lists;
+			}
+			User_Manager_Core::add_activity_log('sms_sent', $user_id, 'Send SMS Text', $log_data);
+		}
+
+		$transient_key = 'um_sms_batch_' . get_current_user_id();
+		if (!empty($remaining_phone_numbers)) {
+			$batch_data = [
+				'phone_numbers'               => $remaining_phone_numbers,
+				'total_original'              => $total_original,
+				'total_sent_so_far'           => $sent_count,
+				'template_id'                 => $template_id,
+				'login_url'                   => $login_url,
+				'coupon_code'                 => $coupon_code,
+				'send_to_all_phone_numbers'   => $send_to_all_phone_numbers,
+				'selected_roles'              => $selected_roles,
+				'selected_lists'              => $selected_lists,
+				'created_at'                  => current_time('mysql'),
+			];
+			set_transient($transient_key, $batch_data, 30 * DAY_IN_SECONDS);
+
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('texts_sent_batch', [
+				'sent'       => $sent_count,
+				'not_found'  => $not_found_count,
+				'failed'     => $failed_count,
+				'remaining'  => count($remaining_phone_numbers),
+				'total'      => $total_original,
+				'total_sent' => $sent_count,
+			]));
+			exit;
+		}
+
+		delete_transient($transient_key);
+		wp_safe_redirect(self::get_send_sms_text_redirect_url('texts_sent', [
+			'sent'      => $sent_count,
+			'not_found' => $not_found_count,
+			'failed'    => $failed_count,
+		]));
+		exit;
+	}
+
+	/**
+	 * Handle Send SMS Text next-batch action.
+	 */
+	public static function handle_send_sms_texts_next_batch(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_send_sms_texts_next_batch');
+
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['send_sms_text_enabled'])) {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('send_sms_disabled'));
+			exit;
+		}
+
+		$api_token = isset($settings['simple_texting_api_token']) ? trim((string) $settings['simple_texting_api_token']) : '';
+		if ($api_token === '') {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('sms_token_missing'));
+			exit;
+		}
+
+		$transient_key = 'um_sms_batch_' . get_current_user_id();
+		$batch_data = get_transient($transient_key);
+		if (empty($batch_data) || !is_array($batch_data)) {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_text_batch'));
+			exit;
+		}
+
+		$phone_numbers = isset($batch_data['phone_numbers']) && is_array($batch_data['phone_numbers']) ? $batch_data['phone_numbers'] : [];
+		if (empty($phone_numbers)) {
+			delete_transient($transient_key);
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_text_batch'));
+			exit;
+		}
+
+		$template_id = isset($batch_data['template_id']) ? sanitize_key((string) $batch_data['template_id']) : '';
+		$login_url = isset($batch_data['login_url']) ? sanitize_text_field((string) $batch_data['login_url']) : '/my-account/';
+		$coupon_code = isset($batch_data['coupon_code']) ? sanitize_text_field((string) $batch_data['coupon_code']) : '';
+		$send_to_all_phone_numbers = !empty($batch_data['send_to_all_phone_numbers']);
+		$selected_roles = isset($batch_data['selected_roles']) ? sanitize_text_field((string) $batch_data['selected_roles']) : '';
+		$selected_lists = isset($batch_data['selected_lists']) ? sanitize_text_field((string) $batch_data['selected_lists']) : '';
+
+		if ($template_id === '') {
+			delete_transient($transient_key);
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_sms_template'));
+			exit;
+		}
+
+		$throttle_enabled = !empty($settings['throttle_emails_enabled']);
+		$throttle_count = !empty($settings['throttle_emails_count']) ? (int) $settings['throttle_emails_count'] : 50;
+		$throttle_count = max(1, $throttle_count);
+
+		$batch_phone_numbers = $phone_numbers;
+		$remaining_phone_numbers = [];
+		if ($throttle_enabled && count($phone_numbers) > $throttle_count) {
+			$batch_phone_numbers = array_slice($phone_numbers, 0, $throttle_count);
+			$remaining_phone_numbers = array_slice($phone_numbers, $throttle_count);
+		}
+
+		$phone_directory = self::get_user_phone_directory();
+		$sent_count = 0;
+		$not_found_count = 0;
+		$failed_count = 0;
+
+		foreach ($batch_phone_numbers as $phone_number) {
+			$phone_number = User_Manager_SMS::normalize_phone_number((string) $phone_number);
+			if (!User_Manager_SMS::is_valid_phone_number($phone_number)) {
+				$failed_count++;
+				continue;
+			}
+
+			$user_context = $phone_directory[$phone_number] ?? null;
+			if (!$send_to_all_phone_numbers && !is_array($user_context)) {
+				$not_found_count++;
+				continue;
+			}
+
+			if (!is_array($user_context)) {
+				$user_context = [
+					'user_id'    => 0,
+					'email'      => '',
+					'username'   => ltrim($phone_number, '+'),
+					'first_name' => '',
+					'last_name'  => '',
+				];
+			}
+
+			$sent = User_Manager_SMS::send_sms_to_phone($phone_number, $template_id, $login_url, $coupon_code, $user_context);
+			if (!$sent) {
+				$failed_count++;
+				continue;
+			}
+
+			$sent_count++;
+			$user_id = isset($user_context['user_id']) ? (int) $user_context['user_id'] : 0;
+			$log_data = [
+				'sms_template' => $template_id,
+				'login_url'    => $login_url,
+				'phone_number' => $phone_number,
+				'is_non_user'  => $user_id <= 0,
+				'batch'        => true,
+			];
+			if ($coupon_code !== '') {
+				$log_data['coupon_code'] = $coupon_code;
+			}
+			if ($selected_roles !== '') {
+				$log_data['selected_roles'] = $selected_roles;
+			}
+			if ($selected_lists !== '') {
+				$log_data['selected_lists'] = $selected_lists;
+			}
+			User_Manager_Core::add_activity_log('sms_sent', $user_id, 'Send SMS Text', $log_data);
+		}
+
+		$total_sent_so_far = isset($batch_data['total_sent_so_far']) ? absint($batch_data['total_sent_so_far']) : 0;
+		$total_sent_so_far += $sent_count;
+		$total_original = isset($batch_data['total_original']) ? absint($batch_data['total_original']) : count($batch_phone_numbers);
+
+		if (!empty($remaining_phone_numbers)) {
+			$batch_data['phone_numbers'] = $remaining_phone_numbers;
+			$batch_data['total_sent_so_far'] = $total_sent_so_far;
+			set_transient($transient_key, $batch_data, 30 * DAY_IN_SECONDS);
+
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('texts_sent_batch', [
+				'sent'       => $sent_count,
+				'not_found'  => $not_found_count,
+				'failed'     => $failed_count,
+				'remaining'  => count($remaining_phone_numbers),
+				'total'      => $total_original,
+				'total_sent' => $total_sent_so_far,
+			]));
+			exit;
+		}
+
+		delete_transient($transient_key);
+		wp_safe_redirect(self::get_send_sms_text_redirect_url('text_batch_complete', [
+			'sent'      => $sent_count,
+			'total'     => $total_sent_so_far,
+			'not_found' => $not_found_count,
+			'failed'    => $failed_count,
+		]));
 		exit;
 	}
 

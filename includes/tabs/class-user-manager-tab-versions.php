@@ -39,6 +39,16 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.10 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > API Keys: added a new "Simple Texting API Token" setting for SMS sending.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Settings sub-navigation: added "SMS Text Templates" next to Email Templates, including full SMS template management.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons: added a new "Send SMS Text" add-on with Activate toggle and a texting workflow modeled after Email Users (phone numbers, template selection, login URL, coupon code, preview, recent texts, and shared custom lists).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added SMS send + next-batch handlers with support for "Send to all phone numbers even if they are not users."', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated throttling labels to include texting and enabled throttle/batch behavior for SMS sends using the same throttle settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.9 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Email Users > Saved Lists: added a CSV button in each list row to download that entire saved list as a CSV file.', 'user-manager'); ?></li>

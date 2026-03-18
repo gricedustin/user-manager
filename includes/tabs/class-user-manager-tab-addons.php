@@ -31,6 +31,7 @@ require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-order-received-page-customizer.php';
+require_once __DIR__ . '/class-user-manager-addon-send-sms-text.php';
 require_once __DIR__ . '/class-user-manager-addon-webhook-urls.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
@@ -238,6 +239,9 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-addon-section" data-addon-section="order-received-page-customizer">
 				<?php User_Manager_Addon_Order_Received_Page_Customizer::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="send-sms-text">
+				<?php User_Manager_Addon_Send_SMS_Text::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="webhook-urls">
 				<?php User_Manager_Addon_Webhook_URLs::render($settings); ?>
@@ -741,6 +745,9 @@ class User_Manager_Tab_Addons {
 			function toggleOrderReceivedPageCustomizerFields() {
 				$('#um-order-received-page-customizer-fields').toggle($('#um-order-received-page-customizer-enabled').is(':checked'));
 			}
+			function toggleSendSmsTextFields() {
+				$('#um-send-sms-text-fields').toggle($('#um-send-sms-text-enabled').is(':checked'));
+			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
 			}
@@ -763,6 +770,7 @@ class User_Manager_Tab_Addons {
 			toggleWebhookUrlsFields();
 			toggleInvoiceApprovalFields();
 			toggleOrderReceivedPageCustomizerFields();
+			toggleSendSmsTextFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
@@ -939,6 +947,10 @@ class User_Manager_Tab_Addons {
 				toggleOrderReceivedPageCustomizerFields();
 				refreshAddonCardAutoState($('#um-addon-card-order-received-page-customizer'));
 			});
+			$('#um-send-sms-text-enabled').on('change', function() {
+				toggleSendSmsTextFields();
+				refreshAddonCardAutoState($('#um-addon-card-send-sms-text'));
+			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
 				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
@@ -1092,6 +1104,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Order Received Page Customizer', 'user-manager'),
 				'description' => __('Customize the Order Received heading and success text after checkout.', 'user-manager'),
 				'active' => !empty($settings['order_received_page_customizer_enabled']),
+			],
+			'send-sms-text' => [
+				'label'  => __('Send SMS Text', 'user-manager'),
+				'description' => __('Send SMS text messages using shared lists, role filters, SMS templates, and batch throttling.', 'user-manager'),
+				'active' => !empty($settings['send_sms_text_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),

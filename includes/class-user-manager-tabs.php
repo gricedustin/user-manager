@@ -18,6 +18,7 @@ require_once __DIR__ . '/tabs/class-user-manager-tab-bulk-create.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-email-users.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-activity-log.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-email-templates.php';
+require_once __DIR__ . '/tabs/class-user-manager-tab-sms-text-templates.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-coupons.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-bulk-coupons.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-tools.php';

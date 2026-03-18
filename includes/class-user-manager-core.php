@@ -34,9 +34,10 @@ final class User_Manager_Core {
 	const OPTION_KEY = 'user_manager_settings';
 	const ACTIVITY_LOG_KEY = 'user_manager_activity_log';
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
+	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.9';
+	const VERSION = '2.4.10';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 
@@ -6704,6 +6705,7 @@ html body .woocommerce-layout__header {
 		register_setting(self::SETTINGS_PAGE_SLUG, self::OPTION_KEY);
 		register_setting(self::SETTINGS_PAGE_SLUG, self::ACTIVITY_LOG_KEY);
 		register_setting(self::SETTINGS_PAGE_SLUG, self::EMAIL_TEMPLATES_KEY);
+		register_setting(self::SETTINGS_PAGE_SLUG, self::SMS_TEXT_TEMPLATES_KEY);
 	}
 
 	/**
@@ -7928,6 +7930,16 @@ html body .woocommerce-layout__header {
 			case 'template_deleted':
 				$content = __('Email template deleted.', 'user-manager');
 				break;
+			case 'sms_template_saved':
+				$content = __('SMS text template saved successfully.', 'user-manager');
+				break;
+			case 'sms_template_deleted':
+				$content = __('SMS text template deleted.', 'user-manager');
+				break;
+			case 'sms_template_error':
+				$content = __('SMS text template could not be saved. Please make sure required fields are filled.', 'user-manager');
+				$type = 'error';
+				break;
 			case 'settings_saved':
 				$content = __('Settings saved successfully.', 'user-manager');
 				break;
@@ -8165,6 +8177,66 @@ html body .woocommerce-layout__header {
 					$sent, $total
 				);
 				$type = 'success';
+				break;
+			case 'texts_sent':
+				$sent = isset($_GET['sent']) ? absint($_GET['sent']) : 0;
+				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
+				$failed = isset($_GET['failed']) ? absint($_GET['failed']) : 0;
+				$content = sprintf(
+					__('SMS texts sent: %1$d. Skipped (no user match): %2$d. Failed to send: %3$d.', 'user-manager'),
+					$sent,
+					$not_found,
+					$failed
+				);
+				$type = ($not_found > 0 || $failed > 0) ? 'warning' : 'success';
+				break;
+			case 'texts_sent_batch':
+				$sent = isset($_GET['sent']) ? absint($_GET['sent']) : 0;
+				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
+				$failed = isset($_GET['failed']) ? absint($_GET['failed']) : 0;
+				$remaining = isset($_GET['remaining']) ? absint($_GET['remaining']) : 0;
+				$total = isset($_GET['total']) ? absint($_GET['total']) : 0;
+				$total_sent = isset($_GET['total_sent']) ? absint($_GET['total_sent']) : $sent;
+				$content = sprintf(
+					__('Text batch sent: %1$d texts in this batch. Total progress: %2$d of %3$d sent. %4$d remaining. Skipped (no user match): %5$d. Failed to send: %6$d.', 'user-manager'),
+					$sent,
+					$total_sent,
+					$total,
+					$remaining,
+					$not_found,
+					$failed
+				);
+				$type = 'info';
+				break;
+			case 'text_batch_complete':
+				$sent = isset($_GET['sent']) ? absint($_GET['sent']) : 0;
+				$total = isset($_GET['total']) ? absint($_GET['total']) : 0;
+				$content = sprintf(
+					__('All queued texts sent! Final batch: %1$d. Total texts sent: %2$d.', 'user-manager'),
+					$sent,
+					$total
+				);
+				$type = 'success';
+				break;
+			case 'no_text_batch':
+				$content = __('No pending text batch found.', 'user-manager');
+				$type = 'warning';
+				break;
+			case 'no_phone_numbers':
+				$content = __('Please enter at least one phone number.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'no_sms_template':
+				$content = __('Please select an SMS text template.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'send_sms_disabled':
+				$content = __('Send SMS Text add-on is not active.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'sms_token_missing':
+				$content = __('Simple Texting API Token is missing. Add your token in Settings → API Keys.', 'user-manager');
+				$type = 'error';
 				break;
 			case 'no_batch':
 				$content = __('No pending email batch found.', 'user-manager');
@@ -8526,6 +8598,10 @@ html body .woocommerce-layout__header {
 				'label' => __('Webhook URLs', 'user-manager'),
 				'settings_keys' => ['webhook_urls_enabled'],
 			],
+			'send-sms-text' => [
+				'label' => __('Send SMS Text', 'user-manager'),
+				'settings_keys' => ['send_sms_text_enabled'],
+			],
 		];
 	}
 
@@ -8714,6 +8790,45 @@ html body .woocommerce-layout__header {
 			update_option(self::EMAIL_TEMPLATES_KEY, $templates);
 		}
 		
+		return $templates;
+	}
+
+	/**
+	 * Get SMS text templates.
+	 */
+	public static function get_sms_text_templates(): array {
+		$templates = get_option(self::SMS_TEXT_TEMPLATES_KEY, []);
+		if (!is_array($templates)) {
+			return [];
+		}
+
+		$needs_persist = false;
+		$order = 1;
+		foreach ($templates as $id => &$tpl) {
+			if (!is_array($tpl)) {
+				$tpl = [];
+			}
+			if (!isset($tpl['order']) || !is_numeric($tpl['order'])) {
+				$tpl['order'] = $order;
+				$needs_persist = true;
+			}
+			$order++;
+		}
+		unset($tpl);
+
+		uasort($templates, static function ($a, $b) {
+			$oa = isset($a['order']) ? (int) $a['order'] : 0;
+			$ob = isset($b['order']) ? (int) $b['order'] : 0;
+			if ($oa === $ob) {
+				return 0;
+			}
+			return $oa < $ob ? -1 : 1;
+		});
+
+		if ($needs_persist) {
+			update_option(self::SMS_TEXT_TEMPLATES_KEY, $templates);
+		}
+
 		return $templates;
 	}
 

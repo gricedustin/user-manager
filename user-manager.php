@@ -2,12 +2,19 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.9
+ * Version: 2.4.10
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.10 - March 16, 2026
+ * - Settings > API Keys: added a new "Simple Texting API Token" setting for SMS sending.
+ * - Settings sub-navigation: added "SMS Text Templates" next to Email Templates, including full SMS template management.
+ * - Add-ons: added a new "Send SMS Text" add-on with Activate toggle and a texting workflow modeled after Email Users (phone numbers, template selection, login URL, coupon code, preview, recent texts, and shared custom lists).
+ * - Added SMS send + next-batch handlers with support for "Send to all phone numbers even if they are not users."
+ * - Updated throttling labels to include texting and enabled throttle/batch behavior for SMS sends using the same throttle settings.
+ *
  * 2.4.9 - March 16, 2026
  * - Email Users > Saved Lists: added a CSV button in each list row to download that entire saved list as a CSV file.
  * - Added a secure admin-post export handler for Saved Lists CSV downloads (capability check + nonce validation).
