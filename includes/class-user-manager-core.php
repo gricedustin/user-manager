@@ -36,7 +36,7 @@ final class User_Manager_Core {
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.6';
+	const VERSION = '2.4.7';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 
@@ -6648,6 +6648,8 @@ html body .woocommerce-layout__header {
 					User_Manager_Tab_Reports::export_orders_tracking_numbers_csv();
 				} elseif ($report === 'orders-tracking-notes') {
 					User_Manager_Tab_Reports::export_orders_tracking_notes_csv();
+				} elseif ($report === 'orders-still-processing-with-tracking-number') {
+					User_Manager_Tab_Reports::export_orders_still_processing_with_tracking_number_csv();
 				} elseif ($report === 'user-data') {
 					User_Manager_Tab_Reports::export_user_data_csv();
 				} elseif ($report === 'user-total-sales') {

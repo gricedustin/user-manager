@@ -105,6 +105,7 @@ class User_Manager_Tab_Reports {
 			'orders-shipments-by-month',
 			'orders-tracking-numbers',
 			'orders-tracking-notes',
+			'orders-still-processing-with-tracking-number',
 			'user-data',
 			'product-purchases',
 			'product-category-purchases',
@@ -152,6 +153,7 @@ class User_Manager_Tab_Reports {
 			'orders-shipments-by-month'   => __('Order Total Shipments by Month', 'user-manager'),
 			'orders-tracking-numbers'     => __('Order Tracking Numbers', 'user-manager'),
 			'orders-tracking-notes'       => __('Order Tracking Number Notes', 'user-manager'),
+			'orders-still-processing-with-tracking-number' => __('Orders Still Processing but have a Tracking Number', 'user-manager'),
 			'user-data'                   => __('User Data', 'user-manager'),
 			'product-purchases'           => __('Product Purchases', 'user-manager'),
 			'product-category-purchases'  => __('Product Category Purchases', 'user-manager'),
@@ -243,6 +245,8 @@ class User_Manager_Tab_Reports {
 						<?php self::render_orders_tracking_numbers_report(); ?>
 					<?php elseif ($report === 'orders-tracking-notes') : ?>
 						<?php self::render_orders_tracking_notes_report(); ?>
+					<?php elseif ($report === 'orders-still-processing-with-tracking-number') : ?>
+						<?php self::render_orders_still_processing_with_tracking_number_report(); ?>
 					<?php elseif ($report === 'sales-vs-coupons') : ?>
 						<?php self::render_sales_vs_coupons_report(); ?>
 					<?php elseif ($report === 'password-reset') : ?>

@@ -411,6 +411,7 @@ class User_Manager_Tab_Documentation {
 			__('Order Tracking Number Notes', 'user-manager'),
 			__('Order Tracking Numbers', 'user-manager'),
 			__('Orders Processing by Number of Days', 'user-manager'),
+			__('Orders Still Processing but have a Tracking Number', 'user-manager'),
 			__('Orders with $0 Total', 'user-manager'),
 			__('Orders with Free Shipping', 'user-manager'),
 			__('Page Category Archives Views', 'user-manager'),

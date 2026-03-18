@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.6
+ * Version: 2.4.7
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.7 - March 16, 2026
+ * - Reports: added a new "Orders Still Processing but have a Tracking Number" report in tab=reports.
+ * - New report filters order notes to only processing orders whose notes contain "with tracking number", helping surface potentially stuck orders that already have tracking details.
+ * - Added CSV export support for the new processing-with-tracking-number report.
+ *
  * 2.4.6 - March 16, 2026
  * - View Website by Role Permission: changed "Default Roles" to a single-selection "Default Role" dropdown on user profile permissions.
  * - View Website by Role Permission: added a new per-user "Roles to Hide" checkbox list so selected roles are hidden from that user's front-end role switcher.

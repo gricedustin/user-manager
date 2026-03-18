@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.7 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports: added a new "Orders Still Processing but have a Tracking Number" report in tab=reports.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('New report filters order notes to only processing orders whose notes contain "with tracking number", helping surface potentially stuck orders that already have tracking details.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added CSV export support for the new processing-with-tracking-number report.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.6 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('View Website by Role Permission: changed "Default Roles" to a single-selection "Default Role" dropdown on user profile permissions.', 'user-manager'); ?></li>
