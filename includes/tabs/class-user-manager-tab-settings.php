@@ -304,6 +304,30 @@ if (!defined('ABSPATH')) {
 							<p class="description"><?php esc_html_e('Applies to Create User, Bulk Create, and SFTP import. Default is enabled.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
+							<?php
+							$deactivate_users_reset_password_enabled = array_key_exists('deactivate_users_reset_password', $settings)
+								? !empty($settings['deactivate_users_reset_password'])
+								: true;
+							?>
+							<label>
+								<input type="checkbox" name="deactivate_users_reset_password" value="1" <?php checked($deactivate_users_reset_password_enabled); ?> />
+								<?php esc_html_e('Deactivate User(s): quiet-reset passwords to random strings', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('When enabled, deactivating users will silently reset their passwords in the background without sending emails.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<?php
+							$deactivate_users_prefix_identity_enabled = array_key_exists('deactivate_users_prefix_identity', $settings)
+								? !empty($settings['deactivate_users_prefix_identity'])
+								: true;
+							?>
+							<label>
+								<input type="checkbox" name="deactivate_users_prefix_identity" value="1" <?php checked($deactivate_users_prefix_identity_enabled); ?> />
+								<?php esc_html_e('Deactivate User(s): prefix login/email with [YYYYMMDD]-deactivated-', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('When enabled, deactivating users renames both login and email to a date-prefixed deactivated format to prevent normal credential reuse.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
 							<label for="um-sftp-directories"><?php esc_html_e('SFTP/Directory Paths for CSV Import', 'user-manager'); ?></label>
 							<textarea name="sftp_directories" id="um-sftp-directories" rows="5" class="large-text code" placeholder="<?php echo esc_attr("/home/username/imports/\n/var/www/html/wp-content/uploads/user-imports/\n" . WP_CONTENT_DIR . "/uploads/user-imports/"); ?>"><?php echo esc_textarea($settings['sftp_directories'] ?? ''); ?></textarea>
 							<p class="description"><?php esc_html_e('Enter one directory path per line. These directories will be monitored for CSV files in the Bulk Create tool.', 'user-manager'); ?></p>

@@ -37,9 +37,14 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.12';
+	const VERSION = '2.4.13';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
+	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
+	const USER_DEACTIVATED_AT_META_KEY = 'um_user_deactivated_at';
+	const USER_DEACTIVATED_BY_META_KEY = 'um_user_deactivated_by';
+	const USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY = 'um_user_deactivated_original_login';
+	const USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY = 'um_user_deactivated_original_email';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -79,6 +84,7 @@ final class User_Manager_Core {
 	const TAB_CREATE_USER     = 'create-user';
 	const TAB_RESET_PASSWORD  = 'reset-password';
 	const TAB_REMOVE_USER     = 'remove-user';
+	const TAB_DEACTIVATE_USER = 'deactivate-user';
 	const TAB_ROLE_SWITCHING  = 'role-switching';
 	const TAB_LOGIN_AS        = 'login-as';
 	const TAB_BULK_CREATE     = 'bulk-create';
@@ -143,6 +149,8 @@ final class User_Manager_Core {
 		add_action('template_redirect', [__CLASS__, 'maybe_log_myaccount_page']);
 		add_action('woocommerce_save_account_details', [__CLASS__, 'log_password_change_on_save'], 10, 1);
 		add_action('after_password_reset', [__CLASS__, 'log_password_change_after_reset'], 10, 2);
+		add_filter('wp_authenticate_user', [__CLASS__, 'block_deactivated_user_authentication'], 20, 2);
+		add_filter('allow_password_reset', [__CLASS__, 'maybe_block_deactivated_user_password_reset'], 10, 2);
 		
 		// Coupon Email Converter meta box toggle + other settings-based behavior.
 		$settings = self::get_settings();
@@ -7432,7 +7440,7 @@ html body .woocommerce-layout__header {
 	 */
 	public static function get_current_tab(): string {
 		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : self::TAB_LOGIN_TOOLS;
-		if (in_array($tab, [self::TAB_CREATE_USER, self::TAB_BULK_CREATE, self::TAB_RESET_PASSWORD, self::TAB_REMOVE_USER, self::TAB_LOGIN_AS], true)) {
+		if (in_array($tab, [self::TAB_CREATE_USER, self::TAB_BULK_CREATE, self::TAB_RESET_PASSWORD, self::TAB_REMOVE_USER, self::TAB_DEACTIVATE_USER, self::TAB_LOGIN_AS], true)) {
 			return self::TAB_LOGIN_TOOLS;
 		}
 		if ($tab === self::TAB_ROLE_SWITCHING) {
@@ -7461,6 +7469,7 @@ html body .woocommerce-layout__header {
 			self::TAB_CREATE_USER,
 			self::TAB_RESET_PASSWORD,
 			self::TAB_REMOVE_USER,
+			self::TAB_DEACTIVATE_USER,
 			self::TAB_LOGIN_AS,
 			self::TAB_BULK_CREATE,
 			self::TAB_EMAIL_USERS,
@@ -7492,6 +7501,7 @@ html body .woocommerce-layout__header {
 			self::TAB_BULK_CREATE,
 			self::TAB_RESET_PASSWORD,
 			self::TAB_REMOVE_USER,
+			self::TAB_DEACTIVATE_USER,
 			self::TAB_LOGIN_AS,
 		];
 
@@ -7519,6 +7529,7 @@ html body .woocommerce-layout__header {
 		$bulk_create_url = add_query_arg('login_tools_section', self::TAB_BULK_CREATE, $base_login_tools_url);
 		$reset_url = add_query_arg('login_tools_section', self::TAB_RESET_PASSWORD, $base_login_tools_url);
 		$remove_url = add_query_arg('login_tools_section', self::TAB_REMOVE_USER, $base_login_tools_url);
+		$deactivate_url = add_query_arg('login_tools_section', self::TAB_DEACTIVATE_USER, $base_login_tools_url);
 		$login_as_url = add_query_arg('login_tools_section', self::TAB_LOGIN_AS, $base_login_tools_url);
 		$recent_logins_url = add_query_arg(
 			[
@@ -7556,6 +7567,11 @@ html body .woocommerce-layout__header {
 			<li>
 				<a href="<?php echo esc_url($remove_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_REMOVE_USER ? 'current' : ''; ?>">
 					<?php esc_html_e('Remove User(s)', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($deactivate_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_DEACTIVATE_USER ? 'current' : ''; ?>">
+					<?php esc_html_e('Deactivate User(s)', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
@@ -8322,6 +8338,31 @@ html body .woocommerce-layout__header {
 					$removed, $not_found
 				);
 				$type = $not_found > 0 ? 'warning' : 'success';
+				break;
+			case 'user_deactivated':
+				$content = __('User deactivated successfully.', 'user-manager');
+				break;
+			case 'user_already_deactivated':
+				$content = __('This user is already deactivated.', 'user-manager');
+				$type = 'warning';
+				break;
+			case 'user_deactivate_failed':
+				$content = __('User could not be deactivated. Please try again.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'bulk_user_deactivated':
+				$deactivated = isset($_GET['deactivated']) ? absint($_GET['deactivated']) : 0;
+				$already = isset($_GET['already']) ? absint($_GET['already']) : 0;
+				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
+				$failed = isset($_GET['failed']) ? absint($_GET['failed']) : 0;
+				$content = sprintf(
+					__('Deactivated %1$d user(s). %2$d already deactivated. %3$d email(s) not found. %4$d failed.', 'user-manager'),
+					$deactivated,
+					$already,
+					$not_found,
+					$failed
+				);
+				$type = ($not_found > 0 || $failed > 0) ? 'warning' : 'success';
 				break;
 		}
 
@@ -9621,6 +9662,53 @@ html body .woocommerce-layout__header {
 		}
 		$email['message'] = implode("\n", $lines);
 		return $email;
+	}
+
+	/**
+	 * Determine whether a user has been deactivated.
+	 */
+	public static function is_user_deactivated(int $user_id): bool {
+		if ($user_id <= 0) {
+			return false;
+		}
+		return !empty(get_user_meta($user_id, self::USER_DEACTIVATED_META_KEY, true));
+	}
+
+	/**
+	 * Block authentication for deactivated users.
+	 *
+	 * @param WP_User|WP_Error $user
+	 * @param string           $password
+	 * @return WP_User|WP_Error
+	 */
+	public static function block_deactivated_user_authentication($user, $password) {
+		if (is_wp_error($user) || !($user instanceof WP_User)) {
+			return $user;
+		}
+		if (!self::is_user_deactivated((int) $user->ID)) {
+			return $user;
+		}
+		return new WP_Error(
+			'um_user_deactivated',
+			__('This account has been deactivated. Please contact the site administrator.', 'user-manager')
+		);
+	}
+
+	/**
+	 * Prevent deactivated users from requesting password resets.
+	 *
+	 * @param bool $allow
+	 * @param int  $user_id
+	 */
+	public static function maybe_block_deactivated_user_password_reset($allow, $user_id): bool {
+		$user_id = absint($user_id);
+		if (!$allow || $user_id <= 0) {
+			return (bool) $allow;
+		}
+		if (self::is_user_deactivated($user_id)) {
+			return false;
+		}
+		return true;
 	}
 
 	/**

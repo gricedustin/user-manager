@@ -213,6 +213,15 @@ class User_Manager_Tab_Activity_Log {
 												case 'user_remove_failed':
 													echo '<span class="um-status-badge um-status-error">' . esc_html__('Remove Failed', 'user-manager') . '</span>';
 													break;
+												case 'user_deactivated':
+													echo '<span class="um-status-badge um-status-warning">' . esc_html__('User Deactivated', 'user-manager') . '</span>';
+													break;
+												case 'user_deactivate_failed':
+													echo '<span class="um-status-badge um-status-error">' . esc_html__('Deactivate Failed', 'user-manager') . '</span>';
+													break;
+												case 'user_deactivated_already':
+													echo '<span class="um-status-badge um-status-secondary">' . esc_html__('Already Deactivated', 'user-manager') . '</span>';
+													break;
 												case 'user_skipped':
 													echo '<span class="um-status-badge um-status-info">' . esc_html__('Skipped', 'user-manager') . '</span>';
 													break;
@@ -295,8 +304,8 @@ class User_Manager_Tab_Activity_Log {
 												<a href="<?php echo esc_url(get_edit_user_link($user->ID)); ?>"><?php echo esc_html($user->user_email); ?></a>
 											<?php elseif (!empty($user_email)) : ?>
 												<span><?php echo esc_html($user_email); ?></span>
-												<?php if (in_array($entry['action'], ['user_removed', 'user_deleted'], true)) : ?>
-													<br><small style="color: #646970;"><?php esc_html_e('User removed', 'user-manager'); ?></small>
+												<?php if (in_array($entry['action'], ['user_removed', 'user_deleted', 'user_deactivated'], true)) : ?>
+													<br><small style="color: #646970;"><?php esc_html_e('User removed/deactivated', 'user-manager'); ?></small>
 												<?php endif; ?>
 											<?php elseif (!empty($attempted_email)) : ?>
 												<span style="color: #d63638;"><?php echo esc_html($attempted_email); ?></span>
@@ -479,6 +488,9 @@ class User_Manager_Tab_Activity_Log {
 			'user_removed' => __('User Removed', 'user-manager'),
 			'user_deleted' => __('User Deleted', 'user-manager'),
 			'user_remove_failed' => __('User Remove Failed', 'user-manager'),
+			'user_deactivated' => __('User Deactivated', 'user-manager'),
+			'user_deactivate_failed' => __('User Deactivate Failed', 'user-manager'),
+			'user_deactivated_already' => __('User Already Deactivated', 'user-manager'),
 			'user_skipped' => __('User Skipped', 'user-manager'),
 			'email_sent' => __('Email Sent', 'user-manager'),
 			'email_failed' => __('Email Failed', 'user-manager'),

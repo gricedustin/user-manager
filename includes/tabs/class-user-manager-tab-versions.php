@@ -39,6 +39,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.13 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login Tools: added a new "Deactivate User(s)" sub-menu next to Remove User(s) with bulk email-based deactivation workflow.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate User(s): preserves account/history data while blocking future logins via a deactivated-user authentication guard.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate User(s): added optional quiet password reset + optional [YYYYMMDD]-deactivated- login/email prefix behavior (both configurable in Settings).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate User(s): added a new "Deactivated Users" card with a paginated table of all deactivated accounts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.12 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Login Tools sub-navigation labels were updated for clarity: Create Single User, Create Multiple Users, Reset Password(s), Remove User(s), and Login As a User.', 'user-manager'); ?></li>
