@@ -4601,6 +4601,16 @@ class User_Manager_Actions {
 				'description' => __('Send a password reset link by SMS', 'user-manager'),
 				'body' => "Reset your password here: %PASSWORDRESETURL%\nAccount email: %EMAIL%",
 			],
+			'sms_tpl_auto_coupon' => [
+				'title' => __('Send automated coupon', 'user-manager'),
+				'description' => __('Configured in Settings to trigger automated discounts & store credits for new users. Supports %COUPONCODE%.', 'user-manager'),
+				'body' => "You have a new coupon.\nCoupon code: %COUPONCODE%\nLogin here: %SITEURL%%LOGINURL%",
+			],
+			'sms_tpl_auto_coupon_apology_10' => [
+				'title' => __('Send $10 coupon apology', 'user-manager'),
+				'description' => __('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'),
+				'body' => "We're so sorry! Here is your one-time $10 gift code: %COUPONCODE%",
+			],
 		];
 
 		foreach ($desired as $key => $data) {
@@ -4657,8 +4667,27 @@ class User_Manager_Actions {
 
 		self::import_demo_sms_text_templates();
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'demo_sms_templates_imported'));
+		wp_safe_redirect(self::get_sms_template_import_redirect_url('demo_sms_templates_imported'));
 		exit;
+	}
+
+	/**
+	 * Build redirect URL after SMS-template import actions.
+	 */
+	private static function get_sms_template_import_redirect_url(string $message): string {
+		$context = isset($_REQUEST['templates_context']) ? sanitize_key(wp_unslash($_REQUEST['templates_context'])) : '';
+		if ($context === 'addon-send-sms-text') {
+			return add_query_arg(
+				[
+					'addon_section'     => 'send-sms-text',
+					'templates_context' => $context,
+					'um_msg'            => $message,
+				],
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+			);
+		}
+
+		return User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, $message);
 	}
 	
 	/**

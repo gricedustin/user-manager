@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.23 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved "Import Demo SMS Text Templates" from Tools into the Send SMS Text add-on area.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('SMS demo template imports now include automated coupon + $10 apology coupon SMS templates (with %COUPONCODE% support).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('SMS import actions submitted from the Send SMS Text add-on now redirect back to that same add-on context with success notices.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.22 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved "Import Demo Email Templates" and "Import Automated Coupon Email" into the Send Email add-on area.', 'user-manager'); ?></li>

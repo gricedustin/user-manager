@@ -35,27 +35,6 @@ class User_Manager_Tab_Tools {
 			<?php if ($show_utility_cards) : ?>
 			<div class="um-admin-card">
 				<div class="um-admin-card-header">
-					<span class="dashicons dashicons-format-chat"></span>
-					<h2><?php esc_html_e('Import Demo SMS Text Templates', 'user-manager'); ?></h2>
-				</div>
-				<div class="um-admin-card-body">
-					<p><?php esc_html_e('Import pre-configured SMS text templates to get started quickly. This will add 4 commonly used templates:', 'user-manager'); ?></p>
-					<ul style="list-style: disc; margin-left: 20px; margin-bottom: 16px;">
-						<li><strong><?php esc_html_e('Send login information', 'user-manager'); ?></strong> — <?php esc_html_e('Send login link, username, and password by text', 'user-manager'); ?></li>
-						<li><strong><?php esc_html_e('Activate your new account', 'user-manager'); ?></strong> — <?php esc_html_e('Send a temporary password and account-activation text flow', 'user-manager'); ?></li>
-						<li><strong><?php esc_html_e('Send new password', 'user-manager'); ?></strong> — <?php esc_html_e('Send updated login credentials after a password change', 'user-manager'); ?></li>
-						<li><strong><?php esc_html_e('Force password reset', 'user-manager'); ?></strong> — <?php esc_html_e('Send a direct reset-password link by text', 'user-manager'); ?></li>
-					</ul>
-					<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-						<input type="hidden" name="action" value="user_manager_import_demo_sms_text_templates" />
-						<?php wp_nonce_field('user_manager_import_demo_sms_text_templates'); ?>
-						<?php submit_button(__('Import Demo SMS Text Templates', 'user-manager'), 'secondary', 'submit', false); ?>
-					</form>
-				</div>
-			</div>
-			
-			<div class="um-admin-card">
-				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-trash"></span>
 					<h2><?php esc_html_e('Clear Logs & Reset Views', 'user-manager'); ?></h2>
 				</div>
