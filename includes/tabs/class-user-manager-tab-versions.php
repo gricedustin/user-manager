@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.33 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports > Admin Log: removed the "Add-ons Connected to Admin Log" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The Activity Log table and filters remain available; only the add-ons summary panel was removed.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.32 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Deactivate User(s): added a new "Deactivated Users History" card under the deactivated users list.', 'user-manager'); ?></li>

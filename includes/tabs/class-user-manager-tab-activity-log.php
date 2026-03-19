@@ -40,76 +40,8 @@ class User_Manager_Tab_Activity_Log {
 		// Get all unique actions for filter dropdown
 		$table = $wpdb->prefix . 'um_admin_activity';
 		$all_actions = $wpdb->get_col("SELECT DISTINCT action FROM {$table} ORDER BY action ASC");
-		$tool_counts = $wpdb->get_results("SELECT tool, COUNT(*) AS total FROM {$table} GROUP BY tool", ARRAY_A);
-		$tool_count_map = [];
-		if (is_array($tool_counts)) {
-			foreach ($tool_counts as $tool_count_row) {
-				$tool_name = isset($tool_count_row['tool']) ? trim((string) $tool_count_row['tool']) : '';
-				if ($tool_name === '') {
-					continue;
-				}
-				$tool_count_map[strtolower($tool_name)] = isset($tool_count_row['total']) ? (int) $tool_count_row['total'] : 0;
-			}
-		}
-		
 		?>
 		<div class="um-admin-grid">
-			<div class="um-admin-card um-admin-card-full">
-				<div class="um-admin-card-header">
-					<span class="dashicons dashicons-admin-plugins"></span>
-					<h2><?php esc_html_e('Add-ons Connected to Admin Log', 'user-manager'); ?></h2>
-				</div>
-				<div class="um-admin-card-body">
-					<p><?php esc_html_e('Every add-on is listed here with its active status and quick links to both Add-ons settings and filtered Admin Log results.', 'user-manager'); ?></p>
-					<?php if (empty($addon_sections)) : ?>
-						<p><?php esc_html_e('No add-ons metadata found.', 'user-manager'); ?></p>
-					<?php else : ?>
-						<table class="widefat striped">
-							<thead>
-								<tr>
-									<th><?php esc_html_e('Add-on', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Status', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Tool Matches', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Links', 'user-manager'); ?></th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($addon_sections as $addon_key => $addon_meta) : ?>
-									<?php
-									$addon_label = isset($addon_meta['label']) ? (string) $addon_meta['label'] : '';
-									$addon_active = !empty($addon_meta['active']);
-									$addon_settings_url = add_query_arg('addon_section', sanitize_key((string) $addon_key), User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS));
-									$addon_log_url = add_query_arg(
-										[
-											'tool_filter' => $addon_label,
-											'action_filter' => '',
-											'paged' => 1,
-										],
-										$current_url
-									);
-									$tool_match_total = isset($tool_count_map[strtolower($addon_label)]) ? (int) $tool_count_map[strtolower($addon_label)] : 0;
-									?>
-									<tr>
-										<td><strong><?php echo esc_html($addon_label); ?></strong></td>
-										<td>
-											<?php if ($addon_active) : ?>
-												<span class="um-status-badge um-status-success"><?php esc_html_e('Active', 'user-manager'); ?></span>
-											<?php else : ?>
-												<span class="um-status-badge um-status-secondary"><?php esc_html_e('Inactive', 'user-manager'); ?></span>
-											<?php endif; ?>
-										</td>
-										<td><?php echo esc_html(number_format_i18n($tool_match_total)); ?></td>
-										<td>
-											<a class="button button-small" href="<?php echo esc_url($addon_settings_url); ?>"><?php esc_html_e('Open Add-on', 'user-manager'); ?></a>
-											<a class="button button-small" href="<?php echo esc_url($addon_log_url); ?>"><?php esc_html_e('View in Admin Log', 'user-manager'); ?></a>
-										</td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					<?php endif; ?>
-				</div>
-			</div>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-list-view"></span>

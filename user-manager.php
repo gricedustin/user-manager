@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.32
+ * Version: 2.4.33
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.33 - March 16, 2026
+ * - Reports > Admin Log: removed the "Add-ons Connected to Admin Log" card.
+ * - The Activity Log table and filters remain available; only the add-ons summary panel was removed.
+ *
  * 2.4.32 - March 16, 2026
  * - Deactivate User(s): added a new "Deactivated Users History" card under the deactivated users list.
  * - The new history keeps a persistent running log of deactivation and reactivation events (with date, action, user, identifier, before/after values, and actor).
