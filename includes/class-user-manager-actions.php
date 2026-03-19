@@ -4547,6 +4547,7 @@ class User_Manager_Actions {
 		check_admin_referer('user_manager_import_demo_templates');
 
 		self::import_demo_templates();
+		self::import_coupon_template();
 
 		wp_safe_redirect(self::get_email_template_import_redirect_url('demo_templates_imported'));
 		exit;

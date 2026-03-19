@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.27 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the standalone "Import Automated Coupon Email" card from Send Email.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Merged coupon template imports into "Import Demo Email Templates" so one import now includes both coupon templates.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated the demo email import list to show all 6 templates, including coupon-focused entries with %COUPONCODE% support.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.26 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved "Import Demo SMS Text Templates" into the SMS Text Templates manager and placed it at the bottom of that panel.', 'user-manager'); ?></li>
