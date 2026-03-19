@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.19';
+	const VERSION = '2.4.20';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -7397,6 +7397,7 @@ html body .woocommerce-layout__header {
 
 		$active_tab = self::get_current_tab();
 		$settings = self::get_settings();
+		$send_email_addon_enabled = self::is_send_email_addon_enabled($settings);
 		$addon_main_navigation_tabs = self::get_enabled_addon_main_navigation_tabs($settings);
 		$current_addon_section = $active_tab === self::TAB_ADDONS && isset($_GET['addon_section'])
 			? sanitize_key(wp_unslash($_GET['addon_section']))
@@ -7417,10 +7418,12 @@ html body .woocommerce-layout__header {
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Login Tools', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_EMAIL_USERS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_EMAIL_USERS)); ?>">
-					<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Send Email', 'user-manager'); ?>
-				</a>
+				<?php if ($send_email_addon_enabled) : ?>
+					<a class="nav-tab <?php echo $active_tab === self::TAB_EMAIL_USERS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_EMAIL_USERS)); ?>">
+						<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
+						<?php esc_html_e('Send Email', 'user-manager'); ?>
+					</a>
+				<?php endif; ?>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_SETTINGS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_SETTINGS)); ?>">
 					<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Settings', 'user-manager'); ?>
@@ -7485,6 +7488,12 @@ html body .woocommerce-layout__header {
 		}
 		if ($tab === self::TAB_EMAIL_TEMPLATES || $tab === self::TAB_TOOLS) {
 			return self::TAB_SETTINGS;
+		}
+		if ($tab === self::TAB_EMAIL_USERS) {
+			$settings = self::get_settings();
+			if (!self::is_send_email_addon_enabled($settings)) {
+				return self::TAB_ADDONS;
+			}
 		}
 		if ($tab === self::TAB_VERSIONS) {
 			return self::TAB_DOCUMENTATION;
@@ -7846,6 +7855,18 @@ html body .woocommerce-layout__header {
 			],
 			admin_url('admin.php')
 		);
+	}
+
+	/**
+	 * Whether Send Email add-on is enabled and not runtime-disabled.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	public static function is_send_email_addon_enabled(array $settings): bool {
+		if (self::is_addon_temporarily_disabled('send-email-users')) {
+			return false;
+		}
+		return !empty($settings['send_email_users_enabled']);
 	}
 
 	/**
@@ -8768,6 +8789,10 @@ html body .woocommerce-layout__header {
 			'send-sms-text' => [
 				'label' => 'Send SMS Text',
 				'settings_keys' => ['send_sms_text_enabled'],
+			],
+			'send-email-users' => [
+				'label' => 'Send Email',
+				'settings_keys' => ['send_email_users_enabled'],
 			],
 		];
 

@@ -1577,7 +1577,7 @@ class User_Manager_Actions {
 		$bcc = isset($_POST['bcc']) ? sanitize_email(wp_unslash($_POST['bcc'])) : '';
 
 		if (empty($title) || empty($subject) || empty($body)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 
@@ -1614,7 +1614,7 @@ class User_Manager_Actions {
 
 		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
 
-		$redirect_url = User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'template_saved');
+		$redirect_url = self::get_email_templates_redirect_url(['um_msg' => 'template_saved']);
 		if ($saved_id) {
 			$redirect_url = add_query_arg('edit_template', $saved_id, $redirect_url);
 		}
@@ -1635,13 +1635,13 @@ class User_Manager_Actions {
 		$direction = isset($_POST['direction']) ? sanitize_key($_POST['direction']) : '';
 		
 		if (empty($template_id) || !in_array($direction, ['up', 'down'], true)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 		
 		$templates = get_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, []);
 		if (!is_array($templates) || !isset($templates[$template_id])) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 		
@@ -1665,7 +1665,7 @@ class User_Manager_Actions {
 		$ids = array_keys($templates);
 		$index = array_search($template_id, $ids, true);
 		if ($index === false) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 		
@@ -1675,7 +1675,7 @@ class User_Manager_Actions {
 			$swapWith = $index + 1;
 		} else {
 			// nothing to do
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'template_saved'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'template_saved']));
 			exit;
 		}
 		
@@ -1687,7 +1687,7 @@ class User_Manager_Actions {
 		$templates[$idB]['order'] = $tmp;
 		
 		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'template_saved'));
+		wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'template_saved']));
 		exit;
 	}
 
@@ -1704,7 +1704,7 @@ class User_Manager_Actions {
 		$template_id = isset($_POST['template_id']) ? sanitize_key($_POST['template_id']) : '';
 
 		if (empty($template_id)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 
@@ -1715,7 +1715,7 @@ class User_Manager_Actions {
 			update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
 		}
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'template_deleted'));
+		wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'template_deleted']));
 		exit;
 	}
 
@@ -1732,14 +1732,14 @@ class User_Manager_Actions {
 		$template_id = isset($_POST['template_id']) ? sanitize_key($_POST['template_id']) : '';
 
 		if (empty($template_id)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 
 		$templates = User_Manager_Core::get_email_templates();
 
 		if (!isset($templates[$template_id])) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 
@@ -1760,27 +1760,57 @@ class User_Manager_Actions {
 
 		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
 
-		wp_safe_redirect(
-			add_query_arg(
-				[
-					'edit_template' => $new_id,
-					'message'       => 'template_duplicated',
-				],
-				User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES)
-			)
-		);
+		wp_safe_redirect(self::get_email_templates_redirect_url([
+			'edit_template' => $new_id,
+			'message'       => 'template_duplicated',
+		]));
 		exit;
+	}
+
+	/**
+	 * Build URL for Email Templates screen, honoring add-on embedding context.
+	 *
+	 * @param array<string,mixed> $extra Additional query args.
+	 */
+	private static function get_email_templates_redirect_url(array $extra = []): string {
+		$context = isset($_REQUEST['templates_context']) ? sanitize_key(wp_unslash($_REQUEST['templates_context'])) : '';
+		if ($context === 'addon-send-email-users') {
+			$url = add_query_arg(
+				[
+					'addon_section'      => 'send-email-users',
+					'templates_context'  => $context,
+				],
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+			);
+		} else {
+			$url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES);
+		}
+		if (!empty($extra)) {
+			$url = add_query_arg($extra, $url);
+		}
+		return $url;
 	}
 
 	/**
 	 * Build URL for Settings > SMS Text Templates section.
 	 */
 	private static function get_sms_text_templates_section_url(array $extra = []): string {
-		$url = add_query_arg(
-			'settings_section',
-			'sms-text-templates',
-			User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS)
-		);
+		$context = isset($_REQUEST['templates_context']) ? sanitize_key(wp_unslash($_REQUEST['templates_context'])) : '';
+		if ($context === 'addon-send-sms-text') {
+			$url = add_query_arg(
+				[
+					'addon_section'      => 'send-sms-text',
+					'templates_context'  => $context,
+				],
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+			);
+		} else {
+			$url = add_query_arg(
+				'settings_section',
+				'sms-text-templates',
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS)
+			);
+		}
 		if (!empty($extra)) {
 			$url = add_query_arg($extra, $url);
 		}
@@ -2353,6 +2383,7 @@ class User_Manager_Actions {
 				$settings['order_received_page_customizer_enabled'] = isset($_POST['order_received_page_customizer_enabled']) && $_POST['order_received_page_customizer_enabled'] === '1';
 				$settings['order_received_page_customizer_heading_text'] = isset($_POST['order_received_page_customizer_heading_text']) ? sanitize_text_field(wp_unslash($_POST['order_received_page_customizer_heading_text'])) : 'Order received';
 				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
+				$settings['send_email_users_enabled'] = isset($_POST['send_email_users_enabled']) && $_POST['send_email_users_enabled'] === '1';
 				$settings['send_sms_text_enabled'] = isset($_POST['send_sms_text_enabled']) && $_POST['send_sms_text_enabled'] === '1';
 				$settings['addon_main_navigation_tabs'] = [];
 				if (isset($_POST['addon_main_navigation_tabs']) && is_array($_POST['addon_main_navigation_tabs'])) {

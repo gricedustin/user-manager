@@ -64,6 +64,25 @@ class User_Manager_Tabs {
 				User_Manager_Tab_Bulk_Create::render();
 				break;
 			case User_Manager_Core::TAB_EMAIL_USERS:
+				$settings = User_Manager_Core::get_settings();
+				if (!User_Manager_Core::is_send_email_addon_enabled($settings)) {
+					$addons_url = add_query_arg('addon_section', 'send-email-users', User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS));
+					?>
+					<div class="um-admin-card um-admin-card-full" style="margin-top:20px;">
+						<div class="um-admin-card-header">
+							<span class="dashicons dashicons-email-alt"></span>
+							<h2><?php esc_html_e('Send Email Add-on is Disabled', 'user-manager'); ?></h2>
+						</div>
+						<div class="um-admin-card-body">
+							<p><?php esc_html_e('Enable the Send Email add-on in Add-ons to access this screen.', 'user-manager'); ?></p>
+							<p>
+								<a href="<?php echo esc_url($addons_url); ?>" class="button button-primary"><?php esc_html_e('Open Send Email Add-on', 'user-manager'); ?></a>
+							</p>
+						</div>
+					</div>
+					<?php
+					break;
+				}
 				User_Manager_Tab_Email_Users::render();
 				break;
 			case User_Manager_Core::TAB_ACTIVITY_LOG:

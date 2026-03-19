@@ -17,6 +17,13 @@ class User_Manager_Addon_Send_SMS_Text {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$enabled = !empty($settings['send_sms_text_enabled']);
 		$templates = User_Manager_Core::get_sms_text_templates();
+		$sms_templates_open = isset($_GET['edit_sms_template']) && sanitize_key(wp_unslash($_GET['edit_sms_template'])) !== '';
+		$sms_templates_toggle_label = $sms_templates_open ? __('Collapse', 'user-manager') : __('Expand', 'user-manager');
+		$sms_templates_base_url = add_query_arg(
+			'addon_section',
+			'send-sms-text',
+			User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+		);
 
 		$activity_data = User_Manager_Core::get_activity_log();
 		$entries = $activity_data['entries'] ?? $activity_data;
@@ -58,6 +65,19 @@ class User_Manager_Addon_Send_SMS_Text {
 				</div>
 
 				<div id="um-send-sms-text-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
+					<div class="um-admin-card" id="um-send-sms-templates-card" style="margin-bottom:20px;">
+						<div class="um-admin-card-header">
+							<span class="dashicons dashicons-format-chat"></span>
+							<h2><?php esc_html_e('SMS Text Templates', 'user-manager'); ?></h2>
+							<button type="button" class="button button-small" id="um-toggle-send-sms-templates-card" aria-expanded="<?php echo $sms_templates_open ? 'true' : 'false'; ?>">
+								<?php echo esc_html($sms_templates_toggle_label); ?>
+							</button>
+						</div>
+						<div class="um-admin-card-body" id="um-send-sms-templates-card-body" style="<?php echo $sms_templates_open ? '' : 'display:none;'; ?>">
+							<?php User_Manager_Tab_SMS_Text_Templates::render($sms_templates_base_url, 'addon-send-sms-text'); ?>
+						</div>
+					</div>
+
 					<?php if (!empty($pending_batch) && is_array($pending_batch)) : ?>
 						<div class="um-admin-card" style="margin-bottom: 20px; border-left: 4px solid #2271b1;">
 							<div class="um-admin-card-header">
@@ -282,7 +302,7 @@ class User_Manager_Addon_Send_SMS_Text {
 										<?php esc_html_e('This add-on uses the same shared custom lists from Email Users (no separate SMS lists).', 'user-manager'); ?>
 									</p>
 									<p>
-										<a href="<?php echo esc_url(User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_USERS)); ?>" class="button">
+										<a href="<?php echo esc_url(add_query_arg('addon_section', 'send-email-users', User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS))); ?>" class="button">
 											<?php esc_html_e('Manage Shared Lists in Email Users', 'user-manager'); ?>
 										</a>
 									</p>
@@ -490,6 +510,8 @@ class User_Manager_Addon_Send_SMS_Text {
 					jQuery(function($) {
 						var smsTemplates = <?php echo wp_json_encode($templates); ?>;
 						var siteUrl = <?php echo wp_json_encode(home_url()); ?>;
+						var $smsTemplatesToggleBtn = $('#um-toggle-send-sms-templates-card');
+						var $smsTemplatesBody = $('#um-send-sms-templates-card-body');
 
 						function updateSmsTemplateDescription() {
 							var $select = $('#um-send-sms-template');
@@ -581,6 +603,16 @@ class User_Manager_Addon_Send_SMS_Text {
 						$('#um-send-sms-template').on('change', updateSmsTemplateDescription);
 						$('.um-sms-role-checkbox, .um-sms-list-checkbox').on('change', updatePhoneListFromSelectors);
 						updateSmsTemplateDescription();
+
+						if ($smsTemplatesToggleBtn.length && $smsTemplatesBody.length) {
+							$smsTemplatesToggleBtn.on('click', function() {
+								var expanded = $smsTemplatesToggleBtn.attr('aria-expanded') === 'true';
+								var nextExpanded = !expanded;
+								$smsTemplatesToggleBtn.attr('aria-expanded', nextExpanded ? 'true' : 'false');
+								$smsTemplatesToggleBtn.text(nextExpanded ? '<?php echo esc_js(__('Collapse', 'user-manager')); ?>' : '<?php echo esc_js(__('Expand', 'user-manager')); ?>');
+								$smsTemplatesBody.stop(true, true).slideToggle(150);
+							});
+						}
 
 						$('#um-preview-sms-text-btn').on('click', function() {
 							var preview = buildSmsPreviewMessage();

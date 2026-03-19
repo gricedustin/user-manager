@@ -9,13 +9,19 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Tab_SMS_Text_Templates {
 
-	public static function render(): void {
+	public static function render(string $base_url = '', string $templates_context = ''): void {
 		$templates = User_Manager_Core::get_sms_text_templates();
-		$section_url = add_query_arg(
-			'settings_section',
-			'sms-text-templates',
-			User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS)
-		);
+		$section_url = $base_url !== ''
+			? $base_url
+			: add_query_arg(
+				'settings_section',
+				'sms-text-templates',
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS)
+			);
+		$templates_context = sanitize_key($templates_context);
+		if ($templates_context !== '') {
+			$section_url = add_query_arg('templates_context', $templates_context, $section_url);
+		}
 
 		$edit_id = isset($_GET['edit_sms_template']) ? sanitize_key(wp_unslash($_GET['edit_sms_template'])) : '';
 		$editing = ($edit_id !== '' && isset($templates[$edit_id])) ? $templates[$edit_id] : null;
@@ -48,6 +54,9 @@ class User_Manager_Tab_SMS_Text_Templates {
 												<input type="hidden" name="action" value="user_manager_move_sms_text_template" />
 												<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
 												<input type="hidden" name="direction" value="up" />
+												<?php if ($templates_context !== '') : ?>
+													<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+												<?php endif; ?>
 												<?php wp_nonce_field('user_manager_move_sms_text_template'); ?>
 												<button type="submit" class="button button-small" title="<?php esc_attr_e('Move Up', 'user-manager'); ?>">&#9650;</button>
 											</form>
@@ -55,6 +64,9 @@ class User_Manager_Tab_SMS_Text_Templates {
 												<input type="hidden" name="action" value="user_manager_move_sms_text_template" />
 												<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
 												<input type="hidden" name="direction" value="down" />
+												<?php if ($templates_context !== '') : ?>
+													<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+												<?php endif; ?>
 												<?php wp_nonce_field('user_manager_move_sms_text_template'); ?>
 												<button type="submit" class="button button-small" title="<?php esc_attr_e('Move Down', 'user-manager'); ?>">&#9660;</button>
 											</form>
@@ -62,12 +74,18 @@ class User_Manager_Tab_SMS_Text_Templates {
 											<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
 												<input type="hidden" name="action" value="user_manager_duplicate_sms_text_template" />
 												<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
+												<?php if ($templates_context !== '') : ?>
+													<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+												<?php endif; ?>
 												<?php wp_nonce_field('user_manager_duplicate_sms_text_template'); ?>
 												<button type="submit" class="button button-small"><?php esc_html_e('Duplicate', 'user-manager'); ?></button>
 											</form>
 											<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php echo esc_js(__('Delete this SMS text template?', 'user-manager')); ?>');">
 												<input type="hidden" name="action" value="user_manager_delete_sms_text_template" />
 												<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
+												<?php if ($templates_context !== '') : ?>
+													<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+												<?php endif; ?>
 												<?php wp_nonce_field('user_manager_delete_sms_text_template'); ?>
 												<button type="submit" class="button button-small button-link-delete"><?php esc_html_e('Delete', 'user-manager'); ?></button>
 											</form>
@@ -97,6 +115,9 @@ class User_Manager_Tab_SMS_Text_Templates {
 					<div class="um-admin-card-body">
 						<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 							<input type="hidden" name="action" value="user_manager_save_sms_text_template" />
+							<?php if ($templates_context !== '') : ?>
+								<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+							<?php endif; ?>
 							<?php if ($edit_id !== '') : ?>
 								<input type="hidden" name="template_id" value="<?php echo esc_attr($edit_id); ?>" />
 							<?php endif; ?>

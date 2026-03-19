@@ -9,9 +9,10 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Tab_Email_Users {
 
-	public static function render(): void {
+	public static function render(string $base_url = ''): void {
 		$templates     = User_Manager_Core::get_email_templates();
 		$activity_data = User_Manager_Core::get_activity_log();
+		$page_url = $base_url !== '' ? $base_url : User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_USERS);
 
 		// Normalize activity log structure (supports older flat arrays and newer ['entries' => []] format).
 		$entries = $activity_data['entries'] ?? $activity_data;
@@ -278,7 +279,7 @@ class User_Manager_Tab_Email_Users {
 							<p>
 								<?php submit_button($editing_list ? __('Update List', 'user-manager') : __('Create List', 'user-manager'), 'primary', 'submit', false); ?>
 								<?php if ($editing_list) : ?>
-									<a href="<?php echo esc_url(User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_USERS)); ?>" class="button" style="margin-left: 5px;"><?php esc_html_e('Cancel', 'user-manager'); ?></a>
+									<a href="<?php echo esc_url($page_url); ?>" class="button" style="margin-left: 5px;"><?php esc_html_e('Cancel', 'user-manager'); ?></a>
 								<?php endif; ?>
 							</p>
 						</form>
@@ -309,7 +310,7 @@ class User_Manager_Tab_Email_Users {
 											<td><strong><?php echo esc_html($list_data['title'] ?? ''); ?></strong></td>
 											<td><?php echo esc_html(number_format(count($list_data['emails'] ?? []))); ?></td>
 											<td style="text-align: center;">
-												<a href="<?php echo esc_url(add_query_arg('edit_list', $list_id, User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_USERS))); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
+												<a href="<?php echo esc_url(add_query_arg('edit_list', $list_id, $page_url)); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
 												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display: inline;">
 													<input type="hidden" name="action" value="user_manager_download_email_list_csv" />
 													<input type="hidden" name="list_id" value="<?php echo esc_attr($list_id); ?>" />

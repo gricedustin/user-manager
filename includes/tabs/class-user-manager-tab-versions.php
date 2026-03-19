@@ -39,6 +39,16 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.20 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new "Send Email" add-on card with Activate toggle and description, so Send Email is no longer shown by default unless enabled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Main navigation now shows the Send Email tab only when the Send Email add-on is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added an "Email Templates" manager card at the top of the Send Email add-on, collapsed by default and auto-expanded when editing a specific template.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added an "SMS Text Templates" manager card at the top of the Send SMS Text add-on, collapsed by default and auto-expanded when editing a specific SMS template.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Template manager forms now preserve add-on context so save/edit/delete/reorder actions return to the corresponding add-on card.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.19 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Retitled add-on shortcut checkbox label from "Add as Man Navigation Tab" to "Add to Main Navigation".', 'user-manager'); ?></li>
