@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.25 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved "Import Demo Email Templates" into the Email Templates manager and placed it at the bottom of that panel.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed the duplicate "Import Demo Email Templates" card from the surrounding Send Email add-on wrapper.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.24 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Removed the legacy top-level "Send Email" navigation tab (`tab=email-users`) now that Send Email is managed as an add-on.', 'user-manager'); ?></li>
