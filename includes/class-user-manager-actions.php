@@ -4548,8 +4548,27 @@ class User_Manager_Actions {
 
 		self::import_demo_templates();
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'demo_templates_imported'));
+		wp_safe_redirect(self::get_email_template_import_redirect_url('demo_templates_imported'));
 		exit;
+	}
+
+	/**
+	 * Build redirect URL after email-template import actions.
+	 */
+	private static function get_email_template_import_redirect_url(string $message): string {
+		$context = isset($_REQUEST['templates_context']) ? sanitize_key(wp_unslash($_REQUEST['templates_context'])) : '';
+		if ($context === 'addon-send-email-users') {
+			return add_query_arg(
+				[
+					'addon_section'     => 'send-email-users',
+					'templates_context' => $context,
+					'um_msg'            => $message,
+				],
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+			);
+		}
+
+		return User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, $message);
 	}
 
 	/**
@@ -4697,7 +4716,7 @@ class User_Manager_Actions {
 
 		self::import_coupon_template();
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'demo_templates_imported'));
+		wp_safe_redirect(self::get_email_template_import_redirect_url('demo_templates_imported'));
 		exit;
 	}
 
