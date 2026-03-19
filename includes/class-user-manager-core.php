@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.29';
+	const VERSION = '2.4.30';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -7009,6 +7009,13 @@ html body .woocommerce-layout__header {
 			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 			gap: 20px;
 			margin-top: 20px;
+		}
+		/* Remove extra first-gap under sub-sub navigation rows */
+		.wrap .subsubsub + .clear + .um-admin-card,
+		.wrap .subsubsub + .clear + .um-admin-grid,
+		.wrap .subsubsub + .clear + .um-create-user-layout,
+		.wrap .subsubsub + .clear + .um-email-templates-layout {
+			margin-top: 0 !important;
 		}
 		/* Two-column variant for pages that want a strict 2-col layout */
 		.um-admin-grid.um-admin-grid-2col {
