@@ -104,7 +104,7 @@ class User_Manager_Tab_Addons {
 		<br class="clear" />
 
 		<?php if ($current_addon_section === '') : ?>
-			<div class="um-admin-card um-admin-card-full" style="margin-top: 20px; margin-bottom: 16px;">
+			<div class="um-admin-card um-admin-card-full" style="margin-bottom: 16px;">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-filter"></span>
 					<h2><?php esc_html_e('Add-ons Filter', 'user-manager'); ?></h2>
@@ -176,7 +176,7 @@ class User_Manager_Tab_Addons {
 			<input type="hidden" name="addon_section" value="<?php echo esc_attr($current_addon_section); ?>" />
 			<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
-			<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
+			<div class="um-admin-grid um-admin-grid-single um-addons-main-grid" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 				<div class="um-addon-section" data-addon-section="add-to-cart-bulk-import">
 					<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
 				</div>
@@ -227,7 +227,7 @@ class User_Manager_Tab_Addons {
 				</div>
 			</div>
 		</form>
-		<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
+		<div class="um-admin-grid um-admin-grid-single um-addons-main-grid" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 			<div class="um-addon-section" data-addon-section="post-meta">
 				<?php User_Manager_Addon_Post_Meta::render($settings, $settings_form_id); ?>
 			</div>
@@ -286,6 +286,9 @@ class User_Manager_Tab_Addons {
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template($settings_form_id); ?>
 
 		<style>
+		.um-admin-grid.um-addons-main-grid {
+			margin-top: 0;
+		}
 		.um-addon-tile-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(240px, 240px));

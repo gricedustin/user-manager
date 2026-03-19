@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.28
+ * Version: 2.4.29
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.29 - March 16, 2026
+ * - Add-ons tab: removed extra top spacing beneath the add-on tag sub-navigation by clearing top margin on the top-level add-on grids/cards.
+ *
  * 2.4.28 - March 16, 2026
  * - Retitled the throttle count label from "Texts Per Batch" to "Emails/Texts Per Batch" in Settings.
  *
