@@ -498,6 +498,13 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 			'invoice' => rawurlencode(self::invoice_get_trimmed_order_key($order)),
 			'pdf' => '1',
 		], home_url('/'));
+		$edit_order_url = '';
+		if (
+			!$pdf_mode &&
+			self::invoice_current_user_is_wordpress_administrator()
+		) {
+			$edit_order_url = (string) get_edit_post_link($order->get_id(), 'raw');
+		}
 
 		$billing_name = $order->get_formatted_billing_full_name();
 		$billing_phone = $order->get_billing_phone();
@@ -707,6 +714,13 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 					<?php endif; ?>
 					<?php if ($footer_below !== '') : ?><p><?php echo nl2br(esc_html($footer_below)); ?></p><?php endif; ?>
 				</div>
+				<?php if ($edit_order_url !== '') : ?>
+					<div style="margin-top:16px; font-size:12px;">
+						<a href="<?php echo esc_url($edit_order_url); ?>" target="_blank" rel="noopener noreferrer">
+							<?php esc_html_e('Edit this order in WP Admin', 'user-manager'); ?>
+						</a>
+					</div>
+				<?php endif; ?>
 			</div>
 		</div>
 		<script>
@@ -887,6 +901,20 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 	private static function invoice_get_trimmed_order_key($order): string {
 		$order_key = method_exists($order, 'get_order_key') ? (string) $order->get_order_key() : '';
 		return preg_replace('/^wc_order_/', '', $order_key) ?: $order_key;
+	}
+
+	/**
+	 * Determine whether current front-end viewer is a WP administrator role user.
+	 */
+	private static function invoice_current_user_is_wordpress_administrator(): bool {
+		if (!is_user_logged_in()) {
+			return false;
+		}
+		$user = wp_get_current_user();
+		if (!($user instanceof WP_User)) {
+			return false;
+		}
+		return in_array('administrator', (array) $user->roles, true);
 	}
 }
 

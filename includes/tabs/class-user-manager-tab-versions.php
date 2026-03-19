@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.16 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Order Invoice & Approval: on front-end invoice pages, logged-in WordPress administrators now see an "Edit this order in WP Admin" link at the bottom.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The edit-order link opens in a new browser tab/window and is hidden for non-administrator viewers.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.15 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Send SMS Text: removed "skip on no user match" behavior so valid phone numbers are still sent even when no user is found.', 'user-manager'); ?></li>
