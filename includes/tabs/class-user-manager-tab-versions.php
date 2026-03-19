@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.19 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled add-on shortcut checkbox label from "Add as Man Navigation Tab" to "Add to Main Navigation".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.18 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added shortcut edit links next to Email Template selectors so admins can jump directly to Settings → Email Templates.', 'user-manager'); ?></li>
@@ -49,7 +55,7 @@ class User_Manager_Tab_Versions {
 					<div class="um-changelog-item">
 						<h4>2.4.17 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Add-ons: each add-on now shows an "Add as Man Navigation Tab" checkbox next to Activate when the add-on is enabled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons: each add-on now shows an "Add to Main Navigation" checkbox next to Activate when the add-on is enabled.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Main navigation: selected + active add-ons now appear as shortcut tabs to the right of Docs, linking directly to each add-on settings screen.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Add-on shortcut choices are now saved in plugin settings and automatically hidden when an add-on is not active.', 'user-manager'); ?></li>
 						</ul>

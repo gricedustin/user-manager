@@ -2,19 +2,22 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.18
+ * Version: 2.4.19
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.19 - March 16, 2026
+ * - Retitled add-on shortcut checkbox label from "Add as Man Navigation Tab" to "Add to Main Navigation".
+ *
  * 2.4.18 - March 16, 2026
  * - Added shortcut edit links next to Email Template selectors so admins can jump directly to Settings → Email Templates.
  * - Added shortcut edit links next to SMS Text Template selectors so admins can jump directly to Settings → SMS Text Templates.
  * - Applied template-editor shortcut links across Create, Bulk Create, Reset Password, Email Users, coupon-email template selectors, and SMS texting template selectors.
  *
  * 2.4.17 - March 16, 2026
- * - Add-ons: each add-on now shows an "Add as Man Navigation Tab" checkbox next to Activate when the add-on is enabled.
+ * - Add-ons: each add-on now shows an "Add to Main Navigation" checkbox next to Activate when the add-on is enabled.
  * - Main navigation: selected + active add-ons now appear as shortcut tabs to the right of Docs, linking directly to each add-on settings screen.
  * - Add-on shortcut choices are now saved in plugin settings and automatically hidden when an add-on is not active.
  *

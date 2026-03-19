@@ -504,7 +504,7 @@ class User_Manager_Tab_Addons {
 		<script>
 		jQuery(document).ready(function($) {
 			var settingsFormId = '<?php echo esc_js($settings_form_id); ?>';
-			var addonMainNavigationLabel = '<?php echo esc_js(__('Add as Man Navigation Tab', 'user-manager')); ?>';
+			var addonMainNavigationLabel = '<?php echo esc_js(__('Add to Main Navigation', 'user-manager')); ?>';
 			var addonMainNavigationFields = <?php echo wp_json_encode($addon_main_navigation_fields); ?> || {};
 			var addonMainNavigationSelected = <?php echo wp_json_encode(array_fill_keys($selected_addon_main_navigation_tabs, true)); ?> || {};
 			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
