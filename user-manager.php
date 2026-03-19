@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.23
+ * Version: 2.4.24
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.24 - March 16, 2026
+ * - Removed the legacy top-level "Send Email" navigation tab (`tab=email-users`) now that Send Email is managed as an add-on.
+ * - Send Email remains available from Add-ons and optional add-on main-navigation shortcuts.
+ *
  * 2.4.23 - March 16, 2026
  * - Moved "Import Demo SMS Text Templates" from Tools into the Send SMS Text add-on area.
  * - SMS demo template imports now include automated coupon + $10 apology coupon SMS templates (with %COUPONCODE% support).
