@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.14
+ * Version: 2.4.15
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.15 - March 16, 2026
+ * - Send SMS Text: removed "skip on no user match" behavior so valid phone numbers are still sent even when no user is found.
+ * - Send SMS Text: improved user lookup by phone using flexible format matching (e.g. 952-200-7732, 9522007732, +19522007732).
+ * - Updated SMS send notices to report "Sent without user match" rather than "Skipped (no user match)".
+ *
  * 2.4.14 - March 16, 2026
  * - Tools: added a new "Import Demo SMS Text Templates" card next to "Import Demo Email Templates".
  * - Added backend import handler and action for demo SMS templates with nonce and capability checks.

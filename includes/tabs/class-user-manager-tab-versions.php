@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.15 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Send SMS Text: removed "skip on no user match" behavior so valid phone numbers are still sent even when no user is found.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Send SMS Text: improved user lookup by phone using flexible format matching (e.g. 952-200-7732, 9522007732, +19522007732).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated SMS send notices to report "Sent without user match" rather than "Skipped (no user match)".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.14 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Tools: added a new "Import Demo SMS Text Templates" card next to "Import Demo Email Templates".', 'user-manager'); ?></li>

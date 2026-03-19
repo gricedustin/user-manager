@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.14';
+	const VERSION = '2.4.15';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8199,12 +8199,12 @@ html body .woocommerce-layout__header {
 				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
 				$failed = isset($_GET['failed']) ? absint($_GET['failed']) : 0;
 				$content = sprintf(
-					__('SMS texts sent: %1$d. Skipped (no user match): %2$d. Failed to send: %3$d.', 'user-manager'),
+					__('SMS texts sent: %1$d. Sent without user match: %2$d. Failed to send: %3$d.', 'user-manager'),
 					$sent,
 					$not_found,
 					$failed
 				);
-				$type = ($not_found > 0 || $failed > 0) ? 'warning' : 'success';
+				$type = $failed > 0 ? 'warning' : 'success';
 				break;
 			case 'texts_sent_batch':
 				$sent = isset($_GET['sent']) ? absint($_GET['sent']) : 0;
@@ -8214,7 +8214,7 @@ html body .woocommerce-layout__header {
 				$total = isset($_GET['total']) ? absint($_GET['total']) : 0;
 				$total_sent = isset($_GET['total_sent']) ? absint($_GET['total_sent']) : $sent;
 				$content = sprintf(
-					__('Text batch sent: %1$d texts in this batch. Total progress: %2$d of %3$d sent. %4$d remaining. Skipped (no user match): %5$d. Failed to send: %6$d.', 'user-manager'),
+					__('Text batch sent: %1$d texts in this batch. Total progress: %2$d of %3$d sent. %4$d remaining. Sent without user match: %5$d. Failed to send: %6$d.', 'user-manager'),
 					$sent,
 					$total_sent,
 					$total,
@@ -8222,7 +8222,7 @@ html body .woocommerce-layout__header {
 					$not_found,
 					$failed
 				);
-				$type = 'info';
+				$type = $failed > 0 ? 'warning' : 'info';
 				break;
 			case 'text_batch_complete':
 				$sent = isset($_GET['sent']) ? absint($_GET['sent']) : 0;

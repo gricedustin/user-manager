@@ -3493,13 +3493,62 @@ class User_Manager_Actions {
 				'last_name'  => (string) $user->last_name,
 			];
 			foreach ($phones as $phone) {
-				if (!isset($directory[$phone])) {
-					$directory[$phone] = $context;
+				foreach (self::get_phone_lookup_keys($phone) as $lookup_key) {
+					if (!isset($directory[$lookup_key])) {
+						$directory[$lookup_key] = $context;
+					}
 				}
 			}
 		}
 
 		return $directory;
+	}
+
+	/**
+	 * Build phone lookup keys so equivalent formats map to the same user.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_phone_lookup_keys(string $phone): array {
+		$keys = [];
+		$normalized = User_Manager_SMS::normalize_phone_number($phone);
+		if ($normalized !== '') {
+			$keys[] = $normalized;
+		}
+
+		$digits = preg_replace('/\D+/', '', $phone);
+		$digits = is_string($digits) ? $digits : '';
+		if ($digits !== '') {
+			$keys[] = $digits;
+			$keys[] = '+' . $digits;
+			if (strlen($digits) === 10) {
+				$keys[] = '+1' . $digits;
+				$keys[] = '1' . $digits;
+			} elseif (strlen($digits) === 11 && strpos($digits, '1') === 0) {
+				$last_ten = substr($digits, 1);
+				if ($last_ten !== '') {
+					$keys[] = $last_ten;
+					$keys[] = '+1' . $last_ten;
+				}
+			}
+		}
+
+		return array_values(array_unique(array_filter($keys)));
+	}
+
+	/**
+	 * Resolve user context from phone directory using flexible phone key matching.
+	 *
+	 * @param array<string,array<string,mixed>> $phone_directory
+	 * @return array<string,mixed>|null
+	 */
+	private static function get_user_context_for_phone(string $phone_number, array $phone_directory): ?array {
+		foreach (self::get_phone_lookup_keys($phone_number) as $lookup_key) {
+			if (isset($phone_directory[$lookup_key]) && is_array($phone_directory[$lookup_key])) {
+				return $phone_directory[$lookup_key];
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -3567,10 +3616,9 @@ class User_Manager_Actions {
 				continue;
 			}
 
-			$user_context = $phone_directory[$phone_number] ?? null;
-			if (!$send_to_all_phone_numbers && !is_array($user_context)) {
+			$user_context = self::get_user_context_for_phone($phone_number, $phone_directory);
+			if (!is_array($user_context)) {
 				$not_found_count++;
-				continue;
 			}
 
 			if (!is_array($user_context)) {
@@ -3684,7 +3732,6 @@ class User_Manager_Actions {
 		$template_id = isset($batch_data['template_id']) ? sanitize_key((string) $batch_data['template_id']) : '';
 		$login_url = isset($batch_data['login_url']) ? sanitize_text_field((string) $batch_data['login_url']) : '/my-account/';
 		$coupon_code = isset($batch_data['coupon_code']) ? sanitize_text_field((string) $batch_data['coupon_code']) : '';
-		$send_to_all_phone_numbers = !empty($batch_data['send_to_all_phone_numbers']);
 		$selected_roles = isset($batch_data['selected_roles']) ? sanitize_text_field((string) $batch_data['selected_roles']) : '';
 		$selected_lists = isset($batch_data['selected_lists']) ? sanitize_text_field((string) $batch_data['selected_lists']) : '';
 
@@ -3717,10 +3764,9 @@ class User_Manager_Actions {
 				continue;
 			}
 
-			$user_context = $phone_directory[$phone_number] ?? null;
-			if (!$send_to_all_phone_numbers && !is_array($user_context)) {
+			$user_context = self::get_user_context_for_phone($phone_number, $phone_directory);
+			if (!is_array($user_context)) {
 				$not_found_count++;
-				continue;
 			}
 
 			if (!is_array($user_context)) {
