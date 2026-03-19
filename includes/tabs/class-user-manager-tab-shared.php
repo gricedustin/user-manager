@@ -325,14 +325,11 @@ class User_Manager_Tab_Shared {
 	 * @param string $template_type Either "email" or "sms".
 	 */
 	public static function get_template_settings_url(string $template_type = 'email'): string {
-		$settings_section = $template_type === 'sms' ? 'sms-text-templates' : 'email-templates';
+		$addon_section = $template_type === 'sms' ? 'send-sms-text' : 'send-email-users';
 		return add_query_arg(
-			[
-				'page' => User_Manager_Core::SETTINGS_PAGE_SLUG,
-				'tab' => User_Manager_Core::TAB_SETTINGS,
-				'settings_section' => $settings_section,
-			],
-			admin_url('admin.php')
+			'addon_section',
+			$addon_section,
+			User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
 		);
 	}
 

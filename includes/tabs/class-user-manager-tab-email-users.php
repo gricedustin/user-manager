@@ -160,7 +160,7 @@ class User_Manager_Tab_Email_Users {
 								</select>
 								<p class="description um-template-description-note" style="margin-top:6px;"></p>
 								<?php if (empty($templates)) : ?>
-									<p class="description" style="color: #d63638;"><?php esc_html_e('No templates found. Create a template in the Email Templates tab first.', 'user-manager'); ?></p>
+									<p class="description" style="color: #d63638;"><?php esc_html_e('No templates found. Create one in Add-ons → Send Email → Email Templates.', 'user-manager'); ?></p>
 								<?php endif; ?>
 							</div>
 							

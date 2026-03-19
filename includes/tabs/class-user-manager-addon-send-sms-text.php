@@ -200,7 +200,7 @@ class User_Manager_Addon_Send_SMS_Text {
 											<p class="description um-sms-template-description-note" style="margin-top:6px;"></p>
 											<?php if (empty($templates)) : ?>
 												<p class="description" style="color:#d63638;">
-													<?php esc_html_e('No SMS text templates found. Create one in Settings → SMS Text Templates first.', 'user-manager'); ?>
+													<?php esc_html_e('No SMS text templates found. Create one in Add-ons → Send SMS Text → SMS Text Templates.', 'user-manager'); ?>
 												</p>
 											<?php endif; ?>
 										</div>

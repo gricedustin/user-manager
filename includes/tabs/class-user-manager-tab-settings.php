@@ -13,13 +13,22 @@ if (!defined('ABSPATH')) {
 		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS);
 		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_SETTINGS;
 		$settings_section = isset($_GET['settings_section']) ? sanitize_key(wp_unslash($_GET['settings_section'])) : '';
-		$valid_sections = ['general', 'email-templates', 'sms-text-templates', 'tools'];
+		$valid_sections = ['general', 'tools'];
+
+		// Email/SMS template managers were moved into their add-ons.
+		// Preserve old URLs by redirecting to the relevant add-on card.
+		if ($settings_section === 'email-templates' || $requested_tab === User_Manager_Core::TAB_EMAIL_TEMPLATES) {
+			wp_safe_redirect(add_query_arg('addon_section', 'send-email-users', User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)));
+			exit;
+		}
+		if ($settings_section === 'sms-text-templates') {
+			wp_safe_redirect(add_query_arg('addon_section', 'send-sms-text', User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)));
+			exit;
+		}
 
 		// Backward compatibility: legacy tabs now live under Settings sub links.
 		if ($settings_section === '') {
-			if ($requested_tab === User_Manager_Core::TAB_EMAIL_TEMPLATES) {
-				$settings_section = 'email-templates';
-			} elseif ($requested_tab === User_Manager_Core::TAB_TOOLS) {
+			if ($requested_tab === User_Manager_Core::TAB_TOOLS) {
 				$settings_section = 'tools';
 			}
 		}
@@ -28,8 +37,6 @@ if (!defined('ABSPATH')) {
 		}
 
 		$general_url = add_query_arg('settings_section', 'general', $base_url);
-		$email_templates_url = add_query_arg('settings_section', 'email-templates', $base_url);
-		$sms_templates_url = add_query_arg('settings_section', 'sms-text-templates', $base_url);
 		$tools_url = add_query_arg('settings_section', 'tools', $base_url);
 
 		?>
@@ -37,16 +44,6 @@ if (!defined('ABSPATH')) {
 			<li>
 				<a href="<?php echo esc_url($general_url); ?>" class="<?php echo $settings_section === 'general' ? 'current' : ''; ?>">
 					<?php esc_html_e('General Settings', 'user-manager'); ?>
-				</a> |
-			</li>
-			<li>
-				<a href="<?php echo esc_url($email_templates_url); ?>" class="<?php echo $settings_section === 'email-templates' ? 'current' : ''; ?>">
-					<?php esc_html_e('Email Templates', 'user-manager'); ?>
-				</a> |
-			</li>
-			<li>
-				<a href="<?php echo esc_url($sms_templates_url); ?>" class="<?php echo $settings_section === 'sms-text-templates' ? 'current' : ''; ?>">
-					<?php esc_html_e('SMS Text Templates', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
@@ -58,14 +55,6 @@ if (!defined('ABSPATH')) {
 		<br class="clear" />
 		<?php
 
-		if ($settings_section === 'email-templates') {
-			User_Manager_Tab_Email_Templates::render();
-			return;
-		}
-		if ($settings_section === 'sms-text-templates') {
-			User_Manager_Tab_SMS_Text_Templates::render();
-			return;
-		}
 		if ($settings_section === 'tools') {
 			User_Manager_Tab_Tools::render(true, false, false);
 			return;
