@@ -2354,6 +2354,21 @@ class User_Manager_Actions {
 				$settings['order_received_page_customizer_heading_text'] = isset($_POST['order_received_page_customizer_heading_text']) ? sanitize_text_field(wp_unslash($_POST['order_received_page_customizer_heading_text'])) : 'Order received';
 				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
 				$settings['send_sms_text_enabled'] = isset($_POST['send_sms_text_enabled']) && $_POST['send_sms_text_enabled'] === '1';
+				$settings['addon_main_navigation_tabs'] = [];
+				if (isset($_POST['addon_main_navigation_tabs']) && is_array($_POST['addon_main_navigation_tabs'])) {
+					$allowed_addon_slugs = array_keys(User_Manager_Core::get_addon_runtime_toggle_map(false));
+					$selected_addon_slugs = array_map(
+						'sanitize_key',
+						wp_unslash($_POST['addon_main_navigation_tabs'])
+					);
+					foreach ($selected_addon_slugs as $selected_addon_slug) {
+						if ($selected_addon_slug === '' || !in_array($selected_addon_slug, $allowed_addon_slugs, true)) {
+							continue;
+						}
+						$settings['addon_main_navigation_tabs'][] = $selected_addon_slug;
+					}
+					$settings['addon_main_navigation_tabs'] = array_values(array_unique($settings['addon_main_navigation_tabs']));
+				}
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';

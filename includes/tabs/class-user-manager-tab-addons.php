@@ -61,6 +61,29 @@ class User_Manager_Tab_Addons {
 			$current_addon_section = '';
 		}
 		$addons_base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
+		$addon_runtime_map = User_Manager_Core::get_addon_runtime_toggle_map(false);
+		$addon_main_navigation_fields = [];
+		foreach ($addon_runtime_map as $addon_slug => $addon_meta) {
+			$activate_field_name = '';
+			$settings_keys = isset($addon_meta['settings_keys']) && is_array($addon_meta['settings_keys']) ? $addon_meta['settings_keys'] : [];
+			foreach ($settings_keys as $settings_key) {
+				$settings_key = (string) $settings_key;
+				if ($settings_key !== '' && $settings_key !== '__role_switching_option_enabled') {
+					$activate_field_name = $settings_key;
+					break;
+				}
+			}
+			if ($addon_slug === 'user-role-switching') {
+				$activate_field_name = 'role_switching_enabled';
+			}
+			if ($activate_field_name === '') {
+				continue;
+			}
+			$addon_main_navigation_fields[$addon_slug] = [
+				'activate_field_name' => $activate_field_name,
+			];
+		}
+		$selected_addon_main_navigation_tabs = User_Manager_Core::get_selected_addon_main_navigation_tabs($settings);
 		?>
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
 			<?php $tag_total = count($addon_tags); $tag_index = 0; ?>
@@ -448,15 +471,42 @@ class User_Manager_Tab_Addons {
 			display: inline-block;
 			margin-bottom: 6px;
 		}
+		.um-addon-main-nav-toggle {
+			display: inline-flex;
+			align-items: center;
+			margin-left: 12px;
+			gap: 5px;
+			font-weight: 400;
+		}
+		.um-addon-main-nav-toggle label {
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			margin: 0;
+			font-size: 12px;
+			font-weight: 400;
+		}
+		.um-addon-main-nav-toggle input {
+			margin: 0;
+		}
 		@media (max-width: 600px) {
 			.um-checkbox-grid {
 				grid-template-columns: 1fr;
+			}
+			.um-addon-main-nav-toggle {
+				display: block;
+				margin-left: 0;
+				margin-top: 6px;
 			}
 		}
 		</style>
 
 		<script>
 		jQuery(document).ready(function($) {
+			var settingsFormId = '<?php echo esc_js($settings_form_id); ?>';
+			var addonMainNavigationLabel = '<?php echo esc_js(__('Add as Man Navigation Tab', 'user-manager')); ?>';
+			var addonMainNavigationFields = <?php echo wp_json_encode($addon_main_navigation_fields); ?> || {};
+			var addonMainNavigationSelected = <?php echo wp_json_encode(array_fill_keys($selected_addon_main_navigation_tabs, true)); ?> || {};
 			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
 			var addonInactiveText = '<?php echo esc_js(__('Inactive', 'user-manager')); ?>';
 			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
@@ -641,6 +691,59 @@ class User_Manager_Tab_Addons {
 				});
 			}
 
+			function syncAddonMainNavigationToggle($activateCheckbox, $mainNavToggle) {
+				var isActive = $activateCheckbox.is(':checked');
+				var $checkbox = $mainNavToggle.find('input[type="checkbox"]').first();
+				if (isActive) {
+					$mainNavToggle.show();
+					$checkbox.prop('disabled', false);
+					return;
+				}
+				$checkbox.prop('checked', false).prop('disabled', true);
+				$mainNavToggle.hide();
+			}
+
+			function initAddonMainNavigationToggles() {
+				$.each(addonMainNavigationFields, function(addonSlug, fieldMeta) {
+					var activateFieldName = (fieldMeta && fieldMeta.activate_field_name) ? String(fieldMeta.activate_field_name) : '';
+					if (!activateFieldName) {
+						return;
+					}
+					var $activateCheckbox = $('input[type="checkbox"][name="' + activateFieldName + '"]').first();
+					if (!$activateCheckbox.length) {
+						return;
+					}
+					var $activateLabel = $activateCheckbox.closest('label');
+					if (!$activateLabel.length) {
+						return;
+					}
+
+					var $mainNavToggle = $activateLabel.find('.um-addon-main-nav-toggle[data-addon-slug="' + addonSlug + '"]');
+					if (!$mainNavToggle.length) {
+						$mainNavToggle = $('<span class="um-addon-main-nav-toggle" data-addon-slug=""></span>');
+						$mainNavToggle.attr('data-addon-slug', addonSlug);
+						var checkboxId = 'um-addon-main-navigation-tab-' + addonSlug;
+						var $toggleLabel = $('<label></label>').attr('for', checkboxId);
+						var $toggleCheckbox = $('<input type="checkbox" />')
+							.attr('id', checkboxId)
+							.attr('name', 'addon_main_navigation_tabs[]')
+							.attr('value', addonSlug)
+							.attr('form', settingsFormId);
+						if (addonMainNavigationSelected[addonSlug]) {
+							$toggleCheckbox.prop('checked', true);
+						}
+						$toggleLabel.append($toggleCheckbox).append($('<span></span>').text(addonMainNavigationLabel));
+						$mainNavToggle.append($toggleLabel);
+						$activateLabel.append($mainNavToggle);
+					}
+
+					syncAddonMainNavigationToggle($activateCheckbox, $mainNavToggle);
+					$activateCheckbox.on('change', function() {
+						syncAddonMainNavigationToggle($activateCheckbox, $mainNavToggle);
+					});
+				});
+			}
+
 			applyAddonSectionFilter();
 			$('#um-addons-filter-text').on('input', applyAddonsFilter);
 			$('#um-addons-filter-clear').on('click', function() {
@@ -648,6 +751,7 @@ class User_Manager_Tab_Addons {
 				applyAddonsFilter();
 			});
 			initAddonCollapsibleCards();
+			initAddonMainNavigationToggles();
 			applyAddonsFilter();
 
 			function umToggleBulkMetaFieldRow() {

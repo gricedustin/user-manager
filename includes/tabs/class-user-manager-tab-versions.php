@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.17 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons: each add-on now shows an "Add as Man Navigation Tab" checkbox next to Activate when the add-on is enabled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Main navigation: selected + active add-ons now appear as shortcut tabs to the right of Docs, linking directly to each add-on settings screen.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-on shortcut choices are now saved in plugin settings and automatically hidden when an add-on is not active.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.16 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Order Invoice & Approval: on front-end invoice pages, logged-in WordPress administrators now see an "Edit this order in WP Admin" link at the bottom.', 'user-manager'); ?></li>

@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.16';
+	const VERSION = '2.4.17';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -7396,6 +7396,18 @@ html body .woocommerce-layout__header {
 		}
 
 		$active_tab = self::get_current_tab();
+		$settings = self::get_settings();
+		$addon_main_navigation_tabs = self::get_enabled_addon_main_navigation_tabs($settings);
+		$current_addon_section = $active_tab === self::TAB_ADDONS && isset($_GET['addon_section'])
+			? sanitize_key(wp_unslash($_GET['addon_section']))
+			: '';
+		$active_addon_shortcut_slug = '';
+		foreach ($addon_main_navigation_tabs as $addon_tab_meta) {
+			if ($current_addon_section === (string) ($addon_tab_meta['slug'] ?? '')) {
+				$active_addon_shortcut_slug = $current_addon_section;
+				break;
+			}
+		}
 		$message = isset($_GET['um_msg']) ? sanitize_key(wp_unslash($_GET['um_msg'])) : '';
 		?>
 		<div class="wrap">
@@ -7417,7 +7429,7 @@ html body .woocommerce-layout__header {
 					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Reports', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
+				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS && $active_addon_shortcut_slug === '' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
 					<span class="dashicons dashicons-admin-plugins" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Add-ons', 'user-manager'); ?>
 				</a>
@@ -7425,6 +7437,19 @@ html body .woocommerce-layout__header {
 					<span class="dashicons dashicons-book" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Docs', 'user-manager'); ?>
 				</a>
+				<?php foreach ($addon_main_navigation_tabs as $addon_tab_meta) : ?>
+					<?php
+					$addon_slug = isset($addon_tab_meta['slug']) ? sanitize_key((string) $addon_tab_meta['slug']) : '';
+					$addon_label = isset($addon_tab_meta['label']) ? (string) $addon_tab_meta['label'] : '';
+					$addon_url = isset($addon_tab_meta['url']) ? (string) $addon_tab_meta['url'] : '';
+					if ($addon_slug === '' || $addon_label === '' || $addon_url === '') {
+						continue;
+					}
+					?>
+					<a class="nav-tab <?php echo $active_addon_shortcut_slug === $addon_slug ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url($addon_url); ?>">
+						<?php echo esc_html($addon_label); ?>
+					</a>
+				<?php endforeach; ?>
 			</h2>
 			<?php if ($active_tab === self::TAB_LOGIN_TOOLS) : ?>
 				<?php self::render_login_tools_sub_navigation(); ?>
@@ -7821,6 +7846,103 @@ html body .woocommerce-layout__header {
 			],
 			admin_url('admin.php')
 		);
+	}
+
+	/**
+	 * Selected add-on slugs configured as main-navigation shortcuts.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 * @return array<int,string>
+	 */
+	public static function get_selected_addon_main_navigation_tabs(array $settings): array {
+		if (!isset($settings['addon_main_navigation_tabs']) || !is_array($settings['addon_main_navigation_tabs'])) {
+			return [];
+		}
+
+		$map = self::get_addon_runtime_toggle_map(false);
+		$selected = [];
+		foreach ($settings['addon_main_navigation_tabs'] as $slug) {
+			$slug = sanitize_key((string) $slug);
+			if ($slug === '' || !isset($map[$slug])) {
+				continue;
+			}
+			$selected[] = $slug;
+		}
+
+		return array_values(array_unique($selected));
+	}
+
+	/**
+	 * Build enabled add-on shortcuts for the main tab navigation.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 * @return array<int,array{slug:string,label:string,url:string}>
+	 */
+	public static function get_enabled_addon_main_navigation_tabs(array $settings): array {
+		$selected_slugs = self::get_selected_addon_main_navigation_tabs($settings);
+		if (empty($selected_slugs)) {
+			return [];
+		}
+
+		$map = self::get_addon_runtime_toggle_map();
+		$tabs = [];
+		foreach ($selected_slugs as $slug) {
+			if (!isset($map[$slug])) {
+				continue;
+			}
+			if (!self::is_addon_enabled_for_main_navigation($slug, $settings)) {
+				continue;
+			}
+			$tabs[] = [
+				'slug'  => $slug,
+				'label' => isset($map[$slug]['label']) ? (string) $map[$slug]['label'] : $slug,
+				'url'   => add_query_arg('addon_section', $slug, self::get_page_url(self::TAB_ADDONS)),
+			];
+		}
+
+		return $tabs;
+	}
+
+	/**
+	 * Determine if an add-on is currently enabled for shortcut rendering.
+	 *
+	 * @param string $addon_slug Add-on slug.
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function is_addon_enabled_for_main_navigation(string $addon_slug, array $settings): bool {
+		$addon_slug = sanitize_key($addon_slug);
+		if ($addon_slug === '' || self::is_addon_temporarily_disabled($addon_slug)) {
+			return false;
+		}
+
+		if ($addon_slug === 'user-role-switching') {
+			$role_settings = get_option('view_website_by_role_settings', []);
+			if (!is_array($role_settings)) {
+				$role_settings = [];
+			}
+			return !empty($role_settings['enabled']);
+		}
+
+		if ($addon_slug === 'product-search-by-sku' && !array_key_exists('search_redirect_by_sku', $settings)) {
+			return true;
+		}
+
+		$map = self::get_addon_runtime_toggle_map(false);
+		if (!isset($map[$addon_slug]['settings_keys']) || !is_array($map[$addon_slug]['settings_keys'])) {
+			return false;
+		}
+
+		foreach ($map[$addon_slug]['settings_keys'] as $settings_key) {
+			$settings_key = (string) $settings_key;
+			if ($settings_key === '' || $settings_key === '__role_switching_option_enabled') {
+				continue;
+			}
+			if (!empty($settings[$settings_key])) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

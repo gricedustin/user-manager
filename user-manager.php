@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.16
+ * Version: 2.4.17
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.17 - March 16, 2026
+ * - Add-ons: each add-on now shows an "Add as Man Navigation Tab" checkbox next to Activate when the add-on is enabled.
+ * - Main navigation: selected + active add-ons now appear as shortcut tabs to the right of Docs, linking directly to each add-on settings screen.
+ * - Add-on shortcut choices are now saved in plugin settings and automatically hidden when an add-on is not active.
+ *
  * 2.4.16 - March 16, 2026
  * - Order Invoice & Approval: on front-end invoice pages, logged-in WordPress administrators now see an "Edit this order in WP Admin" link at the bottom.
  * - The edit-order link opens in a new browser tab/window and is hidden for non-administrator viewers.
