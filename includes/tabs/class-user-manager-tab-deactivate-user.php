@@ -67,9 +67,9 @@ class User_Manager_Tab_Deactivate_User {
 							<?php wp_nonce_field('user_manager_deactivate_user'); ?>
 
 							<div class="um-form-field">
-								<label for="um-deactivate-emails"><?php esc_html_e('Email Addresses', 'user-manager'); ?> <span style="color:red;">*</span></label>
-								<textarea name="emails" id="um-deactivate-emails" class="large-text" rows="5" required placeholder="<?php esc_attr_e("user1@example.com\nuser2@example.com", 'user-manager'); ?>"></textarea>
-								<p class="description"><?php esc_html_e('Enter one email address per line. Matching users will be deactivated (not deleted).', 'user-manager'); ?></p>
+								<label for="um-deactivate-identifiers"><?php esc_html_e('Email Addresses or Usernames', 'user-manager'); ?> <span style="color:red;">*</span></label>
+								<textarea name="identifiers" id="um-deactivate-identifiers" class="large-text" rows="5" required placeholder="<?php esc_attr_e("user1@example.com\nusername2", 'user-manager'); ?>"></textarea>
+								<p class="description"><?php esc_html_e('Enter one email address or username per line. Matching users will be deactivated (not deleted).', 'user-manager'); ?></p>
 							</div>
 
 							<div class="um-info-box">
@@ -125,6 +125,7 @@ class User_Manager_Tab_Deactivate_User {
 								<th><?php esc_html_e('Original Email', 'user-manager'); ?></th>
 								<th><?php esc_html_e('Deactivated At', 'user-manager'); ?></th>
 								<th><?php esc_html_e('Deactivated By', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Actions', 'user-manager'); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -159,6 +160,15 @@ class User_Manager_Tab_Deactivate_User {
 										?>
 									</td>
 									<td><?php echo esc_html($deactivated_by); ?></td>
+									<td>
+										<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('<?php echo esc_js(__('Reactivate this user account?', 'user-manager')); ?>');">
+											<input type="hidden" name="action" value="user_manager_reactivate_user" />
+											<input type="hidden" name="user_id" value="<?php echo esc_attr((string) $user_id); ?>" />
+											<input type="hidden" name="deactivate_users_paged" value="<?php echo esc_attr((string) $paged); ?>" />
+											<?php wp_nonce_field('user_manager_reactivate_user_' . $user_id, 'user_manager_reactivate_user_nonce'); ?>
+											<button type="submit" class="button button-small"><?php esc_html_e('Reactivate', 'user-manager'); ?></button>
+										</form>
+									</td>
 								</tr>
 							<?php endforeach; ?>
 						</tbody>

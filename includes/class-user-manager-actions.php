@@ -23,6 +23,7 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_reset_password', [__CLASS__, 'handle_reset_password']);
 		add_action('admin_post_user_manager_remove_user', [__CLASS__, 'handle_remove_user']);
 		add_action('admin_post_user_manager_deactivate_user', [__CLASS__, 'handle_deactivate_user']);
+		add_action('admin_post_user_manager_reactivate_user', [__CLASS__, 'handle_reactivate_user']);
 		add_action('admin_post_user_manager_bulk_create', [__CLASS__, 'handle_bulk_create']);
 		add_action('admin_post_user_manager_bulk_coupons', [__CLASS__, 'handle_bulk_coupons']);
 		add_action('admin_post_user_manager_save_template', [__CLASS__, 'handle_save_template']);
@@ -884,16 +885,13 @@ class User_Manager_Actions {
 
 		check_admin_referer('user_manager_deactivate_user');
 
-		$emails_raw = isset($_POST['emails']) ? sanitize_textarea_field(wp_unslash($_POST['emails'])) : '';
-		$emails_raw = str_replace("\r\n", "\n", $emails_raw);
-		$emails_raw = str_replace("\r", "\n", $emails_raw);
-		$emails = array_filter(array_map('trim', explode("\n", $emails_raw)));
-		$emails = array_map('sanitize_email', $emails);
-		$emails = array_values(array_filter($emails, static function ($email) {
-			return !empty($email) && is_email($email);
-		}));
+		$identifiers_raw = isset($_POST['identifiers'])
+			? sanitize_textarea_field(wp_unslash($_POST['identifiers']))
+			: (isset($_POST['emails']) ? sanitize_textarea_field(wp_unslash($_POST['emails'])) : '');
+		$identifiers_raw = str_replace(["\r\n", "\r", ',', ';'], "\n", $identifiers_raw);
+		$identifiers = array_values(array_filter(array_map('trim', explode("\n", $identifiers_raw))));
 
-		if (empty($emails)) {
+		if (empty($identifiers)) {
 			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'error'));
 			exit;
 		}
@@ -913,14 +911,14 @@ class User_Manager_Actions {
 		$failed_count = 0;
 		$prefix = '[' . wp_date('Ymd', current_time('timestamp')) . ']-deactivated-';
 
-		foreach ($emails as $email) {
-			$user = get_user_by('email', $email);
+		foreach ($identifiers as $identifier) {
+			$user = self::get_user_from_deactivation_identifier($identifier);
 			if (!$user instanceof WP_User) {
 				$not_found_count++;
 				if ($log_enabled) {
 					User_Manager_Core::add_activity_log('user_deactivate_failed', 0, 'Deactivate User', [
 						'error' => __('User not found', 'user-manager'),
-						'attempted_email' => $email,
+						'attempted_identifier' => $identifier,
 					]);
 				}
 				continue;
@@ -932,7 +930,7 @@ class User_Manager_Actions {
 				if ($log_enabled) {
 					User_Manager_Core::add_activity_log('user_deactivate_failed', $user_id, 'Deactivate User', [
 						'error' => __('Cannot deactivate your own account', 'user-manager'),
-						'attempted_email' => $email,
+						'attempted_identifier' => $identifier,
 					]);
 				}
 				continue;
@@ -943,7 +941,7 @@ class User_Manager_Actions {
 				if ($log_enabled) {
 					User_Manager_Core::add_activity_log('user_deactivated_already', $user_id, 'Deactivate User', [
 						'user_email' => (string) $user->user_email,
-						'attempted_email' => $email,
+						'attempted_identifier' => $identifier,
 					]);
 				}
 				continue;
@@ -981,7 +979,7 @@ class User_Manager_Actions {
 					if ($log_enabled) {
 						User_Manager_Core::add_activity_log('user_deactivate_failed', $user_id, 'Deactivate User', [
 							'error' => __('Failed to update deactivated login/email values', 'user-manager'),
-							'attempted_email' => $email,
+							'attempted_identifier' => $identifier,
 						]);
 					}
 					continue;
@@ -1010,6 +1008,7 @@ class User_Manager_Actions {
 			$deactivated_count++;
 			if ($log_enabled) {
 				User_Manager_Core::add_activity_log('user_deactivated', $user_id, 'Deactivate User', [
+					'attempted_identifier' => $identifier,
 					'user_email' => $original_email,
 					'original_login' => $original_login,
 					'new_login' => $new_login,
@@ -1020,7 +1019,7 @@ class User_Manager_Actions {
 			}
 		}
 
-		if (count($emails) > 1) {
+		if (count($identifiers) > 1) {
 			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'bulk_user_deactivated', [
 				'deactivated' => $deactivated_count,
 				'already' => $already_count,
@@ -1045,6 +1044,113 @@ class User_Manager_Actions {
 
 		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_deactivate_failed'));
 		exit;
+	}
+
+	/**
+	 * Handle user reactivation.
+	 */
+	public static function handle_reactivate_user(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		$user_id = isset($_POST['user_id']) ? absint($_POST['user_id']) : 0;
+		if ($user_id <= 0) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_reactivate_failed'));
+			exit;
+		}
+
+		check_admin_referer('user_manager_reactivate_user_' . $user_id, 'user_manager_reactivate_user_nonce');
+
+		$paged = isset($_POST['deactivate_users_paged']) ? max(1, absint($_POST['deactivate_users_paged'])) : 1;
+		$redirect_extra = ['deactivate_users_paged' => $paged];
+		$settings = User_Manager_Core::get_settings();
+		$log_enabled = $settings['log_activity'] ?? true;
+
+		$user = get_user_by('ID', $user_id);
+		if (!$user instanceof WP_User) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_not_found', $redirect_extra));
+			exit;
+		}
+
+		if (!User_Manager_Core::is_user_deactivated($user_id)) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_not_deactivated', $redirect_extra));
+			exit;
+		}
+
+		$original_login = (string) get_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY, true);
+		$original_email = (string) get_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY, true);
+
+		$restored_login = self::build_deactivated_login($original_login !== '' ? $original_login : (string) $user->user_login, '', $user_id);
+		$restored_email = self::build_deactivated_email($original_email !== '' ? $original_email : (string) $user->user_email, '', $user_id);
+
+		global $wpdb;
+		$updated = $wpdb->update(
+			$wpdb->users,
+			[
+				'user_login' => $restored_login,
+				'user_email' => $restored_email,
+				'user_status' => 0,
+			],
+			['ID' => $user_id],
+			['%s', '%s', '%d'],
+			['%d']
+		);
+
+		if ($updated === false) {
+			if ($log_enabled) {
+				User_Manager_Core::add_activity_log('user_reactivate_failed', $user_id, 'Deactivate User', [
+					'error' => __('Failed to restore login/email values during reactivation', 'user-manager'),
+					'restored_login' => $restored_login,
+					'restored_email' => $restored_email,
+				]);
+			}
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_reactivate_failed', $redirect_extra));
+			exit;
+		}
+
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_META_KEY);
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_AT_META_KEY);
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_BY_META_KEY);
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY);
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY);
+		clean_user_cache($user_id);
+
+		if ($log_enabled) {
+			User_Manager_Core::add_activity_log('user_reactivated', $user_id, 'Deactivate User', [
+				'restored_login' => $restored_login,
+				'restored_email' => $restored_email,
+			]);
+		}
+
+		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_reactivated', $redirect_extra));
+		exit;
+	}
+
+	/**
+	 * Resolve a deactivation identifier (email or username) to a user object.
+	 */
+	private static function get_user_from_deactivation_identifier(string $identifier): ?WP_User {
+		$identifier = trim($identifier);
+		if ($identifier === '') {
+			return null;
+		}
+
+		if (is_email($identifier)) {
+			$email = sanitize_email($identifier);
+			$user_by_email = $email !== '' ? get_user_by('email', $email) : false;
+			if ($user_by_email instanceof WP_User) {
+				return $user_by_email;
+			}
+		}
+
+		$login = sanitize_user($identifier, true);
+		if ($login === '') {
+			return null;
+		}
+
+		$user_by_login = get_user_by('login', $login);
+		return $user_by_login instanceof WP_User ? $user_by_login : null;
 	}
 
 	/**

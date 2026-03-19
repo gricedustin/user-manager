@@ -216,8 +216,14 @@ class User_Manager_Tab_Activity_Log {
 												case 'user_deactivated':
 													echo '<span class="um-status-badge um-status-warning">' . esc_html__('User Deactivated', 'user-manager') . '</span>';
 													break;
+												case 'user_reactivated':
+													echo '<span class="um-status-badge um-status-success">' . esc_html__('User Reactivated', 'user-manager') . '</span>';
+													break;
 												case 'user_deactivate_failed':
 													echo '<span class="um-status-badge um-status-error">' . esc_html__('Deactivate Failed', 'user-manager') . '</span>';
+													break;
+												case 'user_reactivate_failed':
+													echo '<span class="um-status-badge um-status-error">' . esc_html__('Reactivate Failed', 'user-manager') . '</span>';
 													break;
 												case 'user_deactivated_already':
 													echo '<span class="um-status-badge um-status-secondary">' . esc_html__('Already Deactivated', 'user-manager') . '</span>';
@@ -266,6 +272,7 @@ class User_Manager_Tab_Activity_Log {
 											<?php 
 											$extra = isset($entry['extra']) ? $entry['extra'] : [];
 											$attempted_email = isset($extra['attempted_email']) ? $extra['attempted_email'] : '';
+											$attempted_identifier = isset($extra['attempted_identifier']) ? $extra['attempted_identifier'] : $attempted_email;
 											$user_email = isset($extra['user_email']) ? $extra['user_email'] : '';
 											$error_msg = isset($extra['error']) ? $extra['error'] : '';
 											
@@ -307,8 +314,8 @@ class User_Manager_Tab_Activity_Log {
 												<?php if (in_array($entry['action'], ['user_removed', 'user_deleted', 'user_deactivated'], true)) : ?>
 													<br><small style="color: #646970;"><?php esc_html_e('User removed/deactivated', 'user-manager'); ?></small>
 												<?php endif; ?>
-											<?php elseif (!empty($attempted_email)) : ?>
-												<span style="color: #d63638;"><?php echo esc_html($attempted_email); ?></span>
+											<?php elseif (!empty($attempted_identifier)) : ?>
+												<span style="color: #d63638;"><?php echo esc_html($attempted_identifier); ?></span>
 												<?php if (!empty($error_msg)) : ?>
 													<br><small style="color: #646970;"><?php echo esc_html($error_msg); ?></small>
 												<?php endif; ?>
@@ -489,7 +496,9 @@ class User_Manager_Tab_Activity_Log {
 			'user_deleted' => __('User Deleted', 'user-manager'),
 			'user_remove_failed' => __('User Remove Failed', 'user-manager'),
 			'user_deactivated' => __('User Deactivated', 'user-manager'),
+			'user_reactivated' => __('User Reactivated', 'user-manager'),
 			'user_deactivate_failed' => __('User Deactivate Failed', 'user-manager'),
+			'user_reactivate_failed' => __('User Reactivate Failed', 'user-manager'),
 			'user_deactivated_already' => __('User Already Deactivated', 'user-manager'),
 			'user_skipped' => __('User Skipped', 'user-manager'),
 			'email_sent' => __('Email Sent', 'user-manager'),

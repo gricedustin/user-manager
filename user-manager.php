@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.30
+ * Version: 2.4.31
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.31 - March 16, 2026
+ * - Deactivate User(s): input now accepts usernames in addition to email addresses.
+ * - Deactivate User(s): added a per-user Reactivate button in the "Deactivated Users" table.
+ * - Reactivation now clears deactivation flags and restores login/email values (with uniqueness safeguards) so accounts can sign in again.
+ *
  * 2.4.30 - March 16, 2026
  * - Added a sub-navigation spacing override so cards/layout wrappers directly under `.subsubsub` no longer add extra top gap.
  * - This includes wrappers like `.um-admin-grid`, `.um-admin-card`, `.um-create-user-layout`, and `.um-email-templates-layout` when they appear immediately below sub-navigation.

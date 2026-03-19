@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.31 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Deactivate User(s): input now accepts usernames in addition to email addresses.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate User(s): added a per-user Reactivate button in the "Deactivated Users" table.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reactivation now clears deactivation flags and restores login/email values (with uniqueness safeguards) so accounts can sign in again.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.30 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a sub-navigation spacing override so cards/layout wrappers directly under `.subsubsub` no longer add extra top gap.', 'user-manager'); ?></li>

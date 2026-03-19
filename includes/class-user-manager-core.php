@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.30';
+	const VERSION = '2.4.31';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8488,12 +8488,23 @@ html body .woocommerce-layout__header {
 			case 'user_deactivated':
 				$content = __('User deactivated successfully.', 'user-manager');
 				break;
+			case 'user_reactivated':
+				$content = __('User reactivated successfully.', 'user-manager');
+				break;
 			case 'user_already_deactivated':
 				$content = __('This user is already deactivated.', 'user-manager');
 				$type = 'warning';
 				break;
+			case 'user_not_deactivated':
+				$content = __('This user is not currently deactivated.', 'user-manager');
+				$type = 'warning';
+				break;
 			case 'user_deactivate_failed':
 				$content = __('User could not be deactivated. Please try again.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'user_reactivate_failed':
+				$content = __('User could not be reactivated. Please try again.', 'user-manager');
 				$type = 'error';
 				break;
 			case 'bulk_user_deactivated':
@@ -8502,7 +8513,7 @@ html body .woocommerce-layout__header {
 				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
 				$failed = isset($_GET['failed']) ? absint($_GET['failed']) : 0;
 				$content = sprintf(
-					__('Deactivated %1$d user(s). %2$d already deactivated. %3$d email(s) not found. %4$d failed.', 'user-manager'),
+					__('Deactivated %1$d user(s). %2$d already deactivated. %3$d identifier(s) not found. %4$d failed.', 'user-manager'),
 					$deactivated,
 					$already,
 					$not_found,
