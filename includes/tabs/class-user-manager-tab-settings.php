@@ -117,7 +117,7 @@ if (!defined('ABSPATH')) {
 							<p class="description"><?php esc_html_e('When enabled, only the specified number of emails/texts will be sent per page load to avoid provider limits and spam filters. Remaining items are queued for the next batch.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field" id="um-throttle-emails-count-field" style="<?php echo empty($settings['throttle_emails_enabled']) ? 'display:none;' : ''; ?>">
-							<label for="um-throttle-emails-count"><?php esc_html_e('Texts Per Batch', 'user-manager'); ?></label>
+							<label for="um-throttle-emails-count"><?php esc_html_e('Emails/Texts Per Batch', 'user-manager'); ?></label>
 							<input type="number" name="throttle_emails_count" id="um-throttle-emails-count" class="small-text" min="1" value="<?php echo esc_attr($settings['throttle_emails_count'] ?? 50); ?>" />
 							<p class="description"><?php esc_html_e('Number used per batch for both Email Users and Send SMS Texts. After sending a batch, a button appears to send the next batch.', 'user-manager'); ?></p>
 						</div>

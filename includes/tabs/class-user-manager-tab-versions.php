@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.28 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled the throttle count label from "Texts Per Batch" to "Emails/Texts Per Batch" in Settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.27 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Removed the standalone "Import Automated Coupon Email" card from Send Email.', 'user-manager'); ?></li>
