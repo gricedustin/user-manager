@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.31';
+	const VERSION = '2.4.32';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -45,6 +45,7 @@ final class User_Manager_Core {
 	const USER_DEACTIVATED_BY_META_KEY = 'um_user_deactivated_by';
 	const USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY = 'um_user_deactivated_original_login';
 	const USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY = 'um_user_deactivated_original_email';
+	const USER_DEACTIVATION_HISTORY_KEY = 'user_manager_deactivated_users_history';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -9833,6 +9834,78 @@ html body .woocommerce-layout__header {
 			return false;
 		}
 		return !empty(get_user_meta($user_id, self::USER_DEACTIVATED_META_KEY, true));
+	}
+
+	/**
+	 * Get deactivation/reactivation history entries.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function get_deactivated_users_history(): array {
+		$history = get_option(self::USER_DEACTIVATION_HISTORY_KEY, []);
+		if (!is_array($history)) {
+			return [];
+		}
+
+		$normalized = [];
+		foreach ($history as $entry) {
+			if (!is_array($entry)) {
+				continue;
+			}
+
+			$action = isset($entry['action']) ? sanitize_key((string) $entry['action']) : '';
+			if (!in_array($action, ['deactivated', 'reactivated'], true)) {
+				$action = 'deactivated';
+			}
+
+			$normalized[] = [
+				'id' => isset($entry['id']) ? sanitize_text_field((string) $entry['id']) : '',
+				'action' => $action,
+				'user_id' => isset($entry['user_id']) ? absint($entry['user_id']) : 0,
+				'user_login' => isset($entry['user_login']) ? sanitize_user((string) $entry['user_login'], true) : '',
+				'user_email' => isset($entry['user_email']) ? sanitize_text_field((string) $entry['user_email']) : '',
+				'result_login' => isset($entry['result_login']) ? sanitize_user((string) $entry['result_login'], true) : '',
+				'result_email' => isset($entry['result_email']) ? sanitize_text_field((string) $entry['result_email']) : '',
+				'attempted_identifier' => isset($entry['attempted_identifier']) ? sanitize_text_field((string) $entry['attempted_identifier']) : '',
+				'performed_by' => isset($entry['performed_by']) ? absint($entry['performed_by']) : 0,
+				'performed_at' => isset($entry['performed_at']) ? sanitize_text_field((string) $entry['performed_at']) : '',
+			];
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * Add one deactivation/reactivation history entry.
+	 *
+	 * @param array<string,mixed> $entry History entry data.
+	 */
+	public static function add_deactivated_users_history_entry(array $entry): void {
+		$history = self::get_deactivated_users_history();
+		$action = isset($entry['action']) ? sanitize_key((string) $entry['action']) : '';
+		if (!in_array($action, ['deactivated', 'reactivated'], true)) {
+			$action = 'deactivated';
+		}
+
+		$history_entry = [
+			'id' => isset($entry['id'])
+				? sanitize_text_field((string) $entry['id'])
+				: (function_exists('wp_generate_uuid4') ? wp_generate_uuid4() : uniqid('um-deactivate-history-', true)),
+			'action' => $action,
+			'user_id' => isset($entry['user_id']) ? absint($entry['user_id']) : 0,
+			'user_login' => isset($entry['user_login']) ? sanitize_user((string) $entry['user_login'], true) : '',
+			'user_email' => isset($entry['user_email']) ? sanitize_text_field((string) $entry['user_email']) : '',
+			'result_login' => isset($entry['result_login']) ? sanitize_user((string) $entry['result_login'], true) : '',
+			'result_email' => isset($entry['result_email']) ? sanitize_text_field((string) $entry['result_email']) : '',
+			'attempted_identifier' => isset($entry['attempted_identifier']) ? sanitize_text_field((string) $entry['attempted_identifier']) : '',
+			'performed_by' => isset($entry['performed_by']) ? absint($entry['performed_by']) : 0,
+			'performed_at' => isset($entry['performed_at']) && (string) $entry['performed_at'] !== ''
+				? sanitize_text_field((string) $entry['performed_at'])
+				: current_time('mysql'),
+		];
+
+		array_unshift($history, $history_entry);
+		update_option(self::USER_DEACTIVATION_HISTORY_KEY, $history);
 	}
 
 	/**

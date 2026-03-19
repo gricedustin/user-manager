@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.32 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Deactivate User(s): added a new "Deactivated Users History" card under the deactivated users list.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new history keeps a persistent running log of deactivation and reactivation events (with date, action, user, identifier, before/after values, and actor).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate and Reactivate actions now append entries to this history so previous status changes remain visible even after reactivation.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.31 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Deactivate User(s): input now accepts usernames in addition to email addresses.', 'user-manager'); ?></li>

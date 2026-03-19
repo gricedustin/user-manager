@@ -1006,6 +1006,17 @@ class User_Manager_Actions {
 			clean_user_cache($user_id);
 
 			$deactivated_count++;
+			User_Manager_Core::add_deactivated_users_history_entry([
+				'action' => 'deactivated',
+				'user_id' => $user_id,
+				'user_login' => $original_login,
+				'user_email' => $original_email,
+				'result_login' => $new_login,
+				'result_email' => $new_email,
+				'attempted_identifier' => $identifier,
+				'performed_by' => (int) get_current_user_id(),
+				'performed_at' => current_time('mysql'),
+			]);
 			if ($log_enabled) {
 				User_Manager_Core::add_activity_log('user_deactivated', $user_id, 'Deactivate User', [
 					'attempted_identifier' => $identifier,
@@ -1122,6 +1133,16 @@ class User_Manager_Actions {
 				'restored_email' => $restored_email,
 			]);
 		}
+		User_Manager_Core::add_deactivated_users_history_entry([
+			'action' => 'reactivated',
+			'user_id' => $user_id,
+			'user_login' => (string) $user->user_login,
+			'user_email' => (string) $user->user_email,
+			'result_login' => $restored_login,
+			'result_email' => $restored_email,
+			'performed_by' => (int) get_current_user_id(),
+			'performed_at' => current_time('mysql'),
+		]);
 
 		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_reactivated', $redirect_extra));
 		exit;

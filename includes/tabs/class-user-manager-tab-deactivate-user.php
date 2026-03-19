@@ -53,6 +53,32 @@ class User_Manager_Tab_Deactivate_User {
 			'prev_text' => __('&laquo; Previous', 'user-manager'),
 			'next_text' => __('Next &raquo;', 'user-manager'),
 		]);
+
+		$history_paged = isset($_GET['deactivate_history_paged']) ? max(1, absint($_GET['deactivate_history_paged'])) : 1;
+		$history_per_page = 20;
+		$history_all = User_Manager_Core::get_deactivated_users_history();
+		$history_total = count($history_all);
+		$history_total_pages = max(1, (int) ceil($history_total / $history_per_page));
+		$history_rows = array_slice($history_all, ($history_paged - 1) * $history_per_page, $history_per_page);
+		$history_pagination_base = add_query_arg(
+			[
+				'page' => User_Manager_Core::SETTINGS_PAGE_SLUG,
+				'tab' => User_Manager_Core::TAB_LOGIN_TOOLS,
+				'login_tools_section' => User_Manager_Core::TAB_DEACTIVATE_USER,
+				'deactivate_users_paged' => $paged,
+				'deactivate_history_paged' => '%#%',
+			],
+			admin_url('admin.php')
+		);
+		$history_pagination_links = paginate_links([
+			'base' => $history_pagination_base,
+			'format' => '',
+			'current' => $history_paged,
+			'total' => $history_total_pages,
+			'type' => 'array',
+			'prev_text' => __('&laquo; Previous', 'user-manager'),
+			'next_text' => __('Next &raquo;', 'user-manager'),
+		]);
 		?>
 		<div class="um-create-user-layout">
 			<div class="um-create-user-form">
@@ -189,6 +215,110 @@ class User_Manager_Tab_Deactivate_User {
 									<?php
 									foreach ($pagination_links as $link) {
 										echo wp_kses_post($link . ' ');
+									}
+									?>
+								</span>
+							</div>
+						</div>
+					<?php endif; ?>
+				<?php endif; ?>
+			</div>
+		</div>
+
+		<div class="um-admin-card um-admin-card-full" style="margin-top:20px;">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-backup"></span>
+				<h2><?php esc_html_e('Deactivated Users History', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<?php if (empty($history_rows)) : ?>
+					<p class="um-empty-message"><?php esc_html_e('No deactivation/reactivation history found yet.', 'user-manager'); ?></p>
+				<?php else : ?>
+					<table class="widefat striped">
+						<thead>
+							<tr>
+								<th><?php esc_html_e('Date', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Action', 'user-manager'); ?></th>
+								<th><?php esc_html_e('User', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Identifier Used', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Before', 'user-manager'); ?></th>
+								<th><?php esc_html_e('After', 'user-manager'); ?></th>
+								<th><?php esc_html_e('By', 'user-manager'); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ($history_rows as $history_entry) : ?>
+								<?php
+								$history_action = sanitize_key((string) ($history_entry['action'] ?? 'deactivated'));
+								$history_user_id = absint($history_entry['user_id'] ?? 0);
+								$history_user = $history_user_id > 0 ? get_user_by('ID', $history_user_id) : null;
+								$history_user_login = (string) ($history_entry['user_login'] ?? '');
+								$history_user_email = (string) ($history_entry['user_email'] ?? '');
+								$history_result_login = (string) ($history_entry['result_login'] ?? '');
+								$history_result_email = (string) ($history_entry['result_email'] ?? '');
+								$history_identifier = (string) ($history_entry['attempted_identifier'] ?? '');
+								$history_performed_at = (string) ($history_entry['performed_at'] ?? '');
+								$history_performed_by_id = absint($history_entry['performed_by'] ?? 0);
+								$history_performed_by_user = $history_performed_by_id > 0 ? get_user_by('ID', $history_performed_by_id) : null;
+								$history_performed_by = $history_performed_by_user instanceof WP_User ? $history_performed_by_user->display_name : __('Unknown', 'user-manager');
+								$history_action_label = $history_action === 'reactivated' ? __('Reactivated', 'user-manager') : __('Deactivated', 'user-manager');
+								$history_action_class = $history_action === 'reactivated' ? 'um-status-success' : 'um-status-warning';
+								?>
+								<tr>
+									<td>
+										<?php
+										if ($history_performed_at !== '') {
+											$history_ts = strtotime($history_performed_at);
+											echo esc_html($history_ts ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $history_ts) : $history_performed_at);
+										} else {
+											echo '&mdash;';
+										}
+										?>
+									</td>
+									<td><span class="um-status-badge <?php echo esc_attr($history_action_class); ?>"><?php echo esc_html($history_action_label); ?></span></td>
+									<td>
+										<?php if ($history_user instanceof WP_User) : ?>
+											<a href="<?php echo esc_url(get_edit_user_link((int) $history_user->ID)); ?>">
+												<?php echo esc_html($history_user->display_name !== '' ? $history_user->display_name : $history_user->user_login); ?>
+											</a>
+										<?php elseif ($history_user_login !== '') : ?>
+											<code><?php echo esc_html($history_user_login); ?></code>
+										<?php else : ?>
+											&mdash;
+										<?php endif; ?>
+									</td>
+									<td><?php echo $history_identifier !== '' ? '<code>' . esc_html($history_identifier) . '</code>' : '&mdash;'; ?></td>
+									<td>
+										<?php echo $history_user_login !== '' ? '<code>' . esc_html($history_user_login) . '</code>' : '&mdash;'; ?>
+										<br>
+										<?php echo $history_user_email !== '' ? '<code>' . esc_html($history_user_email) . '</code>' : '&mdash;'; ?>
+									</td>
+									<td>
+										<?php echo $history_result_login !== '' ? '<code>' . esc_html($history_result_login) . '</code>' : '&mdash;'; ?>
+										<br>
+										<?php echo $history_result_email !== '' ? '<code>' . esc_html($history_result_email) . '</code>' : '&mdash;'; ?>
+									</td>
+									<td><?php echo esc_html($history_performed_by); ?></td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+
+					<?php if (!empty($history_pagination_links)) : ?>
+						<div class="tablenav" style="margin-top: 12px;">
+							<div class="tablenav-pages">
+								<span class="displaying-num">
+									<?php
+									printf(
+										esc_html(_n('%d event', '%d events', $history_total, 'user-manager')),
+										(int) $history_total
+									);
+									?>
+								</span>
+								<span class="pagination-links" style="margin-left:10px;">
+									<?php
+									foreach ($history_pagination_links as $history_link) {
+										echo wp_kses_post($history_link . ' ');
 									}
 									?>
 								</span>
