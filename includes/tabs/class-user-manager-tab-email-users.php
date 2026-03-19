@@ -147,7 +147,10 @@ class User_Manager_Tab_Email_Users {
 							</div>
 							
 							<div class="um-form-field">
-								<label for="um-email-users-template"><?php esc_html_e('Email Template', 'user-manager'); ?> <span style="color:red;">*</span></label>
+								<label for="um-email-users-template">
+									<?php esc_html_e('Email Template', 'user-manager'); ?> <span style="color:red;">*</span>
+									<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+								</label>
 								<select name="email_template" id="um-email-users-template" class="regular-text" required>
 									<option value=""><?php esc_html_e('— Select Template —', 'user-manager'); ?></option>
 									<?php foreach ($templates as $id => $template) : ?>

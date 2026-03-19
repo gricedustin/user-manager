@@ -103,7 +103,10 @@ class User_Manager_Tab_Bulk_Create {
 							</p>
 							
 							<div id="um-bulk-template-select" style="margin-top:12px;display:none;">
-								<label for="um-bulk-template"><?php esc_html_e('Select Email Template:', 'user-manager'); ?></label>
+								<label for="um-bulk-template">
+									<?php esc_html_e('Select Email Template:', 'user-manager'); ?>
+									<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+								</label>
 								<select name="email_template" id="um-bulk-template" class="regular-text" style="margin-top:6px;">
 									<option value=""><?php esc_html_e('— Default Template —', 'user-manager'); ?></option>
 									<?php foreach ($templates as $id => $template) : ?>
@@ -214,7 +217,10 @@ class User_Manager_Tab_Bulk_Create {
 							</p>
 							
 							<div id="um-paste-template-select" style="margin-top:12px;display:none;">
-								<label for="um-paste-template"><?php esc_html_e('Select Email Template:', 'user-manager'); ?></label>
+								<label for="um-paste-template">
+									<?php esc_html_e('Select Email Template:', 'user-manager'); ?>
+									<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+								</label>
 								<select name="email_template" id="um-paste-template" class="regular-text" style="margin-top:6px;">
 									<option value=""><?php esc_html_e('— Default Template —', 'user-manager'); ?></option>
 									<?php foreach ($templates as $id => $template) : ?>
@@ -511,6 +517,9 @@ admin@example.com,Admin,User,administrator,admin.user,Initech,555-0102,WELCOME10
 													<option value="<?php echo esc_attr($id); ?>" data-description="<?php echo esc_attr($template['description'] ?? ''); ?>"><?php echo esc_html($template['title']); ?></option>
 												<?php endforeach; ?>
 											</select>
+											<span class="um-sftp-template-settings-shortcut" style="display:none;">
+												<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+											</span>
 											<p class="description um-template-description-note" style="margin-top:6px; display:none;"></p>
 											
 											<button type="submit" class="button button-primary">
@@ -563,6 +572,7 @@ admin@example.com,Admin,User,administrator,admin.user,Initech,555-0102,WELCOME10
 			$('.um-sftp-send-email').on('change', function() {
 				var $form = $(this).closest('form');
 				$form.find('.um-sftp-template-select').toggle(this.checked);
+				$form.find('.um-sftp-template-settings-shortcut').toggle(this.checked);
 				$form.find('.um-template-description-note').toggle(this.checked);
 				if (this.checked) {
 					$form.find('.um-sftp-template-select').trigger('change');

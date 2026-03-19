@@ -318,6 +318,41 @@ class User_Manager_Tab_Shared {
 		</script>
 		<?php
 	}
+
+	/**
+	 * Build settings URL for editing email/sms templates.
+	 *
+	 * @param string $template_type Either "email" or "sms".
+	 */
+	public static function get_template_settings_url(string $template_type = 'email'): string {
+		$settings_section = $template_type === 'sms' ? 'sms-text-templates' : 'email-templates';
+		return add_query_arg(
+			[
+				'page' => User_Manager_Core::SETTINGS_PAGE_SLUG,
+				'tab' => User_Manager_Core::TAB_SETTINGS,
+				'settings_section' => $settings_section,
+			],
+			admin_url('admin.php')
+		);
+	}
+
+	/**
+	 * Render inline shortcut link to the template settings editor screen.
+	 *
+	 * @param string $template_type Either "email" or "sms".
+	 */
+	public static function render_template_settings_shortcut(string $template_type = 'email'): void {
+		$template_type = $template_type === 'sms' ? 'sms' : 'email';
+		$url = self::get_template_settings_url($template_type);
+		$link_label = $template_type === 'sms'
+			? __('Edit SMS Text Templates', 'user-manager')
+			: __('Edit Email Templates', 'user-manager');
+		?>
+		<span class="description" style="margin-left:8px;">
+			<a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($link_label); ?></a>
+		</span>
+		<?php
+	}
 }
 
 

@@ -165,7 +165,10 @@ class User_Manager_Addon_Send_SMS_Text {
 										</div>
 
 										<div class="um-form-field">
-											<label for="um-send-sms-template"><?php esc_html_e('SMS Text Template', 'user-manager'); ?> <span style="color:red;">*</span></label>
+											<label for="um-send-sms-template">
+												<?php esc_html_e('SMS Text Template', 'user-manager'); ?> <span style="color:red;">*</span>
+												<?php User_Manager_Tab_Shared::render_template_settings_shortcut('sms'); ?>
+											</label>
 											<select name="sms_template" id="um-send-sms-template" class="regular-text" required>
 												<option value=""><?php esc_html_e('— Select Template —', 'user-manager'); ?></option>
 												<?php foreach ($templates as $id => $template) : ?>
