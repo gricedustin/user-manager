@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.26 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved "Import Demo SMS Text Templates" into the SMS Text Templates manager and placed it at the bottom of that panel.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed the duplicate "Import Demo SMS Text Templates" card from the surrounding Send SMS Text add-on wrapper.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.25 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved "Import Demo Email Templates" into the Email Templates manager and placed it at the bottom of that panel.', 'user-manager'); ?></li>

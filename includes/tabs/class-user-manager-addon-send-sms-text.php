@@ -78,30 +78,6 @@ class User_Manager_Addon_Send_SMS_Text {
 						</div>
 					</div>
 
-					<div class="um-admin-card" style="margin-bottom:20px;">
-						<div class="um-admin-card-header">
-							<span class="dashicons dashicons-format-chat"></span>
-							<h2><?php esc_html_e('Import Demo SMS Text Templates', 'user-manager'); ?></h2>
-						</div>
-						<div class="um-admin-card-body">
-							<p><?php esc_html_e('Import pre-configured SMS text templates to get started quickly. This will add 6 commonly used templates:', 'user-manager'); ?></p>
-							<ul style="list-style: disc; margin-left: 20px; margin-bottom: 16px;">
-								<li><strong><?php esc_html_e('Send login information', 'user-manager'); ?></strong> — <?php esc_html_e('Send login link, username, and password by text', 'user-manager'); ?></li>
-								<li><strong><?php esc_html_e('Activate your new account', 'user-manager'); ?></strong> — <?php esc_html_e('Send a temporary password and account-activation text flow', 'user-manager'); ?></li>
-								<li><strong><?php esc_html_e('Send new password', 'user-manager'); ?></strong> — <?php esc_html_e('Send updated login credentials after a password change', 'user-manager'); ?></li>
-								<li><strong><?php esc_html_e('Force password reset', 'user-manager'); ?></strong> — <?php esc_html_e('Send a direct reset-password link by text', 'user-manager'); ?></li>
-								<li><strong><?php esc_html_e('Send automated coupon', 'user-manager'); ?></strong> — <?php esc_html_e('Configured in Settings to trigger automated discounts & store credits for new users. Supports %COUPONCODE%.', 'user-manager'); ?></li>
-								<li><strong><?php esc_html_e('Send $10 coupon apology', 'user-manager'); ?></strong> — <?php esc_html_e('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'); ?></li>
-							</ul>
-							<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-								<input type="hidden" name="action" value="user_manager_import_demo_sms_text_templates" />
-								<input type="hidden" name="templates_context" value="addon-send-sms-text" />
-								<?php wp_nonce_field('user_manager_import_demo_sms_text_templates'); ?>
-								<?php submit_button(__('Import Demo SMS Text Templates', 'user-manager'), 'secondary', 'submit', false); ?>
-							</form>
-						</div>
-					</div>
-
 					<?php if (!empty($pending_batch) && is_array($pending_batch)) : ?>
 						<div class="um-admin-card" style="margin-bottom: 20px; border-left: 4px solid #2271b1;">
 							<div class="um-admin-card-header">
