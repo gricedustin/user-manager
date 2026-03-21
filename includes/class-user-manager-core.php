@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.33';
+	const VERSION = '2.4.34';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -885,8 +885,9 @@ final class User_Manager_Core {
 	 * @param \WP_Post $post      Post object.
 	 */
 	public static function add_all_post_meta_meta_box(string $post_type, $post): void {
-		$post_types = get_post_types(['show_ui' => true], 'names');
-		if (!in_array($post_type, $post_types, true)) {
+		$settings = self::get_settings();
+		$enabled_post_types = self::get_enabled_post_meta_post_types($settings);
+		if (!in_array($post_type, $enabled_post_types, true)) {
 			return;
 		}
 		add_meta_box(
@@ -1015,6 +1016,13 @@ final class User_Manager_Core {
 		if (empty($settings['allow_edit_post_meta']) || empty($settings['display_post_meta_meta_box'])) {
 			return;
 		}
+		$post_type = is_object($post) && isset($post->post_type) ? sanitize_key((string) $post->post_type) : '';
+		if ($post_type !== '') {
+			$enabled_post_types = self::get_enabled_post_meta_post_types(is_array($settings) ? $settings : []);
+			if (!in_array($post_type, $enabled_post_types, true)) {
+				return;
+			}
+		}
 		if (!isset($_POST['um_post_meta_meta_box_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['um_post_meta_meta_box_nonce'])), 'um_save_post_meta_meta_box')) {
 			return;
 		}
@@ -1048,6 +1056,30 @@ final class User_Manager_Core {
 			$meta_value = isset($new_values[$i]) ? wp_unslash($new_values[$i]) : '';
 			add_post_meta($post_id, $meta_key, $meta_value);
 		}
+	}
+
+	/**
+	 * Get enabled post types for Post Meta Viewer.
+	 *
+	 * Default behavior: all UI post types are enabled when no explicit list is saved.
+	 *
+	 * @param array<string,mixed> $settings Settings array.
+	 * @return array<int,string>
+	 */
+	private static function get_enabled_post_meta_post_types(array $settings): array {
+		$post_types = get_post_types(['show_ui' => true], 'names');
+		if (!is_array($post_types)) {
+			return [];
+		}
+		$post_types = array_values(array_map('sanitize_key', $post_types));
+
+		$selected = [];
+		if (!empty($settings['display_post_meta_post_types']) && is_array($settings['display_post_meta_post_types'])) {
+			$selected = array_values(array_map('sanitize_key', $settings['display_post_meta_post_types']));
+			$selected = array_values(array_intersect($selected, $post_types));
+		}
+
+		return !empty($selected) ? $selected : $post_types;
 	}
 
 	/**

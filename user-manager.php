@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.33
+ * Version: 2.4.34
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.34 - March 16, 2026
+ * - Post Meta Viewer add-on: added a post type checkbox list so admins can limit the meta box to selected post types.
+ * - Default behavior remains enabled for all post types when no specific selections are saved.
+ *
  * 2.4.33 - March 16, 2026
  * - Reports > Admin Log: removed the "Add-ons Connected to Admin Log" card.
  * - The Activity Log table and filters remain available; only the add-ons summary panel was removed.

@@ -2285,6 +2285,16 @@ class User_Manager_Actions {
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
 				$settings['display_post_meta_meta_box'] = isset($_POST['display_post_meta_meta_box']) && $_POST['display_post_meta_meta_box'] === '1';
+				$settings['display_post_meta_post_types'] = [];
+				if (isset($_POST['display_post_meta_post_types']) && is_array($_POST['display_post_meta_post_types'])) {
+					$allowed_post_types = get_post_types(['show_ui' => true], 'names');
+					$allowed_post_types = is_array($allowed_post_types) ? array_map('sanitize_key', $allowed_post_types) : [];
+					$selected_post_types = array_map(
+						'sanitize_key',
+						array_map('wp_unslash', $_POST['display_post_meta_post_types'])
+					);
+					$settings['display_post_meta_post_types'] = array_values(array_unique(array_intersect($selected_post_types, $allowed_post_types)));
+				}
 				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 
 				// Coupons for New Users.
