@@ -37,7 +37,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.34';
+	const VERSION = '2.4.35';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -886,6 +886,9 @@ final class User_Manager_Core {
 	 */
 	public static function add_all_post_meta_meta_box(string $post_type, $post): void {
 		$settings = self::get_settings();
+		if (!self::can_current_user_access_post_meta_viewer($settings)) {
+			return;
+		}
 		$enabled_post_types = self::get_enabled_post_meta_post_types($settings);
 		if (!in_array($post_type, $enabled_post_types, true)) {
 			return;
@@ -1016,6 +1019,9 @@ final class User_Manager_Core {
 		if (empty($settings['allow_edit_post_meta']) || empty($settings['display_post_meta_meta_box'])) {
 			return;
 		}
+		if (!self::can_current_user_access_post_meta_viewer(is_array($settings) ? $settings : [])) {
+			return;
+		}
 		$post_type = is_object($post) && isset($post->post_type) ? sanitize_key((string) $post->post_type) : '';
 		if ($post_type !== '') {
 			$enabled_post_types = self::get_enabled_post_meta_post_types(is_array($settings) ? $settings : []);
@@ -1080,6 +1086,70 @@ final class User_Manager_Core {
 		}
 
 		return !empty($selected) ? $selected : $post_types;
+	}
+
+	/**
+	 * Whether current user can access the Post Meta Viewer.
+	 *
+	 * Access logic:
+	 * - No role/user restrictions configured => allow all users who can edit posts.
+	 * - If restrictions are configured => grant access when role OR username/email matches.
+	 *
+	 * @param array<string,mixed> $settings Settings array.
+	 */
+	private static function can_current_user_access_post_meta_viewer(array $settings): bool {
+		if (!is_user_logged_in()) {
+			return false;
+		}
+
+		$user = wp_get_current_user();
+		if (!$user instanceof WP_User || !$user->ID) {
+			return false;
+		}
+
+		$valid_roles = array_keys(self::get_user_roles());
+		$valid_roles = array_map('sanitize_key', $valid_roles);
+
+		$target_roles = [];
+		if (!empty($settings['display_post_meta_allowed_roles']) && is_array($settings['display_post_meta_allowed_roles'])) {
+			$target_roles = array_values(array_map('sanitize_key', $settings['display_post_meta_allowed_roles']));
+			$target_roles = array_values(array_intersect($target_roles, $valid_roles));
+		}
+
+		$target_users = [];
+		if (!empty($settings['display_post_meta_allowed_users'])) {
+			$raw_users = $settings['display_post_meta_allowed_users'];
+			if (!is_array($raw_users)) {
+				$raw_users = preg_split('/[\r\n,;]+/', (string) $raw_users);
+			}
+			if (is_array($raw_users)) {
+				foreach ($raw_users as $identifier) {
+					$identifier = trim(strtolower((string) $identifier));
+					if ($identifier === '') {
+						continue;
+					}
+					if (is_email($identifier)) {
+						$email = sanitize_email($identifier);
+						if ($email !== '') {
+							$target_users[] = strtolower($email);
+						}
+						continue;
+					}
+					$username = sanitize_user($identifier, false);
+					if ($username !== '') {
+						$target_users[] = strtolower($username);
+					}
+				}
+			}
+			$target_users = array_values(array_unique($target_users));
+		}
+
+		// No specific role/user restrictions: allow everyone who can edit this screen/post.
+		if (empty($target_roles) && empty($target_users)) {
+			return true;
+		}
+
+		return self::wp_admin_css_user_matches_targets($user, (array) $user->roles, $target_users, $target_roles);
 	}
 
 	/**

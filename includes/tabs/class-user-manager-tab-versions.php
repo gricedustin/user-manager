@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.35 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Post Meta Viewer add-on: added role-based access controls ("Allowed Roles") to decide which roles can view the meta box.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Post Meta Viewer add-on: added username/email allow-list ("Allowed Usernames/Emails"), one per line.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Access matching now supports role OR username/email logic, and defaults to allow all post editors when both lists are empty.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.34 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Post Meta Viewer add-on: added a post type checkbox list so admins can limit the meta box to selected post types.', 'user-manager'); ?></li>

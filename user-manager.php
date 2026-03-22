@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.34
+ * Version: 2.4.35
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.35 - March 16, 2026
+ * - Post Meta Viewer add-on: added role-based access controls ("Allowed Roles") to decide which roles can view the meta box.
+ * - Post Meta Viewer add-on: added username/email allow-list ("Allowed Usernames/Emails"), one per line.
+ * - Access matching now supports role OR username/email logic, and defaults to allow all post editors when both lists are empty.
+ *
  * 2.4.34 - March 16, 2026
  * - Post Meta Viewer add-on: added a post type checkbox list so admins can limit the meta box to selected post types.
  * - Default behavior remains enabled for all post types when no specific selections are saved.

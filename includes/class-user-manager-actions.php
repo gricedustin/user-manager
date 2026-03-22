@@ -2295,6 +2295,42 @@ class User_Manager_Actions {
 					);
 					$settings['display_post_meta_post_types'] = array_values(array_unique(array_intersect($selected_post_types, $allowed_post_types)));
 				}
+				$settings['display_post_meta_allowed_roles'] = [];
+				if (isset($_POST['display_post_meta_allowed_roles']) && is_array($_POST['display_post_meta_allowed_roles'])) {
+					$allowed_roles = array_keys(User_Manager_Core::get_user_roles());
+					$allowed_roles = array_map('sanitize_key', $allowed_roles);
+					$selected_roles = array_map(
+						'sanitize_key',
+						array_map('wp_unslash', $_POST['display_post_meta_allowed_roles'])
+					);
+					$settings['display_post_meta_allowed_roles'] = array_values(array_unique(array_intersect($selected_roles, $allowed_roles)));
+				}
+				$settings['display_post_meta_allowed_users'] = [];
+				if (isset($_POST['display_post_meta_allowed_users'])) {
+					$raw_identifiers = sanitize_textarea_field(wp_unslash($_POST['display_post_meta_allowed_users']));
+					$parts = preg_split('/[\r\n,;]+/', $raw_identifiers);
+					$identifiers = [];
+					if (is_array($parts)) {
+						foreach ($parts as $part) {
+							$part = trim((string) $part);
+							if ($part === '') {
+								continue;
+							}
+							if (is_email($part)) {
+								$email = strtolower(sanitize_email($part));
+								if ($email !== '') {
+									$identifiers[] = $email;
+								}
+								continue;
+							}
+							$username = strtolower(sanitize_user($part, false));
+							if ($username !== '') {
+								$identifiers[] = $username;
+							}
+						}
+					}
+					$settings['display_post_meta_allowed_users'] = array_values(array_unique($identifiers));
+				}
 				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 
 				// Coupons for New Users.
