@@ -39,7 +39,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.36';
+	const VERSION = '2.4.37';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -108,6 +108,7 @@ final class User_Manager_Core {
 	 * Boot plugin hooks.
 	 */
 	public static function init(): void {
+		add_action('init', [__CLASS__, 'load_textdomain'], 1);
 		add_action('admin_menu', [__CLASS__, 'register_settings_page']);
 		$main_plugin_basename = self::get_main_plugin_basename();
 		add_filter('plugin_action_links_' . $main_plugin_basename, [__CLASS__, 'add_plugin_action_links']);
@@ -8917,7 +8918,9 @@ html body .woocommerce-layout__header {
 			],
 		];
 
-		if (!$translate_labels) {
+		// Never trigger translations before init; this prevents WP 6.7+
+		// "_load_textdomain_just_in_time called incorrectly" notices.
+		if (!$translate_labels || !did_action('init')) {
 			return $map;
 		}
 
@@ -8927,6 +8930,17 @@ html body .woocommerce-layout__header {
 		unset($meta);
 
 		return $map;
+	}
+
+	/**
+	 * Load plugin translations.
+	 */
+	public static function load_textdomain(): void {
+		load_plugin_textdomain(
+			'user-manager',
+			false,
+			dirname(plugin_basename(dirname(__DIR__) . '/user-manager.php')) . '/languages'
+		);
 	}
 
 	/**

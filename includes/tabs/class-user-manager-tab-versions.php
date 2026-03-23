@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.37 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed early translation loading notice by hardening add-on runtime label translation to never run before the init hook.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added explicit plugin textdomain loading on init for the user-manager domain.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.36 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Add-on: "Add to Cart Min/Max Quantities" with an Activate toggle in Add-ons.', 'user-manager'); ?></li>
