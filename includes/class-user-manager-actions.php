@@ -2577,6 +2577,7 @@ class User_Manager_Actions {
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
 				$settings['add_to_cart_variation_table_enabled'] = isset($_POST['add_to_cart_variation_table_enabled']) && $_POST['add_to_cart_variation_table_enabled'] === '1';
+				$settings['add_to_cart_min_max_quantities_enabled'] = isset($_POST['add_to_cart_min_max_quantities_enabled']) && $_POST['add_to_cart_min_max_quantities_enabled'] === '1';
 				$variation_table_hook = isset($_POST['add_to_cart_variation_table_hook']) ? sanitize_key(wp_unslash($_POST['add_to_cart_variation_table_hook'])) : 'auto';
 				$allowed_variation_table_hooks = ['auto', 'after_add_to_cart_form', 'single_product_summary', 'after_single_product_summary', 'before_add_to_cart_form'];
 				$settings['add_to_cart_variation_table_hook'] = in_array($variation_table_hook, $allowed_variation_table_hooks, true) ? $variation_table_hook : 'auto';

@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.36 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Add to Cart Min/Max Quantities" with an Activate toggle in Add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Adds WooCommerce product Inventory fields for "Minimum quantity" and "Maximum quantity" (per product).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Enforces min/max quantity rules during add-to-cart validation and cart/checkout quantity validation notices.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.35 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Post Meta Viewer add-on: added role-based access controls ("Allowed Roles") to decide which roles can view the meta box.', 'user-manager'); ?></li>

@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) {
 }
 
 require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
+require_once __DIR__ . '/class-user-manager-addon-add-to-cart-min-max-quantities.php';
 require_once __DIR__ . '/class-user-manager-addon-add-to-cart-variation-table.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
@@ -182,6 +183,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="add-to-cart-variation-table">
 					<?php User_Manager_Addon_Add_To_Cart_Variation_Table::render($settings, $settings_form_id); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="add-to-cart-min-max-quantities">
+					<?php User_Manager_Addon_Add_To_Cart_Min_Max_Quantities::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="cart-price-per-piece">
 					<?php User_Manager_Addon_Cart_Price_Per_Piece::render($settings, $settings_form_id); ?>
@@ -949,6 +953,9 @@ class User_Manager_Tab_Addons {
 			function toggleAddToCartVariationTableFields() {
 				$('#um-add-to-cart-variation-table-fields').toggle($('#um-add-to-cart-variation-table-enabled').is(':checked'));
 			}
+			function toggleAddToCartMinMaxQuantitiesFields() {
+				$('#um-add-to-cart-min-max-quantities-fields').toggle($('#um-add-to-cart-min-max-quantities-enabled').is(':checked'));
+			}
 
 			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
 			toggleMyAccountAdminViewerFields();
@@ -969,6 +976,10 @@ class User_Manager_Tab_Addons {
 			$('#um-add-to-cart-variation-table-enabled').on('change', function() {
 				toggleAddToCartVariationTableFields();
 				refreshAddonCardAutoState($('#um-addon-card-add-to-cart-variation-table'));
+			});
+			$('#um-add-to-cart-min-max-quantities-enabled').on('change', function() {
+				toggleAddToCartMinMaxQuantitiesFields();
+				refreshAddonCardAutoState($('#um-addon-card-add-to-cart-min-max-quantities'));
 			});
 			$('#um-bulk-coupons-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-bulk-coupons'));
@@ -1087,6 +1098,7 @@ class User_Manager_Tab_Addons {
 			toggleWpAdminCssFields();
 			toggleRoleSwitchingFields();
 			toggleAddToCartVariationTableFields();
+			toggleAddToCartMinMaxQuantitiesFields();
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;
@@ -1188,6 +1200,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Add to Cart Variation Table', 'user-manager'),
 				'description' => __('Show variable product rows with quantities so multiple variations can be added at once.', 'user-manager'),
 				'active' => !empty($settings['add_to_cart_variation_table_enabled']),
+			],
+			'add-to-cart-min-max-quantities' => [
+				'label'  => __('Add to Cart Min/Max Quantities', 'user-manager'),
+				'description' => __('Add product-level minimum and maximum quantity fields and validate add-to-cart/cart quantity limits.', 'user-manager'),
+				'active' => !empty($settings['add_to_cart_min_max_quantities_enabled']),
 			],
 			'cart-price-per-piece' => [
 				'label'  => __('Cart Price Per-Piece', 'user-manager'),

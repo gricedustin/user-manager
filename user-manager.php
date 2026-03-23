@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.35
+ * Version: 2.4.36
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.36 - March 16, 2026
+ * - Added new Add-on: "Add to Cart Min/Max Quantities" with an Activate toggle in Add-ons.
+ * - Adds WooCommerce product Inventory fields for "Minimum quantity" and "Maximum quantity" (per product).
+ * - Enforces min/max quantity rules during add-to-cart validation and cart/checkout quantity validation notices.
+ *
  * 2.4.35 - March 16, 2026
  * - Post Meta Viewer add-on: added role-based access controls ("Allowed Roles") to decide which roles can view the meta box.
  * - Post Meta Viewer add-on: added username/email allow-list ("Allowed Usernames/Emails"), one per line.

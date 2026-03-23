@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 
 
 require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
+require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-min-max-quantities.php';
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-price-per-piece.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-total-items.php';
@@ -21,6 +22,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-security-hardening.php';
 require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
 final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
+	use User_Manager_Core_Add_To_Cart_Min_Max_Quantities_Trait;
 	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
 	use User_Manager_Core_Cart_Price_Per_Piece_Trait;
 	use User_Manager_Core_Cart_Total_Items_Trait;
@@ -37,7 +39,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.35';
+	const VERSION = '2.4.36';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -155,6 +157,7 @@ final class User_Manager_Core {
 		
 		// Coupon Email Converter meta box toggle + other settings-based behavior.
 		$settings = self::get_settings();
+		self::maybe_boot_add_to_cart_min_max_quantities($settings);
 		self::maybe_boot_cart_price_per_piece($settings);
 		self::maybe_boot_cart_total_items($settings);
 		self::maybe_boot_invoice_approval($settings);
@@ -8785,6 +8788,10 @@ html body .woocommerce-layout__header {
 			'add-to-cart-variation-table' => [
 				'label' => 'Add to Cart Variation Table',
 				'settings_keys' => ['add_to_cart_variation_table_enabled'],
+			],
+			'add-to-cart-min-max-quantities' => [
+				'label' => 'Add to Cart Min/Max Quantities',
+				'settings_keys' => ['add_to_cart_min_max_quantities_enabled'],
 			],
 			'cart-price-per-piece' => [
 				'label' => 'Cart Price Per-Piece',
