@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.38 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders search now supports direct order IDs, order numbers with/without "#" prefixes, and partial order-number matching.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added sequential-order-number meta search support (including common "_order_number" style meta keys) for "Sequential Order Numbers Pro" style values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Expanded Admin Orders search matching to include order-number meta fields and normalized search variants for better partial matching.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.37 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed early translation loading notice by hardening add-on runtime label translation to never run before the init hook.', 'user-manager'); ?></li>

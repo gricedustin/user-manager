@@ -775,34 +775,57 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @return array<int,WC_Order>
 	 */
 	private static function search_orders(string $search, string $status_key = ''): array {
-		$needle = strtolower(trim($search));
-		if ($needle === '') {
+		$search = trim($search);
+		$needles = self::get_order_search_needles($search);
+		if (empty($needles)) {
 			return [];
 		}
 
 		$orders = [];
 		$queries = [];
+		$status_slug = preg_replace('/^wc-/', '', $status_key);
+		$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+		$has_status_filter = $status_slug !== '';
 
-		if (is_numeric($search)) {
-			$single = wc_get_order(absint($search));
+		foreach ($needles as $needle) {
+			if (!ctype_digit($needle)) {
+				continue;
+			}
+			$single = wc_get_order(absint($needle));
 			if ($single instanceof WC_Order && self::order_matches_status_filter($single, $status_key)) {
 				$orders[(int) $single->get_id()] = $single;
 			}
 		}
 
+		$seen_search_fragments = [];
+		foreach ($needles as $needle) {
+			if (isset($seen_search_fragments[$needle])) {
+				continue;
+			}
+			$seen_search_fragments[$needle] = true;
+			$query_args = [
+				'limit'    => 300,
+				'paginate' => false,
+				'orderby'  => 'date',
+				'order'    => 'DESC',
+				'search'   => '*' . $needle . '*',
+			];
+			if ($has_status_filter) {
+				$query_args['status'] = [$status_slug];
+			}
+			$queries[] = $query_args;
+		}
+
 		$queries[] = [
-			'limit'    => 300,
+			'limit'    => 800,
 			'paginate' => false,
 			'orderby'  => 'date',
 			'order'    => 'DESC',
-			'search'   => '*' . $search . '*',
 		];
-		$queries[] = [
-			'limit'    => 400,
-			'paginate' => false,
-			'orderby'  => 'date',
-			'order'    => 'DESC',
-		];
+		if ($has_status_filter) {
+			$queries[count($queries) - 1]['status'] = [$status_slug];
+		}
+
 		if (strpos($search, '@') !== false) {
 			$queries[] = [
 				'limit'         => 300,
@@ -811,15 +834,35 @@ final class User_Manager_My_Account_Site_Admin {
 				'order'         => 'DESC',
 				'billing_email' => $search,
 			];
-		}
-		if ($status_key !== '') {
-			$status_slug = preg_replace('/^wc-/', '', $status_key);
-			$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
-			if ($status_slug !== '') {
-				foreach ($queries as $query_index => $query_args) {
-					$queries[$query_index]['status'] = [$status_slug];
-				}
+			if ($has_status_filter) {
+				$queries[count($queries) - 1]['status'] = [$status_slug];
 			}
+		}
+
+		$meta_keys = self::get_order_number_search_meta_keys();
+		foreach ($needles as $needle) {
+			if ($needle === '') {
+				continue;
+			}
+			$meta_query = ['relation' => 'OR'];
+			foreach ($meta_keys as $meta_key) {
+				$meta_query[] = [
+					'key'     => $meta_key,
+					'value'   => $needle,
+					'compare' => 'LIKE',
+				];
+			}
+			$query_args = [
+				'limit'      => 300,
+				'paginate'   => false,
+				'orderby'    => 'date',
+				'order'      => 'DESC',
+				'meta_query' => $meta_query,
+			];
+			if ($has_status_filter) {
+				$query_args['status'] = [$status_slug];
+			}
+			$queries[] = $query_args;
 		}
 
 		foreach ($queries as $query_args) {
@@ -831,7 +874,7 @@ final class User_Manager_My_Account_Site_Admin {
 				if (!$order instanceof WC_Order) {
 					continue;
 				}
-				if (!self::order_matches_search($order, $needle)) {
+				if (!self::order_matches_search($order, $needles)) {
 					continue;
 				}
 				if (!self::order_matches_status_filter($order, $status_key)) {
@@ -854,12 +897,15 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Determine if an order matches a search term.
 	 *
-	 * @param WC_Order $order Order.
-	 * @param string   $needle Lowercased search query.
+	 * @param WC_Order          $order Order.
+	 * @param array<int,string> $needles Lowercased search query variants.
 	 * @return bool
 	 */
-	private static function order_matches_search($order, string $needle): bool {
+	private static function order_matches_search($order, array $needles): bool {
 		if (!$order instanceof WC_Order) {
+			return false;
+		}
+		if (empty($needles)) {
 			return false;
 		}
 
@@ -868,7 +914,9 @@ final class User_Manager_My_Account_Site_Admin {
 		$fields = [
 			(string) $order->get_id(),
 			(string) $order->get_order_number(),
+			'#' . (string) $order->get_order_number(),
 			(string) $order->get_status(),
+			(string) $order->get_order_key(),
 			(string) $order->get_billing_email(),
 			(string) $order->get_billing_first_name(),
 			(string) $order->get_billing_last_name(),
@@ -877,9 +925,69 @@ final class User_Manager_My_Account_Site_Admin {
 			implode(' ', array_map('strval', (array) $billing)),
 			implode(' ', array_map('strval', (array) $shipping)),
 		];
+		foreach (self::get_order_number_search_meta_keys() as $meta_key) {
+			$fields[] = (string) $order->get_meta($meta_key, true);
+		}
 
 		$haystack = strtolower(implode(' | ', $fields));
-		return strpos($haystack, $needle) !== false;
+		foreach ($needles as $needle) {
+			$needle = trim(strtolower((string) $needle));
+			if ($needle === '') {
+				continue;
+			}
+			if (strpos($haystack, $needle) !== false) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Generate normalized order-search needle variants.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_order_search_needles(string $search): array {
+		$search = trim((string) $search);
+		if ($search === '') {
+			return [];
+		}
+
+		$variants = [];
+		$variants[] = strtolower($search);
+		$variants[] = strtolower(ltrim($search, '#'));
+		$variants[] = strtolower(preg_replace('/^order[\s#:.\-]*/i', '', $search) ?? '');
+
+		$compact = preg_replace('/\s+/', '', $search);
+		if (is_string($compact)) {
+			$variants[] = strtolower($compact);
+			$variants[] = strtolower(ltrim($compact, '#'));
+		}
+
+		$digits = preg_replace('/\D+/', '', $search);
+		if (is_string($digits) && $digits !== '') {
+			$variants[] = strtolower($digits);
+		}
+
+		$variants = array_values(array_unique(array_filter(array_map('trim', $variants))));
+		return $variants;
+	}
+
+	/**
+	 * Order-number meta keys checked for sequential order number plugins.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_order_number_search_meta_keys(): array {
+		return [
+			'_order_number',
+			'_order_number_formatted',
+			'_wc_order_number',
+			'_alg_wc_order_number',
+			'_alg_wc_custom_order_number',
+			'_ywsonp_order_number',
+		];
 	}
 
 	/**

@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.37
+ * Version: 2.4.38
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.38 - March 16, 2026
+ * - My Account Admin Orders search now supports direct order IDs, order numbers with/without "#" prefixes, and partial order-number matching.
+ * - Added sequential-order-number meta search support (including common "_order_number" style meta keys) for "Sequential Order Numbers Pro" style values.
+ * - Expanded Admin Orders search matching to include order-number meta fields and normalized search variants for better partial matching.
+ *
  * 2.4.37 - March 16, 2026
  * - Fixed early translation loading notice by hardening add-on runtime label translation to never run before the init hook.
  * - Added explicit plugin textdomain loading on init for the user-manager domain.
