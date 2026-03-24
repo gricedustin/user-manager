@@ -294,6 +294,7 @@ JS;
 						'properties' => [
 							'label' => ['type' => 'string'],
 							'postId' => ['type' => 'integer'],
+							'selectedPostId' => ['type' => 'integer'],
 						],
 					],
 				],
@@ -313,6 +314,7 @@ JS;
 						'properties' => [
 							'label' => ['type' => 'string'],
 							'postId' => ['type' => 'integer'],
+							'selectedPostId' => ['type' => 'integer'],
 						],
 					],
 				],
@@ -354,7 +356,10 @@ JS;
 				$panel_count = 0;
 				$active_panel_marked = false;
 				foreach ($tabs as $index => $tab) :
-					$post_id = isset($tab['postId']) ? absint($tab['postId']) : 0;
+					$selected_post_id = isset($tab['selectedPostId']) ? absint($tab['selectedPostId']) : 0;
+					$post_id_manual = isset($tab['postId']) ? absint($tab['postId']) : 0;
+					// Manual Page/Post ID overrides dropdown selection when both are set.
+					$post_id = $post_id_manual > 0 ? $post_id_manual : $selected_post_id;
 					$post_obj = $post_id > 0 ? get_post($post_id) : null;
 					if (!$post_obj instanceof WP_Post) {
 						continue;
@@ -412,6 +417,64 @@ JS;
 	 * Enqueue editor UI for custom/tabbed-content-area.
 	 */
 	public static function enqueue_page_block_tabbed_content_editor_assets(): void {
+		$selection_options = [
+			['label' => __('Select a page or post', 'user-manager'), 'value' => ''],
+		];
+
+		$page_posts = get_posts([
+			'post_type' => 'page',
+			'post_status' => 'publish',
+			'posts_per_page' => 250,
+			'orderby' => 'title',
+			'order' => 'ASC',
+			'fields' => 'ids',
+			'no_found_rows' => true,
+		]);
+		if (is_array($page_posts)) {
+			foreach ($page_posts as $post_id) {
+				$post_id = absint($post_id);
+				if ($post_id <= 0) {
+					continue;
+				}
+				$selection_options[] = [
+					'label' => sprintf(
+						/* translators: 1: page title, 2: post ID */
+						__('Page: %1$s (#%2$d)', 'user-manager'),
+						wp_strip_all_tags(get_the_title($post_id)),
+						$post_id
+					),
+					'value' => (string) $post_id,
+				];
+			}
+		}
+
+		$blog_posts = get_posts([
+			'post_type' => 'post',
+			'post_status' => 'publish',
+			'posts_per_page' => 250,
+			'orderby' => 'date',
+			'order' => 'DESC',
+			'fields' => 'ids',
+			'no_found_rows' => true,
+		]);
+		if (is_array($blog_posts)) {
+			foreach ($blog_posts as $post_id) {
+				$post_id = absint($post_id);
+				if ($post_id <= 0) {
+					continue;
+				}
+				$selection_options[] = [
+					'label' => sprintf(
+						/* translators: 1: post title, 2: post ID */
+						__('Post: %1$s (#%2$d)', 'user-manager'),
+						wp_strip_all_tags(get_the_title($post_id)),
+						$post_id
+					),
+					'value' => (string) $post_id,
+				];
+			}
+		}
+
 		wp_register_script(
 			'um-tabbed-content-editor',
 			false,
@@ -419,26 +482,46 @@ JS;
 			self::VERSION,
 			true
 		);
+		wp_add_inline_script(
+			'um-tabbed-content-editor',
+			'window.umTabbedContentOptions = ' . wp_json_encode($selection_options) . ';',
+			'before'
+		);
 
 		$script = <<<'JS'
 (function(blocks, element, blockEditor) {
 	var registerBlockType = blocks.registerBlockType;
 	var Fragment = element.Fragment;
 	var TextControl = window.wp.components.TextControl;
+	var SelectControl = window.wp.components.SelectControl;
 	registerBlockType('custom/tabbed-content-area', {
 		title: 'Tabbed Content Area',
 		icon: 'index-card',
 		category: 'widgets',
-		attributes: { tabs: { type: 'array', default: [] } },
+		attributes: {
+			tabs: {
+				type: 'array',
+				default: [],
+				items: {
+					type: 'object',
+					properties: {
+						label: { type: 'string' },
+						postId: { type: 'integer' },
+						selectedPostId: { type: 'integer' }
+					}
+				}
+			}
+		},
 		edit: function(props) {
 			var a = props.attributes, set = props.setAttributes, tabs = a.tabs || [];
+			var selectionOptions = Array.isArray(window.umTabbedContentOptions) ? window.umTabbedContentOptions : [{ label: 'Select a page or post', value: '' }];
 			function update(i, k, v) {
 				var next = tabs.slice();
 				next[i] = next[i] || {};
 				next[i][k] = v;
 				set({ tabs: next });
 			}
-			function add() { set({ tabs: tabs.concat([{ label: 'Tab ' + (tabs.length + 1), postId: 0 }]) }); }
+			function add() { set({ tabs: tabs.concat([{ label: 'Tab ' + (tabs.length + 1), postId: 0, selectedPostId: 0 }]) }); }
 			function remove(i) { var next = tabs.slice(); next.splice(i, 1); set({ tabs: next }); }
 			function move(i, d) { var ni = i + d; if (ni < 0 || ni >= tabs.length) { return; } var next = tabs.slice(); var temp = next[i]; next[i] = next[ni]; next[ni] = temp; set({ tabs: next }); }
 			return element.createElement(
@@ -452,7 +535,9 @@ JS;
 							'div',
 							{ key: i, style: { border: '1px solid #ddd', padding: '8px', marginBottom: '8px' } },
 							element.createElement(TextControl, { label: 'Tab Label', value: tab.label || '', onChange: function(v){ update(i, 'label', v); } }),
+							element.createElement(SelectControl, { label: 'Select Page/Post', value: String(tab.selectedPostId || ''), options: selectionOptions, onChange: function(v){ update(i, 'selectedPostId', parseInt(v, 10) || 0); } }),
 							element.createElement(TextControl, { label: 'Page/Post ID', type: 'number', value: tab.postId || 0, onChange: function(v){ update(i, 'postId', parseInt(v, 10) || 0); } }),
+							element.createElement('p', { style: { marginTop: '-2px', color: '#646970', fontSize: '12px' } }, 'Manual Page/Post ID overrides selected Page/Post when both are set.'),
 							element.createElement(
 								'div',
 								{},

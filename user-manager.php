@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.44
+ * Version: 2.4.45
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.45 - March 16, 2026
+ * - Tabbed Content Area editor: each tab now supports both a Page/Post selection dropdown and a manual Page/Post ID field.
+ * - Rendering now prioritizes manual Page/Post ID when both manual ID and dropdown selection are saved.
+ * - Added editor-side option loading for pages/posts so tab content can be selected without manually typing IDs.
+ *
  * 2.4.44 - March 16, 2026
  * - Settings > User Experience: retitled "Legacy/Broken Shortcodes to No-op (comma-separated)" to "Legacy/Broken Shortcodes (comma-separated)".
  *
