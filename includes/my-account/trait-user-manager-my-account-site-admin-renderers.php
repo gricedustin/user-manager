@@ -119,6 +119,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			$can_approve = self::current_user_can_approve_orders();
 			$hide_order_status = self::should_hide_order_status();
+			$add_webtoffee_download_invoice_button = self::should_add_webtoffee_download_invoice_button();
+			$add_webtoffee_print_invoice_button = self::should_add_webtoffee_print_invoice_button();
 			$approve_label = self::get_order_approve_button_label();
 			$decline_label = self::get_order_decline_button_label();
 	
@@ -163,6 +165,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					$print_args = $view_args;
 					$print_args['print'] = '1';
 					$print_url  = self::get_endpoint_url($endpoint, $print_args);
+					$webtoffee_invoice_urls = self::get_webtoffee_invoice_action_urls($order);
 	
 					echo '<tr class="express_checkout_order_approvals_row">';
 					echo '<td><strong>' . esc_html($order_number) . '</strong></td>';
@@ -179,6 +182,12 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					echo '<td class="center">';
 					echo '<a class="button breathing_room full_width" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
 					echo '<a class="button breathing_room full_width" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
+					if ($add_webtoffee_print_invoice_button && $webtoffee_invoice_urls['print'] !== '') {
+						echo ' <a class="button breathing_room full_width" href="' . esc_url($webtoffee_invoice_urls['print']) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Print Invoice', 'user-manager') . '</a>';
+					}
+					if ($add_webtoffee_download_invoice_button && $webtoffee_invoice_urls['download'] !== '') {
+						echo ' <a class="button breathing_room full_width" href="' . esc_url($webtoffee_invoice_urls['download']) . '">' . esc_html__('Download Invoice', 'user-manager') . '</a>';
+					}
 					if ($can_approve && !$order->has_status('completed')) {
 						if (!$order->has_status('processing')) {
 							$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());

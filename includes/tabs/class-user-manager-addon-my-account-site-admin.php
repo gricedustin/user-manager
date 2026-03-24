@@ -55,6 +55,14 @@ class User_Manager_Addon_My_Account_Site_Admin {
 							<input type="checkbox" name="my_account_admin_order_hide_status" id="um-my-account-admin-order-hide-status" value="1" <?php checked($settings['my_account_admin_order_hide_status'] ?? false); ?> />
 							<?php esc_html_e('Hide Order Status', 'user-manager'); ?>
 						</label>
+						<label style="display:block; margin-top:8px;">
+							<input type="checkbox" name="my_account_admin_order_add_webtoffee_download_invoice_button" id="um-my-account-admin-order-add-webtoffee-download-invoice-button" value="1" <?php checked($settings['my_account_admin_order_add_webtoffee_download_invoice_button'] ?? false); ?> />
+							<?php esc_html_e('Add WebToffee WooCommerce PDF Invoices Download Invoice Button', 'user-manager'); ?>
+						</label>
+						<label style="display:block; margin-top:6px;">
+							<input type="checkbox" name="my_account_admin_order_add_webtoffee_print_invoice_button" id="um-my-account-admin-order-add-webtoffee-print-invoice-button" value="1" <?php checked($settings['my_account_admin_order_add_webtoffee_print_invoice_button'] ?? false); ?> />
+							<?php esc_html_e('Add WebToffee WooCommerce PDF Invoices Print Invoice Button', 'user-manager'); ?>
+						</label>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-approver-users-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label for="um-my-account-admin-order-approval-usernames"><?php esc_html_e('Order approval allowed usernames (comma-separated)', 'user-manager'); ?></label>

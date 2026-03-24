@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.38
+ * Version: 2.4.39
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.39 - March 16, 2026
+ * - My Account Admin Orders: added two new settings under "Hide Order Status" to optionally add WebToffee invoice action buttons.
+ * - Added "Add WebToffee WooCommerce PDF Invoices Print Invoice Button" and "Add WebToffee WooCommerce PDF Invoices Download Invoice Button" toggles.
+ * - When enabled, Admin Orders rows now pull WebToffee invoice action URLs from WooCommerce account-order actions and render Print Invoice / Download Invoice buttons in the custom button area.
+ *
  * 2.4.38 - March 16, 2026
  * - My Account Admin Orders search now supports direct order IDs, order numbers with/without "#" prefixes, and partial order-number matching.
  * - Added sequential-order-number meta search support (including common "_order_number" style meta keys) for "Sequential Order Numbers Pro" style values.

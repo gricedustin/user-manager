@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.39 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Site Admin > Orders: added two new settings under "Hide Order Status" to optionally add WebToffee invoice action buttons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added "Add WebToffee WooCommerce PDF Invoices Download Invoice Button" and "Add WebToffee WooCommerce PDF Invoices Print Invoice Button" toggles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, Admin: Orders now pulls WebToffee invoice action URLs from WooCommerce account-order actions and appends matching Print Invoice / Download Invoice buttons to each order row when available.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.38 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Orders search now supports direct order IDs, order numbers with/without "#" prefixes, and partial order-number matching.', 'user-manager'); ?></li>

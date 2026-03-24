@@ -710,6 +710,80 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Whether to show WebToffee "Download Invoice" button in Admin: Orders rows.
+	 */
+	private static function should_add_webtoffee_download_invoice_button(): bool {
+		$settings = User_Manager_Core::get_settings();
+		return !empty($settings['my_account_admin_order_add_webtoffee_download_invoice_button']);
+	}
+
+	/**
+	 * Whether to show WebToffee "Print Invoice" button in Admin: Orders rows.
+	 */
+	private static function should_add_webtoffee_print_invoice_button(): bool {
+		$settings = User_Manager_Core::get_settings();
+		return !empty($settings['my_account_admin_order_add_webtoffee_print_invoice_button']);
+	}
+
+	/**
+	 * Resolve WebToffee invoice action URLs from My Account order actions.
+	 *
+	 * @param WC_Order $order Order object.
+	 * @return array{download:string,print:string}
+	 */
+	private static function get_webtoffee_invoice_action_urls($order): array {
+		$resolved = [
+			'download' => '',
+			'print' => '',
+		];
+		if (!$order instanceof WC_Order) {
+			return $resolved;
+		}
+
+		$actions = [];
+		if (function_exists('wc_get_account_orders_actions')) {
+			$actions = wc_get_account_orders_actions($order);
+		} else {
+			$actions = apply_filters('woocommerce_my_account_my_orders_actions', [], $order);
+		}
+		if (!is_array($actions) || empty($actions)) {
+			return $resolved;
+		}
+
+		foreach ($actions as $action_key => $action) {
+			if (!is_array($action)) {
+				continue;
+			}
+			$url = isset($action['url']) ? esc_url_raw((string) $action['url']) : '';
+			if ($url === '') {
+				continue;
+			}
+			$name = strtolower(wp_strip_all_tags((string) ($action['name'] ?? '')));
+			$class = strtolower((string) ($action['class'] ?? ''));
+			$key = strtolower((string) $action_key);
+			$url_lc = strtolower($url);
+
+			$is_download = strpos($key, 'download_invoice') !== false
+				|| strpos($class, 'wt_pklist_invoice_download') !== false
+				|| strpos($name, 'download invoice') !== false
+				|| strpos($url_lc, 'type=download_invoice') !== false;
+			$is_print = strpos($key, 'print_invoice') !== false
+				|| strpos($class, 'wt_pklist_invoice_print') !== false
+				|| strpos($name, 'print invoice') !== false
+				|| strpos($url_lc, 'type=print_invoice') !== false;
+
+			if ($is_download && $resolved['download'] === '') {
+				$resolved['download'] = $url;
+			}
+			if ($is_print && $resolved['print'] === '') {
+				$resolved['print'] = $url;
+			}
+		}
+
+		return $resolved;
+	}
+
+	/**
 	 * Render order status filters above the orders table.
 	 *
 	 * @param string                                                       $endpoint Endpoint slug.

@@ -2432,6 +2432,8 @@ class User_Manager_Actions {
 					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_status_filters']))
 					: '';
 				$settings['my_account_admin_order_hide_status'] = isset($_POST['my_account_admin_order_hide_status']) && $_POST['my_account_admin_order_hide_status'] === '1';
+				$settings['my_account_admin_order_add_webtoffee_download_invoice_button'] = isset($_POST['my_account_admin_order_add_webtoffee_download_invoice_button']) && $_POST['my_account_admin_order_add_webtoffee_download_invoice_button'] === '1';
+				$settings['my_account_admin_order_add_webtoffee_print_invoice_button'] = isset($_POST['my_account_admin_order_add_webtoffee_print_invoice_button']) && $_POST['my_account_admin_order_add_webtoffee_print_invoice_button'] === '1';
 				$settings['my_account_admin_order_approval_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_order_approval_usernames']) ? wp_unslash($_POST['my_account_admin_order_approval_usernames']) : ''
 				);
