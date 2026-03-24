@@ -2230,6 +2230,8 @@ class User_Manager_Actions {
 				$settings['coupon_remainder_order_received_notice'] = isset($_POST['coupon_remainder_order_received_notice']) && $_POST['coupon_remainder_order_received_notice'] === '1';
 				$settings['coupon_remainder_copy_expiration'] = isset($_POST['coupon_remainder_copy_expiration']) && $_POST['coupon_remainder_copy_expiration'] === '1';
 				$settings['coupon_remainder_free_shipping'] = isset($_POST['coupon_remainder_free_shipping']) && $_POST['coupon_remainder_free_shipping'] === '1';
+				$settings['coupon_remainder_send_email'] = isset($_POST['coupon_remainder_send_email']) && $_POST['coupon_remainder_send_email'] === '1';
+				$settings['coupon_remainder_email_template'] = isset($_POST['coupon_remainder_email_template']) ? sanitize_key($_POST['coupon_remainder_email_template']) : '__um_default__';
 				break;
 			
 			case 'general':
@@ -2395,6 +2397,8 @@ class User_Manager_Actions {
 				$settings['coupon_remainder_order_received_notice'] = isset($_POST['coupon_remainder_order_received_notice']) && $_POST['coupon_remainder_order_received_notice'] === '1';
 				$settings['coupon_remainder_copy_expiration'] = isset($_POST['coupon_remainder_copy_expiration']) && $_POST['coupon_remainder_copy_expiration'] === '1';
 				$settings['coupon_remainder_free_shipping'] = isset($_POST['coupon_remainder_free_shipping']) && $_POST['coupon_remainder_free_shipping'] === '1';
+				$settings['coupon_remainder_send_email'] = isset($_POST['coupon_remainder_send_email']) && $_POST['coupon_remainder_send_email'] === '1';
+				$settings['coupon_remainder_email_template'] = isset($_POST['coupon_remainder_email_template']) ? sanitize_key($_POST['coupon_remainder_email_template']) : '__um_default__';
 
 				// Checkout: Ship To Pre-Defined Addresses
 				$settings['checkout_ship_to_predefined_enabled'] = isset($_POST['checkout_ship_to_predefined_enabled']) && $_POST['checkout_ship_to_predefined_enabled'] === '1';

@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.46 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Coupon Remaining Balances add-on: added a new option to send an email whenever a new remaining balance code is created.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a template selector with a default-template option, an Email Templates shortcut link, and a Preview Email button directly in the add-on.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Remaining-balance emails now support both %COUPONCODE% and [coupon_code] placeholders and use Email Settings sender values for From/Reply-To headers.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.45 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Tabbed Content Area block editor now supports both a Page/Post selection dropdown and a manual Page/Post ID field for each tab.', 'user-manager'); ?></li>

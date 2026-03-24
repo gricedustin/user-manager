@@ -249,6 +249,15 @@ class User_Manager_Tab_Shared {
 				loginUrl   = '/my-account/';
 				templateId = jQuery('#nuc_email_template').val();
 				couponCode = 'NEWUSER-123456';
+			} else if (formType === 'coupon-remainder') {
+				// Coupon Remaining Balance: preview the selected/default email template.
+				email      = 'user@example.com';
+				username   = email.split('@')[0] || 'user';
+				firstName  = '';
+				lastName   = '';
+				loginUrl   = '/my-account/';
+				templateId = jQuery('#um-coupon-remainder-email-template').val();
+				couponCode = 'REMAINING-BALANCE-123456';
 			} else if (formType === 'email-users') {
 				// Email Users: get values from email-users form
 				var emailsRaw = jQuery('#um-email-users-list').val();
@@ -267,6 +276,8 @@ class User_Manager_Tab_Shared {
 			// Get subject from template
 			if (templateId && umTemplates[templateId]) {
 				subject = umTemplates[templateId].subject;
+			} else if (templateId === '__um_default__') {
+				subject = 'Your Remaining Balance Coupon Code';
 			}
 			
 			// Replace placeholders in subject
@@ -278,7 +289,8 @@ class User_Manager_Tab_Shared {
 				.replace(/%EMAIL%/g, email)
 				.replace(/%FIRSTNAME%/g, firstName)
 				.replace(/%LASTNAME%/g, lastName)
-				.replace(/%COUPONCODE%/g, couponCode || 'SAMPLECOUPON123');
+				.replace(/%COUPONCODE%/g, couponCode || 'SAMPLECOUPON123')
+				.replace(/\[coupon_code\]/g, couponCode || 'SAMPLECOUPON123');
 			
 			// Update modal content
 			jQuery('#um-preview-to').text(email);

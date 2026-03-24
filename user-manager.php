@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.45
+ * Version: 2.4.46
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.46 - March 16, 2026
+ * - Add-ons > User Coupon Remaining Balances: added new "Send Email to User when New Remaining Balance Code is Created" setting.
+ * - Added template controls under that setting: Select Email Template (+ shortcut), a default-template option, and Preview Email.
+ * - New remaining-balance emails now support both %COUPONCODE% and [coupon_code] variables and use Email Settings sender headers (From/Reply-To).
+ *
  * 2.4.45 - March 16, 2026
  * - Tabbed Content Area editor: each tab now supports both a Page/Post selection dropdown and a manual Page/Post ID field.
  * - Rendering now prioritizes manual Page/Post ID when both manual ID and dropdown selection are saved.

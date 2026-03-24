@@ -10,6 +10,11 @@ if (!defined('ABSPATH')) {
 class User_Manager_Addon_Coupon_Remaining_Balances {
 
 	public static function render(array $settings): void {
+		$templates = User_Manager_Core::get_email_templates();
+		$selected_template = isset($settings['coupon_remainder_email_template']) ? (string) $settings['coupon_remainder_email_template'] : '';
+		if ($selected_template === '') {
+			$selected_template = '__um_default__';
+		}
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-coupon-remainder" data-um-active-selectors="#um-coupon-remainder-enabled">
 			<div class="um-admin-card-header">
@@ -124,6 +129,31 @@ promo"><?php echo esc_textarea($settings['coupon_remainder_source_contains'] ?? 
 						<?php esc_html_e('Apply Free Shipping to New Remaining Balance Codes', 'user-manager'); ?>
 					</label>
 					<p class="description"><?php esc_html_e('When enabled, each newly created remaining balance coupon will also grant free shipping (WooCommerce free shipping on the coupon).', 'user-manager'); ?></p>
+				</div>
+
+				<div class="um-send-email-option" style="margin-top:12px;">
+					<div class="um-form-field-inline">
+						<input type="checkbox" name="coupon_remainder_send_email" id="um-coupon-remainder-send-email" value="1" <?php checked(!empty($settings['coupon_remainder_send_email'])); ?> />
+						<label for="um-coupon-remainder-send-email">
+							<strong><?php esc_html_e('Send Email to User when New Remaining Balance Code is Created', 'user-manager'); ?></strong>
+						</label>
+					</div>
+					<div id="um-coupon-remainder-email-template-wrap" style="margin-top:12px;<?php echo !empty($settings['coupon_remainder_send_email']) ? '' : 'display:none;'; ?>">
+						<label for="um-coupon-remainder-email-template">
+							<?php esc_html_e('Select Email Template:', 'user-manager'); ?>
+							<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+						</label>
+						<select name="coupon_remainder_email_template" id="um-coupon-remainder-email-template" class="regular-text" style="margin-top:6px;">
+							<option value="__um_default__" <?php selected($selected_template, '__um_default__'); ?>><?php esc_html_e('— Default Template —', 'user-manager'); ?></option>
+							<?php foreach ($templates as $id => $template) : ?>
+								<option value="<?php echo esc_attr($id); ?>" <?php selected($selected_template, $id); ?>><?php echo esc_html($template['title'] ?? $id); ?></option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description"><?php esc_html_e('Supports both %COUPONCODE% and [coupon_code] variables.', 'user-manager'); ?></p>
+						<p style="margin-top:8px;">
+							<button type="button" class="button" id="um-preview-coupon-remainder-email-btn"><?php esc_html_e('Preview Email', 'user-manager'); ?></button>
+						</p>
+					</div>
 				</div>
 
 				<p class="description">

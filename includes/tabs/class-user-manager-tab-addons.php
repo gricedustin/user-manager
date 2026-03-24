@@ -821,6 +821,15 @@ class User_Manager_Tab_Addons {
 					window.umShowEmailPreview('bulk-coupons');
 				}
 			});
+			$('#um-coupon-remainder-send-email').on('change', function() {
+				$('#um-coupon-remainder-email-template-wrap').toggle(this.checked);
+			});
+			$('#um-coupon-remainder-email-template-wrap').toggle($('#um-coupon-remainder-send-email').is(':checked'));
+			$('#um-preview-coupon-remainder-email-btn').on('click', function() {
+				if (typeof window.umShowEmailPreview === 'function') {
+					window.umShowEmailPreview('coupon-remainder');
+				}
+			});
 			function toggleBulkCouponsFields() {
 				$('#um-bulk-coupons-fields').toggle($('#um-bulk-coupons-enabled').is(':checked'));
 			}

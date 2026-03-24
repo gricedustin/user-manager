@@ -41,7 +41,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.45';
+	const VERSION = '2.4.46';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -4541,9 +4541,8 @@ html body .woocommerce-layout__header {
 	 * Send coupon email using a User Manager email template to a specific user.
 	 */
 	public static function send_coupon_email_to_user(WP_User $user, string $coupon_code, string $template_id): void {
-		$templates = self::get_email_templates();
-		$template = $templates[$template_id] ?? null;
-		if (!$template) {
+		$template = self::resolve_coupon_email_template($template_id);
+		if (!$template || empty($user->user_email) || !is_email($user->user_email)) {
 			return;
 		}
 		$replacements = [
@@ -4556,6 +4555,7 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%' => $user->last_name,
 			'%PASSWORDRESETURL%' => home_url('/my-account/lost-password/'),
 			'%COUPONCODE%' => $coupon_code,
+			'[coupon_code]' => $coupon_code,
 		];
 		$subject = str_replace(array_keys($replacements), array_values($replacements), $template['subject'] ?? 'Your Coupon');
 		$heading = str_replace(array_keys($replacements), array_values($replacements), $template['heading'] ?? 'Your Coupon Code');
@@ -4573,12 +4573,11 @@ html body .woocommerce-layout__header {
 	 * Supports %COUPONCODE% and the common placeholders used in templates.
 	 */
 	public static function send_coupon_email_to_address(string $email, string $coupon_code, string $template_id): void {
-		if (!is_email($email) || $template_id === '') {
+		if (!is_email($email)) {
 			return;
 		}
 
-		$templates = self::get_email_templates();
-		$template  = $templates[$template_id] ?? null;
+		$template  = self::resolve_coupon_email_template($template_id);
 		if (!$template) {
 			return;
 		}
@@ -4596,6 +4595,7 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%'        => '',
 			'%PASSWORDRESETURL%' => home_url('/my-account/lost-password/'),
 			'%COUPONCODE%'      => $coupon_code,
+			'[coupon_code]'     => $coupon_code,
 		];
 
 		$subject = str_replace(array_keys($replacements), array_values($replacements), $template['subject'] ?? __('Your Coupon', 'user-manager'));
@@ -4605,6 +4605,28 @@ html body .woocommerce-layout__header {
 		$email_html = User_Manager_Email::get_preview_html($body, $heading);
 		$headers = User_Manager_Email::build_email_headers();
 		wp_mail($email, $subject, $email_html, $headers);
+	}
+
+	/**
+	 * Resolve coupon email template, with support for default template fallback.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private static function resolve_coupon_email_template(string $template_id): ?array {
+		if ($template_id === '__um_default__') {
+			return [
+				'title' => __('Default Template', 'user-manager'),
+				'subject' => __('Your Remaining Balance Coupon Code', 'user-manager'),
+				'heading' => __('Your Remaining Balance Coupon Code', 'user-manager'),
+				'body' => '<p>' . __('Your new remaining balance code is:', 'user-manager') . ' <strong>[coupon_code]</strong></p>',
+			];
+		}
+		if ($template_id === '') {
+			return null;
+		}
+		$templates = self::get_email_templates();
+		$template = $templates[$template_id] ?? null;
+		return is_array($template) ? $template : null;
 	}
 	
 	/**
@@ -5074,6 +5096,11 @@ html body .woocommerce-layout__header {
 			$new_code = self::create_remainder_coupon_from_source($coupon, $order, $remaining, $generated_prefix, $user_email);
 			if (!$new_code) {
 				continue;
+			}
+
+			if (!empty($settings['coupon_remainder_send_email']) && !empty($user_email) && is_email($user_email)) {
+				$template_id = isset($settings['coupon_remainder_email_template']) ? (string) $settings['coupon_remainder_email_template'] : '__um_default__';
+				self::send_coupon_email_to_address((string) $user_email, (string) $new_code, $template_id);
 			}
 
 			$processed[$code_key] = $new_code;
@@ -9459,9 +9486,11 @@ html body .woocommerce-layout__header {
 		$login_url   = isset($_GET['login_url']) ? sanitize_text_field($_GET['login_url']) : '/my-account/';
 		$coupon_code = isset($_GET['coupon_code']) ? sanitize_text_field($_GET['coupon_code']) : 'SAMPLECOUPON123';
 
-		// Get template
+		// Get template (supports custom "__um_default__" coupon template token).
 		$template = null;
-		if (!empty($template_id)) {
+		if ($template_id === '__um_default__') {
+			$template = self::resolve_coupon_email_template('__um_default__');
+		} elseif (!empty($template_id)) {
 			$templates = self::get_email_templates();
 			if (isset($templates[$template_id])) {
 				$template = $templates[$template_id];
@@ -9497,6 +9526,7 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%'        => $last_name,
 			'%PASSWORDRESETURL%' => $password_reset_url,
 			'%COUPONCODE%'      => $coupon_code,
+			'[coupon_code]'     => $coupon_code,
 		];
 
 		$heading = str_replace(array_keys($replacements), array_values($replacements), $template['heading']);
