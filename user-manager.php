@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.41
+ * Version: 2.4.42
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.42 - March 16, 2026
+ * - Removed the "Legacy/Broken Shortcodes to No-op (comma-separated)" setting from Page Block: Tile Grid for Subpages.
+ * - Removed legacy no-op shortcode registration code and related saved-setting handling.
+ *
  * 2.4.41 - March 16, 2026
  * - Removed all "mybrand" references from the new Page Block add-ons and updated related block/shortcode identifiers accordingly.
  * - Updated identifiers to neutral names (for example: custom/subpages-grid, custom/tabbed-content-area, custom/simple-icon, custom/menu-tiles, and [subpages_grid]).

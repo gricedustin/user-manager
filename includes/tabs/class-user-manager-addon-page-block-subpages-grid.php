@@ -12,9 +12,6 @@ class User_Manager_Addon_Page_Block_Subpages_Grid {
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$enabled = !empty($settings['page_block_subpages_grid_enabled']);
-		$old_shortcodes = isset($settings['page_block_old_shortcodes_list'])
-			? (string) $settings['page_block_old_shortcodes_list']
-			: '';
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-page-block-subpages-grid" data-um-active-selectors="#um-page-block-subpages-grid-enabled">
 			<div class="um-admin-card-header">
@@ -33,13 +30,7 @@ class User_Manager_Addon_Page_Block_Subpages_Grid {
 				</div>
 
 				<div id="um-page-block-subpages-grid-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
-					<div class="um-form-field">
-						<label for="um-page-block-old-shortcodes-list"><?php esc_html_e('Legacy/Broken Shortcodes to No-op (comma-separated)', 'user-manager'); ?></label>
-						<input type="text" id="um-page-block-old-shortcodes-list" name="page_block_old_shortcodes_list" class="large-text" value="<?php echo esc_attr($old_shortcodes); ?>" placeholder="old_shortcode_one, old_shortcode_two"<?php echo $form_attr; ?> />
-						<p class="description">
-							<?php esc_html_e('Optional. Registers empty handlers for legacy shortcodes so old content does not break when those shortcode sources are removed.', 'user-manager'); ?>
-						</p>
-					</div>
+					<p class="description"><?php esc_html_e('Use shortcode [subpages_grid] or block custom/subpages-grid after activation.', 'user-manager'); ?></p>
 				</div>
 			</div>
 		</div>

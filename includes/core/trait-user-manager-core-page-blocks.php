@@ -16,7 +16,6 @@ trait User_Manager_Core_Page_Blocks_Trait {
 	 */
 	public static function maybe_boot_page_blocks(array $settings): void {
 		if (!empty($settings['page_block_subpages_grid_enabled'])) {
-			add_action('init', [__CLASS__, 'register_noop_old_shortcodes'], 99);
 			add_action('init', [__CLASS__, 'register_page_block_subpages_grid_shortcode'], 20);
 			add_action('init', [__CLASS__, 'register_page_block_subpages_grid'], 20);
 			add_action('enqueue_block_editor_assets', [__CLASS__, 'enqueue_page_block_subpages_grid_editor_assets']);
@@ -37,42 +36,6 @@ trait User_Manager_Core_Page_Blocks_Trait {
 			add_action('init', [__CLASS__, 'register_page_block_menu_tiles'], 20);
 			add_action('enqueue_block_editor_assets', [__CLASS__, 'enqueue_page_block_menu_tiles_editor_assets']);
 		}
-	}
-
-	/**
-	 * Register empty handlers for legacy/broken shortcodes configured in settings.
-	 */
-	public static function register_noop_old_shortcodes(): void {
-		$settings = self::get_settings();
-		$list = isset($settings['page_block_old_shortcodes_list'])
-			? (string) $settings['page_block_old_shortcodes_list']
-			: '';
-		if ($list === '') {
-			return;
-		}
-
-		$tags = array_map('trim', explode(',', $list));
-		$tags = array_values(array_unique(array_filter($tags)));
-		foreach ($tags as $tag) {
-			$valid = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $tag);
-			if (!is_string($valid) || $valid === '') {
-				continue;
-			}
-
-			add_shortcode($valid, [__CLASS__, 'render_noop_shortcode']);
-			$valid_lower = strtolower($valid);
-			if ($valid_lower !== $valid) {
-				add_shortcode($valid_lower, [__CLASS__, 'render_noop_shortcode']);
-			}
-		}
-	}
-
-	/**
-	 * Empty shortcode callback for legacy shortcode compatibility.
-	 */
-	public static function render_noop_shortcode($atts = [], $content = '', $tag = ''): string {
-		unset($atts, $content, $tag);
-		return '';
 	}
 
 	/**

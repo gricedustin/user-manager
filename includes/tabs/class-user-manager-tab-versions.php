@@ -39,11 +39,18 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.42 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the "Legacy/Broken Shortcodes to No-op (comma-separated)" setting from Page Block: Tile Grid for Subpages.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed related legacy no-op shortcode registration hooks and setting persistence for that option.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.40 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added four new Page Block add-ons with Activate toggles in Add-ons: Tile Grid for Subpages, Tabs with Content from Other Pages, Simple Icons, and Tile Grid for Menu.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('When enabled, these add-ons now register their related Gutenberg blocks and editor UI scripts: custom/subpages-grid, custom/tabbed-content-area, custom/simple-icon, and custom/menu-tiles.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Page Block: Tile Grid for Subpages also adds optional legacy shortcode no-op registration and includes [subpages_grid] support with front-end rendering.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Block: Tile Grid for Subpages includes [subpages_grid] support with front-end rendering.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
