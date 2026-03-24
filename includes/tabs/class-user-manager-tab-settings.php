@@ -206,6 +206,11 @@ if (!defined('ABSPATH')) {
 							</label>
 							<p class="description"><?php esc_html_e('Change the reset password copy to set password intended for new users who should set a password when first logging into the site so it doesn\'t look like they are "resetting" for the first time. Also removes the username from the password changed email.', 'user-manager'); ?></p>
 						</div>
+					<div class="um-form-field">
+						<label for="um-legacy-noop-shortcodes"><?php esc_html_e('Legacy/Broken Shortcodes to No-op (comma-separated)', 'user-manager'); ?></label>
+						<input type="text" name="legacy_noop_shortcodes_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($settings['legacy_noop_shortcodes_list'] ?? ''); ?>" placeholder="old_shortcode_one, old_shortcode_two" />
+						<p class="description"><?php esc_html_e('Optional. Registers empty handlers for legacy shortcodes so old content does not break when those shortcode sources are removed.', 'user-manager'); ?></p>
+					</div>
 					</div>
 				</div>
 

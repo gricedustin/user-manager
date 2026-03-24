@@ -15,6 +15,8 @@ trait User_Manager_Core_Page_Blocks_Trait {
 	 * @param array<string,mixed> $settings Plugin settings.
 	 */
 	public static function maybe_boot_page_blocks(array $settings): void {
+		self::maybe_register_legacy_shortcode_noops_from_user_experience_settings($settings);
+
 		if (!empty($settings['page_block_subpages_grid_enabled'])) {
 			add_action('init', [__CLASS__, 'register_page_block_subpages_grid_shortcode'], 20);
 			add_action('init', [__CLASS__, 'register_page_block_subpages_grid'], 20);
@@ -36,6 +38,44 @@ trait User_Manager_Core_Page_Blocks_Trait {
 			add_action('init', [__CLASS__, 'register_page_block_menu_tiles'], 20);
 			add_action('enqueue_block_editor_assets', [__CLASS__, 'enqueue_page_block_menu_tiles_editor_assets']);
 		}
+	}
+
+	/**
+	 * Register empty handlers for legacy/broken shortcodes configured in Settings > User Experience.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function maybe_register_legacy_shortcode_noops_from_user_experience_settings(array $settings): void {
+		$list = isset($settings['legacy_noop_shortcodes_list'])
+			? (string) $settings['legacy_noop_shortcodes_list']
+			: '';
+		$list = trim($list);
+		if ($list === '') {
+			return;
+		}
+
+		$tags = array_map('trim', explode(',', $list));
+		$tags = array_values(array_unique(array_filter($tags)));
+		foreach ($tags as $tag) {
+			$valid = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $tag);
+			if (!is_string($valid) || $valid === '') {
+				continue;
+			}
+
+			add_shortcode($valid, [__CLASS__, 'render_legacy_noop_shortcode']);
+			$valid_lower = strtolower($valid);
+			if ($valid_lower !== $valid) {
+				add_shortcode($valid_lower, [__CLASS__, 'render_legacy_noop_shortcode']);
+			}
+		}
+	}
+
+	/**
+	 * Empty shortcode callback for legacy shortcode compatibility.
+	 */
+	public static function render_legacy_noop_shortcode($atts = [], $content = '', $tag = ''): string {
+		unset($atts, $content, $tag);
+		return '';
 	}
 
 	/**

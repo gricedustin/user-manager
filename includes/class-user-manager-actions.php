@@ -2252,6 +2252,7 @@ class User_Manager_Actions {
 				$settings['deactivate_users_reset_password'] = isset($_POST['deactivate_users_reset_password']) && $_POST['deactivate_users_reset_password'] === '1';
 				$settings['deactivate_users_prefix_identity'] = isset($_POST['deactivate_users_prefix_identity']) && $_POST['deactivate_users_prefix_identity'] === '1';
 				$settings['rebrand_reset_password_copy'] = isset($_POST['rebrand_reset_password_copy']) && $_POST['rebrand_reset_password_copy'] === '1';
+				$settings['legacy_broken_shortcodes_noop_list'] = isset($_POST['legacy_broken_shortcodes_noop_list']) ? sanitize_text_field(wp_unslash($_POST['legacy_broken_shortcodes_noop_list'])) : '';
 				$settings['coupon_email_converter'] = isset($_POST['coupon_email_converter']) && $_POST['coupon_email_converter'] === '1';
 				$settings['coupon_show_email_column'] = isset($_POST['coupon_show_email_column']) && $_POST['coupon_show_email_column'] === '1';
 				$settings['coupon_code_url_param_enabled'] = isset($_POST['coupon_code_url_param_enabled']) && $_POST['coupon_code_url_param_enabled'] === '1';

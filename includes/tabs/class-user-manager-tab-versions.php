@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.43 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > User Experience: added "Legacy/Broken Shortcodes to No-op (comma-separated)" as a standard setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When set, the plugin now registers empty shortcode handlers for listed tags (and lowercase variants) so removed shortcode sources do not break legacy content.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Block: Tile Grid for Subpages no longer owns this setting; it is now managed centrally in User Experience settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.42 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Removed the "Legacy/Broken Shortcodes to No-op (comma-separated)" setting from Page Block: Tile Grid for Subpages.', 'user-manager'); ?></li>
