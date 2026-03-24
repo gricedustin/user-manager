@@ -17,6 +17,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-fatal-error-debugger.php';
 require_once __DIR__ . '/core/trait-user-manager-core-invoice-approval.php';
 require_once __DIR__ . '/core/trait-user-manager-core-my-account-menu-tiles.php';
 require_once __DIR__ . '/core/trait-user-manager-core-order-received-page-customizer.php';
+require_once __DIR__ . '/core/trait-user-manager-core-page-blocks.php';
 require_once __DIR__ . '/core/trait-user-manager-core-plugin-tags-notes.php';
 require_once __DIR__ . '/core/trait-user-manager-core-security-hardening.php';
 require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
@@ -30,6 +31,7 @@ final class User_Manager_Core {
 	use User_Manager_Core_Invoice_Approval_Trait;
 	use User_Manager_Core_My_Account_Menu_Tiles_Trait;
 	use User_Manager_Core_Order_Received_Page_Customizer_Trait;
+	use User_Manager_Core_Page_Blocks_Trait;
 	use User_Manager_Core_Plugin_Tags_Notes_Trait;
 	use User_Manager_Core_Security_Hardening_Trait;
 	use User_Manager_Core_Webhook_URLs_Trait;
@@ -39,7 +41,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.39';
+	const VERSION = '2.4.40';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -164,6 +166,7 @@ final class User_Manager_Core {
 		self::maybe_boot_invoice_approval($settings);
 		self::maybe_boot_my_account_menu_tiles($settings);
 		self::maybe_boot_order_received_page_customizer($settings);
+		self::maybe_boot_page_blocks($settings);
 		self::maybe_boot_plugin_tags_notes($settings);
 		self::maybe_apply_security_hardening($settings);
 		self::maybe_boot_webhook_urls($settings);
@@ -8825,6 +8828,22 @@ html body .woocommerce-layout__header {
 			'bulk-page-creator' => [
 				'label' => 'Page Creator',
 				'settings_keys' => ['bulk_page_creator_enabled'],
+			],
+			'page-block-subpages-grid' => [
+				'label' => 'Page Block: Tile Grid for Subpages',
+				'settings_keys' => ['page_block_subpages_grid_enabled'],
+			],
+			'page-block-tabbed-content-area' => [
+				'label' => 'Page Block: Tabs with Content from Other Pages',
+				'settings_keys' => ['page_block_tabbed_content_area_enabled'],
+			],
+			'page-block-simple-icons' => [
+				'label' => 'Page Block: Simple Icons',
+				'settings_keys' => ['page_block_simple_icons_enabled'],
+			],
+			'page-block-menu-tiles' => [
+				'label' => 'Page Block: Tile Grid for Menu',
+				'settings_keys' => ['page_block_menu_tiles_enabled'],
 			],
 			'database-table-browser' => [
 				'label' => 'Database Table Browser',

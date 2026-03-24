@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.39
+ * Version: 2.4.40
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.40 - March 16, 2026
+ * - Added four new add-ons with Activate toggles for Page Blocks: Tile Grid for Subpages, Tabs with Content from Other Pages, Simple Icons, and Tile Grid for Menu.
+ * - Added runtime-gated block registrations for custom/mybrand-subpages-grid, custom/mybrand-tabbed-content-area (+ legacy custom/tabbed-content-area), custom/mybrand-icon, and custom/mybrand-menu-tiles.
+ * - Added the [mybrand_subpages_grid] shortcode and optional legacy shortcode no-op setting, plus block-editor UI script hooks for each new page-block add-on.
+ *
  * 2.4.39 - March 16, 2026
  * - My Account Admin Orders: added two new settings under "Hide Order Status" to optionally add WebToffee invoice action buttons.
  * - Added "Add WebToffee WooCommerce PDF Invoices Print Invoice Button" and "Add WebToffee WooCommerce PDF Invoices Download Invoice Button" toggles.

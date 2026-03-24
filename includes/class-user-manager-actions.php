@@ -2518,6 +2518,11 @@ class User_Manager_Actions {
 				$settings['bulk_page_creator_set_featured_image'] = isset($_POST['bulk_page_creator_set_featured_image']) && $_POST['bulk_page_creator_set_featured_image'] === '1';
 				$settings['bulk_page_creator_include_with_every_prompt'] = isset($_POST['bulk_page_creator_include_with_every_prompt']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_page_creator_include_with_every_prompt'])) : '';
 				$settings['bulk_page_creator_page_data'] = isset($_POST['bulk_page_creator_page_data']) ? sanitize_textarea_field(wp_unslash($_POST['bulk_page_creator_page_data'])) : '';
+				$settings['page_block_subpages_grid_enabled'] = isset($_POST['page_block_subpages_grid_enabled']) && $_POST['page_block_subpages_grid_enabled'] === '1';
+				$settings['page_block_old_shortcodes_list'] = isset($_POST['page_block_old_shortcodes_list']) ? sanitize_text_field(wp_unslash($_POST['page_block_old_shortcodes_list'])) : '';
+				$settings['page_block_tabbed_content_area_enabled'] = isset($_POST['page_block_tabbed_content_area_enabled']) && $_POST['page_block_tabbed_content_area_enabled'] === '1';
+				$settings['page_block_simple_icons_enabled'] = isset($_POST['page_block_simple_icons_enabled']) && $_POST['page_block_simple_icons_enabled'] === '1';
+				$settings['page_block_menu_tiles_enabled'] = isset($_POST['page_block_menu_tiles_enabled']) && $_POST['page_block_menu_tiles_enabled'] === '1';
 				$settings['database_table_browser_enabled'] = isset($_POST['database_table_browser_enabled']) && $_POST['database_table_browser_enabled'] === '1';
 				$settings['database_table_browser_per_page_limit'] = isset($_POST['database_table_browser_per_page_limit']) ? max(1, min(1000, absint($_POST['database_table_browser_per_page_limit']))) : 100;
 				$settings['webhook_urls_enabled'] = isset($_POST['webhook_urls_enabled']) && $_POST['webhook_urls_enabled'] === '1';
