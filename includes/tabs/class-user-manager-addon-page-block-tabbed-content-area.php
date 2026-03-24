@@ -25,7 +25,7 @@ class User_Manager_Addon_Page_Block_Tabbed_Content_Area {
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
-						<?php esc_html_e('Registers dynamic blocks custom/mybrand-tabbed-content-area (plus legacy alias custom/tabbed-content-area) so tab panels can render content from selected pages/posts.', 'user-manager'); ?>
+						<?php esc_html_e('Registers dynamic blocks custom/tabbed-content-area (plus legacy alias custom/tabbed-content-area) so tab panels can render content from selected pages/posts.', 'user-manager'); ?>
 					</p>
 				</div>
 				<div id="um-page-block-tabbed-content-area-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">

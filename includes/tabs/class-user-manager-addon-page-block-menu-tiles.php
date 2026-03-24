@@ -25,7 +25,7 @@ class User_Manager_Addon_Page_Block_Menu_Tiles {
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
-						<?php esc_html_e('Registers dynamic Gutenberg block "custom/mybrand-menu-tiles" (Menu Tile Buttons) and its editor UI.', 'user-manager'); ?>
+						<?php esc_html_e('Registers dynamic Gutenberg block "custom/menu-tiles" (Menu Tile Buttons) and its editor UI.', 'user-manager'); ?>
 					</p>
 				</div>
 				<div id="um-page-block-menu-tiles-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">

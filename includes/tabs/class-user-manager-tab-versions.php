@@ -42,8 +42,8 @@ class User_Manager_Tab_Versions {
 						<h4>2.4.40 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added four new Page Block add-ons with Activate toggles in Add-ons: Tile Grid for Subpages, Tabs with Content from Other Pages, Simple Icons, and Tile Grid for Menu.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('When enabled, these add-ons now register their related Gutenberg blocks and editor UI scripts: custom/mybrand-subpages-grid, custom/mybrand-tabbed-content-area (plus legacy custom/tabbed-content-area), custom/mybrand-icon, and custom/mybrand-menu-tiles.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Page Block: Tile Grid for Subpages also adds optional legacy shortcode no-op registration and includes [mybrand_subpages_grid] support with front-end rendering.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, these add-ons now register their related Gutenberg blocks and editor UI scripts: custom/subpages-grid, custom/tabbed-content-area, custom/simple-icon, and custom/menu-tiles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Block: Tile Grid for Subpages also adds optional legacy shortcode no-op registration and includes [subpages_grid] support with front-end rendering.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

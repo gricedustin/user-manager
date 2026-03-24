@@ -25,7 +25,7 @@ class User_Manager_Addon_Page_Block_Simple_Icons {
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
-						<?php esc_html_e('Registers block custom/mybrand-icon (My Brand Quick Icon) with editor controls for icon, size, color, and alignment.', 'user-manager'); ?>
+						<?php esc_html_e('Registers block custom/simple-icon (Quick Icon) with editor controls for icon, size, color, and alignment.', 'user-manager'); ?>
 					</p>
 				</div>
 				<div id="um-page-block-simple-icons-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">

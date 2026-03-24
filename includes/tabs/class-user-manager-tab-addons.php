@@ -1271,22 +1271,22 @@ class User_Manager_Tab_Addons {
 			],
 			'page-block-subpages-grid' => [
 				'label'  => __('Page Block: Tile Grid for Subpages', 'user-manager'),
-				'description' => __('Registers custom/mybrand-subpages-grid plus the [mybrand_subpages_grid] shortcode and editor controls.', 'user-manager'),
+				'description' => __('Registers custom/subpages-grid plus the [subpages_grid] shortcode and editor controls.', 'user-manager'),
 				'active' => !empty($settings['page_block_subpages_grid_enabled']),
 			],
 			'page-block-tabbed-content-area' => [
 				'label'  => __('Page Block: Tabs with Content from Other Pages', 'user-manager'),
-				'description' => __('Registers custom/mybrand-tabbed-content-area and legacy custom/tabbed-content-area dynamic tab blocks with editor controls.', 'user-manager'),
+				'description' => __('Registers dynamic block custom/tabbed-content-area with editor controls for tabs sourced from other pages/posts.', 'user-manager'),
 				'active' => !empty($settings['page_block_tabbed_content_area_enabled']),
 			],
 			'page-block-simple-icons' => [
 				'label'  => __('Page Block: Simple Icons', 'user-manager'),
-				'description' => __('Registers custom/mybrand-icon (My Brand Quick Icon) with Font Awesome rendering and editor controls.', 'user-manager'),
+				'description' => __('Registers custom/simple-icon (Quick Icon) with Font Awesome rendering and editor controls.', 'user-manager'),
 				'active' => !empty($settings['page_block_simple_icons_enabled']),
 			],
 			'page-block-menu-tiles' => [
 				'label'  => __('Page Block: Tile Grid for Menu', 'user-manager'),
-				'description' => __('Registers custom/mybrand-menu-tiles (Menu Tile Buttons) with menu filtering and editor controls.', 'user-manager'),
+				'description' => __('Registers custom/menu-tiles (Menu Tile Buttons) with menu filtering and editor controls.', 'user-manager'),
 				'active' => !empty($settings['page_block_menu_tiles_enabled']),
 			],
 			'database-table-browser' => [
@@ -1469,7 +1469,7 @@ class User_Manager_Tab_Addons {
 			],
 			'page'       => [
 				'label'    => __('Pages', 'user-manager'),
-				'keywords' => ['page creator', 'page block', 'mybrand', 'menu tile', 'tabs'],
+				'keywords' => ['page creator', 'page block', 'menu tile', 'tabs'],
 			],
 			'post'       => [
 				'label'    => __('Posts', 'user-manager'),

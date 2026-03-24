@@ -76,18 +76,18 @@ trait User_Manager_Core_Page_Blocks_Trait {
 	}
 
 	/**
-	 * Register [mybrand_subpages_grid] shortcode.
+	 * Register [subpages_grid] shortcode.
 	 */
 	public static function register_page_block_subpages_grid_shortcode(): void {
-		add_shortcode('mybrand_subpages_grid', [__CLASS__, 'render_mybrand_subpages_grid_shortcode']);
+		add_shortcode('subpages_grid', [__CLASS__, 'render_subpages_grid_shortcode']);
 	}
 
 	/**
-	 * Render [mybrand_subpages_grid] shortcode output.
+	 * Render [subpages_grid] shortcode output.
 	 *
 	 * @param array<string,mixed> $atts Shortcode attributes.
 	 */
-	public static function render_mybrand_subpages_grid_shortcode($atts = []): string {
+	public static function render_subpages_grid_shortcode($atts = []): string {
 		$atts = shortcode_atts(
 			[
 				'parent' => 0,
@@ -95,7 +95,7 @@ trait User_Manager_Core_Page_Blocks_Trait {
 				'excerpt_chars' => 0,
 			],
 			(array) $atts,
-			'mybrand_subpages_grid'
+			'subpages_grid'
 		);
 
 		$parent_id = isset($atts['parent']) ? absint($atts['parent']) : 0;
@@ -106,31 +106,31 @@ trait User_Manager_Core_Page_Blocks_Trait {
 	}
 
 	/**
-	 * Register dynamic block: custom/mybrand-subpages-grid.
+	 * Register dynamic block: custom/subpages-grid.
 	 */
 	public static function register_page_block_subpages_grid(): void {
 		if (!function_exists('register_block_type')) {
 			return;
 		}
 
-		register_block_type('custom/mybrand-subpages-grid', [
-			'render_callback' => [__CLASS__, 'render_mybrand_subpages_grid_block'],
+		register_block_type('custom/subpages-grid', [
+			'render_callback' => [__CLASS__, 'render_subpages_grid_block'],
 			'attributes' => [
 				'parent' => ['type' => 'number', 'default' => 0],
 				'columns' => ['type' => 'number', 'default' => 3],
 				'excerptChars' => ['type' => 'number', 'default' => 0],
 				'className' => ['type' => 'string'],
 			],
-			'editor_script' => 'um-mybrand-subpages-grid-editor',
+			'editor_script' => 'um-subpages-grid-editor',
 		]);
 	}
 
 	/**
-	 * Render callback for custom/mybrand-subpages-grid.
+	 * Render callback for custom/subpages-grid.
 	 *
 	 * @param array<string,mixed> $attrs Block attributes.
 	 */
-	public static function render_mybrand_subpages_grid_block(array $attrs = []): string {
+	public static function render_subpages_grid_block(array $attrs = []): string {
 		$parent_id = isset($attrs['parent']) ? absint($attrs['parent']) : 0;
 		$columns = isset($attrs['columns']) ? max(1, min(6, (int) $attrs['columns'])) : 3;
 		$excerpt_length = isset($attrs['excerptChars']) ? max(0, (int) $attrs['excerptChars']) : 0;
@@ -216,11 +216,11 @@ trait User_Manager_Core_Page_Blocks_Trait {
 	}
 
 	/**
-	 * Enqueue editor UI for custom/mybrand-subpages-grid.
+	 * Enqueue editor UI for custom/subpages-grid.
 	 */
 	public static function enqueue_page_block_subpages_grid_editor_assets(): void {
 		wp_register_script(
-			'um-mybrand-subpages-grid-editor',
+			'um-subpages-grid-editor',
 			false,
 			['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor'],
 			self::VERSION,
@@ -233,8 +233,8 @@ trait User_Manager_Core_Page_Blocks_Trait {
 	var TextControl = window.wp.components.TextControl;
 	var PanelBody = window.wp.components.PanelBody;
 	var InspectorControls = blockEditor.InspectorControls;
-	registerBlockType('custom/mybrand-subpages-grid', {
-		title: 'My Brand Subpages Grid',
+	registerBlockType('custom/subpages-grid', {
+		title: 'Subpages Grid',
 		icon: 'screenoptions',
 		category: 'widgets',
 		attributes: {
@@ -266,22 +266,22 @@ trait User_Manager_Core_Page_Blocks_Trait {
 	});
 })(window.wp.blocks, window.wp.element, window.wp.blockEditor);
 JS;
-		wp_add_inline_script('um-mybrand-subpages-grid-editor', $script);
-		wp_enqueue_script('um-mybrand-subpages-grid-editor');
+		wp_add_inline_script('um-subpages-grid-editor', $script);
+		wp_enqueue_script('um-subpages-grid-editor');
 	}
 
 	/**
 	 * Register dynamic blocks:
-	 * - custom/mybrand-tabbed-content-area
-	 * - custom/tabbed-content-area (legacy alias)
+	 * - custom/tabbed-content-area
+	 * - custom/legacy-tabbed-content-area (legacy alias)
 	 */
 	public static function register_page_block_tabbed_content_area(): void {
 		if (!function_exists('register_block_type')) {
 			return;
 		}
 
-		register_block_type('custom/mybrand-tabbed-content-area', [
-			'render_callback' => [__CLASS__, 'render_mybrand_tabbed_content_area_block'],
+		register_block_type('custom/legacy-tabbed-content-area', [
+			'render_callback' => [__CLASS__, 'render_tabbed_content_area_block'],
 			'attributes' => [
 				'tabs' => [
 					'type' => 'array',
@@ -296,11 +296,11 @@ JS;
 				],
 				'className' => ['type' => 'string'],
 			],
-			'editor_script' => 'um-mybrand-tabbed-content-editor',
+			'editor_script' => 'um-tabbed-content-editor',
 		]);
 
 		register_block_type('custom/tabbed-content-area', [
-			'render_callback' => [__CLASS__, 'render_mybrand_tabbed_content_area_block'],
+			'render_callback' => [__CLASS__, 'render_tabbed_content_area_block'],
 			'attributes' => [
 				'tabs' => [
 					'type' => 'array',
@@ -323,7 +323,7 @@ JS;
 	 *
 	 * @param array<string,mixed> $attrs Block attributes.
 	 */
-	public static function render_mybrand_tabbed_content_area_block(array $attrs = []): string {
+	public static function render_tabbed_content_area_block(array $attrs = []): string {
 		$tabs = isset($attrs['tabs']) && is_array($attrs['tabs']) ? $attrs['tabs'] : [];
 		if (empty($tabs)) {
 			return '';
@@ -406,11 +406,11 @@ JS;
 	}
 
 	/**
-	 * Enqueue editor UI for custom/mybrand-tabbed-content-area.
+	 * Enqueue editor UI for custom/tabbed-content-area.
 	 */
 	public static function enqueue_page_block_tabbed_content_editor_assets(): void {
 		wp_register_script(
-			'um-mybrand-tabbed-content-editor',
+			'um-tabbed-content-editor',
 			false,
 			['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor'],
 			self::VERSION,
@@ -422,8 +422,8 @@ JS;
 	var registerBlockType = blocks.registerBlockType;
 	var Fragment = element.Fragment;
 	var TextControl = window.wp.components.TextControl;
-	registerBlockType('custom/mybrand-tabbed-content-area', {
-		title: 'My Brand Tabbed Content Area',
+	registerBlockType('custom/tabbed-content-area', {
+		title: 'Tabbed Content Area',
 		icon: 'index-card',
 		category: 'widgets',
 		attributes: { tabs: { type: 'array', default: [] } },
@@ -467,20 +467,20 @@ JS;
 	});
 })(window.wp.blocks, window.wp.element, window.wp.blockEditor);
 JS;
-		wp_add_inline_script('um-mybrand-tabbed-content-editor', $script);
-		wp_enqueue_script('um-mybrand-tabbed-content-editor');
+		wp_add_inline_script('um-tabbed-content-editor', $script);
+		wp_enqueue_script('um-tabbed-content-editor');
 	}
 
 	/**
-	 * Register dynamic block: custom/mybrand-icon.
+	 * Register dynamic block: custom/simple-icon.
 	 */
 	public static function register_page_block_simple_icons(): void {
 		if (!function_exists('register_block_type')) {
 			return;
 		}
 
-		register_block_type('custom/mybrand-icon', [
-			'render_callback' => [__CLASS__, 'render_mybrand_simple_icon_block'],
+		register_block_type('custom/simple-icon', [
+			'render_callback' => [__CLASS__, 'render_simple_icon_block'],
 			'attributes' => [
 				'icon' => ['type' => 'string', 'default' => 'home'],
 				'size' => ['type' => 'string', 'default' => 'medium'],
@@ -488,16 +488,16 @@ JS;
 				'alignment' => ['type' => 'string', 'default' => 'left'],
 				'className' => ['type' => 'string'],
 			],
-			'editor_script' => 'um-mybrand-icon-editor',
+			'editor_script' => 'um-simple-icon-editor',
 		]);
 	}
 
 	/**
-	 * Render callback for custom/mybrand-icon.
+	 * Render callback for custom/simple-icon.
 	 *
 	 * @param array<string,mixed> $attrs Block attributes.
 	 */
-	public static function render_mybrand_simple_icon_block(array $attrs = []): string {
+	public static function render_simple_icon_block(array $attrs = []): string {
 		$icon = isset($attrs['icon']) ? sanitize_text_field((string) $attrs['icon']) : 'home';
 		$size = isset($attrs['size']) ? sanitize_text_field((string) $attrs['size']) : 'medium';
 		$color = isset($attrs['color']) ? sanitize_hex_color((string) $attrs['color']) : '';
@@ -558,7 +558,7 @@ JS;
 	}
 
 	/**
-	 * Enqueue editor UI for custom/mybrand-icon.
+	 * Enqueue editor UI for custom/simple-icon.
 	 */
 	public static function enqueue_page_block_simple_icons_editor_assets(): void {
 		wp_enqueue_style(
@@ -569,7 +569,7 @@ JS;
 		);
 
 		wp_register_script(
-			'um-mybrand-icon-editor',
+			'um-simple-icon-editor',
 			false,
 			['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-i18n'],
 			self::VERSION,
@@ -593,8 +593,8 @@ JS;
 		{ label: 'Arrow Right', value: 'arrow-right' }, { label: 'Arrow Left', value: 'arrow-left' }, { label: 'Arrow Up', value: 'arrow-up' }, { label: 'Arrow Down', value: 'arrow-down' }
 	];
 
-	registerBlockType('custom/mybrand-icon', {
-		title: __('My Brand Quick Icon', 'user-manager'),
+	registerBlockType('custom/simple-icon', {
+		title: __('Quick Icon', 'user-manager'),
 		icon: 'star-filled',
 		category: 'widgets',
 		attributes: {
@@ -679,8 +679,8 @@ JS;
 	});
 })(window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.i18n);
 JS;
-		wp_add_inline_script('um-mybrand-icon-editor', $script);
-		wp_enqueue_script('um-mybrand-icon-editor');
+		wp_add_inline_script('um-simple-icon-editor', $script);
+		wp_enqueue_script('um-simple-icon-editor');
 	}
 
 	/**
@@ -696,15 +696,15 @@ JS;
 	}
 
 	/**
-	 * Register dynamic block: custom/mybrand-menu-tiles.
+	 * Register dynamic block: custom/menu-tiles.
 	 */
 	public static function register_page_block_menu_tiles(): void {
 		if (!function_exists('register_block_type')) {
 			return;
 		}
 
-		register_block_type('custom/mybrand-menu-tiles', [
-			'render_callback' => [__CLASS__, 'render_mybrand_menu_tiles_block'],
+		register_block_type('custom/menu-tiles', [
+			'render_callback' => [__CLASS__, 'render_menu_tiles_block'],
 			'attributes' => [
 				'columns' => ['type' => 'number', 'default' => 3],
 				'excludeTitles' => ['type' => 'string', 'default' => ''],
@@ -714,16 +714,16 @@ JS;
 				'buttonTextHoverColor' => ['type' => 'string', 'default' => ''],
 				'className' => ['type' => 'string'],
 			],
-			'editor_script' => 'um-mybrand-menu-tiles-editor',
+			'editor_script' => 'um-menu-tiles-editor',
 		]);
 	}
 
 	/**
-	 * Render callback for custom/mybrand-menu-tiles.
+	 * Render callback for custom/menu-tiles.
 	 *
 	 * @param array<string,mixed> $attrs Block attributes.
 	 */
-	public static function render_mybrand_menu_tiles_block(array $attrs = []): string {
+	public static function render_menu_tiles_block(array $attrs = []): string {
 		$columns = isset($attrs['columns']) ? max(1, min(6, (int) $attrs['columns'])) : 3;
 		$exclude_titles = isset($attrs['excludeTitles']) ? sanitize_text_field((string) $attrs['excludeTitles']) : '';
 		$button_bg = isset($attrs['buttonBgColor']) ? sanitize_hex_color((string) $attrs['buttonBgColor']) : '';
@@ -840,11 +840,11 @@ JS;
 	}
 
 	/**
-	 * Enqueue editor UI for custom/mybrand-menu-tiles.
+	 * Enqueue editor UI for custom/menu-tiles.
 	 */
 	public static function enqueue_page_block_menu_tiles_editor_assets(): void {
 		wp_register_script(
-			'um-mybrand-menu-tiles-editor',
+			'um-menu-tiles-editor',
 			false,
 			['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor'],
 			self::VERSION,
@@ -858,7 +858,7 @@ JS;
 	var TextControl = components.TextControl;
 	var PanelBody = components.PanelBody;
 	var InspectorControls = blockEditor.InspectorControls;
-	registerBlockType('custom/mybrand-menu-tiles', {
+	registerBlockType('custom/menu-tiles', {
 		title: 'Menu Tile Buttons',
 		icon: 'screenoptions',
 		category: 'widgets',
@@ -897,8 +897,8 @@ JS;
 	});
 })(window.wp.blocks, window.wp.element, window.wp.components, window.wp.blockEditor);
 JS;
-		wp_add_inline_script('um-mybrand-menu-tiles-editor', $script);
-		wp_enqueue_script('um-mybrand-menu-tiles-editor');
+		wp_add_inline_script('um-menu-tiles-editor', $script);
+		wp_enqueue_script('um-menu-tiles-editor');
 	}
 }
 

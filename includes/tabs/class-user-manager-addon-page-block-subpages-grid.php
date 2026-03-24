@@ -28,7 +28,7 @@ class User_Manager_Addon_Page_Block_Subpages_Grid {
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
-						<?php esc_html_e('Registers the My Brand Subpages Grid tools: shortcode [mybrand_subpages_grid] and dynamic block custom/mybrand-subpages-grid (with block editor controls).', 'user-manager'); ?>
+						<?php esc_html_e('Registers the Subpages Grid tools: shortcode [subpages_grid] and dynamic block custom/subpages-grid (with block editor controls).', 'user-manager'); ?>
 					</p>
 				</div>
 
