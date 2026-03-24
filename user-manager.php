@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.43
+ * Version: 2.4.44
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.44 - March 16, 2026
+ * - Settings > User Experience: retitled "Legacy/Broken Shortcodes to No-op (comma-separated)" to "Legacy/Broken Shortcodes (comma-separated)".
+ *
  * 2.4.43 - March 16, 2026
  * - Settings > User Experience: added "Legacy/Broken Shortcodes to No-op (comma-separated)" as a normal setting with help text.
  * - Reintroduced runtime registration of empty handlers for configured legacy shortcode tags so removed shortcode sources do not break old content.
