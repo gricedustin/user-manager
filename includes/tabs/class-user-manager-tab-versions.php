@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.52 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hotfix: prevented duplicate Gutenberg block registration notices for custom/tabbed-content-area by guarding block registration with WP_Block_Type_Registry checks.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tabbed Content Area add-on now safely skips registering custom/tabbed-content-area and custom/legacy-tabbed-content-area when they already exist.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.51 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Hotfix: removed a duplicate User_Manager_Core static property declaration (`$staging_dev_notice_rendered`) that caused a fatal "Cannot redeclare" error.', 'user-manager'); ?></li>

@@ -283,44 +283,55 @@ JS;
 			return;
 		}
 
-		register_block_type('custom/legacy-tabbed-content-area', [
-			'render_callback' => [__CLASS__, 'render_tabbed_content_area_block'],
-			'attributes' => [
-				'tabs' => [
-					'type' => 'array',
-					'default' => [],
-					'items' => [
-						'type' => 'object',
-						'properties' => [
-							'label' => ['type' => 'string'],
-							'postId' => ['type' => 'integer'],
-							'selectedPostId' => ['type' => 'integer'],
-						],
-					],
-				],
-				'className' => ['type' => 'string'],
-			],
-			'editor_script' => 'um-tabbed-content-editor',
-		]);
+		$registry = class_exists('WP_Block_Type_Registry') ? WP_Block_Type_Registry::get_instance() : null;
+		$is_registered = static function (string $block_name) use ($registry): bool {
+			return $registry instanceof WP_Block_Type_Registry
+				&& method_exists($registry, 'is_registered')
+				&& $registry->is_registered($block_name);
+		};
 
-		register_block_type('custom/tabbed-content-area', [
-			'render_callback' => [__CLASS__, 'render_tabbed_content_area_block'],
-			'attributes' => [
-				'tabs' => [
-					'type' => 'array',
-					'default' => [],
-					'items' => [
-						'type' => 'object',
-						'properties' => [
-							'label' => ['type' => 'string'],
-							'postId' => ['type' => 'integer'],
-							'selectedPostId' => ['type' => 'integer'],
+		if (!$is_registered('custom/legacy-tabbed-content-area')) {
+			register_block_type('custom/legacy-tabbed-content-area', [
+				'render_callback' => [__CLASS__, 'render_tabbed_content_area_block'],
+				'attributes' => [
+					'tabs' => [
+						'type' => 'array',
+						'default' => [],
+						'items' => [
+							'type' => 'object',
+							'properties' => [
+								'label' => ['type' => 'string'],
+								'postId' => ['type' => 'integer'],
+								'selectedPostId' => ['type' => 'integer'],
+							],
 						],
 					],
+					'className' => ['type' => 'string'],
 				],
-				'className' => ['type' => 'string'],
-			],
-		]);
+				'editor_script' => 'um-tabbed-content-editor',
+			]);
+		}
+
+		if (!$is_registered('custom/tabbed-content-area')) {
+			register_block_type('custom/tabbed-content-area', [
+				'render_callback' => [__CLASS__, 'render_tabbed_content_area_block'],
+				'attributes' => [
+					'tabs' => [
+						'type' => 'array',
+						'default' => [],
+						'items' => [
+							'type' => 'object',
+							'properties' => [
+								'label' => ['type' => 'string'],
+								'postId' => ['type' => 'integer'],
+								'selectedPostId' => ['type' => 'integer'],
+							],
+						],
+					],
+					'className' => ['type' => 'string'],
+				],
+			]);
+		}
 	}
 
 	/**
