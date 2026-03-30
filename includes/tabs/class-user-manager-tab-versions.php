@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.54 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Staging/Dev front-end notice bar now always renders at the top of the page instead of being output as footer content.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a dedicated footer fallback that injects the notice at the top of <body> for themes that do not call wp_body_open.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.53 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Data Anonymizer > Exceptions to Above: added "Exclude All WP Administrators" and "Exclude User if Email Address Matches Administration Email Address" checkboxes.', 'user-manager'); ?></li>

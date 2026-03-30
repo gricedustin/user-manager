@@ -41,7 +41,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.53';
+	const VERSION = '2.4.54';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -234,7 +234,7 @@ final class User_Manager_Core {
 		add_action('wp_footer', [__CLASS__, 'inject_checkout_remaining_balance_notice'], 5);
 		add_action('wp_footer', [__CLASS__, 'render_public_coupon_debug_output'], 999);
 		add_action('admin_notices', [__CLASS__, 'render_non_production_admin_notice'], 6);
-		add_action('wp_footer', [__CLASS__, 'render_non_production_frontend_notice_bar'], 0);
+		add_action('wp_footer', [__CLASS__, 'render_non_production_frontend_notice_bar_fallback'], 0);
 		add_action('wp_body_open', [__CLASS__, 'render_non_production_frontend_notice_bar'], 1);
 		add_filter('pre_wp_mail', [__CLASS__, 'maybe_block_staging_dev_wp_mail'], 10, 2);
 		add_filter('woocommerce_available_payment_gateways', [__CLASS__, 'maybe_disable_staging_dev_payment_gateways'], 999);
@@ -467,11 +467,80 @@ final class User_Manager_Core {
 			return;
 		}
 		$suffix = self::get_staging_dev_data_anonymized_notice_suffix($settings);
+		$message = __('Non-Production Environment - staging/development overrides are active.', 'user-manager') . $suffix;
+
+		if (current_action() === 'wp_footer') {
+			?>
+			<script>
+			(function() {
+				var barId = 'um-non-production-notice-bar';
+				if (document.getElementById(barId)) {
+					return;
+				}
+				var bar = document.createElement('div');
+				bar.id = barId;
+				bar.className = 'um-non-production-notice-bar';
+				bar.setAttribute('style', 'position:sticky;top:0;left:0;right:0;z-index:99999;background:#d63638;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;');
+				bar.textContent = <?php echo wp_json_encode($message); ?>;
+				if (document.body) {
+					document.body.insertBefore(bar, document.body.firstChild);
+				}
+			})();
+			</script>
+			<?php
+			self::$staging_dev_notice_rendered = true;
+			return;
+		}
 		?>
-		<div class="um-non-production-notice-bar" style="position:sticky;top:0;left:0;right:0;z-index:99999;background:#d63638;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;">
-			<?php esc_html_e('Non-Production Environment - staging/development overrides are active.', 'user-manager'); ?>
-			<?php echo esc_html($suffix); ?>
+		<div id="um-non-production-notice-bar" class="um-non-production-notice-bar" style="position:sticky;top:0;left:0;right:0;z-index:99999;background:#d63638;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;">
+			<?php echo esc_html($message); ?>
 		</div>
+		<?php
+		self::$staging_dev_notice_rendered = true;
+	}
+
+	/**
+	 * Footer fallback for themes that do not call wp_body_open.
+	 * Injects the notice at the top of <body>, not at the visual footer.
+	 */
+	public static function render_non_production_frontend_notice_bar_fallback(): void {
+		if (is_admin() || wp_doing_ajax()) {
+			return;
+		}
+		if (self::$staging_dev_notice_rendered) {
+			return;
+		}
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_notice_frontend_top_bar')) {
+			return;
+		}
+		$suffix = self::get_staging_dev_data_anonymized_notice_suffix($settings);
+		?>
+		<script>
+		(function() {
+			if (!document.body || document.querySelector('.um-non-production-notice-bar')) {
+				return;
+			}
+			var bar = document.createElement('div');
+			bar.className = 'um-non-production-notice-bar';
+			bar.style.position = 'sticky';
+			bar.style.top = '0';
+			bar.style.left = '0';
+			bar.style.right = '0';
+			bar.style.zIndex = '99999';
+			bar.style.background = '#d63638';
+			bar.style.color = '#fff';
+			bar.style.padding = '10px 14px';
+			bar.style.fontSize = '13px';
+			bar.style.fontWeight = '600';
+			bar.style.textAlign = 'center';
+			bar.textContent = <?php echo wp_json_encode(__('Non-Production Environment - staging/development overrides are active.', 'user-manager') . $suffix); ?>;
+			document.body.insertBefore(bar, document.body.firstChild);
+		})();
+		</script>
 		<?php
 		self::$staging_dev_notice_rendered = true;
 	}
