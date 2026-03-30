@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.51 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hotfix: removed a duplicate User_Manager_Core static property declaration (`$staging_dev_notice_rendered`) that caused a fatal "Cannot redeclare" error.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Staging/Dev notice rendering now uses a single property declaration, restoring normal plugin loading.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.50 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tag filter: added a new "Security" tag and positioned it directly after "Users" in the Add-ons sub-navigation.', 'user-manager'); ?></li>

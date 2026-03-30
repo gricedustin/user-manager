@@ -41,7 +41,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.50';
+	const VERSION = '2.4.51';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -88,7 +88,6 @@ final class User_Manager_Core {
 	 * Cached runtime "disable all add-ons" URL flag.
 	 */
 	private static ?bool $runtime_disable_all_addons = null;
-	private static bool $staging_dev_notice_rendered = false;
 
 	// Tab constants
 	const TAB_LOGIN_TOOLS     = 'login-tools';
