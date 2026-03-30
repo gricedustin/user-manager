@@ -41,7 +41,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.54';
+	const VERSION = '2.4.55';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -260,7 +260,7 @@ final class User_Manager_Core {
 		}
 
 		// Front-end search: when ?s= exactly matches a product/variation SKU, redirect to product.
-		if (!isset($settings['search_redirect_by_sku']) || !empty($settings['search_redirect_by_sku'])) {
+		if (!empty($settings['search_redirect_by_sku'])) {
 			add_action('template_redirect', [__CLASS__, 'maybe_redirect_search_to_product_by_sku'], 5);
 		}
 		// Apply coupon code from URL parameter (e.g. ?coupon-code=SAVE10).

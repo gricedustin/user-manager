@@ -1422,7 +1422,7 @@ class User_Manager_Tab_Addons {
 			'product-search-by-sku' => [
 				'label'  => __('Product Search by SKU', 'user-manager'),
 				'description' => __('Redirect front-end WooCommerce searches directly to a product when the search term exactly matches a product or variation SKU.', 'user-manager'),
-				'active' => !array_key_exists('search_redirect_by_sku', $settings) || !empty($settings['search_redirect_by_sku']),
+				'active' => !empty($settings['search_redirect_by_sku']),
 			],
 			'post-content-generator' => [
 				'label'  => __('Post Content Generator', 'user-manager'),

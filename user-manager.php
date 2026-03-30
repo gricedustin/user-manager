@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.54
+ * Version: 2.4.55
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.55 - March 16, 2026
+ * - Product Search by SKU add-on is now OFF by default on fresh installs (requires explicit activation).
+ *
  * 2.4.54 - March 16, 2026
  * - Staging & Development non-production front-end notice now renders at the top of the page (via wp_body_open) and no longer appears as a footer bar.
  * - Added a footer fallback injector that inserts the same notice at the top of <body> for themes that do not call wp_body_open.

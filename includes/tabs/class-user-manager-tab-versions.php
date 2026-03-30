@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.55 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Product Search by SKU add-on default changed to OFF for new installs (must be explicitly activated).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Product Search by SKU add-on active-state checks so unset settings are treated as disabled by default.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.54 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Staging/Dev front-end notice bar now always renders at the top of the page instead of being output as footer content.', 'user-manager'); ?></li>

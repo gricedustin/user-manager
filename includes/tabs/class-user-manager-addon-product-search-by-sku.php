@@ -11,7 +11,7 @@ class User_Manager_Addon_Product_Search_By_SKU {
 
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
-		$enabled = !array_key_exists('search_redirect_by_sku', $settings) || !empty($settings['search_redirect_by_sku']);
+		$enabled = !empty($settings['search_redirect_by_sku']);
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-product-search-by-sku" data-um-active-selectors="#um-product-search-by-sku-enabled">
 			<div class="um-admin-card-header">
