@@ -134,6 +134,8 @@ trait User_Manager_Actions_Data_Anonymizer_Trait {
 			'data_anonymizer_user_email_random',
 			'data_anonymizer_user_login_random',
 			'data_anonymizer_forms_random',
+			'data_anonymizer_exclude_wp_administrators',
+			'data_anonymizer_exclude_if_matches_admin_email',
 		];
 
 		foreach ($bool_fields as $field) {
@@ -325,6 +327,8 @@ trait User_Manager_Actions_Data_Anonymizer_Trait {
 			'user_emails_updated' => 0,
 			'user_logins_updated' => 0,
 			'user_identity_skipped_excluded' => 0,
+			'users_skipped_wp_administrators' => 0,
+			'users_skipped_admin_email_match' => 0,
 		];
 		$notes = [];
 
@@ -332,7 +336,14 @@ trait User_Manager_Actions_Data_Anonymizer_Trait {
 		$do_phone_meta = !empty($settings['data_anonymizer_user_meta_phone_fixed']);
 		$do_user_email = !empty($settings['data_anonymizer_user_email_random']);
 		$do_user_login = !empty($settings['data_anonymizer_user_login_random']);
+		$exclude_wp_administrators = array_key_exists('data_anonymizer_exclude_wp_administrators', $settings)
+			? !empty($settings['data_anonymizer_exclude_wp_administrators'])
+			: true;
+		$exclude_if_matches_admin_email = array_key_exists('data_anonymizer_exclude_if_matches_admin_email', $settings)
+			? !empty($settings['data_anonymizer_exclude_if_matches_admin_email'])
+			: true;
 		$excluded_domains = self::data_anonymizer_parse_excluded_domains((string) ($settings['data_anonymizer_excluded_email_domains'] ?? ''));
+		$site_admin_email = strtolower(trim((string) get_option('admin_email')));
 
 		if (!$do_address_meta && !$do_phone_meta && !$do_user_email && !$do_user_login) {
 			return [
@@ -364,6 +375,16 @@ trait User_Manager_Actions_Data_Anonymizer_Trait {
 			}
 			$original_email = (string) $user_obj->user_email;
 			$counts['users_scanned']++;
+
+			if ($exclude_wp_administrators && in_array('administrator', (array) $user_obj->roles, true)) {
+				$counts['users_skipped_wp_administrators']++;
+				continue;
+			}
+
+			if ($exclude_if_matches_admin_email && $site_admin_email !== '' && strtolower(trim($original_email)) === $site_admin_email) {
+				$counts['users_skipped_admin_email_match']++;
+				continue;
+			}
 
 			$touched_this_user = false;
 
@@ -438,6 +459,20 @@ trait User_Manager_Actions_Data_Anonymizer_Trait {
 				/* translators: %d: skipped count */
 				__('Skipped user email/login anonymization due to excluded domains: %d', 'user-manager'),
 				(int) $counts['user_identity_skipped_excluded']
+			);
+		}
+		if (!empty($counts['users_skipped_wp_administrators'])) {
+			$notes[] = sprintf(
+				/* translators: %d: skipped administrators */
+				__('Skipped users because they are WP Administrators: %d', 'user-manager'),
+				(int) $counts['users_skipped_wp_administrators']
+			);
+		}
+		if (!empty($counts['users_skipped_admin_email_match'])) {
+			$notes[] = sprintf(
+				/* translators: %d: skipped admin-email matches */
+				__('Skipped users because email matches Administration Email Address: %d', 'user-manager'),
+				(int) $counts['users_skipped_admin_email_match']
 			);
 		}
 
@@ -840,6 +875,8 @@ trait User_Manager_Actions_Data_Anonymizer_Trait {
 			'data_anonymizer_user_email_random' => __('User: Replace email addresses with random emails', 'user-manager'),
 			'data_anonymizer_user_login_random' => __('User: Replace logins with random logins', 'user-manager'),
 			'data_anonymizer_forms_random' => __('Forms: Replace submissions with random data', 'user-manager'),
+			'data_anonymizer_exclude_wp_administrators' => __('Exceptions: Exclude All WP Administrators', 'user-manager'),
+			'data_anonymizer_exclude_if_matches_admin_email' => __('Exceptions: Exclude User if Email Address Matches Administration Email Address', 'user-manager'),
 		];
 
 		$checked = [];

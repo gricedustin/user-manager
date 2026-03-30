@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.53 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Data Anonymizer > Exceptions to Above: added "Exclude All WP Administrators" and "Exclude User if Email Address Matches Administration Email Address" checkboxes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Both new exception checkboxes default to checked when first introduced.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Users anonymization now skips matching users for those exceptions and logs skip counts in run notes/history.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.52 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Hotfix: prevented duplicate Gutenberg block registration notices for custom/tabbed-content-area by guarding block registration with WP_Block_Type_Registry checks.', 'user-manager'); ?></li>

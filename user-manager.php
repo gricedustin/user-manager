@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.52
+ * Version: 2.4.53
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.53 - March 16, 2026
+ * - Data Anonymizer > Exceptions to Above: added "Exclude All WP Administrators" checkbox (checked by default).
+ * - Data Anonymizer > Exceptions to Above: added "Exclude User if Email Address Matches Administration Email Address" checkbox (checked by default).
+ * - Users anonymization now skips matching users when these new exception options are enabled and logs skip counts in run notes/history.
+ *
  * 2.4.52 - March 16, 2026
  * - Hotfix: prevented duplicate WordPress block registration for custom/tabbed-content-area by guarding block registration with WP_Block_Type_Registry checks.
  * - Added the same duplicate-registration guard for the legacy alias custom/legacy-tabbed-content-area.

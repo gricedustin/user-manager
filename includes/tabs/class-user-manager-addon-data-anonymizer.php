@@ -28,6 +28,12 @@ class User_Manager_Addon_Data_Anonymizer {
 		$excluded_domains = isset($settings['data_anonymizer_excluded_email_domains'])
 			? (string) $settings['data_anonymizer_excluded_email_domains']
 			: '';
+		$exclude_wp_administrators = array_key_exists('data_anonymizer_exclude_wp_administrators', $settings)
+			? !empty($settings['data_anonymizer_exclude_wp_administrators'])
+			: true;
+		$exclude_admin_email_match = array_key_exists('data_anonymizer_exclude_if_matches_admin_email', $settings)
+			? !empty($settings['data_anonymizer_exclude_if_matches_admin_email'])
+			: true;
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-data-anonymizer" data-um-active-selectors="#um-data-anonymizer-enabled">
 			<div class="um-admin-card-header">
@@ -127,6 +133,14 @@ class User_Manager_Addon_Data_Anonymizer {
 								<h3 style="margin:0;"><?php esc_html_e('Exceptions to Above', 'user-manager'); ?></h3>
 							</div>
 							<div class="um-admin-card-body">
+								<label style="display:block;margin:0 0 10px;">
+									<input type="checkbox" name="data_anonymizer_exclude_wp_administrators" value="1" <?php checked($exclude_wp_administrators); ?> />
+									<?php esc_html_e('Exclude All WP Administrators', 'user-manager'); ?>
+								</label>
+								<label style="display:block;margin:0 0 12px;">
+									<input type="checkbox" name="data_anonymizer_exclude_if_matches_admin_email" value="1" <?php checked($exclude_admin_email_match); ?> />
+									<?php esc_html_e('Exclude User if Email Address Matches Administration Email Address', 'user-manager'); ?>
+								</label>
 								<label for="um-data-anonymizer-excluded-email-domains" style="display:block;">
 									<?php esc_html_e('Email Domains to Exclude from Email Address Changes and Login Changes (comma separated)', 'user-manager'); ?>
 								</label>

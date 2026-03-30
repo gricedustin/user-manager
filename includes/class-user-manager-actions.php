@@ -2592,6 +2592,8 @@ class User_Manager_Actions {
 				$settings['data_anonymizer_user_email_random'] = isset($_POST['data_anonymizer_user_email_random']) && $_POST['data_anonymizer_user_email_random'] === '1';
 				$settings['data_anonymizer_user_login_random'] = isset($_POST['data_anonymizer_user_login_random']) && $_POST['data_anonymizer_user_login_random'] === '1';
 				$settings['data_anonymizer_forms_random'] = isset($_POST['data_anonymizer_forms_random']) && $_POST['data_anonymizer_forms_random'] === '1';
+				$settings['data_anonymizer_exclude_wp_administrators'] = isset($_POST['data_anonymizer_exclude_wp_administrators']) && $_POST['data_anonymizer_exclude_wp_administrators'] === '1';
+				$settings['data_anonymizer_exclude_if_matches_admin_email'] = isset($_POST['data_anonymizer_exclude_if_matches_admin_email']) && $_POST['data_anonymizer_exclude_if_matches_admin_email'] === '1';
 				$settings['data_anonymizer_excluded_email_domains'] = isset($_POST['data_anonymizer_excluded_email_domains']) ? sanitize_text_field(wp_unslash($_POST['data_anonymizer_excluded_email_domains'])) : '';
 				$settings['addon_main_navigation_tabs'] = [];
 				if (isset($_POST['addon_main_navigation_tabs']) && is_array($_POST['addon_main_navigation_tabs'])) {
