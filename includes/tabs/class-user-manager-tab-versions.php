@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.50 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tag filter: added a new "Security" tag and positioned it directly after "Users" in the Add-ons sub-navigation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated security-related add-on descriptions so they are matched by the new Security filter (for example: Security Hardening, Webhook URLs, Post Meta Viewer access controls, and related safety/security tools).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.49 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Edit User/Profile notice now includes a "Login As This User" button that links directly to Login Tools > Login As.', 'user-manager'); ?></li>

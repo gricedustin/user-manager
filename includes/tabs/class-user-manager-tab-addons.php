@@ -1331,7 +1331,7 @@ class User_Manager_Tab_Addons {
 			],
 			'webhook-urls' => [
 				'label'  => __('Webhook URLs', 'user-manager'),
-				'description' => __('Handle create/edit webhook requests for orders, coupons, password resets, and email sending with optional debug responses.', 'user-manager'),
+				'description' => __('Handle secure create/edit webhook requests for orders, coupons, password resets, and email sending with optional debug responses.', 'user-manager'),
 				'active' => !empty($settings['webhook_urls_enabled']),
 			],
 			'invoice-approval' => [
@@ -1381,12 +1381,12 @@ class User_Manager_Tab_Addons {
 			],
 			'data-anonymizer' => [
 				'label'  => __('Data Anonymizer', 'user-manager'),
-				'description' => __('Anonymize order, user, and supported form-submission data with configurable replacement rules and run history.', 'user-manager'),
+				'description' => __('Anonymize order, user, and supported form-submission data with configurable privacy/security replacement rules and run history.', 'user-manager'),
 				'active' => !empty($settings['data_anonymizer_enabled']),
 			],
 			'staging-development-environment-overrides' => [
 				'label'  => __('Staging & Development Environment Overrides', 'user-manager'),
-				'description' => __('Apply non-production safety overrides (email/payment/webhook/API blocking) plus front-end/WP-Admin warning notices.', 'user-manager'),
+				'description' => __('Apply non-production security/safety overrides (email/payment/webhook/API blocking) plus front-end/WP-Admin warning notices.', 'user-manager'),
 				'active' => !empty($settings['staging_dev_overrides_enabled']),
 			],
 			'security-hardening' => [
@@ -1396,7 +1396,7 @@ class User_Manager_Tab_Addons {
 			],
 			'fatal-error-debugger' => [
 				'label'  => __('Fatal Error Debugger', 'user-manager'),
-				'description' => __('Capture front-end fatal errors for WP-Admin administrators and optionally email alerts.', 'user-manager'),
+				'description' => __('Capture front-end fatal errors for WP-Admin administrators with optional security alert emails.', 'user-manager'),
 				'active' => !empty($settings['fatal_error_debugger_enabled']),
 			],
 			'my-account-coupon-screen' => [
@@ -1416,7 +1416,7 @@ class User_Manager_Tab_Addons {
 			],
 			'post-meta' => [
 				'label'  => __('Post Meta Viewer', 'user-manager'),
-				'description' => __('Show all post meta keys and values in a dedicated editor box.', 'user-manager'),
+				'description' => __('Show all post meta keys and values in a dedicated editor box with configurable role/user access controls for security.', 'user-manager'),
 				'active' => !empty($settings['display_post_meta_meta_box']),
 			],
 			'product-search-by-sku' => [
@@ -1441,7 +1441,7 @@ class User_Manager_Tab_Addons {
 			],
 			'user-role-switching' => [
 				'label'  => __('User Role Switching', 'user-manager'),
-				'description' => __('Enable front-end role switching controls with profile permission support.', 'user-manager'),
+				'description' => __('Enable front-end role switching controls with profile permission/security support.', 'user-manager'),
 				'active' => !empty($role_switch_settings['enabled']),
 			],
 			'wp-admin-bar-menu-items' => [
@@ -1482,6 +1482,29 @@ class User_Manager_Tab_Addons {
 		}
 
 		asort($tags, SORT_NATURAL | SORT_FLAG_CASE);
+
+		// Keep alphabetical order, but place "Security" directly after "Users".
+		if (isset($tags['security'])) {
+			$security_label = $tags['security'];
+			unset($tags['security']);
+
+			$ordered_tags = [];
+			$inserted = false;
+			foreach ($tags as $tag_key => $tag_label) {
+				$ordered_tags[$tag_key] = $tag_label;
+				if ($tag_key === 'user') {
+					$ordered_tags['security'] = $security_label;
+					$inserted = true;
+				}
+			}
+
+			if (!$inserted) {
+				$ordered_tags['security'] = $security_label;
+			}
+
+			$tags = $ordered_tags;
+		}
+
 		return $tags;
 	}
 
@@ -1531,6 +1554,10 @@ class User_Manager_Tab_Addons {
 			'user'       => [
 				'label'    => __('Users', 'user-manager'),
 				'keywords' => ['user'],
+			],
+			'security'   => [
+				'label'    => __('Security', 'user-manager'),
+				'keywords' => ['security', 'secure', 'hardening', 'harden', 'permission', 'permissions', 'access control', 'access controls', 'ssl'],
 			],
 			'wp-admin'   => [
 				'label'    => __('WP-Admin', 'user-manager'),

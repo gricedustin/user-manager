@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.49
+ * Version: 2.4.50
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.50 - March 16, 2026
+ * - Add-ons tag filter: added a new "Security" tag in the sub-navigation and positioned it directly after "Users".
+ * - Reviewed and updated security-related add-on descriptions so they are discoverable via the Security filter.
+ *
  * 2.4.49 - March 16, 2026
  * - Edit User/Profile notice: added a new "Login As This User" button next to Reset Password.
  * - The new button opens Login Tools > Login As, auto-fills the current user's email, and auto-triggers "Generate Temporary Password".
