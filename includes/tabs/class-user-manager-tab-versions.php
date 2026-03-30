@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.47 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Data Anonymizer" with Activate toggle and grouped settings for Order Data, User Data, Form Data, and exception domains.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added dedicated run actions/buttons for Orders, Users, and Forms plus a persistent Data Anonymizer History table showing runner, checked settings, counts, notes, and timestamp.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Forms anonymization now supports common storage sources including CFDB7, WPForms, Fluent Forms, Gravity Forms, Ninja Forms, Formidable Forms, and Flamingo (CF7 storage).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.46 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Coupon Remaining Balances add-on: added a new option to send an email whenever a new remaining balance code is created.', 'user-manager'); ?></li>

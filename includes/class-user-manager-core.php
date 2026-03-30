@@ -41,7 +41,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.46';
+	const VERSION = '2.4.47';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8851,6 +8851,10 @@ html body .woocommerce-layout__header {
 			'coupon-remaining-balances' => [
 				'label' => 'User Coupon Remaining Balances',
 				'settings_keys' => ['coupon_remainder_enabled'],
+			],
+			'data-anonymizer' => [
+				'label' => 'Data Anonymizer',
+				'settings_keys' => ['data_anonymizer_enabled'],
 			],
 			'bulk-page-creator' => [
 				'label' => 'Page Creator',

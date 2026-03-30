@@ -21,6 +21,7 @@ require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users
 require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php';
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
+require_once __DIR__ . '/class-user-manager-addon-data-anonymizer.php';
 require_once __DIR__ . '/class-user-manager-addon-database-table-browser.php';
 require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
 require_once __DIR__ . '/class-user-manager-addon-invoice-approval.php';
@@ -211,6 +212,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="coupon-remaining-balances">
 					<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="data-anonymizer">
+					<?php User_Manager_Addon_Data_Anonymizer::render($settings); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="bulk-page-creator">
 					<?php User_Manager_Addon_Bulk_Page_Creator::render($settings); ?>
@@ -856,6 +860,11 @@ class User_Manager_Tab_Addons {
 			function toggleCouponRemainderAddonFields() {
 				$('#um-coupon-remainder-fields').toggle($('#um-coupon-remainder-enabled').is(':checked'));
 			}
+			function toggleDataAnonymizerAddonFields() {
+				var enabled = $('#um-data-anonymizer-enabled').is(':checked');
+				$('#um-data-anonymizer-fields').toggle(enabled);
+				$('#um-data-anonymizer-run-card').toggle(enabled);
+			}
 			function toggleMyAccountCouponScreenFields() {
 				$('#um-my-account-coupon-screen-fields').toggle($('#um-my-account-coupon-screen-enabled').is(':checked'));
 			}
@@ -916,6 +925,7 @@ class User_Manager_Tab_Addons {
 			toggleNewUserCouponAddonFields();
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
+			toggleDataAnonymizerAddonFields();
 			toggleMyAccountCouponScreenFields();
 			toggleMyAccountMenuTilesFields();
 			toggleCartPricePerPieceFields();
@@ -1069,6 +1079,10 @@ class User_Manager_Tab_Addons {
 			$('#um-coupon-remainder-enabled').on('change', function() {
 				toggleCouponRemainderAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
+			});
+			$('#um-data-anonymizer-enabled').on('change', function() {
+				toggleDataAnonymizerAddonFields();
+				refreshAddonCardAutoState($('#um-addon-card-data-anonymizer'));
 			});
 			$('#um-security-hardening-enabled').on('change', function() {
 				toggleSecurityHardeningFields();
@@ -1353,6 +1367,11 @@ class User_Manager_Tab_Addons {
 				'description' => __('Create a replacement coupon when a qualifying balance remains after checkout.', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
 			],
+			'data-anonymizer' => [
+				'label'  => __('Data Anonymizer', 'user-manager'),
+				'description' => __('Anonymize order, user, and supported form-submission data with configurable replacement rules and run history.', 'user-manager'),
+				'active' => !empty($settings['data_anonymizer_enabled']),
+			],
 			'security-hardening' => [
 				'label'  => __('Security Hardening', 'user-manager'),
 				'description' => __('Apply optional hardening controls for REST, WP-Admin file access, SSL admin, and version visibility.', 'user-manager'),
@@ -1479,6 +1498,10 @@ class User_Manager_Tab_Addons {
 			'page'       => [
 				'label'    => __('Pages', 'user-manager'),
 				'keywords' => ['page creator', 'page block', 'menu tile', 'tabs'],
+			],
+			'privacy'    => [
+				'label'    => __('Privacy', 'user-manager'),
+				'keywords' => ['anonymizer', 'anonymize', 'privacy', 'gdpr', 'pii', 'data'],
 			],
 			'post'       => [
 				'label'    => __('Posts', 'user-manager'),

@@ -10,10 +10,12 @@ if (!defined('ABSPATH')) {
 
 require_once __DIR__ . '/actions/trait-user-manager-actions-content-generator.php';
 require_once __DIR__ . '/actions/trait-user-manager-actions-bulk-page-creator.php';
+require_once __DIR__ . '/actions/trait-user-manager-actions-data-anonymizer.php';
 require_once __DIR__ . '/class-user-manager-sms.php';
 class User_Manager_Actions {
 	use User_Manager_Actions_Content_Generator_Trait;
 	use User_Manager_Actions_Bulk_Page_Creator_Trait;
+	use User_Manager_Actions_Data_Anonymizer_Trait;
 
 	/**
 	 * Initialize action hooks.
@@ -55,6 +57,9 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_reset_view_reports', [__CLASS__, 'handle_reset_view_reports']);
 		add_action('admin_post_user_manager_blog_post_importer', [__CLASS__, 'handle_blog_post_importer']);
 		add_action('admin_post_user_manager_bulk_page_creator', [__CLASS__, 'handle_bulk_page_creator']);
+		add_action('admin_post_user_manager_run_data_anonymizer_orders', [__CLASS__, 'handle_run_data_anonymizer_orders']);
+		add_action('admin_post_user_manager_run_data_anonymizer_users', [__CLASS__, 'handle_run_data_anonymizer_users']);
+		add_action('admin_post_user_manager_run_data_anonymizer_forms', [__CLASS__, 'handle_run_data_anonymizer_forms']);
 		add_action('wp_ajax_user_manager_blog_chatgpt', [__CLASS__, 'ajax_blog_chatgpt']);
 		add_action('wp_ajax_user_manager_set_post_thumbnail', [__CLASS__, 'ajax_set_post_thumbnail']);
 		add_action('wp_ajax_user_manager_set_post_date', [__CLASS__, 'ajax_set_post_date']);
@@ -2569,6 +2574,17 @@ class User_Manager_Actions {
 				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
 				$settings['send_email_users_enabled'] = isset($_POST['send_email_users_enabled']) && $_POST['send_email_users_enabled'] === '1';
 				$settings['send_sms_text_enabled'] = isset($_POST['send_sms_text_enabled']) && $_POST['send_sms_text_enabled'] === '1';
+				$settings['data_anonymizer_enabled'] = isset($_POST['data_anonymizer_enabled']) && $_POST['data_anonymizer_enabled'] === '1';
+				$settings['data_anonymizer_order_address_random'] = isset($_POST['data_anonymizer_order_address_random']) && $_POST['data_anonymizer_order_address_random'] === '1';
+				$settings['data_anonymizer_order_phone_fixed'] = isset($_POST['data_anonymizer_order_phone_fixed']) && $_POST['data_anonymizer_order_phone_fixed'] === '1';
+				$settings['data_anonymizer_order_email_random'] = isset($_POST['data_anonymizer_order_email_random']) && $_POST['data_anonymizer_order_email_random'] === '1';
+				$settings['data_anonymizer_order_notes_random'] = isset($_POST['data_anonymizer_order_notes_random']) && $_POST['data_anonymizer_order_notes_random'] === '1';
+				$settings['data_anonymizer_user_meta_address_random'] = isset($_POST['data_anonymizer_user_meta_address_random']) && $_POST['data_anonymizer_user_meta_address_random'] === '1';
+				$settings['data_anonymizer_user_meta_phone_fixed'] = isset($_POST['data_anonymizer_user_meta_phone_fixed']) && $_POST['data_anonymizer_user_meta_phone_fixed'] === '1';
+				$settings['data_anonymizer_user_email_random'] = isset($_POST['data_anonymizer_user_email_random']) && $_POST['data_anonymizer_user_email_random'] === '1';
+				$settings['data_anonymizer_user_login_random'] = isset($_POST['data_anonymizer_user_login_random']) && $_POST['data_anonymizer_user_login_random'] === '1';
+				$settings['data_anonymizer_forms_random'] = isset($_POST['data_anonymizer_forms_random']) && $_POST['data_anonymizer_forms_random'] === '1';
+				$settings['data_anonymizer_excluded_email_domains'] = isset($_POST['data_anonymizer_excluded_email_domains']) ? sanitize_text_field(wp_unslash($_POST['data_anonymizer_excluded_email_domains'])) : '';
 				$settings['addon_main_navigation_tabs'] = [];
 				if (isset($_POST['addon_main_navigation_tabs']) && is_array($_POST['addon_main_navigation_tabs'])) {
 					$allowed_addon_slugs = array_keys(User_Manager_Core::get_addon_runtime_toggle_map(false));
