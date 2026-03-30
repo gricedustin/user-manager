@@ -19,6 +19,9 @@ class User_Manager_Tab_Login_As {
 			wp_die(esc_html__('You do not have permission to access this page.', 'user-manager'));
 		}
 
+		$prefill_email = isset($_GET['um_login_as_email']) ? sanitize_email(wp_unslash($_GET['um_login_as_email'])) : '';
+		$auto_generate = isset($_GET['um_login_as_auto_generate']) && wp_unslash($_GET['um_login_as_auto_generate']) === '1';
+
 		$current_admin_id = get_current_user_id();
 		$sessions         = get_option(self::OPTION_KEY, []);
 		if (!is_array($sessions)) {
@@ -84,9 +87,11 @@ class User_Manager_Tab_Login_As {
 										class="regular-text"
 										list="um-login-as-user-search-datalist"
 										placeholder="<?php esc_attr_e('Search by username or email', 'user-manager'); ?>"
+										value="<?php echo esc_attr($prefill_email); ?>"
 										autocomplete="off"
 										data-um-login-as-search-nonce="<?php echo esc_attr(wp_create_nonce('user_manager_login_as_search')); ?>"
 										data-um-login-as-search-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
+										data-um-login-as-auto-generate="<?php echo $auto_generate ? '1' : '0'; ?>"
 									/>
 									<input type="hidden" name="um_login_as_user" id="um-login-as-user-id" value="" />
 									<datalist id="um-login-as-user-search-datalist"></datalist>
@@ -314,6 +319,7 @@ class User_Manager_Tab_Login_As {
 			}
 			var searchMap   = {};
 			var timer       = null;
+			var maybeAutoSubmit = function() {};
 
 			function setHiddenFromInputValue() {
 				var value = (searchInput.value || '').trim();
@@ -407,6 +413,7 @@ class User_Manager_Tab_Login_As {
 						}
 						renderSearchResults(payload.data.results || []);
 						setHiddenFromInputValue();
+						maybeAutoSubmit();
 					})
 					.fail(function() {
 						renderSearchResults([]);
@@ -444,6 +451,45 @@ class User_Manager_Tab_Login_As {
 					searchInput.value = selectedLabel;
 					hideResults();
 				});
+			}
+
+			var shouldAutoGenerate = searchInput.getAttribute('data-um-login-as-auto-generate') === '1';
+			if (shouldAutoGenerate) {
+				var submitGenerated = false;
+				var form = searchInput.closest('form');
+				var submitButton = form ? form.querySelector('input[type="submit"], button[type="submit"]') : null;
+
+				maybeAutoSubmit = function() {
+					if (!shouldAutoGenerate || submitGenerated || !form) {
+						return;
+					}
+					setHiddenFromInputValue();
+					if (!hiddenInput.value) {
+						return;
+					}
+					submitGenerated = true;
+					window.setTimeout(function() {
+						if (submitButton && typeof submitButton.click === 'function') {
+							submitButton.click();
+							return;
+						}
+						if (typeof form.requestSubmit === 'function') {
+							form.requestSubmit();
+						} else {
+							form.submit();
+						}
+					}, 120);
+				};
+
+				searchInput.addEventListener('input', maybeAutoSubmit);
+				searchInput.addEventListener('change', maybeAutoSubmit);
+				searchInput.addEventListener('blur', maybeAutoSubmit);
+
+				if ((searchInput.value || '').trim().length >= 2) {
+					runSearch();
+				}
+				window.setTimeout(maybeAutoSubmit, 300);
+				window.setTimeout(maybeAutoSubmit, 900);
 			}
 		})();
 		</script>

@@ -41,7 +41,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.48';
+	const VERSION = '2.4.49';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8096,8 +8096,23 @@ html body .woocommerce-layout__header {
 		}
 		$url         = self::get_page_url();
 		$reset_url   = self::get_page_url(self::TAB_RESET_PASSWORD);
+		$login_as_url = add_query_arg(
+			[
+				'page' => self::SETTINGS_PAGE_SLUG,
+				'tab' => self::TAB_LOGIN_TOOLS,
+				'login_tools_section' => self::TAB_LOGIN_AS,
+			],
+			admin_url('admin.php')
+		);
 		if ($profile_user_email !== '') {
 			$reset_url = add_query_arg('um_email', rawurlencode($profile_user_email), $reset_url);
+			$login_as_url = add_query_arg(
+				[
+					'um_login_as_email' => $profile_user_email,
+					'um_login_as_auto_generate' => '1',
+				],
+				$login_as_url
+			);
 		}
 		?>
 		<div class="notice notice-info um-profile-notice" style="margin: 15px 0 20px 0; padding: 20px 24px; border-left-width: 4px; font-size: 16px; line-height: 1.5;">
@@ -8111,6 +8126,11 @@ html body .woocommerce-layout__header {
 				<a href="<?php echo esc_url($reset_url); ?>" class="button button-large" style="font-weight: 600; margin-left: 8px;">
 					<?php esc_html_e('Reset Password', 'user-manager'); ?>
 				</a>
+				<?php if ($profile_user_email !== '') : ?>
+					<a href="<?php echo esc_url($login_as_url); ?>" class="button button-large" style="font-weight: 600; margin-left: 8px;">
+						<?php esc_html_e('Login As This User', 'user-manager'); ?>
+					</a>
+				<?php endif; ?>
 			</p>
 		</div>
 		<?php

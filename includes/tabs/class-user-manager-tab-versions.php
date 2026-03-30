@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.49 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Edit User/Profile notice now includes a "Login As This User" button that links directly to Login Tools > Login As.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new button pre-fills the selected user email and can auto-run "Generate Temporary Password" to reduce clicks for admins.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login As screen now supports URL-driven prefill and auto-generate behavior for faster user impersonation workflows.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.48 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Add-on: "Staging & Development Environment Overrides" with Activate toggle and default-on safety settings for disabling emails, payment gateways, webhooks, and API/JSON requests in non-production.', 'user-manager'); ?></li>
