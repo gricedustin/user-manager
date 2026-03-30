@@ -31,6 +31,7 @@ require_once __DIR__ . '/class-user-manager-addon-page-block-subpages-grid.php';
 require_once __DIR__ . '/class-user-manager-addon-page-block-tabbed-content-area.php';
 require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
 require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
+require_once __DIR__ . '/class-user-manager-addon-staging-development-environment-overrides.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
@@ -215,6 +216,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="data-anonymizer">
 					<?php User_Manager_Addon_Data_Anonymizer::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="staging-development-environment-overrides">
+					<?php User_Manager_Addon_Staging_Development_Environment_Overrides::render($settings); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="bulk-page-creator">
 					<?php User_Manager_Addon_Bulk_Page_Creator::render($settings); ?>
@@ -865,6 +869,9 @@ class User_Manager_Tab_Addons {
 				$('#um-data-anonymizer-fields').toggle(enabled);
 				$('#um-data-anonymizer-run-card').toggle(enabled);
 			}
+			function toggleStagingDevOverridesAddonFields() {
+				$('#um-staging-dev-overrides-fields').toggle($('#um-staging-dev-overrides-enabled').is(':checked'));
+			}
 			function toggleMyAccountCouponScreenFields() {
 				$('#um-my-account-coupon-screen-fields').toggle($('#um-my-account-coupon-screen-enabled').is(':checked'));
 			}
@@ -926,6 +933,7 @@ class User_Manager_Tab_Addons {
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
 			toggleDataAnonymizerAddonFields();
+			toggleStagingDevOverridesAddonFields();
 			toggleMyAccountCouponScreenFields();
 			toggleMyAccountMenuTilesFields();
 			toggleCartPricePerPieceFields();
@@ -1083,6 +1091,10 @@ class User_Manager_Tab_Addons {
 			$('#um-data-anonymizer-enabled').on('change', function() {
 				toggleDataAnonymizerAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-data-anonymizer'));
+			});
+			$('#um-staging-dev-overrides-enabled').on('change', function() {
+				toggleStagingDevOverridesAddonFields();
+				refreshAddonCardAutoState($('#um-addon-card-staging-dev-overrides'));
 			});
 			$('#um-security-hardening-enabled').on('change', function() {
 				toggleSecurityHardeningFields();
@@ -1372,6 +1384,11 @@ class User_Manager_Tab_Addons {
 				'description' => __('Anonymize order, user, and supported form-submission data with configurable replacement rules and run history.', 'user-manager'),
 				'active' => !empty($settings['data_anonymizer_enabled']),
 			],
+			'staging-development-environment-overrides' => [
+				'label'  => __('Staging & Development Environment Overrides', 'user-manager'),
+				'description' => __('Apply non-production safety overrides (email/payment/webhook/API blocking) plus front-end/WP-Admin warning notices.', 'user-manager'),
+				'active' => !empty($settings['staging_dev_overrides_enabled']),
+			],
 			'security-hardening' => [
 				'label'  => __('Security Hardening', 'user-manager'),
 				'description' => __('Apply optional hardening controls for REST, WP-Admin file access, SSL admin, and version visibility.', 'user-manager'),
@@ -1502,6 +1519,10 @@ class User_Manager_Tab_Addons {
 			'privacy'    => [
 				'label'    => __('Privacy', 'user-manager'),
 				'keywords' => ['anonymizer', 'anonymize', 'privacy', 'gdpr', 'pii', 'data'],
+			],
+			'staging'    => [
+				'label'    => __('Staging/Dev', 'user-manager'),
+				'keywords' => ['staging', 'development', 'non-production', 'non production', 'override'],
 			],
 			'post'       => [
 				'label'    => __('Posts', 'user-manager'),

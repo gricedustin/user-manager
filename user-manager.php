@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.47
+ * Version: 2.4.48
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.48 - March 16, 2026
+ * - Added new Add-on: "Staging & Development Environment Overrides" with Activate toggle and default-on safety settings.
+ * - Added non-production overrides to disable emails, payment gateways, webhooks, and external API/JSON requests (configurable by checkbox).
+ * - Added configurable non-production notices for front-end and WP-Admin, with optional Data Anonymized timestamp suffix based on Data Anonymizer history.
+ *
  * 2.4.47 - March 16, 2026
  * - Added new Add-on: "Data Anonymizer" with Activate toggle and configurable anonymization settings for Orders, Users, and Form Submissions.
  * - Added "Run Data Anonymizer" card with three run actions (Orders, Users, Forms) that execute using the currently checked settings.

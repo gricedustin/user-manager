@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.48 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Staging & Development Environment Overrides" with Activate toggle and default-on safety settings for disabling emails, payment gateways, webhooks, and API/JSON requests in non-production.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added non-production notices for both front-end top bar and WP-Admin, each enabled by default when the add-on is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added optional "Data Anonymized" timestamp note in non-production notices, sourced from the latest Data Anonymizer history run.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.47 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Add-on: "Data Anonymizer" with Activate toggle and grouped settings for Order Data, User Data, Form Data, and exception domains.', 'user-manager'); ?></li>

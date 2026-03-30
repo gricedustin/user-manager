@@ -2574,6 +2574,14 @@ class User_Manager_Actions {
 				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
 				$settings['send_email_users_enabled'] = isset($_POST['send_email_users_enabled']) && $_POST['send_email_users_enabled'] === '1';
 				$settings['send_sms_text_enabled'] = isset($_POST['send_sms_text_enabled']) && $_POST['send_sms_text_enabled'] === '1';
+				$settings['staging_dev_overrides_enabled'] = isset($_POST['staging_dev_overrides_enabled']) && $_POST['staging_dev_overrides_enabled'] === '1';
+				$settings['staging_dev_disable_all_emails'] = isset($_POST['staging_dev_disable_all_emails']) && $_POST['staging_dev_disable_all_emails'] === '1';
+				$settings['staging_dev_disable_all_payment_gateways'] = isset($_POST['staging_dev_disable_all_payment_gateways']) && $_POST['staging_dev_disable_all_payment_gateways'] === '1';
+				$settings['staging_dev_disable_all_webhooks'] = isset($_POST['staging_dev_disable_all_webhooks']) && $_POST['staging_dev_disable_all_webhooks'] === '1';
+				$settings['staging_dev_disable_all_api_json_requests'] = isset($_POST['staging_dev_disable_all_api_json_requests']) && $_POST['staging_dev_disable_all_api_json_requests'] === '1';
+				$settings['staging_dev_notice_frontend_top_bar'] = isset($_POST['staging_dev_notice_frontend_top_bar']) && $_POST['staging_dev_notice_frontend_top_bar'] === '1';
+				$settings['staging_dev_notice_wp_admin'] = isset($_POST['staging_dev_notice_wp_admin']) && $_POST['staging_dev_notice_wp_admin'] === '1';
+				$settings['staging_dev_notice_include_data_anonymized'] = isset($_POST['staging_dev_notice_include_data_anonymized']) && $_POST['staging_dev_notice_include_data_anonymized'] === '1';
 				$settings['data_anonymizer_enabled'] = isset($_POST['data_anonymizer_enabled']) && $_POST['data_anonymizer_enabled'] === '1';
 				$settings['data_anonymizer_order_address_random'] = isset($_POST['data_anonymizer_order_address_random']) && $_POST['data_anonymizer_order_address_random'] === '1';
 				$settings['data_anonymizer_order_phone_fixed'] = isset($_POST['data_anonymizer_order_phone_fixed']) && $_POST['data_anonymizer_order_phone_fixed'] === '1';

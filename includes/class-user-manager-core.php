@@ -41,7 +41,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.47';
+	const VERSION = '2.4.48';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -57,6 +57,11 @@ final class User_Manager_Core {
 	 * @var array<int,array<int,string>>
 	 */
 	private static array $coupon_remainder_debug_messages = [];
+
+	/**
+	 * Prevent duplicate front-end non-production notice rendering.
+	 */
+	private static bool $staging_dev_notice_rendered = false;
 
 	/**
 	 * Per-request debug trace rows for bulk add to cart uploads.
@@ -83,6 +88,7 @@ final class User_Manager_Core {
 	 * Cached runtime "disable all add-ons" URL flag.
 	 */
 	private static ?bool $runtime_disable_all_addons = null;
+	private static bool $staging_dev_notice_rendered = false;
 
 	// Tab constants
 	const TAB_LOGIN_TOOLS     = 'login-tools';
@@ -228,6 +234,14 @@ final class User_Manager_Core {
 		add_filter('render_block', [__CLASS__, 'maybe_detect_checkout_block'], 10, 2);
 		add_action('wp_footer', [__CLASS__, 'inject_checkout_remaining_balance_notice'], 5);
 		add_action('wp_footer', [__CLASS__, 'render_public_coupon_debug_output'], 999);
+		add_action('admin_notices', [__CLASS__, 'render_non_production_admin_notice'], 6);
+		add_action('wp_footer', [__CLASS__, 'render_non_production_frontend_notice_bar'], 0);
+		add_action('wp_body_open', [__CLASS__, 'render_non_production_frontend_notice_bar'], 1);
+		add_filter('pre_wp_mail', [__CLASS__, 'maybe_block_staging_dev_wp_mail'], 10, 2);
+		add_filter('woocommerce_available_payment_gateways', [__CLASS__, 'maybe_disable_staging_dev_payment_gateways'], 999);
+		add_filter('pre_http_request', [__CLASS__, 'maybe_block_staging_dev_http_requests'], 10, 3);
+		add_filter('rest_pre_dispatch', [__CLASS__, 'maybe_block_staging_dev_rest_requests'], 10, 3);
+		add_filter('woocommerce_webhook_should_deliver', [__CLASS__, 'maybe_block_staging_dev_woocommerce_webhook'], 10, 4);
 		
 		// Frontend/site-wide behavior toggles based on settings.
 		$settings = self::get_settings();
@@ -350,6 +364,227 @@ final class User_Manager_Core {
 		}
 
 		$cart->calculate_totals();
+	}
+
+	/**
+	 * Whether Staging & Development Environment Overrides add-on is active.
+	 *
+	 * @param array<string,mixed>|null $settings Optional settings cache.
+	 */
+	private static function is_staging_dev_overrides_enabled(?array $settings = null): bool {
+		if ($settings === null) {
+			$settings = self::get_settings();
+		}
+		return !empty($settings['staging_dev_overrides_enabled']) && !self::is_addon_temporarily_disabled('staging-development-environment-overrides');
+	}
+
+	/**
+	 * Get a default-true staging/dev setting value.
+	 *
+	 * @param array<string,mixed> $settings
+	 */
+	private static function get_staging_dev_default_true_setting(array $settings, string $key): bool {
+		if (!array_key_exists($key, $settings)) {
+			return true;
+		}
+		return !empty($settings[$key]);
+	}
+
+	/**
+	 * Build data anonymized suffix text based on latest Data Anonymizer history.
+	 */
+	private static function get_staging_dev_data_anonymized_notice_suffix(array $settings): string {
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_notice_include_data_anonymized')) {
+			return '';
+		}
+		$history = get_option('user_manager_data_anonymizer_history', []);
+		if (!is_array($history) || empty($history)) {
+			return __(' | Data anonymized: no runs recorded yet', 'user-manager');
+		}
+		$latest = $history[0];
+		if (!is_array($latest)) {
+			return __(' | Data anonymized: no runs recorded yet', 'user-manager');
+		}
+		$created_at = isset($latest['created_at']) ? (string) $latest['created_at'] : '';
+		if ($created_at === '') {
+			return __(' | Data anonymized: timestamp unavailable', 'user-manager');
+		}
+		$timestamp = strtotime($created_at);
+		if (!$timestamp) {
+			return sprintf(
+				/* translators: %s: timestamp text */
+				__(' | Data anonymized: %s', 'user-manager'),
+				$created_at
+			);
+		}
+		return sprintf(
+			/* translators: %s: timestamp text */
+			__(' | Data anonymized: %s', 'user-manager'),
+			date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $timestamp)
+		);
+	}
+
+	/**
+	 * Render non-production warning notice in WP-Admin.
+	 */
+	public static function render_non_production_admin_notice(): void {
+		if (wp_doing_ajax()) {
+			return;
+		}
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_notice_wp_admin')) {
+			return;
+		}
+		$suffix = self::get_staging_dev_data_anonymized_notice_suffix($settings);
+		?>
+		<div class="notice notice-warning" style="margin:12px 0 16px;">
+			<p>
+				<strong><?php esc_html_e('Non-Production Environment', 'user-manager'); ?></strong>
+				<?php echo esc_html__(' - staging/development overrides are active.', 'user-manager'); ?>
+				<?php echo esc_html($suffix); ?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render non-production warning notice bar on front-end.
+	 */
+	public static function render_non_production_frontend_notice_bar(): void {
+		if (is_admin() || wp_doing_ajax()) {
+			return;
+		}
+		if (self::$staging_dev_notice_rendered) {
+			return;
+		}
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_notice_frontend_top_bar')) {
+			return;
+		}
+		$suffix = self::get_staging_dev_data_anonymized_notice_suffix($settings);
+		?>
+		<div class="um-non-production-notice-bar" style="position:sticky;top:0;left:0;right:0;z-index:99999;background:#d63638;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;">
+			<?php esc_html_e('Non-Production Environment - staging/development overrides are active.', 'user-manager'); ?>
+			<?php echo esc_html($suffix); ?>
+		</div>
+		<?php
+		self::$staging_dev_notice_rendered = true;
+	}
+
+	/**
+	 * Block outgoing wp_mail calls when staging/dev email override is enabled.
+	 *
+	 * @param null|bool|WP_Error $return Short-circuit return.
+	 * @param array<string,mixed> $atts Mail attributes.
+	 * @return null|bool|WP_Error
+	 */
+	public static function maybe_block_staging_dev_wp_mail($return, array $atts = []) {
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $return;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_emails')) {
+			return $return;
+		}
+		return false;
+	}
+
+	/**
+	 * Disable all WooCommerce payment gateways when override is active.
+	 *
+	 * @param array<string,mixed> $gateways
+	 * @return array<string,mixed>
+	 */
+	public static function maybe_disable_staging_dev_payment_gateways(array $gateways): array {
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $gateways;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_payment_gateways')) {
+			return $gateways;
+		}
+		return [];
+	}
+
+	/**
+	 * Disable outbound HTTP API requests (except same-host/admin internal requests).
+	 *
+	 * @param false|array|WP_Error $preempt
+	 * @param array<string,mixed> $args
+	 * @param string $url
+	 * @return false|array|WP_Error
+	 */
+	public static function maybe_block_staging_dev_http_requests($preempt, array $args, string $url) {
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $preempt;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_api_json_requests')) {
+			return $preempt;
+		}
+		if (wp_doing_cron() || wp_doing_ajax()) {
+			return $preempt;
+		}
+
+		$target_host = (string) wp_parse_url($url, PHP_URL_HOST);
+		$home_host = (string) wp_parse_url(home_url(), PHP_URL_HOST);
+		if ($target_host !== '' && $home_host !== '' && strtolower($target_host) === strtolower($home_host)) {
+			return $preempt;
+		}
+
+		return new WP_Error(
+			'um_staging_dev_http_blocked',
+			__('Blocked by Staging & Development Environment Overrides: API/JSON requests are disabled.', 'user-manager')
+		);
+	}
+
+	/**
+	 * Disable REST API endpoint dispatch when override is active.
+	 *
+	 * @param mixed $result
+	 * @param WP_REST_Server $server
+	 * @param WP_REST_Request $request
+	 * @return mixed
+	 */
+	public static function maybe_block_staging_dev_rest_requests($result, $server, $request) {
+		if (defined('WP_CLI') && WP_CLI) {
+			return $result;
+		}
+		if (wp_doing_ajax()) {
+			return $result;
+		}
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $result;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_api_json_requests')) {
+			return $result;
+		}
+		return new WP_Error(
+			'um_staging_dev_rest_blocked',
+			__('Blocked by Staging & Development Environment Overrides: REST/API requests are disabled.', 'user-manager'),
+			['status' => 503]
+		);
+	}
+
+	/**
+	 * Disable WooCommerce webhook delivery when override is active.
+	 */
+	public static function maybe_block_staging_dev_woocommerce_webhook(bool $should_deliver, $webhook, $arg, $resource): bool {
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $should_deliver;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_webhooks')) {
+			return $should_deliver;
+		}
+		return false;
 	}
 	
 	/**
@@ -8855,6 +9090,10 @@ html body .woocommerce-layout__header {
 			'data-anonymizer' => [
 				'label' => 'Data Anonymizer',
 				'settings_keys' => ['data_anonymizer_enabled'],
+			],
+			'staging-development-environment-overrides' => [
+				'label' => 'Staging & Development Environment Overrides',
+				'settings_keys' => ['staging_dev_overrides_enabled'],
 			],
 			'bulk-page-creator' => [
 				'label' => 'Page Creator',
