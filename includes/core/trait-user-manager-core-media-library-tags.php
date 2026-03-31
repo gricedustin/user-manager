@@ -563,11 +563,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		var filterHtml = buildOptions(cfg.labels && cfg.labels.filterAll, selectedTag);
 		var bulkHtml = buildOptions(cfg.labels && cfg.labels.bulkChoose, '');
 		var $filterLabel = $('<label class="screen-reader-text" for="um-media-library-tag-filter-grid">Library Tag filter</label>');
-		var $filter = $('<select id="um-media-library-tag-filter-grid" class="attachment-filters"></select>').html(filterHtml);
+		var $filter = $('<select id="um-media-library-tag-filter-grid" class="um-media-library-tag-control"></select>').html(filterHtml);
 		var $bulkLabel = $('<label class="screen-reader-text" for="um-media-library-tag-bulk-grid">Bulk apply Library Tag</label>');
-		var $bulk = $('<select id="um-media-library-tag-bulk-grid" class="attachment-filters"></select>').html(bulkHtml);
-		var $newTag = $('<input type="text" id="um-media-library-tag-bulk-grid-new" class="attachment-filters" />').attr('placeholder', (cfg.labels && cfg.labels.bulkNewTagPlaceholder) || 'or enter new Library Tag');
+		var $bulk = $('<select id="um-media-library-tag-bulk-grid" class="um-media-library-tag-control"></select>').html(bulkHtml);
+		var $newTag = $('<input type="text" id="um-media-library-tag-bulk-grid-new" class="um-media-library-tag-control" />').attr('placeholder', (cfg.labels && cfg.labels.bulkNewTagPlaceholder) || 'or enter new Library Tag');
 		var $button = $('<button type="button" class="button media-button"></button>').text((cfg.labels && cfg.labels.bulkButton) || 'Apply Library Tag');
+		$filter.css({ display: 'inline-block', minWidth: '160px' });
+		$bulk.css({ display: 'inline-block', minWidth: '190px' });
+		$newTag.css({ display: 'inline-block', minWidth: '190px' });
 
 		$toolbar.append($filterLabel).append($filter).append($bulkLabel).append($bulk).append($newTag).append($button);
 
