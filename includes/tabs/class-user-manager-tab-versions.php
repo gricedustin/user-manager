@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.59 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery block: added per-block setting "Allow URL tag override (?tag=...)" to optionally override the selected block tag from the URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, ?tag={tag-slug-or-name} now overrides the gallery tag filter for that block instance only; when disabled, the saved block tag remains in effect.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.58 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags & Photo Gallery: updated Style choices to 12 layout modes (Mosaic Grid, Masonry/Pinterest, Uniform Grid, Justified Rows, Carousel/Slider, Fullscreen Lightbox Grid, Horizontal Scroll, Polaroid/Scrapbook, Split Screen Feature, Infinite Scroll, 3D Perspective, Timeline/Story).', 'user-manager'); ?></li>

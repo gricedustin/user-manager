@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.58
+ * Version: 2.4.59
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.59 - March 16, 2026
+ * - Media Library Tag Gallery block: added a block-level setting to allow URL parameter override via ?tag=[tag_name].
+ * - When enabled on a block instance, the URL tag parameter overrides the block-selected Library Tag (if the tag exists); when disabled, block tag selection remains unchanged.
+ *
  * 2.4.58 - March 16, 2026
  * - Media Library Tags & Photo Gallery: updated Style options to 12 layouts: Mosaic Grid (Irregular Tiles), Masonry / Pinterest, Uniform Grid, Justified Row, Carousel / Slider, Fullscreen Lightbox Grid, Horizontal Scroll, Polaroid / Scrapbook, Split Screen Feature, Infinite Scroll, 3D Perspective, and Timeline / Story.
  * - Added matching front-end rendering/CSS/JS behaviors for each of these gallery styles, including carousel navigation, split-screen thumbnail switching, infinite reveal-on-scroll, timeline metadata layout, and fullscreen/lightbox interactions.

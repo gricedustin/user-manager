@@ -599,6 +599,7 @@ JS;
 			'render_callback' => [__CLASS__, 'render_media_library_tags_gallery_block'],
 			'attributes' => [
 				'tagSlug' => ['type' => 'string', 'default' => ''],
+				'allowUrlTagOverride' => ['type' => 'boolean', 'default' => false],
 				'columnsDesktop' => ['type' => 'integer', 'default' => 4],
 				'columnsMobile' => ['type' => 'integer', 'default' => 2],
 				'sortOrder' => ['type' => 'string', 'default' => 'date_desc'],
@@ -675,6 +676,7 @@ JS;
 	var PanelBody = components.PanelBody;
 	var SelectControl = components.SelectControl;
 	var TextControl = components.TextControl;
+	var ToggleControl = components.ToggleControl;
 
 	var cfg = window.umMediaLibraryTagGalleryConfig || {};
 	var defaults = cfg.defaults || {};
@@ -699,11 +701,12 @@ JS;
 		category: 'widgets',
 		attributes: {
 			tagSlug: { type: 'string', default: '' },
+			allowUrlTagOverride: { type: 'boolean', default: false },
 			columnsDesktop: { type: 'integer', default: parseInt(defaults.columnsDesktop, 10) || 4 },
 			columnsMobile: { type: 'integer', default: parseInt(defaults.columnsMobile, 10) || 2 },
 			sortOrder: { type: 'string', default: defaults.sortOrder || 'date_desc' },
 			fileSize: { type: 'string', default: defaults.fileSize || 'thumbnail' },
-			style: { type: 'string', default: defaults.style || 'standard' },
+			style: { type: 'string', default: defaults.style || 'uniform_grid' },
 			pageLimit: { type: 'integer', default: parseInt(defaults.pageLimit, 10) || 0 },
 			linkTo: { type: 'string', default: defaults.linkTo || 'none' }
 		},
@@ -724,6 +727,12 @@ JS;
 							value: a.tagSlug || '',
 							options: terms,
 							onChange: function(v){ set({ tagSlug: String(v || '') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Allow URL tag override (?tag=tag-slug)',
+							checked: !!a.allowUrlTagOverride,
+							onChange: function(v){ set({ allowUrlTagOverride: !!v }); },
+							help: a.allowUrlTagOverride ? 'URL ?tag=... can override selected tag for this block.' : 'Use selected tag only.'
 						}),
 						element.createElement(TextControl, {
 							label: 'Number of Columns (Desktop)',
@@ -769,7 +778,7 @@ JS;
 								{ label: 'Mosaic Grid (Irregular Tiles)', value: 'mosaic_grid' },
 								{ label: 'Masonry / Pinterest Layout', value: 'masonry_pinterest' },
 								{ label: 'Uniform Grid (Classic Gallery)', value: 'uniform_grid' },
-								{ label: 'Justified Row Layout', value: 'justified_row' },
+								{ label: 'Justified Row Layout', value: 'justified_rows' },
 								{ label: 'Carousel / Slider Gallery', value: 'carousel_slider' },
 								{ label: 'Fullscreen Lightbox Grid', value: 'fullscreen_lightbox_grid' },
 								{ label: 'Horizontal Scroll Gallery', value: 'horizontal_scroll' },
@@ -821,6 +830,7 @@ JS;
 		$defaults = self::get_media_library_tag_gallery_defaults($settings);
 
 		$tag_slug = isset($attrs['tagSlug']) ? sanitize_title((string) $attrs['tagSlug']) : '';
+		$allow_url_tag_override = !empty($attrs['allowUrlTagOverride']);
 		$columns_desktop = max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
 		$columns_mobile = max(1, min(4, absint($attrs['columnsMobile'] ?? $defaults['columnsMobile'])));
 		$sort_order = isset($attrs['sortOrder']) ? sanitize_key((string) $attrs['sortOrder']) : (string) $defaults['sortOrder'];
@@ -847,6 +857,14 @@ JS;
 		}
 		if (!in_array($link_to, $allowed_links, true)) {
 			$link_to = 'none';
+		}
+		if ($allow_url_tag_override && isset($_GET['tag'])) {
+			$url_tag = sanitize_title((string) wp_unslash($_GET['tag']));
+			if ($url_tag === 'all') {
+				$tag_slug = '';
+			} elseif ($url_tag !== '' && term_exists($url_tag, self::media_library_tags_taxonomy())) {
+				$tag_slug = $url_tag;
+			}
 		}
 
 		$effective_link_to = $link_to;
