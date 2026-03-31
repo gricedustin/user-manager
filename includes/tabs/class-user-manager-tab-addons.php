@@ -925,6 +925,9 @@ class User_Manager_Tab_Addons {
 			}
 			function toggleMediaLibraryTagsFields() {
 				$('#um-media-library-tags-fields').toggle($('#um-media-library-tags-enabled').is(':checked'));
+				$('#um-media-library-tags-gallery-settings').toggle(
+					$('#um-media-library-tags-enabled').is(':checked') && $('#um-media-library-tags-gallery-block-enabled').is(':checked')
+				);
 			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
@@ -1173,6 +1176,10 @@ class User_Manager_Tab_Addons {
 				refreshAddonCardAutoState($('#um-addon-card-send-sms-text'));
 			});
 			$('#um-media-library-tags-enabled').on('change', function() {
+				toggleMediaLibraryTagsFields();
+				refreshAddonCardAutoState($('#um-addon-card-media-library-tags'));
+			});
+			$('#um-media-library-tags-gallery-block-enabled').on('change', function() {
 				toggleMediaLibraryTagsFields();
 				refreshAddonCardAutoState($('#um-addon-card-media-library-tags'));
 			});
@@ -1427,8 +1434,8 @@ class User_Manager_Tab_Addons {
 				'active' => $my_account_site_admin_enabled,
 			],
 			'media-library-tags' => [
-				'label'  => __('Media Library Tags', 'user-manager'),
-				'description' => __('Add Library Tags taxonomy management, media-library filtering, and bulk tag assignment tools for attachments.', 'user-manager'),
+				'label'  => __('Media Library Tags & Photo Gallery', 'user-manager'),
+				'description' => __('Add Library Tags taxonomy management, media-library filtering, bulk tag assignment tools for attachments, plus an optional tag-based photo gallery block for posts/pages.', 'user-manager'),
 				'active' => !empty($settings['media_library_tags_enabled']),
 			],
 			'post-meta' => [

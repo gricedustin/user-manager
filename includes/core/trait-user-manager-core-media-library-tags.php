@@ -20,6 +20,10 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 
 		add_action('init', [__CLASS__, 'register_media_library_tags_taxonomy'], 20);
+		if (!empty($settings['media_library_tag_gallery_block_enabled'])) {
+			add_action('init', [__CLASS__, 'register_media_library_tags_gallery_block'], 20);
+			add_action('enqueue_block_editor_assets', [__CLASS__, 'enqueue_media_library_tags_gallery_block_editor_assets']);
+		}
 		add_action('restrict_manage_posts', [__CLASS__, 'render_media_library_tag_filter_controls'], 20, 2);
 		add_filter('manage_upload_columns', [__CLASS__, 'add_media_library_tags_list_table_column']);
 		add_action('manage_media_custom_column', [__CLASS__, 'render_media_library_tags_list_table_column'], 10, 2);
@@ -556,23 +560,547 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 	$(function() {
 		var isGridMode = $('body.upload-php.mode-grid').length > 0 || /[?&]mode=grid(?:&|$)/.test(window.location.search);
-		if (!isGridMode) {
-			return;
-		}
-		ensureGridControls();
-		var tries = 0;
-		var timer = window.setInterval(function() {
+		if (isGridMode) {
 			ensureGridControls();
-			tries++;
-			if (tries > 20 || $('#um-media-library-tag-filter-grid').length) {
-				window.clearInterval(timer);
-			}
-		}, 300);
+			var tries = 0;
+			var timer = window.setInterval(function() {
+				ensureGridControls();
+				tries++;
+				if (tries > 20 || $('#um-media-library-tag-filter-grid').length) {
+					window.clearInterval(timer);
+				}
+			}, 300);
+		}
+
 	});
 })(jQuery);
 JS;
 		wp_add_inline_script('um-media-library-tags-admin', $script);
 		wp_enqueue_script('um-media-library-tags-admin');
+	}
+
+	/**
+	 * Register Media Library Tag Gallery block.
+	 */
+	public static function register_media_library_tags_gallery_block(): void {
+		if (!function_exists('register_block_type')) {
+			return;
+		}
+
+		$block_name = 'custom/media-library-tag-gallery';
+		if (class_exists('WP_Block_Type_Registry')) {
+			$registry = WP_Block_Type_Registry::get_instance();
+			if ($registry instanceof WP_Block_Type_Registry && method_exists($registry, 'is_registered') && $registry->is_registered($block_name)) {
+				return;
+			}
+		}
+
+		register_block_type($block_name, [
+			'render_callback' => [__CLASS__, 'render_media_library_tags_gallery_block'],
+			'attributes' => [
+				'tagSlug' => ['type' => 'string', 'default' => ''],
+				'columnsDesktop' => ['type' => 'integer', 'default' => 4],
+				'columnsMobile' => ['type' => 'integer', 'default' => 2],
+				'sortOrder' => ['type' => 'string', 'default' => 'date_desc'],
+				'fileSize' => ['type' => 'string', 'default' => 'thumbnail'],
+				'style' => ['type' => 'string', 'default' => 'standard'],
+				'pageLimit' => ['type' => 'integer', 'default' => 0],
+				'linkTo' => ['type' => 'string', 'default' => 'none'],
+			],
+			'editor_script' => 'um-media-library-tag-gallery-editor',
+		]);
+	}
+
+	/**
+	 * Enqueue editor assets for Media Library Tag Gallery block.
+	 */
+	public static function enqueue_media_library_tags_gallery_block_editor_assets(): void {
+		$terms = get_terms([
+			'taxonomy' => self::media_library_tags_taxonomy(),
+			'hide_empty' => false,
+			'orderby' => 'name',
+			'order' => 'ASC',
+		]);
+		if (is_wp_error($terms)) {
+			$terms = [];
+		}
+
+		$term_options = [
+			['label' => __('All Library Tags', 'user-manager'), 'value' => ''],
+		];
+		foreach ($terms as $term) {
+			if (!($term instanceof WP_Term)) {
+				continue;
+			}
+			$term_options[] = [
+				'label' => (string) $term->name,
+				'value' => (string) $term->slug,
+			];
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$defaults = self::get_media_library_tag_gallery_defaults($settings);
+
+		wp_register_script(
+			'um-media-library-tag-gallery-editor',
+			false,
+			['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor'],
+			User_Manager_Core::VERSION,
+			true
+		);
+		wp_add_inline_script(
+			'um-media-library-tag-gallery-editor',
+			'window.umMediaLibraryTagGalleryConfig = ' . wp_json_encode([
+				'terms' => $term_options,
+				'defaults' => $defaults,
+				'imageSizes' => array_map(
+					static function (string $size_value, string $size_label): array {
+						return [
+							'value' => $size_value,
+							'label' => $size_label,
+						];
+					},
+					array_keys(self::get_available_image_sizes_for_media_gallery()),
+					array_values(self::get_available_image_sizes_for_media_gallery())
+				),
+			]) . ';',
+			'before'
+		);
+
+		$script = <<<'JS'
+(function(blocks, element, blockEditor, components) {
+	var registerBlockType = blocks.registerBlockType;
+	var Fragment = element.Fragment;
+	var InspectorControls = blockEditor.InspectorControls;
+	var PanelBody = components.PanelBody;
+	var SelectControl = components.SelectControl;
+	var TextControl = components.TextControl;
+
+	var cfg = window.umMediaLibraryTagGalleryConfig || {};
+	var defaults = cfg.defaults || {};
+	var terms = Array.isArray(cfg.terms) ? cfg.terms : [{ label: 'All Library Tags', value: '' }];
+	var imageSizeOptions = Array.isArray(cfg.imageSizes) ? cfg.imageSizes.map(function(size) {
+		return { label: String(size.label || size.value || ''), value: String(size.value || '') };
+	}).filter(function(size) {
+		return size.value !== '';
+	}) : [];
+	if (!imageSizeOptions.length) {
+		imageSizeOptions = [
+			{ label: 'Thumbnail', value: 'thumbnail' },
+			{ label: 'Medium', value: 'medium' },
+			{ label: 'Large', value: 'large' },
+			{ label: 'Full Size', value: 'full' }
+		];
+	}
+
+	registerBlockType('custom/media-library-tag-gallery', {
+		title: 'Media Library Tag Gallery',
+		icon: 'format-gallery',
+		category: 'widgets',
+		attributes: {
+			tagSlug: { type: 'string', default: '' },
+			columnsDesktop: { type: 'integer', default: parseInt(defaults.columnsDesktop, 10) || 4 },
+			columnsMobile: { type: 'integer', default: parseInt(defaults.columnsMobile, 10) || 2 },
+			sortOrder: { type: 'string', default: defaults.sortOrder || 'date_desc' },
+			fileSize: { type: 'string', default: defaults.fileSize || 'thumbnail' },
+			style: { type: 'string', default: defaults.style || 'standard' },
+			pageLimit: { type: 'integer', default: parseInt(defaults.pageLimit, 10) || 0 },
+			linkTo: { type: 'string', default: defaults.linkTo || 'none' }
+		},
+		edit: function(props) {
+			var a = props.attributes;
+			var set = props.setAttributes;
+			return element.createElement(
+				Fragment,
+				{},
+				element.createElement(
+					InspectorControls,
+					{},
+					element.createElement(
+						PanelBody,
+						{ title: 'Gallery Settings', initialOpen: true },
+						element.createElement(SelectControl, {
+							label: 'Library Tag',
+							value: a.tagSlug || '',
+							options: terms,
+							onChange: function(v){ set({ tagSlug: String(v || '') }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Number of Columns (Desktop)',
+							type: 'number',
+							min: 1,
+							max: 8,
+							value: a.columnsDesktop || 4,
+							onChange: function(v){ set({ columnsDesktop: Math.max(1, parseInt(v, 10) || 1) }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Number of Columns (Mobile)',
+							type: 'number',
+							min: 1,
+							max: 4,
+							value: a.columnsMobile || 2,
+							onChange: function(v){ set({ columnsMobile: Math.max(1, parseInt(v, 10) || 1) }); }
+						}),
+						element.createElement(SelectControl, {
+							label: 'Sort Order',
+							value: a.sortOrder || 'date_desc',
+							options: [
+								{ label: 'Date ASC', value: 'date_asc' },
+								{ label: 'Date DESC', value: 'date_desc' },
+								{ label: 'ID ASC', value: 'id_asc' },
+								{ label: 'ID DESC', value: 'id_desc' },
+								{ label: 'Filename ASC', value: 'filename_asc' },
+								{ label: 'Filename DESC', value: 'filename_desc' },
+								{ label: 'Caption ASC', value: 'caption_asc' },
+								{ label: 'Caption DESC', value: 'caption_desc' }
+							],
+							onChange: function(v){ set({ sortOrder: String(v || 'date_desc') }); }
+						}),
+						element.createElement(SelectControl, {
+							label: 'File Size',
+							value: a.fileSize || 'thumbnail',
+							options: imageSizeOptions,
+							onChange: function(v){ set({ fileSize: String(v || 'thumbnail') }); }
+						}),
+						element.createElement(SelectControl, {
+							label: 'Style',
+							value: a.style || 'standard',
+							options: [
+								{ label: 'Standard', value: 'standard' },
+								{ label: 'Mosaic', value: 'mosaic' },
+				{ label: 'Square CSS Crop', value: 'square_crop' },
+				{ label: 'Wide Rectangle CSS Crop', value: 'wide_rectangle_crop' },
+				{ label: 'Tall Rectangle CSS Crop', value: 'tall_rectangle_crop' },
+				{ label: 'Circle CSS Crop', value: 'circle_crop' }
+							],
+							onChange: function(v){ set({ style: String(v || 'standard') }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Page Limit (0 = unlimited)',
+							type: 'number',
+							min: 0,
+							value: a.pageLimit || 0,
+							onChange: function(v){ set({ pageLimit: Math.max(0, parseInt(v, 10) || 0) }); }
+						}),
+						element.createElement(SelectControl, {
+							label: 'Link To',
+							value: a.linkTo || 'none',
+							options: [
+								{ label: 'Nothing', value: 'none' },
+								{ label: 'Lightbox', value: 'lightbox' },
+								{ label: 'Open Media Library Permalink', value: 'media_permalink' }
+							],
+							onChange: function(v){ set({ linkTo: String(v || 'none') }); }
+						})
+					)
+				),
+				element.createElement('p', {}, 'Media Library Tag Gallery preview is shown on the front-end.')
+			);
+		},
+		save: function() { return null; }
+	});
+})(window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.components);
+JS;
+		wp_add_inline_script('um-media-library-tag-gallery-editor', $script);
+		wp_enqueue_script('um-media-library-tag-gallery-editor');
+	}
+
+	/**
+	 * Render callback for Media Library Tag Gallery block.
+	 *
+	 * @param array<string,mixed> $attrs Block attributes.
+	 */
+	public static function render_media_library_tags_gallery_block(array $attrs = []): string {
+		$settings = User_Manager_Core::get_settings();
+		$defaults = self::get_media_library_tag_gallery_defaults($settings);
+
+		$tag_slug = isset($attrs['tagSlug']) ? sanitize_title((string) $attrs['tagSlug']) : '';
+		$columns_desktop = max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
+		$columns_mobile = max(1, min(4, absint($attrs['columnsMobile'] ?? $defaults['columnsMobile'])));
+		$sort_order = isset($attrs['sortOrder']) ? sanitize_key((string) $attrs['sortOrder']) : (string) $defaults['sortOrder'];
+		$file_size = isset($attrs['fileSize']) ? sanitize_key((string) $attrs['fileSize']) : (string) $defaults['fileSize'];
+		$style = isset($attrs['style']) ? sanitize_key((string) $attrs['style']) : (string) $defaults['style'];
+		$page_limit = max(0, absint($attrs['pageLimit'] ?? $defaults['pageLimit']));
+		$link_to = isset($attrs['linkTo']) ? sanitize_key((string) $attrs['linkTo']) : (string) $defaults['linkTo'];
+
+		$allowed_sort_orders = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc'];
+		$allowed_file_sizes = array_keys(self::get_available_image_sizes_for_media_gallery());
+		if (empty($allowed_file_sizes)) {
+			$allowed_file_sizes = ['thumbnail', 'medium', 'large', 'full'];
+		}
+		$allowed_styles = ['standard', 'mosaic', 'square_crop', 'wide_rectangle_crop', 'tall_rectangle_crop', 'circle_crop'];
+		$allowed_links = ['none', 'lightbox', 'media_permalink'];
+		if (!in_array($sort_order, $allowed_sort_orders, true)) {
+			$sort_order = 'date_desc';
+		}
+		if (!in_array($file_size, $allowed_file_sizes, true)) {
+			$file_size = 'thumbnail';
+		}
+		if (!in_array($style, $allowed_styles, true)) {
+			$style = 'standard';
+		}
+		if (!in_array($link_to, $allowed_links, true)) {
+			$link_to = 'none';
+		}
+
+		$page_num = isset($_GET['um_media_gallery_page']) ? max(1, absint(wp_unslash($_GET['um_media_gallery_page']))) : 1;
+		$offset = 0;
+		if ($page_limit > 0) {
+			$offset = ($page_num - 1) * $page_limit;
+		}
+
+		$query_args = [
+			'post_type' => 'attachment',
+			'post_status' => 'inherit',
+			'post_mime_type' => 'image',
+			'posts_per_page' => $page_limit > 0 ? $page_limit : -1,
+			'offset' => $offset,
+			'no_found_rows' => $page_limit <= 0,
+		];
+
+		if ($tag_slug !== '' && term_exists($tag_slug, self::media_library_tags_taxonomy())) {
+			$query_args['tax_query'] = [
+				[
+					'taxonomy' => self::media_library_tags_taxonomy(),
+					'field' => 'slug',
+					'terms' => [$tag_slug],
+				],
+			];
+		}
+
+		switch ($sort_order) {
+			case 'date_asc':
+				$query_args['orderby'] = 'date';
+				$query_args['order'] = 'ASC';
+				break;
+			case 'date_desc':
+				$query_args['orderby'] = 'date';
+				$query_args['order'] = 'DESC';
+				break;
+			case 'id_asc':
+				$query_args['orderby'] = 'ID';
+				$query_args['order'] = 'ASC';
+				break;
+			case 'id_desc':
+				$query_args['orderby'] = 'ID';
+				$query_args['order'] = 'DESC';
+				break;
+			case 'filename_asc':
+				$query_args['meta_key'] = '_wp_attached_file';
+				$query_args['orderby'] = 'meta_value';
+				$query_args['order'] = 'ASC';
+				break;
+			case 'filename_desc':
+				$query_args['meta_key'] = '_wp_attached_file';
+				$query_args['orderby'] = 'meta_value';
+				$query_args['order'] = 'DESC';
+				break;
+			case 'caption_asc':
+				$query_args['orderby'] = 'post_excerpt';
+				$query_args['order'] = 'ASC';
+				break;
+			case 'caption_desc':
+				$query_args['orderby'] = 'post_excerpt';
+				$query_args['order'] = 'DESC';
+				break;
+		}
+
+		$query = new WP_Query($query_args);
+		$attachments = $query->posts;
+		if (!is_array($attachments)) {
+			$attachments = [];
+		}
+
+		$uid = function_exists('wp_unique_id') ? wp_unique_id('um-media-gallery-') : uniqid('um-media-gallery-');
+		$style_class = 'um-media-gallery-style-' . $style;
+		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
+
+		ob_start();
+		?>
+		<div id="<?php echo esc_attr($uid); ?>" class="um-media-library-tag-gallery <?php echo esc_attr($style_class); ?>">
+			<div class="um-media-library-tag-gallery-grid" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
+				<?php foreach ($attachments as $attachment) : ?>
+					<?php
+					if (!($attachment instanceof WP_Post)) {
+						continue;
+					}
+					$attachment_id = (int) $attachment->ID;
+					$image_html = wp_get_attachment_image($attachment_id, $file_size, false, ['loading' => 'lazy']);
+					if ($image_html === '') {
+						continue;
+					}
+					$image_src = wp_get_attachment_image_url($attachment_id, 'full');
+					$permalink = get_attachment_link($attachment_id);
+					$caption = wp_get_attachment_caption($attachment_id);
+					?>
+					<figure class="um-media-library-tag-gallery-item">
+					<?php if ($link_to === 'media_permalink' && $permalink) : ?>
+							<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+						<?php elseif ($link_to === 'lightbox' && $image_src) : ?>
+							<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1"><?php echo $image_html; ?></a>
+						<?php else : ?>
+							<?php echo $image_html; ?>
+						<?php endif; ?>
+						<?php if ($caption !== '') : ?>
+							<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($caption); ?></figcaption>
+						<?php endif; ?>
+					</figure>
+				<?php endforeach; ?>
+			</div>
+			<?php if ($page_limit > 0 && $total_pages > 1) : ?>
+				<div class="um-media-library-tag-gallery-pagination">
+					<?php for ($i = 1; $i <= $total_pages; $i++) : ?>
+						<?php $page_url = add_query_arg('um_media_gallery_page', (string) $i); ?>
+						<a href="<?php echo esc_url($page_url); ?>" class="<?php echo $i === $page_num ? 'current' : ''; ?>"><?php echo esc_html((string) $i); ?></a>
+					<?php endfor; ?>
+				</div>
+			<?php endif; ?>
+		</div>
+		<style>
+		.um-media-library-tag-gallery-grid {
+			display: grid;
+			grid-template-columns: repeat(var(--um-mltg-cols-desktop), minmax(0, 1fr));
+			gap: 14px;
+		}
+		@media (max-width: 782px) {
+			.um-media-library-tag-gallery-grid {
+				grid-template-columns: repeat(var(--um-mltg-cols-mobile), minmax(0, 1fr));
+			}
+		}
+		.um-media-library-tag-gallery-item { margin: 0; }
+		.um-media-library-tag-gallery-item img { width: 100%; height: auto; display: block; }
+		.um-media-gallery-style-square_crop .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; }
+		.um-media-gallery-style-wide_rectangle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 16 / 9; object-fit: cover; }
+		.um-media-gallery-style-tall_rectangle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 3 / 4; object-fit: cover; }
+		.um-media-gallery-style-circle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; border-radius: 999px; }
+		.um-media-gallery-style-mosaic .um-media-library-tag-gallery-item:nth-child(3n+1) { grid-column: span 2; }
+		.um-media-library-tag-gallery-caption { margin-top: 6px; font-size: 12px; color: #50575e; }
+		.um-media-library-tag-gallery-pagination { margin-top: 14px; display:flex; gap:8px; flex-wrap:wrap; }
+		.um-media-library-tag-gallery-pagination a { text-decoration:none; padding:4px 8px; border:1px solid #dcdcde; border-radius:4px; }
+		.um-media-library-tag-gallery-pagination a.current { background:#2271b1; border-color:#2271b1; color:#fff; }
+		.um-mltg-lightbox-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.86); z-index: 999999; display: none; align-items: center; justify-content: center; padding: 30px; }
+		.um-mltg-lightbox-overlay img { max-width: min(95vw, 1600px); max-height: 88vh; width: auto; height: auto; display: block; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+		.um-mltg-lightbox-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: #fff; font-size: 36px; line-height: 1; cursor: pointer; }
+		</style>
+		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true">
+			<button type="button" class="um-mltg-lightbox-close" aria-label="<?php esc_attr_e('Close image', 'user-manager'); ?>">&times;</button>
+			<img src="" alt="" />
+		</div>
+		<script>
+		(function() {
+			var root = document.getElementById('<?php echo esc_js($uid); ?>');
+			if (!root) { return; }
+			var overlay = document.getElementById('<?php echo esc_js($uid); ?>-lightbox');
+			if (!overlay) { return; }
+			var closeBtn = overlay.querySelector('.um-mltg-lightbox-close');
+			var image = overlay.querySelector('img');
+			function closeOverlay() {
+				overlay.style.display = 'none';
+				overlay.setAttribute('aria-hidden', 'true');
+				if (image) {
+					image.setAttribute('src', '');
+				}
+			}
+			root.addEventListener('click', function(event) {
+				var link = event.target.closest('a[data-um-lightbox="1"]');
+				if (!link) { return; }
+				event.preventDefault();
+				var src = link.getAttribute('href') || '';
+				if (!src || !image) { return; }
+				image.setAttribute('src', src);
+				overlay.style.display = 'flex';
+				overlay.setAttribute('aria-hidden', 'false');
+			});
+			if (closeBtn) {
+				closeBtn.addEventListener('click', closeOverlay);
+			}
+			overlay.addEventListener('click', function(event) {
+				if (event.target === overlay) {
+					closeOverlay();
+				}
+			});
+			document.addEventListener('keydown', function(event) {
+				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+					closeOverlay();
+				}
+			});
+		})();
+		</script>
+		<?php
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Resolve default gallery settings from add-on options.
+	 *
+	 * @param array<string,mixed> $settings
+	 * @return array<string,mixed>
+	 */
+	public static function get_media_library_tag_gallery_defaults(array $settings = []): array {
+		if (empty($settings)) {
+			$settings = User_Manager_Core::get_settings();
+		}
+
+		$defaults = [
+			'columnsDesktop' => 4,
+			'columnsMobile' => 2,
+			'sortOrder' => 'date_desc',
+			'fileSize' => 'thumbnail',
+			'style' => 'standard',
+			'pageLimit' => 0,
+			'linkTo' => 'none',
+		];
+
+		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
+			$defaults['columnsDesktop'] = max(1, min(8, absint($settings['media_library_tag_gallery_columns_desktop'])));
+		}
+		if (isset($settings['media_library_tag_gallery_columns_mobile'])) {
+			$defaults['columnsMobile'] = max(1, min(4, absint($settings['media_library_tag_gallery_columns_mobile'])));
+		}
+		if (!empty($settings['media_library_tag_gallery_sort_order'])) {
+			$defaults['sortOrder'] = sanitize_key((string) $settings['media_library_tag_gallery_sort_order']);
+		}
+		if (!empty($settings['media_library_tag_gallery_file_size'])) {
+			$defaults['fileSize'] = sanitize_key((string) $settings['media_library_tag_gallery_file_size']);
+		}
+		if (!empty($settings['media_library_tag_gallery_style'])) {
+			$defaults['style'] = sanitize_key((string) $settings['media_library_tag_gallery_style']);
+		}
+		if (isset($settings['media_library_tag_gallery_page_limit'])) {
+			$defaults['pageLimit'] = max(0, absint($settings['media_library_tag_gallery_page_limit']));
+		}
+		if (!empty($settings['media_library_tag_gallery_link_to'])) {
+			$defaults['linkTo'] = sanitize_key((string) $settings['media_library_tag_gallery_link_to']);
+		}
+
+		return $defaults;
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_available_image_sizes_for_media_gallery(): array {
+		$sizes = [
+			'thumbnail' => __('Thumbnail', 'user-manager'),
+			'medium' => __('Medium', 'user-manager'),
+			'large' => __('Large', 'user-manager'),
+			'full' => __('Full Size', 'user-manager'),
+		];
+
+		if (function_exists('get_intermediate_image_sizes')) {
+			$registered = get_intermediate_image_sizes();
+			if (is_array($registered)) {
+				foreach ($registered as $size_name) {
+					$size_name = sanitize_key((string) $size_name);
+					if ($size_name === '' || isset($sizes[$size_name])) {
+						continue;
+					}
+					$sizes[$size_name] = ucwords(str_replace(['-', '_'], ' ', $size_name));
+				}
+			}
+		}
+
+		return $sizes;
 	}
 
 	/**

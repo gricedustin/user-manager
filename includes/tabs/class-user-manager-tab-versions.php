@@ -39,11 +39,21 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.57 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Media Library Tags & Photo Gallery" with Activate toggle and description in Add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Adds a new "Library Tags" submenu item under Media using an attachment taxonomy for tag management.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library supports filtering by Library Tag, bulk applying tags (list and grid views), and per-item add/remove tags in attachment details.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added "Activate Media Library Tag Gallery Block" plus global default gallery settings (columns desktop/mobile, sort order, file size, style, page limit, link target).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Registered new block: custom/media-library-tag-gallery for posts/pages with tag selection (All by default) and front-end gallery rendering with optional pagination.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.56 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Add-on: "Media Library Tags" with Activate toggle and description in Add-ons.', 'user-manager'); ?></li>
 							<li><?php esc_html_e('Adds a new "Library Tags" submenu item under Media using an attachment taxonomy for tag management.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Media Library now supports filtering by Library Tag, bulk applying tags (list and grid views), and per-item add/remove tags in attachment details.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library supports filtering by Library Tag, bulk applying tags (list and grid views), and per-item add/remove tags in attachment details.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
