@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.66 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery block: added per-setting "Use add-on default" toggles for Columns (Desktop/Mobile), Sort Order, File Size, Style, Page Limit, and Link To.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled per setting, the block inspector disables that field and uses the corresponding default configured in the Media Library Tags & Photo Gallery add-on settings.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end render now honors these per-setting default toggles while preserving existing block behavior when toggles are not enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.65 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library grid toolbar: ensured Library Tag bulk controls remain visible in bulk-select mode by using dedicated control classes instead of default attachment-filters visibility toggles.', 'user-manager'); ?></li>

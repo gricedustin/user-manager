@@ -644,12 +644,19 @@ JS;
 			'attributes' => [
 				'tagSlug' => ['type' => 'string', 'default' => ''],
 				'allowUrlTagOverride' => ['type' => 'boolean', 'default' => false],
+				'useDefaultColumnsDesktop' => ['type' => 'boolean'],
 				'columnsDesktop' => ['type' => 'integer', 'default' => 4],
+				'useDefaultColumnsMobile' => ['type' => 'boolean'],
 				'columnsMobile' => ['type' => 'integer', 'default' => 2],
+				'useDefaultSortOrder' => ['type' => 'boolean'],
 				'sortOrder' => ['type' => 'string', 'default' => 'date_desc'],
+				'useDefaultFileSize' => ['type' => 'boolean'],
 				'fileSize' => ['type' => 'string', 'default' => 'thumbnail'],
+				'useDefaultStyle' => ['type' => 'boolean'],
 				'style' => ['type' => 'string', 'default' => 'uniform_grid'],
+				'useDefaultPageLimit' => ['type' => 'boolean'],
 				'pageLimit' => ['type' => 'integer', 'default' => 0],
+				'useDefaultLinkTo' => ['type' => 'boolean'],
 				'linkTo' => ['type' => 'string', 'default' => 'none'],
 			],
 			'editor_script' => 'um-media-library-tag-gallery-editor',
@@ -738,6 +745,49 @@ JS;
 			{ label: 'Full Size', value: 'full' }
 		];
 	}
+	var sortOrderOptions = [
+		{ label: 'Date ASC', value: 'date_asc' },
+		{ label: 'Date DESC', value: 'date_desc' },
+		{ label: 'ID ASC', value: 'id_asc' },
+		{ label: 'ID DESC', value: 'id_desc' },
+		{ label: 'Filename ASC', value: 'filename_asc' },
+		{ label: 'Filename DESC', value: 'filename_desc' },
+		{ label: 'Caption ASC', value: 'caption_asc' },
+		{ label: 'Caption DESC', value: 'caption_desc' }
+	];
+	var styleOptions = [
+		{ label: 'Mosaic Grid (Irregular Tiles)', value: 'mosaic_grid' },
+		{ label: 'Masonry / Pinterest Layout', value: 'masonry_pinterest' },
+		{ label: 'Uniform Grid (Classic Gallery)', value: 'uniform_grid' },
+		{ label: 'Justified Row Layout', value: 'justified_rows' },
+		{ label: 'Carousel / Slider Gallery', value: 'carousel_slider' },
+		{ label: 'Fullscreen Lightbox Grid', value: 'fullscreen_lightbox_grid' },
+		{ label: 'Horizontal Scroll Gallery', value: 'horizontal_scroll' },
+		{ label: 'Polaroid / Scrapbook Layout', value: 'polaroid_scrapbook' },
+		{ label: 'Split Screen Feature Gallery', value: 'split_screen_feature' },
+		{ label: 'Infinite Scroll Gallery', value: 'infinite_scroll' },
+		{ label: '3D Perspective Gallery', value: 'perspective_3d' },
+		{ label: 'Timeline / Story Gallery', value: 'timeline_story' },
+		{ label: 'Standard', value: 'standard' },
+		{ label: 'Square CSS Crop', value: 'square_crop' },
+		{ label: 'Wide Rectangle CSS Crop', value: 'wide_rectangle_crop' },
+		{ label: 'Tall Rectangle CSS Crop', value: 'tall_rectangle_crop' },
+		{ label: 'Circle CSS Crop', value: 'circle_crop' }
+	];
+	var linkToOptions = [
+		{ label: 'Nothing', value: 'none' },
+		{ label: 'Lightbox', value: 'lightbox' },
+		{ label: 'Open Media Library Permalink', value: 'media_permalink' }
+	];
+	var fallbackDefaults = {
+		columnsDesktop: parseInt(defaults.columnsDesktop, 10) || 4,
+		columnsMobile: parseInt(defaults.columnsMobile, 10) || 2,
+		sortOrder: defaults.sortOrder || 'date_desc',
+		fileSize: defaults.fileSize || 'thumbnail',
+		style: defaults.style || 'uniform_grid',
+		pageLimit: parseInt(defaults.pageLimit, 10) || 0,
+		linkTo: defaults.linkTo || 'none'
+	};
 
 	registerBlockType('custom/media-library-tag-gallery', {
 		title: 'Media Library Tag Gallery',
@@ -746,17 +796,38 @@ JS;
 		attributes: {
 			tagSlug: { type: 'string', default: '' },
 			allowUrlTagOverride: { type: 'boolean', default: false },
+			useDefaultColumnsDesktop: { type: 'boolean', default: false },
 			columnsDesktop: { type: 'integer', default: parseInt(defaults.columnsDesktop, 10) || 4 },
+			useDefaultColumnsMobile: { type: 'boolean', default: false },
 			columnsMobile: { type: 'integer', default: parseInt(defaults.columnsMobile, 10) || 2 },
+			useDefaultSortOrder: { type: 'boolean', default: false },
 			sortOrder: { type: 'string', default: defaults.sortOrder || 'date_desc' },
+			useDefaultFileSize: { type: 'boolean', default: false },
 			fileSize: { type: 'string', default: defaults.fileSize || 'thumbnail' },
+			useDefaultStyle: { type: 'boolean', default: false },
 			style: { type: 'string', default: defaults.style || 'uniform_grid' },
+			useDefaultPageLimit: { type: 'boolean', default: false },
 			pageLimit: { type: 'integer', default: parseInt(defaults.pageLimit, 10) || 0 },
+			useDefaultLinkTo: { type: 'boolean', default: false },
 			linkTo: { type: 'string', default: defaults.linkTo || 'none' }
 		},
 		edit: function(props) {
 			var a = props.attributes;
 			var set = props.setAttributes;
+			var useDefaultColumnsDesktop = !!a.useDefaultColumnsDesktop;
+			var useDefaultColumnsMobile = !!a.useDefaultColumnsMobile;
+			var useDefaultSortOrder = !!a.useDefaultSortOrder;
+			var useDefaultFileSize = !!a.useDefaultFileSize;
+			var useDefaultStyle = !!a.useDefaultStyle;
+			var useDefaultPageLimit = !!a.useDefaultPageLimit;
+			var useDefaultLinkTo = !!a.useDefaultLinkTo;
+			var effectiveColumnsDesktop = useDefaultColumnsDesktop ? fallbackDefaults.columnsDesktop : (a.columnsDesktop || fallbackDefaults.columnsDesktop);
+			var effectiveColumnsMobile = useDefaultColumnsMobile ? fallbackDefaults.columnsMobile : (a.columnsMobile || fallbackDefaults.columnsMobile);
+			var effectiveSortOrder = useDefaultSortOrder ? fallbackDefaults.sortOrder : (a.sortOrder || fallbackDefaults.sortOrder);
+			var effectiveFileSize = useDefaultFileSize ? fallbackDefaults.fileSize : (a.fileSize || fallbackDefaults.fileSize);
+			var effectiveStyle = useDefaultStyle ? fallbackDefaults.style : (a.style || fallbackDefaults.style);
+			var effectivePageLimit = useDefaultPageLimit ? fallbackDefaults.pageLimit : (typeof a.pageLimit === 'number' ? a.pageLimit : fallbackDefaults.pageLimit);
+			var effectiveLinkTo = useDefaultLinkTo ? fallbackDefaults.linkTo : (a.linkTo || fallbackDefaults.linkTo);
 			return element.createElement(
 				Fragment,
 				{},
@@ -783,78 +854,96 @@ JS;
 							type: 'number',
 							min: 1,
 							max: 8,
-							value: a.columnsDesktop || 4,
+							disabled: useDefaultColumnsDesktop,
+							value: effectiveColumnsDesktop,
+							help: useDefaultColumnsDesktop ? ('Using add-on default: ' + String(fallbackDefaults.columnsDesktop)) : '',
 							onChange: function(v){ set({ columnsDesktop: Math.max(1, parseInt(v, 10) || 1) }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Number of Columns (Desktop)',
+							checked: useDefaultColumnsDesktop,
+							onChange: function(v){ set({ useDefaultColumnsDesktop: !!v }); }
 						}),
 						element.createElement(TextControl, {
 							label: 'Number of Columns (Mobile)',
 							type: 'number',
 							min: 1,
 							max: 4,
-							value: a.columnsMobile || 2,
+							disabled: useDefaultColumnsMobile,
+							value: effectiveColumnsMobile,
+							help: useDefaultColumnsMobile ? ('Using add-on default: ' + String(fallbackDefaults.columnsMobile)) : '',
 							onChange: function(v){ set({ columnsMobile: Math.max(1, parseInt(v, 10) || 1) }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Number of Columns (Mobile)',
+							checked: useDefaultColumnsMobile,
+							onChange: function(v){ set({ useDefaultColumnsMobile: !!v }); }
 						}),
 						element.createElement(SelectControl, {
 							label: 'Sort Order',
-							value: a.sortOrder || 'date_desc',
-							options: [
-								{ label: 'Date ASC', value: 'date_asc' },
-								{ label: 'Date DESC', value: 'date_desc' },
-								{ label: 'ID ASC', value: 'id_asc' },
-								{ label: 'ID DESC', value: 'id_desc' },
-								{ label: 'Filename ASC', value: 'filename_asc' },
-								{ label: 'Filename DESC', value: 'filename_desc' },
-								{ label: 'Caption ASC', value: 'caption_asc' },
-								{ label: 'Caption DESC', value: 'caption_desc' }
-							],
+							disabled: useDefaultSortOrder,
+							value: effectiveSortOrder,
+							help: useDefaultSortOrder ? ('Using add-on default: ' + String(fallbackDefaults.sortOrder)) : '',
+							options: sortOrderOptions,
 							onChange: function(v){ set({ sortOrder: String(v || 'date_desc') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Sort Order',
+							checked: useDefaultSortOrder,
+							onChange: function(v){ set({ useDefaultSortOrder: !!v }); }
 						}),
 						element.createElement(SelectControl, {
 							label: 'File Size',
-							value: a.fileSize || 'thumbnail',
+							disabled: useDefaultFileSize,
+							value: effectiveFileSize,
+							help: useDefaultFileSize ? ('Using add-on default: ' + String(fallbackDefaults.fileSize)) : '',
 							options: imageSizeOptions,
 							onChange: function(v){ set({ fileSize: String(v || 'thumbnail') }); }
 						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for File Size',
+							checked: useDefaultFileSize,
+							onChange: function(v){ set({ useDefaultFileSize: !!v }); }
+						}),
 						element.createElement(SelectControl, {
 							label: 'Style',
-							value: a.style || 'uniform_grid',
-							options: [
-								{ label: 'Mosaic Grid (Irregular Tiles)', value: 'mosaic_grid' },
-								{ label: 'Masonry / Pinterest Layout', value: 'masonry_pinterest' },
-								{ label: 'Uniform Grid (Classic Gallery)', value: 'uniform_grid' },
-								{ label: 'Justified Row Layout', value: 'justified_rows' },
-								{ label: 'Carousel / Slider Gallery', value: 'carousel_slider' },
-								{ label: 'Fullscreen Lightbox Grid', value: 'fullscreen_lightbox_grid' },
-								{ label: 'Horizontal Scroll Gallery', value: 'horizontal_scroll' },
-								{ label: 'Polaroid / Scrapbook Layout', value: 'polaroid_scrapbook' },
-								{ label: 'Split Screen Feature Gallery', value: 'split_screen_feature' },
-								{ label: 'Infinite Scroll Gallery', value: 'infinite_scroll' },
-								{ label: '3D Perspective Gallery', value: 'perspective_3d' },
-								{ label: 'Timeline / Story Gallery', value: 'timeline_story' },
-								{ label: 'Standard', value: 'standard' },
-								{ label: 'Square CSS Crop', value: 'square_crop' },
-								{ label: 'Wide Rectangle CSS Crop', value: 'wide_rectangle_crop' },
-								{ label: 'Tall Rectangle CSS Crop', value: 'tall_rectangle_crop' },
-								{ label: 'Circle CSS Crop', value: 'circle_crop' }
-							],
+							disabled: useDefaultStyle,
+							value: effectiveStyle,
+							help: useDefaultStyle ? ('Using add-on default: ' + String(fallbackDefaults.style)) : '',
+							options: styleOptions,
 							onChange: function(v){ set({ style: String(v || 'uniform_grid') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Style',
+							checked: useDefaultStyle,
+							onChange: function(v){ set({ useDefaultStyle: !!v }); }
 						}),
 						element.createElement(TextControl, {
 							label: 'Page Limit (0 = unlimited)',
 							type: 'number',
 							min: 0,
-							value: a.pageLimit || 0,
+							disabled: useDefaultPageLimit,
+							value: effectivePageLimit,
+							help: useDefaultPageLimit ? ('Using add-on default: ' + String(fallbackDefaults.pageLimit)) : '',
 							onChange: function(v){ set({ pageLimit: Math.max(0, parseInt(v, 10) || 0) }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Page Limit',
+							checked: useDefaultPageLimit,
+							onChange: function(v){ set({ useDefaultPageLimit: !!v }); }
 						}),
 						element.createElement(SelectControl, {
 							label: 'Link To',
-							value: a.linkTo || 'none',
-							options: [
-								{ label: 'Nothing', value: 'none' },
-								{ label: 'Lightbox', value: 'lightbox' },
-								{ label: 'Open Media Library Permalink', value: 'media_permalink' }
-							],
+							disabled: useDefaultLinkTo,
+							value: effectiveLinkTo,
+							help: useDefaultLinkTo ? ('Using add-on default: ' + String(fallbackDefaults.linkTo)) : '',
+							options: linkToOptions,
 							onChange: function(v){ set({ linkTo: String(v || 'none') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Link To',
+							checked: useDefaultLinkTo,
+							onChange: function(v){ set({ useDefaultLinkTo: !!v }); }
 						})
 					)
 				),
@@ -880,13 +969,34 @@ JS;
 
 		$tag_slug = isset($attrs['tagSlug']) ? sanitize_title((string) $attrs['tagSlug']) : '';
 		$allow_url_tag_override = !empty($attrs['allowUrlTagOverride']);
-		$columns_desktop = max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
-		$columns_mobile = max(1, min(4, absint($attrs['columnsMobile'] ?? $defaults['columnsMobile'])));
-		$sort_order = isset($attrs['sortOrder']) ? sanitize_key((string) $attrs['sortOrder']) : (string) $defaults['sortOrder'];
-		$file_size = isset($attrs['fileSize']) ? sanitize_key((string) $attrs['fileSize']) : (string) $defaults['fileSize'];
-		$style = isset($attrs['style']) ? sanitize_key((string) $attrs['style']) : (string) $defaults['style'];
-		$page_limit = max(0, absint($attrs['pageLimit'] ?? $defaults['pageLimit']));
-		$link_to = isset($attrs['linkTo']) ? sanitize_key((string) $attrs['linkTo']) : (string) $defaults['linkTo'];
+		$use_default_columns_desktop = !empty($attrs['useDefaultColumnsDesktop']);
+		$use_default_columns_mobile = !empty($attrs['useDefaultColumnsMobile']);
+		$use_default_sort_order = !empty($attrs['useDefaultSortOrder']);
+		$use_default_file_size = !empty($attrs['useDefaultFileSize']);
+		$use_default_style = !empty($attrs['useDefaultStyle']);
+		$use_default_page_limit = !empty($attrs['useDefaultPageLimit']);
+		$use_default_link_to = !empty($attrs['useDefaultLinkTo']);
+		$columns_desktop = $use_default_columns_desktop
+			? max(1, min(8, absint($defaults['columnsDesktop'])))
+			: max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
+		$columns_mobile = $use_default_columns_mobile
+			? max(1, min(4, absint($defaults['columnsMobile'])))
+			: max(1, min(4, absint($attrs['columnsMobile'] ?? $defaults['columnsMobile'])));
+		$sort_order = $use_default_sort_order
+			? sanitize_key((string) $defaults['sortOrder'])
+			: (isset($attrs['sortOrder']) ? sanitize_key((string) $attrs['sortOrder']) : (string) $defaults['sortOrder']);
+		$file_size = $use_default_file_size
+			? sanitize_key((string) $defaults['fileSize'])
+			: (isset($attrs['fileSize']) ? sanitize_key((string) $attrs['fileSize']) : (string) $defaults['fileSize']);
+		$style = $use_default_style
+			? sanitize_key((string) $defaults['style'])
+			: (isset($attrs['style']) ? sanitize_key((string) $attrs['style']) : (string) $defaults['style']);
+		$page_limit = $use_default_page_limit
+			? max(0, absint($defaults['pageLimit']))
+			: max(0, absint($attrs['pageLimit'] ?? $defaults['pageLimit']));
+		$link_to = $use_default_link_to
+			? sanitize_key((string) $defaults['linkTo'])
+			: (isset($attrs['linkTo']) ? sanitize_key((string) $attrs['linkTo']) : (string) $defaults['linkTo']);
 
 		$allowed_sort_orders = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc'];
 		$allowed_file_sizes = array_keys(self::get_available_image_sizes_for_media_gallery());

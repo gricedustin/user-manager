@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.65
+ * Version: 2.4.66
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.66 - March 16, 2026
+ * - Media Library Tag Gallery block editor: added per-setting "Use add-on default" toggles for columns (desktop/mobile), sort order, file size, style, page limit, and link target.
+ * - When enabled for a setting, that block option now inherits the configured add-on default value and disables local override in the inspector.
+ * - Front-end rendering now honors each per-setting default toggle, so defaults can be centrally updated without editing every block.
+ *
  * 2.4.65 - March 16, 2026
  * - Media Library Tags (grid/select mode): kept custom bulk controls visible in the media toolbar by using dedicated classes/styles instead of hidden default attachment-filters styling.
  * - Bulk apply dropdown and "or enter new Library Tag" text input now stay visible and usable while selecting media items in grid view.
