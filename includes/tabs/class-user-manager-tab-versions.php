@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.70 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags add-on: added "Show Tags on Thumbnails when Bulk Selecting" setting to display each selected image\'s Library Tags directly on media thumbnails in bulk-select mode.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: added "Tags to hide from front end gallery" (comma-separated) setting to permanently exclude matching Library Tags from front-end gallery output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Example supported: create/use a Library Tag named "hide", then add hide in this setting to ensure those tagged images never render in front-end galleries.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.69 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags & Photo Gallery: added new default settings "Description Display" (none, centered under photo, lightbox under photo, both) and "Description Value" (caption, title, description, alt text, filename, slug, date).', 'user-manager'); ?></li>

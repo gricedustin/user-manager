@@ -42,6 +42,10 @@ class User_Manager_Addon_Media_Library_Tags {
 		$description_value = isset($settings['media_library_tag_gallery_description_value']) && is_string($settings['media_library_tag_gallery_description_value']) && $settings['media_library_tag_gallery_description_value'] !== ''
 			? $settings['media_library_tag_gallery_description_value']
 			: (string) $defaults['descriptionValue'];
+		$show_tags_on_bulk_select = !empty($settings['media_library_tags_show_tags_on_thumbnails_bulk_select']);
+		$hidden_frontend_tags = isset($settings['media_library_tag_gallery_hidden_frontend_tags']) && is_string($settings['media_library_tag_gallery_hidden_frontend_tags'])
+			? $settings['media_library_tag_gallery_hidden_frontend_tags']
+			: '';
 
 		$image_sizes = User_Manager_Core::get_available_image_sizes_for_media_gallery();
 		$description_display_options = User_Manager_Core::get_media_library_gallery_description_display_options();
@@ -155,6 +159,18 @@ class User_Manager_Addon_Media_Library_Tags {
 										<option value="<?php echo esc_attr($value_key); ?>" <?php selected($description_value, $value_key); ?>><?php echo esc_html($value_label); ?></option>
 									<?php endforeach; ?>
 								</select>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tags_show_tags_on_thumbnails_bulk_select" value="1" <?php checked($show_tags_on_bulk_select); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Show Tags on Thumbnails when Bulk Selecting', 'user-manager'); ?>
+								</label>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Displays each selected media item\'s Library Tags on its thumbnail while in Bulk Select mode.', 'user-manager'); ?></p>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-hidden-frontend-tags"><?php esc_html_e('Tags to hide from front end gallery', 'user-manager'); ?></label>
+								<input type="text" class="regular-text" id="um-media-library-tags-hidden-frontend-tags" name="media_library_tag_gallery_hidden_frontend_tags" value="<?php echo esc_attr($hidden_frontend_tags); ?>" placeholder="hide, internal-only"<?php echo $form_attr; ?> />
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Comma-separated tag slugs/names that should never display in front-end galleries. Example: create a tag named "hide" and add hide here to always exclude those images from front-end gallery output.', 'user-manager'); ?></p>
 							</div>
 						</div>
 						<p class="description" style="margin-top:10px;">

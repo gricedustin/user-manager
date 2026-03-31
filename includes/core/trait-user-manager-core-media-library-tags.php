@@ -332,6 +332,24 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	}
 
 	/**
+	 * Build list of frontend-hidden tag slugs from settings.
+	 *
+	 * @param array<string,mixed> $settings
+	 * @return array<int,string>
+	 */
+	private static function get_hidden_frontend_tag_slugs(array $settings): array {
+		if (empty($settings['media_library_tag_gallery_hidden_frontend_tags'])) {
+			return [];
+		}
+		$raw_hidden = sanitize_text_field((string) $settings['media_library_tag_gallery_hidden_frontend_tags']);
+		$parts = preg_split('/[\r\n,;]+/', $raw_hidden);
+		if (!is_array($parts)) {
+			return [];
+		}
+		return array_values(array_unique(array_filter(array_map('sanitize_title', array_map('trim', $parts)))));
+	}
+
+	/**
 	 * Handle grid-view bulk apply via AJAX.
 	 */
 	public static function ajax_bulk_apply_media_library_tag(): void {
@@ -503,11 +521,15 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			];
 		}
 
+		$settings = User_Manager_Core::get_settings();
+		$show_thumbnail_tags = !empty($settings['media_library_tags_show_tags_on_thumbnails_bulk_select']);
 		$config = [
 			'selectedTag' => self::get_requested_media_library_tag_slug(),
 			'terms' => $term_options,
 			'ajaxUrl' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce('um_media_library_tags_ajax'),
+			'showTagsOnThumbnailsWhenBulkSelecting' => $show_thumbnail_tags,
+			'attachmentTagsById' => $show_thumbnail_tags ? self::get_media_library_attachment_tags_map() : [],
 			'labels' => [
 				'filterAll' => __('All tags', 'user-manager'),
 				'bulkChoose' => __('Apply Tag', 'user-manager'),
@@ -515,6 +537,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				'bulkButton' => __('Apply Tag(s)', 'user-manager'),
 				'bulkNoSelection' => __('Select one or more media items first.', 'user-manager'),
 				'bulkNoTag' => __('Choose a Library Tag or enter a new one first.', 'user-manager'),
+				'tagsLabel' => __('Tags', 'user-manager'),
 			],
 		];
 
@@ -626,6 +649,31 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				$bulk.val('');
 				$newTag.val('');
 			}
+			applyThumbnailTagBadges();
+		}
+
+		function applyThumbnailTagBadges() {
+			if (!(cfg && cfg.showTagsOnThumbnailsWhenBulkSelecting)) {
+				$('.attachments .attachment .um-media-library-tag-thumb-label').remove();
+				return;
+			}
+			var showBadges = isBulkSelectModeActive();
+			var tagsMap = cfg.attachmentTagsById || {};
+			$('.attachments .attachment').each(function() {
+				var $attachment = $(this);
+				var modelId = String($attachment.data('id') || $attachment.attr('data-id') || '');
+				$attachment.find('.um-media-library-tag-thumb-label').remove();
+				if (!showBadges || !modelId || !Object.prototype.hasOwnProperty.call(tagsMap, modelId)) {
+					return;
+				}
+				var tags = tagsMap[modelId];
+				if (!Array.isArray(tags) || !tags.length) {
+					return;
+				}
+				var $label = $('<div class="um-media-library-tag-thumb-label"></div>').text(((cfg.labels && cfg.labels.tagsLabel) || 'Tags') + ': ' + tags.join(', '));
+				$attachment.css('position', 'relative');
+				$attachment.append($label);
+			});
 		}
 
 		syncBulkControlsVisibility();
@@ -637,6 +685,12 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		});
 		$(document).on('click.umMediaLibraryTagBulkSync', '.media-toolbar-secondary .delete-selected-button', function() {
 			window.setTimeout(syncBulkControlsVisibility, 60);
+		});
+		$(document).on('click.umMediaLibraryTagBulkSync', '.attachments .attachment', function() {
+			window.setTimeout(syncBulkControlsVisibility, 60);
+		});
+		$(document).on('mouseenter.umMediaLibraryTagBulkSync', '.attachments .attachment', function() {
+			window.setTimeout(applyThumbnailTagBadges, 0);
 		});
 
 		$filter.on('change', function() {
@@ -673,6 +727,13 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		// Do not rely solely on URL/body classes for grid detection; some "All items"
 		// views omit expected mode flags. Inject controls whenever the media toolbar exists.
 		ensureGridControls();
+		window.setTimeout(function() {
+			$('.attachments-browser').on('DOMNodeInserted.umMediaLibraryTagBulkSync', function() {
+				window.setTimeout(function() {
+					applyThumbnailTagBadges();
+				}, 40);
+			});
+		}, 100);
 		var tries = 0;
 		var timer = window.setInterval(function() {
 			ensureGridControls();
@@ -685,7 +746,72 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 })(jQuery);
 JS;
 		wp_add_inline_script('um-media-library-tags-admin', $script);
+		$styles = <<<'CSS'
+.attachments .attachment .um-media-library-tag-thumb-label {
+	position: absolute;
+	left: 6px;
+	right: 6px;
+	bottom: 6px;
+	padding: 4px 6px;
+	border-radius: 3px;
+	background: rgba(34, 113, 177, 0.88);
+	color: #fff;
+	font-size: 11px;
+	line-height: 1.3;
+	z-index: 3;
+	pointer-events: none;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+CSS;
+		wp_add_inline_style('media-views', $styles);
 		wp_enqueue_script('um-media-library-tags-admin');
+	}
+
+	/**
+	 * Build attachment => tag names map for media toolbar overlays.
+	 *
+	 * @return array<string,array<int,string>>
+	 */
+	private static function get_media_library_attachment_tags_map(): array {
+		global $wpdb;
+		if (!($wpdb instanceof wpdb)) {
+			return [];
+		}
+
+		$post_ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_status = %s",
+				'attachment',
+				'inherit'
+			)
+		);
+		if (!is_array($post_ids) || empty($post_ids)) {
+			return [];
+		}
+
+		$ids = array_values(array_unique(array_filter(array_map('absint', $post_ids))));
+		if (empty($ids)) {
+			return [];
+		}
+
+		$map = [];
+		$taxonomy = self::media_library_tags_taxonomy();
+		foreach ($ids as $attachment_id) {
+			$names = wp_get_object_terms($attachment_id, $taxonomy, ['fields' => 'names']);
+			if (!is_array($names) || empty($names)) {
+				continue;
+			}
+			$clean_names = array_values(array_filter(array_map('strval', $names), static function (string $name): bool {
+				return trim($name) !== '';
+			}));
+			if (!empty($clean_names)) {
+				$map[(string) $attachment_id] = $clean_names;
+			}
+		}
+
+		return $map;
 	}
 
 	/**
@@ -1171,6 +1297,7 @@ JS;
 		}
 		$show_description_under_photo = in_array($description_display, ['grid', 'both'], true);
 		$show_description_in_lightbox = in_array($description_display, ['lightbox', 'both'], true);
+		$hidden_frontend_tag_slugs = self::get_hidden_frontend_tag_slugs($settings);
 
 		$page_num = isset($_GET['um_media_gallery_page']) ? max(1, absint(wp_unslash($_GET['um_media_gallery_page']))) : 1;
 		$offset = 0;
@@ -1194,6 +1321,20 @@ JS;
 					'field' => 'slug',
 					'terms' => [$tag_slug],
 				],
+			];
+		}
+		if (!empty($hidden_frontend_tag_slugs)) {
+			if (!isset($query_args['tax_query']) || !is_array($query_args['tax_query'])) {
+				$query_args['tax_query'] = [];
+			}
+			if (!empty($query_args['tax_query'])) {
+				$query_args['tax_query']['relation'] = 'AND';
+			}
+			$query_args['tax_query'][] = [
+				'taxonomy' => self::media_library_tags_taxonomy(),
+				'field' => 'slug',
+				'terms' => $hidden_frontend_tag_slugs,
+				'operator' => 'NOT IN',
 			];
 		}
 
