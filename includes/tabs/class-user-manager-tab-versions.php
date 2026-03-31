@@ -39,10 +39,10 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.4.59 <span>(March 16, 2026)</span></h4>
+						<h4>2.4.60 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Media Library Tag Gallery block: added per-block setting "Allow URL tag override (?tag=...)" to optionally override the selected block tag from the URL.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('When enabled, ?tag={tag-slug-or-name} now overrides the gallery tag filter for that block instance only; when disabled, the saved block tag remains in effect.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart shortcode: fixed undefined variable warning for $product_id_column_header by initializing the display header before the How-To instructions render.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart shortcode: fixed undefined variable warnings for $show_sample_csv and $show_sample_with_data by initializing the sample-download visibility flags before rendering links.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
