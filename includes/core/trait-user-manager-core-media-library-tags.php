@@ -396,12 +396,34 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 		$terms = wp_get_object_terms($post->ID, self::media_library_tags_taxonomy(), ['fields' => 'names']);
 		$value = is_array($terms) ? implode(', ', array_map('strval', $terms)) : '';
+		$all_terms = get_terms([
+			'taxonomy' => self::media_library_tags_taxonomy(),
+			'hide_empty' => false,
+			'orderby' => 'name',
+			'order' => 'ASC',
+		]);
+		if (is_wp_error($all_terms)) {
+			$all_terms = [];
+		}
+		$quick_links_html = '';
+		if (!empty($all_terms)) {
+			$quick_links_html .= '<div style="margin: 8px 0 6px;">';
+			$quick_links_html .= '<strong style="display:block; margin-bottom:4px;">' . esc_html__('Quick add tags:', 'user-manager') . '</strong>';
+			foreach ($all_terms as $term) {
+				if (!($term instanceof WP_Term)) {
+					continue;
+				}
+				$quick_links_html .= '<a href="#" class="um-media-library-tag-insert" data-um-tag="' . esc_attr((string) $term->name) . '" style="display:inline-block; margin:0 8px 6px 0;">' . esc_html((string) $term->name) . '</a>';
+			}
+			$quick_links_html .= '</div>';
+		}
+		$quick_links_html .= '<script>(function(){ if(window.umMediaLibraryTagInsertInit){return;} window.umMediaLibraryTagInsertInit=true; document.addEventListener("click",function(e){ var link=e.target&&e.target.closest?e.target.closest(".um-media-library-tag-insert"):null; if(!link){return;} e.preventDefault(); var tag=(link.getAttribute("data-um-tag")||"").trim(); if(!tag){return;} var wrap=link.closest?link.closest("tr,div") : null; var input=wrap?wrap.querySelector("input[name*=\'[um_media_library_tags]\']"):null; if(!input){input=document.querySelector("input[name*=\'[um_media_library_tags]\']");} if(!input){return;} var parts=(input.value||"").split(",").map(function(v){return v.trim();}).filter(Boolean); if(parts.indexOf(tag)===-1){parts.push(tag);} input.value=parts.join(", "); input.dispatchEvent(new Event("change",{bubbles:true})); }); })();</script>';
 
 		$form_fields['um_media_library_tags'] = [
 			'label' => __('Library Tags', 'user-manager'),
 			'input' => 'html',
 			'html'  => '<input type="text" class="text" name="attachments[' . (int) $post->ID . '][um_media_library_tags]" value="' . esc_attr($value) . '" />',
-			'helps' => __('Comma-separated tags. Add new tags or remove existing tags for this media item.', 'user-manager'),
+			'helps' => $quick_links_html . __('Comma-separated tags. Add new tags or remove existing tags for this media item.', 'user-manager'),
 		];
 
 		return $form_fields;
