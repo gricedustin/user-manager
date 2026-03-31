@@ -155,7 +155,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		<select id="um-media-library-tag-filter" name="um_media_library_tag" class="attachment-filters">
 			<option value=""><?php esc_html_e('All tags', 'user-manager'); ?></option>
 			<option value="<?php echo esc_attr($no_tags_filter_value); ?>" <?php selected($selected_filter, $no_tags_filter_value); ?>>
-				<?php esc_html_e('No Tags', 'user-manager'); ?>
+				<?php esc_html_e('No tags', 'user-manager'); ?>
 			</option>
 			<?php foreach ($terms as $term) : ?>
 				<?php if (!$term instanceof WP_Term) { continue; } ?>
@@ -245,10 +245,15 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			$tax_query = [];
 		}
 		if (self::is_media_library_no_tags_filter_value($requested_filter)) {
-			$tax_query[] = [
-				'taxonomy' => self::media_library_tags_taxonomy(),
-				'operator' => 'NOT EXISTS',
-			];
+			$all_term_ids = self::get_media_library_all_tag_term_ids();
+			if (!empty($all_term_ids)) {
+				$tax_query[] = [
+					'taxonomy' => self::media_library_tags_taxonomy(),
+					'field' => 'term_id',
+					'terms' => $all_term_ids,
+					'operator' => 'NOT IN',
+				];
+			}
 		} else {
 			$tax_query[] = [
 				'taxonomy' => self::media_library_tags_taxonomy(),
@@ -289,10 +294,15 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 		$tax_query = isset($query['tax_query']) && is_array($query['tax_query']) ? $query['tax_query'] : [];
 		if (self::is_media_library_no_tags_filter_value($requested_filter)) {
-			$tax_query[] = [
-				'taxonomy' => self::media_library_tags_taxonomy(),
-				'operator' => 'NOT EXISTS',
-			];
+			$all_term_ids = self::get_media_library_all_tag_term_ids();
+			if (!empty($all_term_ids)) {
+				$tax_query[] = [
+					'taxonomy' => self::media_library_tags_taxonomy(),
+					'field' => 'term_id',
+					'terms' => $all_term_ids,
+					'operator' => 'NOT IN',
+				];
+			}
 		} else {
 			$tax_query[] = [
 				'taxonomy' => self::media_library_tags_taxonomy(),
@@ -559,7 +569,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'attachmentTagsById' => $show_thumbnail_tags ? self::get_media_library_attachment_tags_map() : [],
 			'labels' => [
 				'filterAll' => __('All tags', 'user-manager'),
-				'filterNoTags' => __('No Tags', 'user-manager'),
+				'filterNoTags' => __('No tags', 'user-manager'),
 				'bulkChoose' => __('Apply Tag', 'user-manager'),
 				'bulkNewTagPlaceholder' => __('or enter tag', 'user-manager'),
 				'bulkButton' => __('Apply Tag(s)', 'user-manager'),
@@ -584,7 +594,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			var noTagsValue = String((cfg && cfg.noTagsValue) || '__um_no_tags__');
 			var noTagsSelected = selected && selected === noTagsValue ? ' selected' : '';
 			html += '<option value="' + noTagsValue.replace(/"/g, '&quot;') + '"' + noTagsSelected + '>'
-				+ String((cfg.labels && cfg.labels.filterNoTags) || 'No Tags').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+				+ String((cfg.labels && cfg.labels.filterNoTags) || 'No tags').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 				+ '</option>';
 		}
 		cfg.terms.forEach(function(term) {
@@ -2083,7 +2093,24 @@ JS;
 	}
 
 	/**
-	 * Whether a requested filter value indicates "No Tags".
+	 * Get all term IDs for the Library Tags taxonomy.
+	 *
+	 * @return array<int,int>
+	 */
+	private static function get_media_library_all_tag_term_ids(): array {
+		$ids = get_terms([
+			'taxonomy' => self::media_library_tags_taxonomy(),
+			'hide_empty' => false,
+			'fields' => 'ids',
+		]);
+		if (is_wp_error($ids) || !is_array($ids)) {
+			return [];
+		}
+		return array_values(array_filter(array_map('absint', $ids)));
+	}
+
+	/**
+	 * Whether a requested filter value indicates "No tags".
 	 */
 	private static function is_media_library_no_tags_filter_value(string $value): bool {
 		return $value === self::get_media_library_no_tags_filter_value();
