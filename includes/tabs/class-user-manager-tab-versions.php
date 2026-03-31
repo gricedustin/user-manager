@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.63 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags: restored bulk-assign controls visibility on Media Library "All items" views by allowing upload.php render when post_type is empty.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk apply tag dropdown + Apply button now display for attachment views and empty post_type views, so bulk tag assignment works in default Media Library screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.62 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags filter now reliably renders on Media Library "All items" views by allowing empty post_type values in the upload.php filter-control hook.', 'user-manager'); ?></li>

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.62
+ * Version: 2.4.63
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.63 - March 16, 2026
+ * - Media Library Tags: fixed bulk-assign controls visibility on Media Library "All items" views where post_type can be empty.
+ * - Bulk apply dropdown/button now render in list view when browsing upload.php with no explicit post_type, matching the tag filter behavior.
+ *
  * 2.4.62 - March 16, 2026
  * - Media Library Tags: fixed Library Tag filter visibility on Media Library "All items" views by allowing empty post_type contexts on upload.php.
  * - Tag filter dropdown and bulk controls now reliably render on upload.php list views even when WordPress does not pass post_type=attachment.
