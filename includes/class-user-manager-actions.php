@@ -2300,9 +2300,22 @@ class User_Manager_Actions {
 					}
 				}
 				$settings['media_library_tag_gallery_file_size'] = in_array($gallery_size, $allowed_gallery_sizes, true) ? $gallery_size : 'thumbnail';
-				$gallery_style = isset($_POST['media_library_tag_gallery_style']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_style'])) : 'standard';
-				$allowed_gallery_styles = ['standard', 'mosaic', 'square_crop', 'wide_rectangle_crop', 'tall_rectangle_crop', 'circle_crop'];
-				$settings['media_library_tag_gallery_style'] = in_array($gallery_style, $allowed_gallery_styles, true) ? $gallery_style : 'standard';
+				$gallery_style = isset($_POST['media_library_tag_gallery_style']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_style'])) : 'uniform_grid';
+				$allowed_gallery_styles = [
+					'mosaic_grid',
+					'masonry_pinterest',
+					'uniform_grid',
+					'justified_row',
+					'carousel_slider',
+					'fullscreen_lightbox_grid',
+					'horizontal_scroll',
+					'polaroid_scrapbook',
+					'split_screen_feature',
+					'infinite_scroll',
+					'three_d_perspective',
+					'timeline_story',
+				];
+				$settings['media_library_tag_gallery_style'] = in_array($gallery_style, $allowed_gallery_styles, true) ? $gallery_style : 'uniform_grid';
 				$settings['media_library_tag_gallery_page_limit'] = isset($_POST['media_library_tag_gallery_page_limit']) ? max(0, absint($_POST['media_library_tag_gallery_page_limit'])) : 0;
 				$gallery_link_to = isset($_POST['media_library_tag_gallery_link_to']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_link_to'])) : 'none';
 				$allowed_gallery_link_to = ['none', 'lightbox', 'media_permalink'];

@@ -603,7 +603,7 @@ JS;
 				'columnsMobile' => ['type' => 'integer', 'default' => 2],
 				'sortOrder' => ['type' => 'string', 'default' => 'date_desc'],
 				'fileSize' => ['type' => 'string', 'default' => 'thumbnail'],
-				'style' => ['type' => 'string', 'default' => 'standard'],
+				'style' => ['type' => 'string', 'default' => 'uniform_grid'],
 				'pageLimit' => ['type' => 'integer', 'default' => 0],
 				'linkTo' => ['type' => 'string', 'default' => 'none'],
 			],
@@ -764,16 +764,22 @@ JS;
 						}),
 						element.createElement(SelectControl, {
 							label: 'Style',
-							value: a.style || 'standard',
+							value: a.style || 'uniform_grid',
 							options: [
-								{ label: 'Standard', value: 'standard' },
-								{ label: 'Mosaic', value: 'mosaic' },
-				{ label: 'Square CSS Crop', value: 'square_crop' },
-				{ label: 'Wide Rectangle CSS Crop', value: 'wide_rectangle_crop' },
-				{ label: 'Tall Rectangle CSS Crop', value: 'tall_rectangle_crop' },
-				{ label: 'Circle CSS Crop', value: 'circle_crop' }
+								{ label: 'Mosaic Grid (Irregular Tiles)', value: 'mosaic_grid' },
+								{ label: 'Masonry / Pinterest Layout', value: 'masonry_pinterest' },
+								{ label: 'Uniform Grid (Classic Gallery)', value: 'uniform_grid' },
+								{ label: 'Justified Row Layout', value: 'justified_row' },
+								{ label: 'Carousel / Slider Gallery', value: 'carousel_slider' },
+								{ label: 'Fullscreen Lightbox Grid', value: 'fullscreen_lightbox_grid' },
+								{ label: 'Horizontal Scroll Gallery', value: 'horizontal_scroll' },
+								{ label: 'Polaroid / Scrapbook Layout', value: 'polaroid_scrapbook' },
+								{ label: 'Split Screen Feature Gallery', value: 'split_screen_feature' },
+								{ label: 'Infinite Scroll Gallery', value: 'infinite_scroll' },
+								{ label: '3D Perspective Gallery', value: 'perspective_3d' },
+								{ label: 'Timeline / Story Gallery', value: 'timeline_story' }
 							],
-							onChange: function(v){ set({ style: String(v || 'standard') }); }
+							onChange: function(v){ set({ style: String(v || 'uniform_grid') }); }
 						}),
 						element.createElement(TextControl, {
 							label: 'Page Limit (0 = unlimited)',
@@ -828,7 +834,7 @@ JS;
 		if (empty($allowed_file_sizes)) {
 			$allowed_file_sizes = ['thumbnail', 'medium', 'large', 'full'];
 		}
-		$allowed_styles = ['standard', 'mosaic', 'square_crop', 'wide_rectangle_crop', 'tall_rectangle_crop', 'circle_crop'];
+		$allowed_styles = array_keys(self::get_media_library_gallery_style_options());
 		$allowed_links = ['none', 'lightbox', 'media_permalink'];
 		if (!in_array($sort_order, $allowed_sort_orders, true)) {
 			$sort_order = 'date_desc';
@@ -837,10 +843,18 @@ JS;
 			$file_size = 'thumbnail';
 		}
 		if (!in_array($style, $allowed_styles, true)) {
-			$style = 'standard';
+			$style = 'uniform_grid';
 		}
 		if (!in_array($link_to, $allowed_links, true)) {
 			$link_to = 'none';
+		}
+
+		$effective_link_to = $link_to;
+		if ($style === 'fullscreen_lightbox_grid') {
+			$effective_link_to = 'lightbox';
+		}
+		if ($style === 'infinite_scroll') {
+			$page_limit = 0;
 		}
 
 		$page_num = isset($_GET['um_media_gallery_page']) ? max(1, absint(wp_unslash($_GET['um_media_gallery_page']))) : 1;
@@ -914,40 +928,132 @@ JS;
 		$uid = function_exists('wp_unique_id') ? wp_unique_id('um-media-gallery-') : uniqid('um-media-gallery-');
 		$style_class = 'um-media-gallery-style-' . $style;
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
+		$timeline_date_format = get_option('date_format');
+		if (!is_string($timeline_date_format) || $timeline_date_format === '') {
+			$timeline_date_format = 'F j, Y';
+		}
 
 		ob_start();
 		?>
 		<div id="<?php echo esc_attr($uid); ?>" class="um-media-library-tag-gallery <?php echo esc_attr($style_class); ?>">
-			<div class="um-media-library-tag-gallery-grid" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
-				<?php foreach ($attachments as $attachment) : ?>
-					<?php
-					if (!($attachment instanceof WP_Post)) {
-						continue;
-					}
-					$attachment_id = (int) $attachment->ID;
-					$image_html = wp_get_attachment_image($attachment_id, $file_size, false, ['loading' => 'lazy']);
-					if ($image_html === '') {
-						continue;
-					}
-					$image_src = wp_get_attachment_image_url($attachment_id, 'full');
-					$permalink = get_attachment_link($attachment_id);
-					$caption = wp_get_attachment_caption($attachment_id);
-					?>
-					<figure class="um-media-library-tag-gallery-item">
-					<?php if ($link_to === 'media_permalink' && $permalink) : ?>
-							<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
-						<?php elseif ($link_to === 'lightbox' && $image_src) : ?>
-							<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1"><?php echo $image_html; ?></a>
-						<?php else : ?>
-							<?php echo $image_html; ?>
+			<?php if (empty($attachments)) : ?>
+				<p class="um-media-library-tag-gallery-empty"><?php esc_html_e('No images found for this gallery.', 'user-manager'); ?></p>
+			<?php elseif ($style === 'carousel_slider') : ?>
+				<div class="um-mltg-carousel">
+					<button type="button" class="um-mltg-carousel-nav um-mltg-carousel-prev" aria-label="<?php esc_attr_e('Previous slide', 'user-manager'); ?>">&lsaquo;</button>
+					<div class="um-mltg-carousel-viewport">
+						<div class="um-mltg-carousel-track">
+							<?php foreach ($attachments as $index => $attachment) : ?>
+								<?php
+								if (!($attachment instanceof WP_Post)) {
+									continue;
+								}
+								$attachment_id = (int) $attachment->ID;
+								$image_html = wp_get_attachment_image($attachment_id, $file_size, false, ['loading' => $index < 2 ? 'eager' : 'lazy']);
+								if ($image_html === '') {
+									continue;
+								}
+								$image_src = wp_get_attachment_image_url($attachment_id, 'full');
+								$permalink = get_attachment_link($attachment_id);
+								$caption = wp_get_attachment_caption($attachment_id);
+								?>
+								<figure class="um-media-library-tag-gallery-item um-mltg-carousel-slide" data-slide-index="<?php echo esc_attr((string) $index); ?>">
+									<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
+										<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
+										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1"><?php echo $image_html; ?></a>
+									<?php else : ?>
+										<?php echo $image_html; ?>
+									<?php endif; ?>
+									<?php if ($caption !== '') : ?>
+										<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($caption); ?></figcaption>
+									<?php endif; ?>
+								</figure>
+							<?php endforeach; ?>
+						</div>
+					</div>
+					<button type="button" class="um-mltg-carousel-nav um-mltg-carousel-next" aria-label="<?php esc_attr_e('Next slide', 'user-manager'); ?>">&rsaquo;</button>
+				</div>
+				<div class="um-mltg-carousel-dots"></div>
+			<?php elseif ($style === 'split_screen_feature') : ?>
+				<?php $first_attachment = $attachments[0] instanceof WP_Post ? $attachments[0] : null; ?>
+				<div class="um-mltg-split-screen">
+					<div class="um-mltg-split-main">
+						<?php if ($first_attachment instanceof WP_Post) : ?>
+							<?php
+							$first_id = (int) $first_attachment->ID;
+							$first_main_src = wp_get_attachment_image_url($first_id, 'full');
+							$first_main_caption = wp_get_attachment_caption($first_id);
+							$first_main_thumb = wp_get_attachment_image_url($first_id, $file_size);
+							?>
+							<img src="<?php echo esc_url((string) ($first_main_thumb ?: $first_main_src)); ?>" alt="" class="um-mltg-split-main-image" />
+							<?php if ($first_main_caption !== '') : ?>
+								<p class="um-mltg-split-main-caption"><?php echo esc_html($first_main_caption); ?></p>
+							<?php endif; ?>
 						<?php endif; ?>
-						<?php if ($caption !== '') : ?>
-							<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($caption); ?></figcaption>
-						<?php endif; ?>
-					</figure>
-				<?php endforeach; ?>
-			</div>
-			<?php if ($page_limit > 0 && $total_pages > 1) : ?>
+					</div>
+					<div class="um-mltg-split-thumbs">
+						<?php foreach ($attachments as $index => $attachment) : ?>
+							<?php
+							if (!($attachment instanceof WP_Post)) {
+								continue;
+							}
+							$attachment_id = (int) $attachment->ID;
+							$thumb_src = wp_get_attachment_image_url($attachment_id, $file_size);
+							$full_src = wp_get_attachment_image_url($attachment_id, 'full');
+							$caption = wp_get_attachment_caption($attachment_id);
+							if (!$thumb_src && !$full_src) {
+								continue;
+							}
+							?>
+							<button
+								type="button"
+								class="um-mltg-split-thumb<?php echo $index === 0 ? ' is-active' : ''; ?>"
+								data-main-src="<?php echo esc_attr((string) ($thumb_src ?: $full_src)); ?>"
+								data-caption="<?php echo esc_attr((string) $caption); ?>"
+							>
+								<img src="<?php echo esc_url((string) ($thumb_src ?: $full_src)); ?>" alt="" />
+							</button>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php else : ?>
+				<div class="um-media-library-tag-gallery-grid" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
+					<?php foreach ($attachments as $index => $attachment) : ?>
+						<?php
+						if (!($attachment instanceof WP_Post)) {
+							continue;
+						}
+						$attachment_id = (int) $attachment->ID;
+						$image_html = wp_get_attachment_image($attachment_id, $file_size, false, ['loading' => $index < 12 ? 'eager' : 'lazy']);
+						if ($image_html === '') {
+							continue;
+						}
+						$image_src = wp_get_attachment_image_url($attachment_id, 'full');
+						$permalink = get_attachment_link($attachment_id);
+						$caption = wp_get_attachment_caption($attachment_id);
+						$date_label = get_the_date($timeline_date_format, $attachment_id);
+						$is_infinite_hidden = $style === 'infinite_scroll' && $index >= max(12, $columns_desktop * 3);
+						?>
+						<figure class="um-media-library-tag-gallery-item<?php echo $is_infinite_hidden ? ' um-mltg-infinite-hidden' : ''; ?>"<?php echo $is_infinite_hidden ? ' data-um-infinite-hidden="1"' : ''; ?>>
+							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
+								<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+							<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
+								<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1"><?php echo $image_html; ?></a>
+							<?php else : ?>
+								<?php echo $image_html; ?>
+							<?php endif; ?>
+							<?php if ($style === 'timeline_story') : ?>
+								<div class="um-mltg-timeline-meta"><?php echo esc_html((string) $date_label); ?></div>
+							<?php endif; ?>
+							<?php if ($caption !== '') : ?>
+								<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($caption); ?></figcaption>
+							<?php endif; ?>
+						</figure>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+			<?php if ($page_limit > 0 && $total_pages > 1 && $style !== 'infinite_scroll') : ?>
 				<div class="um-media-library-tag-gallery-pagination">
 					<?php for ($i = 1; $i <= $total_pages; $i++) : ?>
 						<?php $page_url = add_query_arg('um_media_gallery_page', (string) $i); ?>
@@ -967,13 +1073,58 @@ JS;
 				grid-template-columns: repeat(var(--um-mltg-cols-mobile), minmax(0, 1fr));
 			}
 		}
-		.um-media-library-tag-gallery-item { margin: 0; }
+		.um-media-library-tag-gallery-item { margin: 0; position: relative; }
 		.um-media-library-tag-gallery-item img { width: 100%; height: auto; display: block; }
-		.um-media-gallery-style-square_crop .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; }
-		.um-media-gallery-style-wide_rectangle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 16 / 9; object-fit: cover; }
-		.um-media-gallery-style-tall_rectangle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 3 / 4; object-fit: cover; }
-		.um-media-gallery-style-circle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; border-radius: 999px; }
-		.um-media-gallery-style-mosaic .um-media-library-tag-gallery-item:nth-child(3n+1) { grid-column: span 2; }
+		.um-media-gallery-style-uniform_grid .um-media-library-tag-gallery-item img,
+		.um-media-gallery-style-fullscreen_lightbox_grid .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid { grid-auto-flow: dense; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item:nth-child(7n+1) { grid-column: span 2; grid-row: span 2; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item:nth-child(5n+3) { grid-column: span 2; }
+		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-grid { display: block; column-count: var(--um-mltg-cols-desktop); column-gap: 14px; }
+		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-item { break-inside: avoid; margin: 0 0 14px; }
+		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-item img { width: 100%; height: auto; object-fit: cover; }
+		@media (max-width: 782px) { .um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-grid { column-count: var(--um-mltg-cols-mobile); } }
+		.um-media-gallery-style-justified_rows .um-media-library-tag-gallery-grid { display:flex; flex-wrap:wrap; gap:10px; }
+		.um-media-gallery-style-justified_rows .um-media-library-tag-gallery-item { flex: 1 0 180px; }
+		.um-media-gallery-style-justified_rows .um-media-library-tag-gallery-item img { height: 200px; width: 100%; object-fit: cover; }
+		.um-mltg-carousel { display:flex; align-items:center; gap:8px; }
+		.um-mltg-carousel-viewport { overflow:hidden; width:100%; }
+		.um-mltg-carousel-track { display:flex; transition: transform .35s ease; }
+		.um-mltg-carousel-slide { min-width:100%; }
+		.um-mltg-carousel-slide img { width:100%; max-height:70vh; object-fit:contain; background:#f6f7f7; }
+		.um-mltg-carousel-nav { border:1px solid #c3c4c7; background:#fff; border-radius:4px; width:34px; height:34px; line-height:1; font-size:24px; cursor:pointer; }
+		.um-mltg-carousel-dots { display:flex; gap:6px; justify-content:center; margin-top:10px; }
+		.um-mltg-carousel-dots button { width:9px; height:9px; border-radius:50%; border:0; background:#c3c4c7; cursor:pointer; }
+		.um-mltg-carousel-dots button.is-active { background:#2271b1; }
+		.um-media-gallery-style-horizontal_scroll .um-media-library-tag-gallery-grid { display:flex; overflow-x:auto; gap:12px; scroll-snap-type:x mandatory; padding-bottom:6px; }
+		.um-media-gallery-style-horizontal_scroll .um-media-library-tag-gallery-item { min-width:min(320px, 85vw); flex:0 0 auto; scroll-snap-align:start; }
+		.um-media-gallery-style-horizontal_scroll .um-media-library-tag-gallery-item img { height:260px; object-fit:cover; }
+		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item { background:#fff; padding:10px 10px 18px; box-shadow:0 8px 18px rgba(0,0,0,0.12); border:1px solid #e5e5e5; }
+		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item:nth-child(odd) { transform: rotate(-2.3deg); }
+		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item:nth-child(even) { transform: rotate(2.1deg); }
+		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item:hover { transform: rotate(0deg) scale(1.02); z-index:2; }
+		.um-mltg-split-screen { display:grid; grid-template-columns:minmax(0, 2fr) minmax(180px, 1fr); gap:14px; }
+		.um-mltg-split-main { border:1px solid #dcdcde; border-radius:6px; padding:8px; background:#fff; }
+		.um-mltg-split-main-image { width:100%; height:auto; max-height:70vh; object-fit:contain; display:block; }
+		.um-mltg-split-main-caption { margin:8px 0 2px; font-size:13px; color:#50575e; }
+		.um-mltg-split-thumbs { display:grid; gap:8px; max-height:70vh; overflow:auto; }
+		.um-mltg-split-thumb { border:1px solid #c3c4c7; background:#fff; padding:3px; cursor:pointer; border-radius:4px; }
+		.um-mltg-split-thumb.is-active { border-color:#2271b1; box-shadow:0 0 0 1px #2271b1 inset; }
+		.um-mltg-split-thumb img { width:100%; height:84px; object-fit:cover; display:block; }
+		@media (max-width: 782px) { .um-mltg-split-screen { grid-template-columns:1fr; } }
+		.um-media-gallery-style-infinite_scroll .um-mltg-infinite-hidden { display:none; }
+		.um-mltg-infinite-sentinel { width:100%; height:1px; }
+		.um-media-gallery-style-perspective_3d .um-media-library-tag-gallery-grid { display:flex; gap:16px; overflow-x:auto; perspective:1000px; padding:8px 4px 14px; }
+		.um-media-gallery-style-perspective_3d .um-media-library-tag-gallery-item { flex:0 0 min(340px, 82vw); transform:rotateY(-18deg) scale(.94); transform-origin:center; transition:transform .2s ease; }
+		.um-media-gallery-style-perspective_3d .um-media-library-tag-gallery-item:hover { transform:rotateY(0deg) scale(1); }
+		.um-media-gallery-style-perspective_3d .um-media-library-tag-gallery-item img { height:230px; object-fit:cover; border-radius:8px; }
+		.um-media-gallery-style-timeline_story .um-media-library-tag-gallery-grid { grid-template-columns:1fr; gap:20px; position:relative; }
+		.um-media-gallery-style-timeline_story .um-media-library-tag-gallery-grid::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#dcdcde; }
+		.um-media-gallery-style-timeline_story .um-media-library-tag-gallery-item { padding-left:34px; }
+		.um-media-gallery-style-timeline_story .um-media-library-tag-gallery-item::before { content:''; position:absolute; left:7px; top:14px; width:14px; height:14px; border-radius:50%; background:#2271b1; }
+		.um-media-gallery-style-timeline_story .um-media-library-tag-gallery-item img { max-height:340px; object-fit:cover; border-radius:6px; }
+		.um-mltg-timeline-meta { margin:6px 0 4px; font-size:12px; color:#2271b1; font-weight:600; }
 		.um-media-library-tag-gallery-caption { margin-top: 6px; font-size: 12px; color: #50575e; }
 		.um-media-library-tag-gallery-pagination { margin-top: 14px; display:flex; gap:8px; flex-wrap:wrap; }
 		.um-media-library-tag-gallery-pagination a { text-decoration:none; padding:4px 8px; border:1px solid #dcdcde; border-radius:4px; }
@@ -994,11 +1145,15 @@ JS;
 			if (!overlay) { return; }
 			var closeBtn = overlay.querySelector('.um-mltg-lightbox-close');
 			var image = overlay.querySelector('img');
+			var bodyPrevOverflow = '';
 			function closeOverlay() {
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
 				if (image) {
 					image.setAttribute('src', '');
+				}
+				if (document && document.body) {
+					document.body.style.overflow = bodyPrevOverflow;
 				}
 			}
 			root.addEventListener('click', function(event) {
@@ -1008,6 +1163,10 @@ JS;
 				var src = link.getAttribute('href') || '';
 				if (!src || !image) { return; }
 				image.setAttribute('src', src);
+				if (document && document.body) {
+					bodyPrevOverflow = document.body.style.overflow || '';
+					document.body.style.overflow = 'hidden';
+				}
 				overlay.style.display = 'flex';
 				overlay.setAttribute('aria-hidden', 'false');
 			});
@@ -1024,6 +1183,111 @@ JS;
 					closeOverlay();
 				}
 			});
+
+			var carouselRoot = root.querySelector('.um-mltg-carousel');
+			if (carouselRoot) {
+				var track = carouselRoot.querySelector('.um-mltg-carousel-track');
+				var slides = track ? track.querySelectorAll('.um-mltg-carousel-slide') : [];
+				var dotsWrap = root.querySelector('.um-mltg-carousel-dots');
+				var prevBtn = carouselRoot.querySelector('.um-mltg-carousel-prev');
+				var nextBtn = carouselRoot.querySelector('.um-mltg-carousel-next');
+				var slideIndex = 0;
+				function renderCarousel() {
+					if (!track || !slides.length) { return; }
+					if (slideIndex < 0) { slideIndex = slides.length - 1; }
+					if (slideIndex >= slides.length) { slideIndex = 0; }
+					track.style.transform = 'translateX(' + String(-slideIndex * 100) + '%)';
+					if (dotsWrap) {
+						var dots = dotsWrap.querySelectorAll('button');
+						dots.forEach(function(dot, idx) {
+							if (idx === slideIndex) {
+								dot.classList.add('is-active');
+							} else {
+								dot.classList.remove('is-active');
+							}
+						});
+					}
+				}
+				if (dotsWrap && slides.length > 1) {
+					slides.forEach(function(_, idx) {
+						var dot = document.createElement('button');
+						dot.type = 'button';
+						dot.addEventListener('click', function() {
+							slideIndex = idx;
+							renderCarousel();
+						});
+						dotsWrap.appendChild(dot);
+					});
+				}
+				if (prevBtn) {
+					prevBtn.addEventListener('click', function() {
+						slideIndex -= 1;
+						renderCarousel();
+					});
+				}
+				if (nextBtn) {
+					nextBtn.addEventListener('click', function() {
+						slideIndex += 1;
+						renderCarousel();
+					});
+				}
+				renderCarousel();
+			}
+
+			var splitRoot = root.querySelector('.um-mltg-split-screen');
+			if (splitRoot) {
+				var mainImage = splitRoot.querySelector('.um-mltg-split-main-image');
+				var mainCaption = splitRoot.querySelector('.um-mltg-split-main-caption');
+				var thumbs = splitRoot.querySelectorAll('.um-mltg-split-thumb');
+				thumbs.forEach(function(thumb) {
+					thumb.addEventListener('click', function() {
+						var nextSrc = thumb.getAttribute('data-main-src') || '';
+						var nextCaption = thumb.getAttribute('data-caption') || '';
+						if (mainImage && nextSrc) {
+							mainImage.setAttribute('src', nextSrc);
+						}
+						if (mainCaption) {
+							mainCaption.textContent = nextCaption;
+						}
+						thumbs.forEach(function(item) { item.classList.remove('is-active'); });
+						thumb.classList.add('is-active');
+					});
+				});
+			}
+
+			if (root.classList.contains('um-media-gallery-style-infinite_scroll')) {
+				var hidden = root.querySelectorAll('[data-um-infinite-hidden="1"]');
+				if (hidden.length) {
+					var revealBatch = Math.max(6, parseInt(root.style.getPropertyValue('--um-mltg-cols-desktop'), 10) * 2 || 8);
+					var sentinel = document.createElement('div');
+					sentinel.className = 'um-mltg-infinite-sentinel';
+					root.appendChild(sentinel);
+					var revealMore = function() {
+						var count = 0;
+						hidden.forEach(function(node) {
+							if (count >= revealBatch) { return; }
+							if (node.style.display === 'none' || node.classList.contains('um-mltg-infinite-hidden')) {
+								node.classList.remove('um-mltg-infinite-hidden');
+								node.style.display = '';
+								node.removeAttribute('data-um-infinite-hidden');
+								count += 1;
+							}
+						});
+					};
+					if ('IntersectionObserver' in window) {
+						var io = new IntersectionObserver(function(entries) {
+							entries.forEach(function(entry) {
+								if (entry.isIntersecting) {
+									revealMore();
+								}
+							});
+						}, { rootMargin: '120px 0px' });
+						io.observe(sentinel);
+					} else {
+						revealMore();
+					}
+				}
+			}
 		})();
 		</script>
 		<?php
@@ -1046,7 +1310,7 @@ JS;
 			'columnsMobile' => 2,
 			'sortOrder' => 'date_desc',
 			'fileSize' => 'thumbnail',
-			'style' => 'standard',
+			'style' => 'uniform_grid',
 			'pageLimit' => 0,
 			'linkTo' => 'none',
 		];
@@ -1071,6 +1335,10 @@ JS;
 		}
 		if (!empty($settings['media_library_tag_gallery_link_to'])) {
 			$defaults['linkTo'] = sanitize_key((string) $settings['media_library_tag_gallery_link_to']);
+		}
+		$valid_styles = array_keys(self::get_media_library_gallery_style_options());
+		if (!in_array((string) $defaults['style'], $valid_styles, true)) {
+			$defaults['style'] = 'uniform_grid';
 		}
 
 		return $defaults;
@@ -1101,6 +1369,26 @@ JS;
 		}
 
 		return $sizes;
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_media_library_gallery_style_options(): array {
+		return [
+			'mosaic_grid' => __('Mosaic Grid (Irregular Tiles)', 'user-manager'),
+			'masonry_pinterest' => __('Masonry / Pinterest Layout', 'user-manager'),
+			'uniform_grid' => __('Uniform Grid (Classic Gallery)', 'user-manager'),
+			'justified_rows' => __('Justified Row Layout', 'user-manager'),
+			'carousel_slider' => __('Carousel / Slider Gallery', 'user-manager'),
+			'fullscreen_lightbox_grid' => __('Fullscreen Lightbox Grid', 'user-manager'),
+			'horizontal_scroll' => __('Horizontal Scroll Gallery', 'user-manager'),
+			'polaroid_scrapbook' => __('Polaroid / Scrapbook Layout', 'user-manager'),
+			'split_screen_feature' => __('Split Screen Feature Gallery', 'user-manager'),
+			'infinite_scroll' => __('Infinite Scroll Gallery', 'user-manager'),
+			'perspective_3d' => __('3D Perspective Gallery', 'user-manager'),
+			'timeline_story' => __('Timeline / Story Gallery', 'user-manager'),
+		];
 	}
 
 	/**

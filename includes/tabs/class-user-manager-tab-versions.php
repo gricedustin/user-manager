@@ -39,13 +39,11 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.4.57 <span>(March 16, 2026)</span></h4>
+						<h4>2.4.58 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Added new Add-on: "Media Library Tags & Photo Gallery" with Activate toggle and description in Add-ons.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Adds a new "Library Tags" submenu item under Media using an attachment taxonomy for tag management.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Media Library supports filtering by Library Tag, bulk applying tags (list and grid views), and per-item add/remove tags in attachment details.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Added "Activate Media Library Tag Gallery Block" plus global default gallery settings (columns desktop/mobile, sort order, file size, style, page limit, link target).', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Registered new block: custom/media-library-tag-gallery for posts/pages with tag selection (All by default) and front-end gallery rendering with optional pagination.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: updated Style choices to 12 layout modes (Mosaic Grid, Masonry/Pinterest, Uniform Grid, Justified Rows, Carousel/Slider, Fullscreen Lightbox Grid, Horizontal Scroll, Polaroid/Scrapbook, Split Screen Feature, Infinite Scroll, 3D Perspective, Timeline/Story).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Style rendering behavior and front-end scripts/CSS to support all 12 modes with responsive behavior and style-specific interactions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Normalized gallery style keys across add-on settings, block editor controls, and render logic to ensure selected styles save/apply correctly.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
