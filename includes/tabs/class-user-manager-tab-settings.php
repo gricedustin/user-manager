@@ -206,6 +206,13 @@ if (!defined('ABSPATH')) {
 							</label>
 							<p class="description"><?php esc_html_e('Change the reset password copy to set password intended for new users who should set a password when first logging into the site so it doesn\'t look like they are "resetting" for the first time. Also removes the username from the password changed email.', 'user-manager'); ?></p>
 						</div>
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="show_profile_user_manager_notice" value="1" <?php checked($settings['show_profile_user_manager_notice'] ?? false); ?> />
+								<?php esc_html_e('Show User Manager notice on Edit User/Profile screens', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('Disabled by default. Enable to show the top notice with quick links on user-edit.php and profile.php.', 'user-manager'); ?></p>
+						</div>
 					<div class="um-form-field">
 						<label for="um-legacy-noop-shortcodes"><?php esc_html_e('Legacy/Broken Shortcodes (comma-separated)', 'user-manager'); ?></label>
 						<input type="text" name="legacy_noop_shortcodes_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($settings['legacy_noop_shortcodes_list'] ?? ''); ?>" placeholder="old_shortcode_one, old_shortcode_two" />
