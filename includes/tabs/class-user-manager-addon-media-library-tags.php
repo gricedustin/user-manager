@@ -100,10 +100,15 @@ class User_Manager_Addon_Media_Library_Tags {
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-style"><?php esc_html_e('Style', 'user-manager'); ?></label>
 								<select id="um-media-library-tags-gallery-style" name="media_library_tag_gallery_style"<?php echo $form_attr; ?>>
+									<option value="standard" <?php selected($style, 'standard'); ?>><?php esc_html_e('Standard', 'user-manager'); ?></option>
 									<option value="mosaic_grid" <?php selected($style, 'mosaic_grid'); ?>><?php esc_html_e('Mosaic Grid (Irregular Tiles)', 'user-manager'); ?></option>
 									<option value="masonry_pinterest" <?php selected($style, 'masonry_pinterest'); ?>><?php esc_html_e('Masonry / Pinterest Layout', 'user-manager'); ?></option>
 									<option value="uniform_grid" <?php selected($style, 'uniform_grid'); ?>><?php esc_html_e('Uniform Grid (Classic Gallery)', 'user-manager'); ?></option>
-									<option value="justified_row" <?php selected($style, 'justified_row'); ?>><?php esc_html_e('Justified Row Layout', 'user-manager'); ?></option>
+									<option value="justified_rows" <?php selected($style, 'justified_rows'); ?>><?php esc_html_e('Justified Row Layout', 'user-manager'); ?></option>
+									<option value="square_crop" <?php selected($style, 'square_crop'); ?>><?php esc_html_e('Square CSS Crop', 'user-manager'); ?></option>
+									<option value="wide_rectangle_crop" <?php selected($style, 'wide_rectangle_crop'); ?>><?php esc_html_e('Wide Rectangle CSS Crop', 'user-manager'); ?></option>
+									<option value="tall_rectangle_crop" <?php selected($style, 'tall_rectangle_crop'); ?>><?php esc_html_e('Tall Rectangle CSS Crop', 'user-manager'); ?></option>
+									<option value="circle_crop" <?php selected($style, 'circle_crop'); ?>><?php esc_html_e('Circle CSS Crop', 'user-manager'); ?></option>
 									<option value="carousel_slider" <?php selected($style, 'carousel_slider'); ?>><?php esc_html_e('Carousel / Slider Gallery', 'user-manager'); ?></option>
 									<option value="fullscreen_lightbox_grid" <?php selected($style, 'fullscreen_lightbox_grid'); ?>><?php esc_html_e('Fullscreen Lightbox Grid', 'user-manager'); ?></option>
 									<option value="horizontal_scroll" <?php selected($style, 'horizontal_scroll'); ?>><?php esc_html_e('Horizontal Scroll Gallery', 'user-manager'); ?></option>

@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.61 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: restored legacy style options "Standard", "Square CSS Crop", "Wide Rectangle CSS Crop", "Tall Rectangle CSS Crop", and "Circle CSS Crop" alongside the newer style layouts.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Re-added these legacy styles across add-on settings, block editor Style selector, save validation, and front-end rendering classes so existing selections remain compatible.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.60 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Bulk Add to Cart shortcode: fixed undefined variable warning for $product_id_column_header by initializing the display header before the How-To instructions render.', 'user-manager'); ?></li>

@@ -786,7 +786,12 @@ JS;
 								{ label: 'Split Screen Feature Gallery', value: 'split_screen_feature' },
 								{ label: 'Infinite Scroll Gallery', value: 'infinite_scroll' },
 								{ label: '3D Perspective Gallery', value: 'perspective_3d' },
-								{ label: 'Timeline / Story Gallery', value: 'timeline_story' }
+								{ label: 'Timeline / Story Gallery', value: 'timeline_story' },
+								{ label: 'Standard', value: 'standard' },
+								{ label: 'Square CSS Crop', value: 'square_crop' },
+								{ label: 'Wide Rectangle CSS Crop', value: 'wide_rectangle_crop' },
+								{ label: 'Tall Rectangle CSS Crop', value: 'tall_rectangle_crop' },
+								{ label: 'Circle CSS Crop', value: 'circle_crop' }
 							],
 							onChange: function(v){ set({ style: String(v || 'uniform_grid') }); }
 						}),
@@ -1094,7 +1099,11 @@ JS;
 		.um-media-library-tag-gallery-item { margin: 0; position: relative; }
 		.um-media-library-tag-gallery-item img { width: 100%; height: auto; display: block; }
 		.um-media-gallery-style-uniform_grid .um-media-library-tag-gallery-item img,
+		.um-media-gallery-style-square_crop .um-media-library-tag-gallery-item img,
 		.um-media-gallery-style-fullscreen_lightbox_grid .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; }
+		.um-media-gallery-style-wide_rectangle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 16 / 9; object-fit: cover; }
+		.um-media-gallery-style-tall_rectangle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 3 / 4; object-fit: cover; }
+		.um-media-gallery-style-circle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; border-radius: 999px; }
 		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid { grid-auto-flow: dense; }
 		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; }
 		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item:nth-child(7n+1) { grid-column: span 2; grid-row: span 2; }

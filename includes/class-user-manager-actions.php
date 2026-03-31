@@ -2302,17 +2302,22 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_file_size'] = in_array($gallery_size, $allowed_gallery_sizes, true) ? $gallery_size : 'thumbnail';
 				$gallery_style = isset($_POST['media_library_tag_gallery_style']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_style'])) : 'uniform_grid';
 				$allowed_gallery_styles = [
+					'standard',
 					'mosaic_grid',
 					'masonry_pinterest',
 					'uniform_grid',
-					'justified_row',
+					'justified_rows',
+					'square_crop',
+					'wide_rectangle_crop',
+					'tall_rectangle_crop',
+					'circle_crop',
 					'carousel_slider',
 					'fullscreen_lightbox_grid',
 					'horizontal_scroll',
 					'polaroid_scrapbook',
 					'split_screen_feature',
 					'infinite_scroll',
-					'three_d_perspective',
+					'perspective_3d',
 					'timeline_story',
 				];
 				$settings['media_library_tag_gallery_style'] = in_array($gallery_style, $allowed_gallery_styles, true) ? $gallery_style : 'uniform_grid';
