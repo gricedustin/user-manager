@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.72
+ * Version: 2.4.73
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.73 - March 16, 2026
+ * - Media Library Tags add-on: added setting to keep the Media Library bulk-tools header visible on mobile while scrolling.
+ * - When enabled, Media Library mobile toolbar/router stays sticky so Bulk Select controls remain accessible without scrolling back to the top.
+ *
  * 2.4.72 - March 16, 2026
  * - Media Library tag filter: added a new "No Tags" option to show only attachments that do not have any Library Tags.
  * - "No Tags" filter now works in both list view and media grid/ajax view using a taxonomy NOT EXISTS query.

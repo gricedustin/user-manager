@@ -547,6 +547,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 		$settings = User_Manager_Core::get_settings();
 		$show_thumbnail_tags = !empty($settings['media_library_tags_show_tags_on_thumbnails_bulk_select']);
+		$sticky_bulk_toolbar_mobile = !empty($settings['media_library_tags_sticky_bulk_toolbar_mobile']);
 		$config = [
 			'selectedTag' => self::get_requested_media_library_tag_filter_value(),
 			'noTagsValue' => self::get_media_library_no_tags_filter_value(),
@@ -554,6 +555,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'ajaxUrl' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce('um_media_library_tags_ajax'),
 			'showTagsOnThumbnailsWhenBulkSelecting' => $show_thumbnail_tags,
+			'stickyBulkToolbarMobile' => $sticky_bulk_toolbar_mobile,
 			'attachmentTagsById' => $show_thumbnail_tags ? self::get_media_library_attachment_tags_map() : [],
 			'labels' => [
 				'filterAll' => __('All tags', 'user-manager'),
@@ -797,8 +799,43 @@ JS;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+@media (max-width: 782px) {
+	body.um-media-library-sticky-toolbar-mobile .media-frame .media-frame-toolbar,
+	body.um-media-library-sticky-toolbar-mobile .media-frame .media-frame-router {
+		position: sticky;
+		top: var(--wp-admin--admin-bar--height, 46px);
+		z-index: 1002;
+		background: #fff;
+	}
+	body.um-media-library-sticky-toolbar-mobile .media-frame .media-frame-toolbar {
+		border-bottom: 1px solid #dcdcde;
+	}
+}
 CSS;
 		wp_add_inline_style('media-views', $styles);
+		if ($sticky_bulk_toolbar_mobile) {
+			$sticky_script = <<<'JS'
+(function($){
+	$(function(){
+		if (!(window.matchMedia)) {
+			$('body').addClass('um-media-library-sticky-toolbar-mobile');
+			return;
+		}
+		var mq = window.matchMedia('(max-width: 782px)');
+		function syncStickyToolbarClass() {
+			$('body').toggleClass('um-media-library-sticky-toolbar-mobile', !!mq.matches);
+		}
+		syncStickyToolbarClass();
+		if (typeof mq.addEventListener === 'function') {
+			mq.addEventListener('change', syncStickyToolbarClass);
+		} else if (typeof mq.addListener === 'function') {
+			mq.addListener(syncStickyToolbarClass);
+		}
+	});
+})(jQuery);
+JS;
+			wp_add_inline_script('um-media-library-tags-admin', $sticky_script);
+		}
 		wp_enqueue_script('um-media-library-tags-admin');
 	}
 

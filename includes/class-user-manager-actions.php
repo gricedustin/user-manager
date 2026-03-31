@@ -2338,7 +2338,8 @@ class User_Manager_Actions {
 					$gallery_description_value = 'caption';
 				}
 				$settings['media_library_tag_gallery_description_value'] = $gallery_description_value;
-				$settings['media_library_tags_show_tags_on_thumbnails_bulk_select'] = isset($_POST['media_library_tags_show_tags_on_bulk_select']) && $_POST['media_library_tags_show_tags_on_bulk_select'] === '1';
+				$settings['media_library_tags_show_tags_on_thumbnails_bulk_select'] = isset($_POST['media_library_tags_show_tags_on_thumbnails_bulk_select']) && $_POST['media_library_tags_show_tags_on_thumbnails_bulk_select'] === '1';
+				$settings['media_library_tags_sticky_bulk_toolbar_mobile'] = isset($_POST['media_library_tags_sticky_bulk_toolbar_mobile']) && $_POST['media_library_tags_sticky_bulk_toolbar_mobile'] === '1';
 				$settings['media_library_tag_gallery_hidden_frontend_tags'] = isset($_POST['media_library_tag_gallery_hidden_frontend_tags'])
 					? sanitize_text_field(wp_unslash($_POST['media_library_tag_gallery_hidden_frontend_tags']))
 					: '';

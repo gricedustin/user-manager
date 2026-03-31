@@ -43,6 +43,7 @@ class User_Manager_Addon_Media_Library_Tags {
 			? $settings['media_library_tag_gallery_description_value']
 			: (string) $defaults['descriptionValue'];
 		$show_tags_on_bulk_select = !empty($settings['media_library_tags_show_tags_on_thumbnails_bulk_select']);
+		$sticky_bulk_toolbar_mobile = !empty($settings['media_library_tags_sticky_bulk_toolbar_mobile']);
 		$hidden_frontend_tags = isset($settings['media_library_tag_gallery_hidden_frontend_tags']) && is_string($settings['media_library_tag_gallery_hidden_frontend_tags'])
 			? $settings['media_library_tag_gallery_hidden_frontend_tags']
 			: '';
@@ -166,6 +167,13 @@ class User_Manager_Addon_Media_Library_Tags {
 									<?php esc_html_e('Show Tags on Thumbnails when Bulk Selecting', 'user-manager'); ?>
 								</label>
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Displays each selected media item\'s Library Tags on its thumbnail while in Bulk Select mode.', 'user-manager'); ?></p>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tags_sticky_bulk_toolbar_mobile" value="1" <?php checked($sticky_bulk_toolbar_mobile); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Keep Media Library bulk tools header visible on mobile while scrolling', 'user-manager'); ?>
+								</label>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Pins the Media Library header/toolbar on small screens so Bulk Select controls stay accessible without scrolling back to the top.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-hidden-frontend-tags"><?php esc_html_e('Tags to hide from front end gallery', 'user-manager'); ?></label>

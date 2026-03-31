@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.73 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags add-on: added "Keep Media Library bulk tools header visible on mobile while scrolling" setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, the Media Library toolbar/header becomes sticky on mobile viewport widths so Bulk Select tools remain accessible without scrolling back to the top.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.72 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library tag filter: added a new "No Tags" option at the top so admins can quickly show only images with no Library Tags assigned.', 'user-manager'); ?></li>
