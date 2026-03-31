@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.67
+ * Version: 2.4.68
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.68 - March 16, 2026
+ * - Media Library bulk tag input placeholder updated from "enter tag" to "or enter tag" in list and grid bulk-apply controls.
+ * - Adjusted Media Library bulk-select toolbar alignment so Apply Tag select/input/button sit slightly lower and align better with Delete/Cancel controls.
+ *
  * 2.4.67 - March 16, 2026
  * - Media Library Tags copy updates: changed "All Library Tags" to "All tags", "Bulk apply: choose Library Tag" to "Apply Tag", "or enter new Library Tag" to "enter tag", and "Apply Library Tag" to "Apply Tag(s)".
  * - Media Library bulk-apply tag controls are now hidden until Bulk Select mode is active (list and grid views), then shown while selecting media.

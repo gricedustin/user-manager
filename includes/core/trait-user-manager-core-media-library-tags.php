@@ -175,12 +175,12 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 					<option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?></option>
 				<?php endforeach; ?>
 			</select>
-			<label for="um-media-library-bulk-tag-new" class="screen-reader-text"><?php esc_html_e('Enter tag', 'user-manager'); ?></label>
+			<label for="um-media-library-bulk-tag-new" class="screen-reader-text"><?php esc_html_e('Or enter tag', 'user-manager'); ?></label>
 			<input
 				type="text"
 				id="um-media-library-bulk-tag-new"
 				name="um_media_library_bulk_tag_new"
-				placeholder="<?php echo esc_attr__('enter tag', 'user-manager'); ?>"
+				placeholder="<?php echo esc_attr__('or enter tag', 'user-manager'); ?>"
 				style="width: 190px;"
 			/>
 			<?php submit_button(__('Apply Tag(s)', 'user-manager'), 'secondary', 'um_media_library_bulk_apply', false); ?>
@@ -511,7 +511,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'labels' => [
 				'filterAll' => __('All tags', 'user-manager'),
 				'bulkChoose' => __('Apply Tag', 'user-manager'),
-				'bulkNewTagPlaceholder' => __('enter tag', 'user-manager'),
+				'bulkNewTagPlaceholder' => __('or enter tag', 'user-manager'),
 				'bulkButton' => __('Apply Tag(s)', 'user-manager'),
 				'bulkNoSelection' => __('Select one or more media items first.', 'user-manager'),
 				'bulkNoTag' => __('Choose a Library Tag or enter a new one first.', 'user-manager'),
@@ -587,12 +587,20 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		var $filter = $('<select id="um-media-library-tag-filter-grid" class="um-media-library-tag-control"></select>').html(filterHtml);
 		var $bulkLabel = $('<label class="screen-reader-text" for="um-media-library-tag-bulk-grid">Bulk apply Library Tag</label>');
 		var $bulk = $('<select id="um-media-library-tag-bulk-grid" class="um-media-library-tag-control"></select>').html(bulkHtml);
-		var $newTag = $('<input type="text" id="um-media-library-tag-bulk-grid-new" class="um-media-library-tag-control" />').attr('placeholder', (cfg.labels && cfg.labels.bulkNewTagPlaceholder) || 'enter tag');
+		var $newTag = $('<input type="text" id="um-media-library-tag-bulk-grid-new" class="um-media-library-tag-control" />').attr('placeholder', (cfg.labels && cfg.labels.bulkNewTagPlaceholder) || 'or enter tag');
 		var $button = $('<button type="button" class="button media-button"></button>').text((cfg.labels && cfg.labels.bulkButton) || 'Apply Tag(s)');
 		var $bulkWrap = $('<span class="um-media-library-tag-bulk-controls" style="display:none;"></span>');
 		$filter.css({ display: 'inline-block', minWidth: '160px' });
 		$bulk.css({ display: 'inline-block', minWidth: '190px' });
 		$newTag.css({ display: 'inline-block', minWidth: '190px' });
+		$button.css({ marginTop: '0' });
+		$bulkWrap.css({
+			display: 'none',
+			alignItems: 'center',
+			gap: '6px',
+			marginTop: '4px',
+			verticalAlign: 'middle'
+		});
 		$bulkWrap.append($bulkLabel).append($bulk).append($newTag).append($button);
 
 		$toolbar.append($filterLabel).append($filter).append($bulkWrap);
