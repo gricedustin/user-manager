@@ -125,7 +125,12 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	 */
 	public static function render_media_library_tag_filter_controls(string $post_type = '', string $which = 'top'): void {
 		global $pagenow;
-		if ($pagenow !== 'upload.php' || $post_type !== 'attachment') {
+		if ($pagenow !== 'upload.php') {
+			return;
+		}
+
+		// On Media Library "All items" views WordPress can pass an empty post_type.
+		if ($post_type !== '' && $post_type !== 'attachment') {
 			return;
 		}
 

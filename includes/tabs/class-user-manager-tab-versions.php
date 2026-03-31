@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.62 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags filter now reliably renders on Media Library "All items" views by allowing empty post_type values in the upload.php filter-control hook.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This restores Library Tag filtering visibility in list/grid contexts where WordPress does not pass "attachment" explicitly.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.61 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags & Photo Gallery: restored legacy style options "Standard", "Square CSS Crop", "Wide Rectangle CSS Crop", "Tall Rectangle CSS Crop", and "Circle CSS Crop" alongside the newer style layouts.', 'user-manager'); ?></li>

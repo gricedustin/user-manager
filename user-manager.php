@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.61
+ * Version: 2.4.62
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.62 - March 16, 2026
+ * - Media Library Tags: fixed Library Tag filter visibility on Media Library "All items" views by allowing empty post_type contexts on upload.php.
+ * - Tag filter dropdown and bulk controls now reliably render on upload.php list views even when WordPress does not pass post_type=attachment.
+ *
  * 2.4.61 - March 16, 2026
  * - Media Library Tags & Photo Gallery: added legacy style options back into Style dropdown: Standard, Square CSS Crop, Wide Rectangle CSS Crop, Tall Rectangle CSS Crop, and Circle CSS Crop.
  * - Restored save validation and render support for these legacy style keys so previously configured galleries continue to work as expected.
