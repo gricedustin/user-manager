@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.69 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: added new default settings "Description Display" (none, centered under photo, lightbox under photo, both) and "Description Value" (caption, title, description, alt text, filename, slug, date).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery block now includes matching per-block override controls for Description Display and Description Value, including "Use add-on default" toggles for each.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Gallery rendering now outputs description text from the selected value source under photos and/or inside the lightbox (with dynamic lightbox caption support), based on the selected display mode.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.68 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags copy tweak: updated "enter tag" to "or enter tag" for bulk tag input placeholders.', 'user-manager'); ?></li>

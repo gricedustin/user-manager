@@ -36,8 +36,16 @@ class User_Manager_Addon_Media_Library_Tags {
 		$link_to = isset($settings['media_library_tag_gallery_link_to']) && is_string($settings['media_library_tag_gallery_link_to']) && $settings['media_library_tag_gallery_link_to'] !== ''
 			? $settings['media_library_tag_gallery_link_to']
 			: (string) $defaults['linkTo'];
+		$description_display = isset($settings['media_library_tag_gallery_description_display']) && is_string($settings['media_library_tag_gallery_description_display']) && $settings['media_library_tag_gallery_description_display'] !== ''
+			? $settings['media_library_tag_gallery_description_display']
+			: (string) $defaults['descriptionDisplay'];
+		$description_value = isset($settings['media_library_tag_gallery_description_value']) && is_string($settings['media_library_tag_gallery_description_value']) && $settings['media_library_tag_gallery_description_value'] !== ''
+			? $settings['media_library_tag_gallery_description_value']
+			: (string) $defaults['descriptionValue'];
 
 		$image_sizes = User_Manager_Core::get_available_image_sizes_for_media_gallery();
+		$description_display_options = User_Manager_Core::get_media_library_gallery_description_display_options();
+		$description_value_options = User_Manager_Core::get_media_library_gallery_description_value_options();
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-media-library-tags" data-um-active-selectors="#um-media-library-tags-enabled">
 			<div class="um-admin-card-header">
@@ -130,6 +138,22 @@ class User_Manager_Addon_Media_Library_Tags {
 									<option value="none" <?php selected($link_to, 'none'); ?>><?php esc_html_e('nothing', 'user-manager'); ?></option>
 									<option value="lightbox" <?php selected($link_to, 'lightbox'); ?>><?php esc_html_e('lightbox', 'user-manager'); ?></option>
 									<option value="media_permalink" <?php selected($link_to, 'media_permalink'); ?>><?php esc_html_e('open media library permalink', 'user-manager'); ?></option>
+								</select>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-description-display"><?php esc_html_e('Description Display', 'user-manager'); ?></label>
+								<select id="um-media-library-tags-gallery-description-display" name="media_library_tag_gallery_description_display"<?php echo $form_attr; ?>>
+									<?php foreach ($description_display_options as $display_key => $display_label) : ?>
+										<option value="<?php echo esc_attr($display_key); ?>" <?php selected($description_display, $display_key); ?>><?php echo esc_html($display_label); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-description-value"><?php esc_html_e('Description Value', 'user-manager'); ?></label>
+								<select id="um-media-library-tags-gallery-description-value" name="media_library_tag_gallery_description_value"<?php echo $form_attr; ?>>
+									<?php foreach ($description_value_options as $value_key => $value_label) : ?>
+										<option value="<?php echo esc_attr($value_key); ?>" <?php selected($description_value, $value_key); ?>><?php echo esc_html($value_label); ?></option>
+									<?php endforeach; ?>
 								</select>
 							</div>
 						</div>

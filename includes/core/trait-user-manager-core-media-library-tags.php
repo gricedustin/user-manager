@@ -723,6 +723,10 @@ JS;
 				'pageLimit' => ['type' => 'integer', 'default' => 0],
 				'useDefaultLinkTo' => ['type' => 'boolean'],
 				'linkTo' => ['type' => 'string', 'default' => 'none'],
+				'useDefaultDescriptionDisplay' => ['type' => 'boolean'],
+				'descriptionDisplay' => ['type' => 'string', 'default' => 'none'],
+				'useDefaultDescriptionValue' => ['type' => 'boolean'],
+				'descriptionValue' => ['type' => 'string', 'default' => 'caption'],
 			],
 			'editor_script' => 'um-media-library-tag-gallery-editor',
 		]);
@@ -844,6 +848,21 @@ JS;
 		{ label: 'Lightbox', value: 'lightbox' },
 		{ label: 'Open Media Library Permalink', value: 'media_permalink' }
 	];
+	var descriptionDisplayOptions = [
+		{ label: 'none', value: 'none' },
+		{ label: 'centered under photo', value: 'grid' },
+		{ label: 'lightbox under photo', value: 'lightbox' },
+		{ label: 'both', value: 'both' }
+	];
+	var descriptionValueOptions = [
+		{ label: 'Caption', value: 'caption' },
+		{ label: 'Filename', value: 'filename' },
+		{ label: 'Title', value: 'title' },
+		{ label: 'Description', value: 'description' },
+		{ label: 'Alt text', value: 'alt' },
+		{ label: 'Slug', value: 'slug' },
+		{ label: 'Date', value: 'date' }
+	];
 	var fallbackDefaults = {
 		columnsDesktop: parseInt(defaults.columnsDesktop, 10) || 4,
 		columnsMobile: parseInt(defaults.columnsMobile, 10) || 2,
@@ -851,7 +870,9 @@ JS;
 		fileSize: defaults.fileSize || 'thumbnail',
 		style: defaults.style || 'uniform_grid',
 		pageLimit: parseInt(defaults.pageLimit, 10) || 0,
-		linkTo: defaults.linkTo || 'none'
+		linkTo: defaults.linkTo || 'none',
+		descriptionDisplay: defaults.descriptionDisplay || 'none',
+		descriptionValue: defaults.descriptionValue || 'caption'
 	};
 
 	registerBlockType('custom/media-library-tag-gallery', {
@@ -874,7 +895,11 @@ JS;
 			useDefaultPageLimit: { type: 'boolean', default: false },
 			pageLimit: { type: 'integer', default: parseInt(defaults.pageLimit, 10) || 0 },
 			useDefaultLinkTo: { type: 'boolean', default: false },
-			linkTo: { type: 'string', default: defaults.linkTo || 'none' }
+			linkTo: { type: 'string', default: defaults.linkTo || 'none' },
+			useDefaultDescriptionDisplay: { type: 'boolean', default: false },
+			descriptionDisplay: { type: 'string', default: defaults.descriptionDisplay || 'none' },
+			useDefaultDescriptionValue: { type: 'boolean', default: false },
+			descriptionValue: { type: 'string', default: defaults.descriptionValue || 'caption' }
 		},
 		edit: function(props) {
 			var a = props.attributes;
@@ -886,6 +911,8 @@ JS;
 			var useDefaultStyle = !!a.useDefaultStyle;
 			var useDefaultPageLimit = !!a.useDefaultPageLimit;
 			var useDefaultLinkTo = !!a.useDefaultLinkTo;
+			var useDefaultDescriptionDisplay = !!a.useDefaultDescriptionDisplay;
+			var useDefaultDescriptionValue = !!a.useDefaultDescriptionValue;
 			var effectiveColumnsDesktop = useDefaultColumnsDesktop ? fallbackDefaults.columnsDesktop : (a.columnsDesktop || fallbackDefaults.columnsDesktop);
 			var effectiveColumnsMobile = useDefaultColumnsMobile ? fallbackDefaults.columnsMobile : (a.columnsMobile || fallbackDefaults.columnsMobile);
 			var effectiveSortOrder = useDefaultSortOrder ? fallbackDefaults.sortOrder : (a.sortOrder || fallbackDefaults.sortOrder);
@@ -893,6 +920,8 @@ JS;
 			var effectiveStyle = useDefaultStyle ? fallbackDefaults.style : (a.style || fallbackDefaults.style);
 			var effectivePageLimit = useDefaultPageLimit ? fallbackDefaults.pageLimit : (typeof a.pageLimit === 'number' ? a.pageLimit : fallbackDefaults.pageLimit);
 			var effectiveLinkTo = useDefaultLinkTo ? fallbackDefaults.linkTo : (a.linkTo || fallbackDefaults.linkTo);
+			var effectiveDescriptionDisplay = useDefaultDescriptionDisplay ? fallbackDefaults.descriptionDisplay : (a.descriptionDisplay || fallbackDefaults.descriptionDisplay);
+			var effectiveDescriptionValue = useDefaultDescriptionValue ? fallbackDefaults.descriptionValue : (a.descriptionValue || fallbackDefaults.descriptionValue);
 			return element.createElement(
 				Fragment,
 				{},
@@ -1009,6 +1038,32 @@ JS;
 							label: 'Use add-on default for Link To',
 							checked: useDefaultLinkTo,
 							onChange: function(v){ set({ useDefaultLinkTo: !!v }); }
+						}),
+						element.createElement(SelectControl, {
+							label: 'Description Display',
+							disabled: useDefaultDescriptionDisplay,
+							value: effectiveDescriptionDisplay,
+							help: useDefaultDescriptionDisplay ? ('Using add-on default: ' + String(fallbackDefaults.descriptionDisplay)) : '',
+							options: descriptionDisplayOptions,
+							onChange: function(v){ set({ descriptionDisplay: String(v || 'none') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Description Display',
+							checked: useDefaultDescriptionDisplay,
+							onChange: function(v){ set({ useDefaultDescriptionDisplay: !!v }); }
+						}),
+						element.createElement(SelectControl, {
+							label: 'Description Value',
+							disabled: useDefaultDescriptionValue,
+							value: effectiveDescriptionValue,
+							help: useDefaultDescriptionValue ? ('Using add-on default: ' + String(fallbackDefaults.descriptionValue)) : '',
+							options: descriptionValueOptions,
+							onChange: function(v){ set({ descriptionValue: String(v || 'caption') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Description Value',
+							checked: useDefaultDescriptionValue,
+							onChange: function(v){ set({ useDefaultDescriptionValue: !!v }); }
 						})
 					)
 				),
@@ -1041,6 +1096,8 @@ JS;
 		$use_default_style = !empty($attrs['useDefaultStyle']);
 		$use_default_page_limit = !empty($attrs['useDefaultPageLimit']);
 		$use_default_link_to = !empty($attrs['useDefaultLinkTo']);
+		$use_default_description_display = !empty($attrs['useDefaultDescriptionDisplay']);
+		$use_default_description_value = !empty($attrs['useDefaultDescriptionValue']);
 		$columns_desktop = $use_default_columns_desktop
 			? max(1, min(8, absint($defaults['columnsDesktop'])))
 			: max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
@@ -1062,6 +1119,12 @@ JS;
 		$link_to = $use_default_link_to
 			? sanitize_key((string) $defaults['linkTo'])
 			: (isset($attrs['linkTo']) ? sanitize_key((string) $attrs['linkTo']) : (string) $defaults['linkTo']);
+		$description_display = $use_default_description_display
+			? sanitize_key((string) $defaults['descriptionDisplay'])
+			: (isset($attrs['descriptionDisplay']) ? sanitize_key((string) $attrs['descriptionDisplay']) : (string) $defaults['descriptionDisplay']);
+		$description_value = $use_default_description_value
+			? sanitize_key((string) $defaults['descriptionValue'])
+			: (isset($attrs['descriptionValue']) ? sanitize_key((string) $attrs['descriptionValue']) : (string) $defaults['descriptionValue']);
 
 		$allowed_sort_orders = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc'];
 		$allowed_file_sizes = array_keys(self::get_available_image_sizes_for_media_gallery());
@@ -1070,6 +1133,8 @@ JS;
 		}
 		$allowed_styles = array_keys(self::get_media_library_gallery_style_options());
 		$allowed_links = ['none', 'lightbox', 'media_permalink'];
+		$allowed_description_display = array_keys(self::get_media_library_gallery_description_display_options());
+		$allowed_description_values = array_keys(self::get_media_library_gallery_description_value_options());
 		if (!in_array($sort_order, $allowed_sort_orders, true)) {
 			$sort_order = 'date_desc';
 		}
@@ -1081,6 +1146,12 @@ JS;
 		}
 		if (!in_array($link_to, $allowed_links, true)) {
 			$link_to = 'none';
+		}
+		if (!in_array($description_display, $allowed_description_display, true)) {
+			$description_display = 'none';
+		}
+		if (!in_array($description_value, $allowed_description_values, true)) {
+			$description_value = 'caption';
 		}
 		if ($allow_url_tag_override && isset($_GET['tag'])) {
 			$url_tag = sanitize_title((string) wp_unslash($_GET['tag']));
@@ -1098,6 +1169,8 @@ JS;
 		if ($style === 'infinite_scroll') {
 			$page_limit = 0;
 		}
+		$show_description_under_photo = in_array($description_display, ['grid', 'both'], true);
+		$show_description_in_lightbox = in_array($description_display, ['lightbox', 'both'], true);
 
 		$page_num = isset($_GET['um_media_gallery_page']) ? max(1, absint(wp_unslash($_GET['um_media_gallery_page']))) : 1;
 		$offset = 0;
@@ -1197,18 +1270,20 @@ JS;
 								}
 								$image_src = wp_get_attachment_image_url($attachment_id, 'full');
 								$permalink = get_attachment_link($attachment_id);
-								$caption = wp_get_attachment_caption($attachment_id);
+								$description_text = self::get_media_library_gallery_description_text($attachment_id, $description_value);
+								$image_alt = trim((string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true));
+								$description_attr = $image_alt !== '' ? $image_alt : $description_text;
 								?>
 								<figure class="um-media-library-tag-gallery-item um-mltg-carousel-slide" data-slide-index="<?php echo esc_attr((string) $index); ?>">
 									<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 										<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1"><?php echo $image_html; ?></a>
+										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?>><?php echo $image_html; ?></a>
 									<?php else : ?>
 										<?php echo $image_html; ?>
 									<?php endif; ?>
-									<?php if ($caption !== '') : ?>
-										<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($caption); ?></figcaption>
+									<?php if ($show_description_under_photo && $description_text !== '') : ?>
+										<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($description_text); ?></figcaption>
 									<?php endif; ?>
 								</figure>
 							<?php endforeach; ?>
@@ -1225,12 +1300,13 @@ JS;
 							<?php
 							$first_id = (int) $first_attachment->ID;
 							$first_main_src = wp_get_attachment_image_url($first_id, 'full');
-							$first_main_caption = wp_get_attachment_caption($first_id);
+							$first_main_description = self::get_media_library_gallery_description_text($first_id, $description_value);
+							$first_main_alt = trim((string) get_post_meta($first_id, '_wp_attachment_image_alt', true));
 							$first_main_thumb = wp_get_attachment_image_url($first_id, $file_size);
 							?>
-							<img src="<?php echo esc_url((string) ($first_main_thumb ?: $first_main_src)); ?>" alt="" class="um-mltg-split-main-image" />
-							<?php if ($first_main_caption !== '') : ?>
-								<p class="um-mltg-split-main-caption"><?php echo esc_html($first_main_caption); ?></p>
+							<img src="<?php echo esc_url((string) ($first_main_thumb ?: $first_main_src)); ?>" alt="<?php echo esc_attr($first_main_alt !== '' ? $first_main_alt : $first_main_description); ?>" class="um-mltg-split-main-image" />
+							<?php if ($show_description_under_photo && $first_main_description !== '') : ?>
+								<p class="um-mltg-split-main-caption"><?php echo esc_html($first_main_description); ?></p>
 							<?php endif; ?>
 						<?php endif; ?>
 					</div>
@@ -1243,7 +1319,9 @@ JS;
 							$attachment_id = (int) $attachment->ID;
 							$thumb_src = wp_get_attachment_image_url($attachment_id, $file_size);
 							$full_src = wp_get_attachment_image_url($attachment_id, 'full');
-							$caption = wp_get_attachment_caption($attachment_id);
+							$description_text = self::get_media_library_gallery_description_text($attachment_id, $description_value);
+							$image_alt = trim((string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true));
+							$description_attr = $image_alt !== '' ? $image_alt : $description_text;
 							if (!$thumb_src && !$full_src) {
 								continue;
 							}
@@ -1252,9 +1330,10 @@ JS;
 								type="button"
 								class="um-mltg-split-thumb<?php echo $index === 0 ? ' is-active' : ''; ?>"
 								data-main-src="<?php echo esc_attr((string) ($thumb_src ?: $full_src)); ?>"
-								data-caption="<?php echo esc_attr((string) $caption); ?>"
+								data-caption="<?php echo esc_attr((string) $description_text); ?>"
+								aria-label="<?php echo esc_attr($description_attr); ?>"
 							>
-								<img src="<?php echo esc_url((string) ($thumb_src ?: $full_src)); ?>" alt="" />
+								<img src="<?php echo esc_url((string) ($thumb_src ?: $full_src)); ?>" alt="<?php echo esc_attr($description_attr); ?>" />
 							</button>
 						<?php endforeach; ?>
 					</div>
@@ -1273,7 +1352,9 @@ JS;
 						}
 						$image_src = wp_get_attachment_image_url($attachment_id, 'full');
 						$permalink = get_attachment_link($attachment_id);
-						$caption = wp_get_attachment_caption($attachment_id);
+						$description_text = self::get_media_library_gallery_description_text($attachment_id, $description_value);
+						$image_alt = trim((string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true));
+						$description_attr = $image_alt !== '' ? $image_alt : $description_text;
 						$date_label = get_the_date($timeline_date_format, $attachment_id);
 						$is_infinite_hidden = $style === 'infinite_scroll' && $index >= max(12, $columns_desktop * 3);
 						?>
@@ -1281,15 +1362,15 @@ JS;
 							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 								<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 							<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-								<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1"><?php echo $image_html; ?></a>
+								<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?>><?php echo $image_html; ?></a>
 							<?php else : ?>
 								<?php echo $image_html; ?>
 							<?php endif; ?>
 							<?php if ($style === 'timeline_story') : ?>
 								<div class="um-mltg-timeline-meta"><?php echo esc_html((string) $date_label); ?></div>
 							<?php endif; ?>
-							<?php if ($caption !== '') : ?>
-								<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($caption); ?></figcaption>
+							<?php if ($show_description_under_photo && $description_text !== '') : ?>
+								<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($description_text); ?></figcaption>
 							<?php endif; ?>
 						</figure>
 					<?php endforeach; ?>
@@ -1375,13 +1456,15 @@ JS;
 		.um-media-library-tag-gallery-pagination { margin-top: 14px; display:flex; gap:8px; flex-wrap:wrap; }
 		.um-media-library-tag-gallery-pagination a { text-decoration:none; padding:4px 8px; border:1px solid #dcdcde; border-radius:4px; }
 		.um-media-library-tag-gallery-pagination a.current { background:#2271b1; border-color:#2271b1; color:#fff; }
-		.um-mltg-lightbox-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.86); z-index: 999999; display: none; align-items: center; justify-content: center; padding: 30px; }
+		.um-mltg-lightbox-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.86); z-index: 999999; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 30px; }
 		.um-mltg-lightbox-overlay img { max-width: min(95vw, 1600px); max-height: 88vh; width: auto; height: auto; display: block; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+		.um-mltg-lightbox-caption { margin-top: 10px; color: #fff; font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }
 		.um-mltg-lightbox-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: #fff; font-size: 36px; line-height: 1; cursor: pointer; }
 		</style>
 		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true">
 			<button type="button" class="um-mltg-lightbox-close" aria-label="<?php esc_attr_e('Close image', 'user-manager'); ?>">&times;</button>
 			<img src="" alt="" />
+			<p class="um-mltg-lightbox-caption"></p>
 		</div>
 		<script>
 		(function() {
@@ -1391,12 +1474,17 @@ JS;
 			if (!overlay) { return; }
 			var closeBtn = overlay.querySelector('.um-mltg-lightbox-close');
 			var image = overlay.querySelector('img');
+			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
 			var bodyPrevOverflow = '';
 			function closeOverlay() {
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
 				if (image) {
 					image.setAttribute('src', '');
+				}
+				if (captionEl) {
+					captionEl.textContent = '';
+					captionEl.style.display = 'none';
 				}
 				if (document && document.body) {
 					document.body.style.overflow = bodyPrevOverflow;
@@ -1408,7 +1496,14 @@ JS;
 				event.preventDefault();
 				var src = link.getAttribute('href') || '';
 				if (!src || !image) { return; }
+				var caption = link.getAttribute('data-um-lightbox-caption') || '';
+				var altText = link.getAttribute('data-um-lightbox-alt') || '';
 				image.setAttribute('src', src);
+				image.setAttribute('alt', altText);
+				if (captionEl) {
+					captionEl.textContent = caption;
+					captionEl.style.display = caption ? 'block' : 'none';
+				}
 				if (document && document.body) {
 					bodyPrevOverflow = document.body.style.overflow || '';
 					document.body.style.overflow = 'hidden';
@@ -1559,6 +1654,8 @@ JS;
 			'style' => 'uniform_grid',
 			'pageLimit' => 0,
 			'linkTo' => 'none',
+			'descriptionDisplay' => 'none',
+			'descriptionValue' => 'caption',
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -1582,9 +1679,23 @@ JS;
 		if (!empty($settings['media_library_tag_gallery_link_to'])) {
 			$defaults['linkTo'] = sanitize_key((string) $settings['media_library_tag_gallery_link_to']);
 		}
+		if (!empty($settings['media_library_tag_gallery_description_display'])) {
+			$defaults['descriptionDisplay'] = sanitize_key((string) $settings['media_library_tag_gallery_description_display']);
+		}
+		if (!empty($settings['media_library_tag_gallery_description_value'])) {
+			$defaults['descriptionValue'] = sanitize_key((string) $settings['media_library_tag_gallery_description_value']);
+		}
 		$valid_styles = array_keys(self::get_media_library_gallery_style_options());
 		if (!in_array((string) $defaults['style'], $valid_styles, true)) {
 			$defaults['style'] = 'uniform_grid';
+		}
+		$valid_description_display = array_keys(self::get_media_library_gallery_description_display_options());
+		if (!in_array((string) $defaults['descriptionDisplay'], $valid_description_display, true)) {
+			$defaults['descriptionDisplay'] = 'none';
+		}
+		$valid_description_values = array_keys(self::get_media_library_gallery_description_value_options());
+		if (!in_array((string) $defaults['descriptionValue'], $valid_description_values, true)) {
+			$defaults['descriptionValue'] = 'caption';
 		}
 
 		return $defaults;
@@ -1615,6 +1726,70 @@ JS;
 		}
 
 		return $sizes;
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_media_library_gallery_description_display_options(): array {
+		return [
+			'none' => __('none', 'user-manager'),
+			'grid' => __('centered under photo', 'user-manager'),
+			'lightbox' => __('lightbox under photo', 'user-manager'),
+			'both' => __('both', 'user-manager'),
+		];
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_media_library_gallery_description_value_options(): array {
+		return [
+			'caption' => __('Caption', 'user-manager'),
+			'title' => __('Title', 'user-manager'),
+			'description' => __('Description', 'user-manager'),
+			'alt' => __('Alt text', 'user-manager'),
+			'filename' => __('Filename', 'user-manager'),
+			'slug' => __('Slug', 'user-manager'),
+			'date' => __('Date', 'user-manager'),
+		];
+	}
+
+	/**
+	 * Resolve description text value for a specific attachment.
+	 */
+	private static function get_media_library_gallery_description_text(int $attachment_id, string $description_value): string {
+		if ($attachment_id <= 0) {
+			return '';
+		}
+
+		switch ($description_value) {
+			case 'title':
+				return trim((string) get_the_title($attachment_id));
+			case 'description':
+				$attachment = get_post($attachment_id);
+				return $attachment instanceof WP_Post ? trim((string) $attachment->post_content) : '';
+			case 'alt':
+				return trim((string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true));
+			case 'filename':
+				$file = get_post_meta($attachment_id, '_wp_attached_file', true);
+				if (!is_string($file) || $file === '') {
+					return '';
+				}
+				return trim((string) wp_basename($file));
+			case 'slug':
+				$attachment = get_post($attachment_id);
+				return $attachment instanceof WP_Post ? trim((string) $attachment->post_name) : '';
+			case 'date':
+				$date_format = get_option('date_format');
+				if (!is_string($date_format) || $date_format === '') {
+					$date_format = 'F j, Y';
+				}
+				return trim((string) get_the_date($date_format, $attachment_id));
+			case 'caption':
+			default:
+				return trim((string) wp_get_attachment_caption($attachment_id));
+		}
 	}
 
 	/**

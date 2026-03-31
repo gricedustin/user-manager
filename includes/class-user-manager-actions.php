@@ -2325,6 +2325,18 @@ class User_Manager_Actions {
 				$gallery_link_to = isset($_POST['media_library_tag_gallery_link_to']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_link_to'])) : 'none';
 				$allowed_gallery_link_to = ['none', 'lightbox', 'media_permalink'];
 				$settings['media_library_tag_gallery_link_to'] = in_array($gallery_link_to, $allowed_gallery_link_to, true) ? $gallery_link_to : 'none';
+				$gallery_description_display = isset($_POST['media_library_tag_gallery_description_display']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_description_display'])) : 'none';
+				$allowed_description_display = array_keys(User_Manager_Core::get_media_library_gallery_description_display_options());
+				if (!in_array($gallery_description_display, $allowed_description_display, true)) {
+					$gallery_description_display = 'none';
+				}
+				$settings['media_library_tag_gallery_description_display'] = $gallery_description_display;
+				$gallery_description_value = isset($_POST['media_library_tag_gallery_description_value']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_description_value'])) : 'caption';
+				$allowed_description_values = array_keys(User_Manager_Core::get_media_library_gallery_description_value_options());
+				if (!in_array($gallery_description_value, $allowed_description_values, true)) {
+					$gallery_description_value = 'caption';
+				}
+				$settings['media_library_tag_gallery_description_value'] = $gallery_description_value;
 				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
 				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
