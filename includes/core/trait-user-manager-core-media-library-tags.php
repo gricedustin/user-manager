@@ -89,7 +89,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 					'name' => __('Library Tags', 'user-manager'),
 					'singular_name' => __('Library Tag', 'user-manager'),
 					'search_items' => __('Search Library Tags', 'user-manager'),
-					'all_items' => __('All Library Tags', 'user-manager'),
+					'all_items' => __('All tags', 'user-manager'),
 					'edit_item' => __('Edit Library Tag', 'user-manager'),
 					'update_item' => __('Update Library Tag', 'user-manager'),
 					'add_new_item' => __('Add New Library Tag', 'user-manager'),
@@ -152,7 +152,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		?>
 		<label for="um-media-library-tag-filter" class="screen-reader-text"><?php esc_html_e('Filter by Library Tag', 'user-manager'); ?></label>
 		<select id="um-media-library-tag-filter" name="um_media_library_tag" class="attachment-filters">
-			<option value=""><?php esc_html_e('All Library Tags', 'user-manager'); ?></option>
+			<option value=""><?php esc_html_e('All tags', 'user-manager'); ?></option>
 			<?php foreach ($terms as $term) : ?>
 				<?php if (!$term instanceof WP_Term) { continue; } ?>
 				<option value="<?php echo esc_attr($term->slug); ?>" <?php selected($selected_filter, (string) $term->slug); ?>>
@@ -166,24 +166,45 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			return;
 		}
 		?>
-		<label for="um-media-library-bulk-tag" class="screen-reader-text"><?php esc_html_e('Choose Library Tag for bulk apply', 'user-manager'); ?></label>
-		<select id="um-media-library-bulk-tag" name="um_media_library_bulk_tag">
-			<option value=""><?php esc_html_e('Bulk apply: choose Library Tag', 'user-manager'); ?></option>
-			<?php foreach ($terms as $term) : ?>
-				<?php if (!$term instanceof WP_Term) { continue; } ?>
-				<option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?></option>
-			<?php endforeach; ?>
-		</select>
-		<label for="um-media-library-bulk-tag-new" class="screen-reader-text"><?php esc_html_e('Or enter a new Library Tag for bulk apply', 'user-manager'); ?></label>
-		<input
-			type="text"
-			id="um-media-library-bulk-tag-new"
-			name="um_media_library_bulk_tag_new"
-			placeholder="<?php echo esc_attr__('or enter new Library Tag', 'user-manager'); ?>"
-			style="width: 190px;"
-		/>
-		<?php submit_button(__('Apply Library Tag', 'user-manager'), 'secondary', 'um_media_library_bulk_apply', false); ?>
-		<?php wp_nonce_field('um_media_library_bulk_apply_action', 'um_media_library_bulk_apply_nonce', false); ?>
+		<span id="um-media-library-bulk-tag-wrap" style="display:none;">
+			<label for="um-media-library-bulk-tag" class="screen-reader-text"><?php esc_html_e('Apply tag to selected media', 'user-manager'); ?></label>
+			<select id="um-media-library-bulk-tag" name="um_media_library_bulk_tag">
+				<option value=""><?php esc_html_e('Apply Tag', 'user-manager'); ?></option>
+				<?php foreach ($terms as $term) : ?>
+					<?php if (!$term instanceof WP_Term) { continue; } ?>
+					<option value="<?php echo esc_attr($term->slug); ?>"><?php echo esc_html($term->name); ?></option>
+				<?php endforeach; ?>
+			</select>
+			<label for="um-media-library-bulk-tag-new" class="screen-reader-text"><?php esc_html_e('Enter tag', 'user-manager'); ?></label>
+			<input
+				type="text"
+				id="um-media-library-bulk-tag-new"
+				name="um_media_library_bulk_tag_new"
+				placeholder="<?php echo esc_attr__('enter tag', 'user-manager'); ?>"
+				style="width: 190px;"
+			/>
+			<?php submit_button(__('Apply Tag(s)', 'user-manager'), 'secondary', 'um_media_library_bulk_apply', false); ?>
+			<?php wp_nonce_field('um_media_library_bulk_apply_action', 'um_media_library_bulk_apply_nonce', false); ?>
+		</span>
+		<script>
+			(function($) {
+				function syncListBulkTagVisibility() {
+					var $toggle = $('.wp-filter .select-mode-toggle-button, .media-toolbar .select-mode-toggle-button').first();
+					var isActive = false;
+					if ($toggle.length) {
+						var txt = String($.trim($toggle.text() || '')).toLowerCase();
+						isActive = txt.indexOf('cancel') !== -1 || String($toggle.attr('aria-pressed') || '').toLowerCase() === 'true';
+					}
+					$('#um-media-library-bulk-tag-wrap').toggle(isActive);
+				}
+				$(document).ready(function() {
+					syncListBulkTagVisibility();
+					$(document).on('click', '.select-mode-toggle-button, .delete-selected-button, .attachments-browser input[type="checkbox"]', function() {
+						window.setTimeout(syncListBulkTagVisibility, 60);
+					});
+				});
+			})(jQuery);
+		</script>
 		<?php
 	}
 
@@ -488,10 +509,10 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'ajaxUrl' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce('um_media_library_tags_ajax'),
 			'labels' => [
-				'filterAll' => __('All Library Tags', 'user-manager'),
-				'bulkChoose' => __('Bulk apply: choose Library Tag', 'user-manager'),
-				'bulkNewTagPlaceholder' => __('or enter new Library Tag', 'user-manager'),
-				'bulkButton' => __('Apply Library Tag', 'user-manager'),
+				'filterAll' => __('All tags', 'user-manager'),
+				'bulkChoose' => __('Apply Tag', 'user-manager'),
+				'bulkNewTagPlaceholder' => __('enter tag', 'user-manager'),
+				'bulkButton' => __('Apply Tag(s)', 'user-manager'),
 				'bulkNoSelection' => __('Select one or more media items first.', 'user-manager'),
 				'bulkNoTag' => __('Choose a Library Tag or enter a new one first.', 'user-manager'),
 			],
@@ -566,13 +587,49 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		var $filter = $('<select id="um-media-library-tag-filter-grid" class="um-media-library-tag-control"></select>').html(filterHtml);
 		var $bulkLabel = $('<label class="screen-reader-text" for="um-media-library-tag-bulk-grid">Bulk apply Library Tag</label>');
 		var $bulk = $('<select id="um-media-library-tag-bulk-grid" class="um-media-library-tag-control"></select>').html(bulkHtml);
-		var $newTag = $('<input type="text" id="um-media-library-tag-bulk-grid-new" class="um-media-library-tag-control" />').attr('placeholder', (cfg.labels && cfg.labels.bulkNewTagPlaceholder) || 'or enter new Library Tag');
-		var $button = $('<button type="button" class="button media-button"></button>').text((cfg.labels && cfg.labels.bulkButton) || 'Apply Library Tag');
+		var $newTag = $('<input type="text" id="um-media-library-tag-bulk-grid-new" class="um-media-library-tag-control" />').attr('placeholder', (cfg.labels && cfg.labels.bulkNewTagPlaceholder) || 'enter tag');
+		var $button = $('<button type="button" class="button media-button"></button>').text((cfg.labels && cfg.labels.bulkButton) || 'Apply Tag(s)');
+		var $bulkWrap = $('<span class="um-media-library-tag-bulk-controls" style="display:none;"></span>');
 		$filter.css({ display: 'inline-block', minWidth: '160px' });
 		$bulk.css({ display: 'inline-block', minWidth: '190px' });
 		$newTag.css({ display: 'inline-block', minWidth: '190px' });
+		$bulkWrap.append($bulkLabel).append($bulk).append($newTag).append($button);
 
-		$toolbar.append($filterLabel).append($filter).append($bulkLabel).append($bulk).append($newTag).append($button);
+		$toolbar.append($filterLabel).append($filter).append($bulkWrap);
+
+		function isBulkSelectModeActive() {
+			var $toggle = $('.media-toolbar-secondary .select-mode-toggle-button').first();
+			if (!$toggle.length) {
+				return false;
+			}
+			var toggleText = String($.trim($toggle.text() || '')).toLowerCase();
+			var pressed = String($toggle.attr('aria-pressed') || '').toLowerCase() === 'true';
+			var expanded = String($toggle.attr('aria-expanded') || '').toLowerCase() === 'true';
+			var activeClass = $toggle.hasClass('active');
+			var cancelText = toggleText.indexOf('cancel') !== -1;
+			var deleteVisible = $('.media-toolbar-secondary .delete-selected-button').first().is(':visible') && !$('.media-toolbar-secondary .delete-selected-button').first().hasClass('hidden');
+			return pressed || expanded || activeClass || cancelText || deleteVisible;
+		}
+
+		function syncBulkControlsVisibility() {
+			var isActive = isBulkSelectModeActive();
+			$bulkWrap.toggle(!!isActive);
+			if (!isActive) {
+				$bulk.val('');
+				$newTag.val('');
+			}
+		}
+
+		syncBulkControlsVisibility();
+		$(document).on('click.umMediaLibraryTagBulkSync', '.media-toolbar-secondary .select-mode-toggle-button', function() {
+			window.setTimeout(syncBulkControlsVisibility, 60);
+		});
+		$(document).on('change.umMediaLibraryTagBulkSync', '.attachments-browser input[type="checkbox"]', function() {
+			window.setTimeout(syncBulkControlsVisibility, 60);
+		});
+		$(document).on('click.umMediaLibraryTagBulkSync', '.media-toolbar-secondary .delete-selected-button', function() {
+			window.setTimeout(syncBulkControlsVisibility, 60);
+		});
 
 		$filter.on('change', function() {
 			updateUrlParam('um_media_library_tag', $(this).val());
@@ -678,7 +735,7 @@ JS;
 		}
 
 		$term_options = [
-			['label' => __('All Library Tags', 'user-manager'), 'value' => ''],
+			['label' => __('All tags', 'user-manager'), 'value' => ''],
 		];
 		foreach ($terms as $term) {
 			if (!($term instanceof WP_Term)) {
@@ -731,7 +788,7 @@ JS;
 
 	var cfg = window.umMediaLibraryTagGalleryConfig || {};
 	var defaults = cfg.defaults || {};
-	var terms = Array.isArray(cfg.terms) ? cfg.terms : [{ label: 'All Library Tags', value: '' }];
+	var terms = Array.isArray(cfg.terms) ? cfg.terms : [{ label: 'All tags', value: '' }];
 	var imageSizeOptions = Array.isArray(cfg.imageSizes) ? cfg.imageSizes.map(function(size) {
 		return { label: String(size.label || size.value || ''), value: String(size.value || '') };
 	}).filter(function(size) {
