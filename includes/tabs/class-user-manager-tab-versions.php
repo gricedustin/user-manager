@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.75 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: added "Random" to Sort Order options in add-on defaults and block-level controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Gallery rendering now supports random image ordering when Sort Order is set to Random.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.74 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library tag filter label updated from "No Tags" to "No tags" in list and grid views.', 'user-manager'); ?></li>

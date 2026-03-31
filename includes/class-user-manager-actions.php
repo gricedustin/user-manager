@@ -2285,7 +2285,7 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_columns_desktop'] = isset($_POST['media_library_tag_gallery_columns_desktop']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop']))) : 4;
 				$settings['media_library_tag_gallery_columns_mobile'] = isset($_POST['media_library_tag_gallery_columns_mobile']) ? max(1, min(4, absint($_POST['media_library_tag_gallery_columns_mobile']))) : 2;
 				$gallery_sort = isset($_POST['media_library_tag_gallery_sort_order']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_sort_order'])) : 'date_desc';
-				$allowed_gallery_sort = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc'];
+				$allowed_gallery_sort = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc', 'random'];
 				$settings['media_library_tag_gallery_sort_order'] = in_array($gallery_sort, $allowed_gallery_sort, true) ? $gallery_sort : 'date_desc';
 				$gallery_size = isset($_POST['media_library_tag_gallery_file_size']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_file_size'])) : 'thumbnail';
 				$allowed_gallery_sizes = ['thumbnail', 'medium', 'large', 'full'];

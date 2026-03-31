@@ -100,6 +100,7 @@ class User_Manager_Addon_Media_Library_Tags {
 									<option value="filename_desc" <?php selected($sort_order, 'filename_desc'); ?>><?php esc_html_e('Filename DESC', 'user-manager'); ?></option>
 									<option value="caption_asc" <?php selected($sort_order, 'caption_asc'); ?>><?php esc_html_e('Caption ASC', 'user-manager'); ?></option>
 									<option value="caption_desc" <?php selected($sort_order, 'caption_desc'); ?>><?php esc_html_e('Caption DESC', 'user-manager'); ?></option>
+									<option value="random" <?php selected($sort_order, 'random'); ?>><?php esc_html_e('Random', 'user-manager'); ?></option>
 								</select>
 							</div>
 							<div class="um-form-field">

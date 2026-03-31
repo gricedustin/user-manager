@@ -1028,7 +1028,8 @@ JS;
 		{ label: 'Filename ASC', value: 'filename_asc' },
 		{ label: 'Filename DESC', value: 'filename_desc' },
 		{ label: 'Caption ASC', value: 'caption_asc' },
-		{ label: 'Caption DESC', value: 'caption_desc' }
+		{ label: 'Caption DESC', value: 'caption_desc' },
+		{ label: 'Random', value: 'random' }
 	];
 	var styleOptions = [
 		{ label: 'Mosaic Grid (Irregular Tiles)', value: 'mosaic_grid' },
@@ -1332,7 +1333,7 @@ JS;
 			? sanitize_key((string) $defaults['descriptionValue'])
 			: (isset($attrs['descriptionValue']) ? sanitize_key((string) $attrs['descriptionValue']) : (string) $defaults['descriptionValue']);
 
-		$allowed_sort_orders = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc'];
+		$allowed_sort_orders = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc', 'random'];
 		$allowed_file_sizes = array_keys(self::get_available_image_sizes_for_media_gallery());
 		if (empty($allowed_file_sizes)) {
 			$allowed_file_sizes = ['thumbnail', 'medium', 'large', 'full'];
@@ -1452,6 +1453,9 @@ JS;
 			case 'caption_desc':
 				$query_args['orderby'] = 'post_excerpt';
 				$query_args['order'] = 'DESC';
+				break;
+			case 'random':
+				$query_args['orderby'] = 'rand';
 				break;
 		}
 
