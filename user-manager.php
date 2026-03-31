@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.55
+ * Version: 2.4.56
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.56 - March 16, 2026
+ * - Added new Add-on: "Media Library Tags" with Activate checkbox and description.
+ * - Adds a "Library Tags" taxonomy menu under Media, media-library filter dropdown (list/grid), bulk tag assignment, and per-item tag edit controls in attachment details.
+ *
  * 2.4.55 - March 16, 2026
  * - Product Search by SKU add-on is now OFF by default on fresh installs (requires explicit activation).
  *

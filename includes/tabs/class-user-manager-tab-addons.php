@@ -34,6 +34,7 @@ require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
 require_once __DIR__ . '/class-user-manager-addon-staging-development-environment-overrides.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
+require_once __DIR__ . '/class-user-manager-addon-media-library-tags.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
@@ -252,6 +253,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="my-account-site-admin">
 					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="media-library-tags">
+					<?php User_Manager_Addon_Media_Library_Tags::render($settings, $settings_form_id); ?>
 				</div>
 			</div>
 		</form>
@@ -919,6 +923,9 @@ class User_Manager_Tab_Addons {
 			function toggleSendEmailUsersFields() {
 				$('#um-send-email-users-fields').toggle($('#um-send-email-users-enabled').is(':checked'));
 			}
+			function toggleMediaLibraryTagsFields() {
+				$('#um-media-library-tags-fields').toggle($('#um-media-library-tags-enabled').is(':checked'));
+			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
 			}
@@ -949,6 +956,7 @@ class User_Manager_Tab_Addons {
 			toggleOrderReceivedPageCustomizerFields();
 			toggleSendEmailUsersFields();
 			toggleSendSmsTextFields();
+			toggleMediaLibraryTagsFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			$('.um-addon-action-submit').on('click', function() {
@@ -1163,6 +1171,10 @@ class User_Manager_Tab_Addons {
 			$('#um-send-sms-text-enabled').on('change', function() {
 				toggleSendSmsTextFields();
 				refreshAddonCardAutoState($('#um-addon-card-send-sms-text'));
+			});
+			$('#um-media-library-tags-enabled').on('change', function() {
+				toggleMediaLibraryTagsFields();
+				refreshAddonCardAutoState($('#um-addon-card-media-library-tags'));
 			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
@@ -1413,6 +1425,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('My Account Admin', 'user-manager'),
 				'description' => __('Add admin-style Orders, Products, Coupons, and Users tools in My Account.', 'user-manager'),
 				'active' => $my_account_site_admin_enabled,
+			],
+			'media-library-tags' => [
+				'label'  => __('Media Library Tags', 'user-manager'),
+				'description' => __('Add Library Tags taxonomy management, media-library filtering, and bulk tag assignment tools for attachments.', 'user-manager'),
+				'active' => !empty($settings['media_library_tags_enabled']),
 			],
 			'post-meta' => [
 				'label'  => __('Post Meta Viewer', 'user-manager'),
