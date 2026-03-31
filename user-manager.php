@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.75
+ * Version: 2.4.76
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.76 - March 16, 2026
+ * - Media Library "No tags" filter fix: remove conflicting Library Tags tax clauses/query vars before applying the no-tags filter.
+ * - This ensures "No tags" returns untagged media items instead of "No media items found." in list and grid views.
+ *
  * 2.4.75 - March 16, 2026
  * - Media Library Tags gallery Sort Order: added "Random" option in add-on defaults and block-level controls.
  * - Gallery rendering now supports random ordering when Sort Order is set to Random.

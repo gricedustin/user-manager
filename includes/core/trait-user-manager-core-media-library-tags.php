@@ -240,10 +240,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			return;
 		}
 
-		$tax_query = $query->get('tax_query');
-		if (!is_array($tax_query)) {
-			$tax_query = [];
-		}
+		$query->set('um_media_library_tag', '');
+		$tax_query = self::remove_media_library_tag_tax_query_clauses($query->get('tax_query'));
 		if (self::is_media_library_no_tags_filter_value($requested_filter)) {
 			$all_term_ids = self::get_media_library_all_tag_term_ids();
 			if (!empty($all_term_ids)) {
@@ -260,6 +258,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				'field' => 'slug',
 				'terms' => [$requested_filter],
 			];
+		}
+		if (count($tax_query) >= 1) {
+			$tax_query['relation'] = 'AND';
 		}
 		$query->set('tax_query', $tax_query);
 	}
@@ -292,7 +293,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			}
 		}
 
-		$tax_query = isset($query['tax_query']) && is_array($query['tax_query']) ? $query['tax_query'] : [];
+		unset($query['um_media_library_tag']);
+		$tax_query = self::remove_media_library_tag_tax_query_clauses($query['tax_query'] ?? []);
 		if (self::is_media_library_no_tags_filter_value($requested_filter)) {
 			$all_term_ids = self::get_media_library_all_tag_term_ids();
 			if (!empty($all_term_ids)) {
@@ -309,6 +311,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				'field' => 'slug',
 				'terms' => [$requested_filter],
 			];
+		}
+		if (count($tax_query) >= 1) {
+			$tax_query['relation'] = 'AND';
 		}
 		$query['tax_query'] = $tax_query;
 		return $query;
@@ -2111,6 +2116,29 @@ JS;
 			return [];
 		}
 		return array_values(array_filter(array_map('absint', $ids)));
+	}
+
+	/**
+	 * Remove existing Library Tags taxonomy clauses from a tax_query array.
+	 *
+	 * @param mixed $tax_query Existing tax_query.
+	 * @return array<int|string,mixed>
+	 */
+	private static function remove_media_library_tag_tax_query_clauses($tax_query): array {
+		if (!is_array($tax_query)) {
+			return [];
+		}
+		$filtered = [];
+		foreach ($tax_query as $key => $clause) {
+			if ($key === 'relation') {
+				continue;
+			}
+			if (is_array($clause) && !empty($clause['taxonomy']) && (string) $clause['taxonomy'] === self::media_library_tags_taxonomy()) {
+				continue;
+			}
+			$filtered[] = $clause;
+		}
+		return $filtered;
 	}
 
 	/**

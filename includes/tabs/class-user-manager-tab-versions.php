@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.76 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library "No tags" filter: fixed query handling to remove conflicting Library Tag clauses before applying the no-tags condition.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('No-tags filtering now reliably returns attachments with no Library Tags assigned in both list and grid Media Library views.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.75 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags & Photo Gallery: added "Random" to Sort Order options in add-on defaults and block-level controls.', 'user-manager'); ?></li>
