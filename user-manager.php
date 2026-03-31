@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.71
+ * Version: 2.4.72
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.72 - March 16, 2026
+ * - Media Library tag filter: added a new "No Tags" option to show only attachments that do not have any Library Tags.
+ * - "No Tags" filter now works in both list view and media grid/ajax view using a taxonomy NOT EXISTS query.
+ *
  * 2.4.71 - March 16, 2026
  * - Settings tab: added "Show profile/edit user helper notice" checkbox under User Experience.
  * - Profile/Edit User notice is now hidden by default unless this new setting is enabled.

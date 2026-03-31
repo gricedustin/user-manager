@@ -139,7 +139,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			return;
 		}
 
-		$selected_filter = self::get_requested_media_library_tag_slug();
+		$selected_filter = self::get_requested_media_library_tag_filter_value();
+		$no_tags_filter_value = self::get_media_library_no_tags_filter_value();
 		$terms = get_terms([
 			'taxonomy' => $taxonomy,
 			'hide_empty' => false,
@@ -153,6 +154,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		<label for="um-media-library-tag-filter" class="screen-reader-text"><?php esc_html_e('Filter by Library Tag', 'user-manager'); ?></label>
 		<select id="um-media-library-tag-filter" name="um_media_library_tag" class="attachment-filters">
 			<option value=""><?php esc_html_e('All tags', 'user-manager'); ?></option>
+			<option value="<?php echo esc_attr($no_tags_filter_value); ?>" <?php selected($selected_filter, $no_tags_filter_value); ?>>
+				<?php esc_html_e('No Tags', 'user-manager'); ?>
+			</option>
 			<?php foreach ($terms as $term) : ?>
 				<?php if (!$term instanceof WP_Term) { continue; } ?>
 				<option value="<?php echo esc_attr($term->slug); ?>" <?php selected($selected_filter, (string) $term->slug); ?>>
@@ -231,8 +235,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			return;
 		}
 
-		$tag_slug = self::get_requested_media_library_tag_slug();
-		if ($tag_slug === '') {
+		$requested_filter = self::get_requested_media_library_tag_filter_value();
+		if ($requested_filter === '') {
 			return;
 		}
 
@@ -240,11 +244,18 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		if (!is_array($tax_query)) {
 			$tax_query = [];
 		}
-		$tax_query[] = [
-			'taxonomy' => self::media_library_tags_taxonomy(),
-			'field' => 'slug',
-			'terms' => [$tag_slug],
-		];
+		if (self::is_media_library_no_tags_filter_value($requested_filter)) {
+			$tax_query[] = [
+				'taxonomy' => self::media_library_tags_taxonomy(),
+				'operator' => 'NOT EXISTS',
+			];
+		} else {
+			$tax_query[] = [
+				'taxonomy' => self::media_library_tags_taxonomy(),
+				'field' => 'slug',
+				'terms' => [$requested_filter],
+			];
+		}
 		$query->set('tax_query', $tax_query);
 	}
 
@@ -255,27 +266,40 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	 * @return array<string,mixed>
 	 */
 	public static function filter_media_library_ajax_query_by_tag(array $query): array {
-		$tag_slug = '';
+		$requested_filter = '';
 
 		if (isset($query['um_media_library_tag'])) {
-			$tag_slug = sanitize_title((string) $query['um_media_library_tag']);
+			$requested_filter = sanitize_text_field((string) $query['um_media_library_tag']);
 		}
-		if ($tag_slug === '' && isset($_REQUEST['query']) && is_array($_REQUEST['query']) && isset($_REQUEST['query']['um_media_library_tag'])) {
-			$tag_slug = sanitize_title((string) wp_unslash($_REQUEST['query']['um_media_library_tag']));
+		if ($requested_filter === '' && isset($_REQUEST['query']) && is_array($_REQUEST['query']) && isset($_REQUEST['query']['um_media_library_tag'])) {
+			$requested_filter = sanitize_text_field((string) wp_unslash($_REQUEST['query']['um_media_library_tag']));
 		}
-		if ($tag_slug === '') {
-			$tag_slug = self::get_requested_media_library_tag_slug();
+		if ($requested_filter === '') {
+			$requested_filter = self::get_requested_media_library_tag_filter_value();
 		}
-		if ($tag_slug === '') {
+		if ($requested_filter === '') {
 			return $query;
+		}
+		if (!self::is_media_library_no_tags_filter_value($requested_filter)) {
+			$requested_filter = sanitize_title($requested_filter);
+			if ($requested_filter === '' || !term_exists($requested_filter, self::media_library_tags_taxonomy())) {
+				return $query;
+			}
 		}
 
 		$tax_query = isset($query['tax_query']) && is_array($query['tax_query']) ? $query['tax_query'] : [];
-		$tax_query[] = [
-			'taxonomy' => self::media_library_tags_taxonomy(),
-			'field' => 'slug',
-			'terms' => [$tag_slug],
-		];
+		if (self::is_media_library_no_tags_filter_value($requested_filter)) {
+			$tax_query[] = [
+				'taxonomy' => self::media_library_tags_taxonomy(),
+				'operator' => 'NOT EXISTS',
+			];
+		} else {
+			$tax_query[] = [
+				'taxonomy' => self::media_library_tags_taxonomy(),
+				'field' => 'slug',
+				'terms' => [$requested_filter],
+			];
+		}
 		$query['tax_query'] = $tax_query;
 		return $query;
 	}
@@ -524,7 +548,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		$settings = User_Manager_Core::get_settings();
 		$show_thumbnail_tags = !empty($settings['media_library_tags_show_tags_on_thumbnails_bulk_select']);
 		$config = [
-			'selectedTag' => self::get_requested_media_library_tag_slug(),
+			'selectedTag' => self::get_requested_media_library_tag_filter_value(),
+			'noTagsValue' => self::get_media_library_no_tags_filter_value(),
 			'terms' => $term_options,
 			'ajaxUrl' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce('um_media_library_tags_ajax'),
@@ -532,6 +557,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'attachmentTagsById' => $show_thumbnail_tags ? self::get_media_library_attachment_tags_map() : [],
 			'labels' => [
 				'filterAll' => __('All tags', 'user-manager'),
+				'filterNoTags' => __('No Tags', 'user-manager'),
 				'bulkChoose' => __('Apply Tag', 'user-manager'),
 				'bulkNewTagPlaceholder' => __('or enter tag', 'user-manager'),
 				'bulkButton' => __('Apply Tag(s)', 'user-manager'),
@@ -550,8 +576,15 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		return;
 	}
 
-	function buildOptions(defaultLabel, selected) {
+	function buildOptions(defaultLabel, selected, includeNoTags) {
 		var html = '<option value="">' + String(defaultLabel || '') + '</option>';
+		if (includeNoTags) {
+			var noTagsValue = String((cfg && cfg.noTagsValue) || '__um_no_tags__');
+			var noTagsSelected = selected && selected === noTagsValue ? ' selected' : '';
+			html += '<option value="' + noTagsValue.replace(/"/g, '&quot;') + '"' + noTagsSelected + '>'
+				+ String((cfg.labels && cfg.labels.filterNoTags) || 'No Tags').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+				+ '</option>';
+		}
 		cfg.terms.forEach(function(term) {
 			if (!term || !term.slug) {
 				return;
@@ -604,8 +637,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 
 		var selectedTag = String(cfg.selectedTag || '');
-		var filterHtml = buildOptions(cfg.labels && cfg.labels.filterAll, selectedTag);
-		var bulkHtml = buildOptions(cfg.labels && cfg.labels.bulkChoose, '');
+		var filterHtml = buildOptions(cfg.labels && cfg.labels.filterAll, selectedTag, true);
+		var bulkHtml = buildOptions(cfg.labels && cfg.labels.bulkChoose, '', false);
 		var $filterLabel = $('<label class="screen-reader-text" for="um-media-library-tag-filter-grid">Library Tag filter</label>');
 		var $filter = $('<select id="um-media-library-tag-filter-grid" class="um-media-library-tag-control"></select>').html(filterHtml);
 		var $bulkLabel = $('<label class="screen-reader-text" for="um-media-library-tag-bulk-grid">Bulk apply Library Tag</label>');
@@ -1956,29 +1989,34 @@ JS;
 	/**
 	 * Resolve selected Library Tag from request/query/referer.
 	 */
-	private static function get_requested_media_library_tag_slug(): string {
-		$slug = '';
+	private static function get_requested_media_library_tag_filter_value(): string {
+		$value = '';
 
 		if (isset($_REQUEST['query']) && is_array($_REQUEST['query']) && isset($_REQUEST['query']['um_media_library_tag'])) {
-			$slug = sanitize_title((string) wp_unslash($_REQUEST['query']['um_media_library_tag']));
+			$value = sanitize_text_field((string) wp_unslash($_REQUEST['query']['um_media_library_tag']));
 		}
-		if ($slug === '' && isset($_REQUEST['um_media_library_tag'])) {
-			$slug = sanitize_title((string) wp_unslash($_REQUEST['um_media_library_tag']));
+		if ($value === '' && isset($_REQUEST['um_media_library_tag'])) {
+			$value = sanitize_text_field((string) wp_unslash($_REQUEST['um_media_library_tag']));
 		}
-		if ($slug === '') {
-			$slug = self::get_media_library_tag_slug_from_referer();
+		if ($value === '') {
+			$value = self::get_media_library_tag_filter_value_from_referer();
 		}
-		if ($slug === '') {
+		if ($value === '') {
 			return '';
 		}
 
-		return term_exists($slug, self::media_library_tags_taxonomy()) ? $slug : '';
+		if (self::is_media_library_no_tags_filter_value($value)) {
+			return self::get_media_library_no_tags_filter_value();
+		}
+
+		$slug = sanitize_title($value);
+		return ($slug !== '' && term_exists($slug, self::media_library_tags_taxonomy())) ? $slug : '';
 	}
 
 	/**
 	 * Read Library Tag from referer query string.
 	 */
-	private static function get_media_library_tag_slug_from_referer(): string {
+	private static function get_media_library_tag_filter_value_from_referer(): string {
 		$referer = wp_get_referer();
 		if (!$referer && isset($_SERVER['HTTP_REFERER'])) {
 			$referer = esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER']));
@@ -1997,7 +2035,21 @@ JS;
 			return '';
 		}
 
-		return sanitize_title((string) $query_args['um_media_library_tag']);
+		return sanitize_text_field((string) $query_args['um_media_library_tag']);
+	}
+
+	/**
+	 * Special request value used to filter only attachments with no Library Tags.
+	 */
+	private static function get_media_library_no_tags_filter_value(): string {
+		return '__um_no_tags__';
+	}
+
+	/**
+	 * Whether a requested filter value indicates "No Tags".
+	 */
+	private static function is_media_library_no_tags_filter_value(string $value): bool {
+		return $value === self::get_media_library_no_tags_filter_value();
 	}
 
 	/**

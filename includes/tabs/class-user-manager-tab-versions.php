@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.72 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library tag filter: added a new "No Tags" option at the top so admins can quickly show only images with no Library Tags assigned.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Both list and grid Media Library views now apply a taxonomy "NOT EXISTS" query when "No Tags" is selected.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.71 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Edit User/Profile top notice is now hidden by default.', 'user-manager'); ?></li>
