@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.81 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added [tag-description] placeholder support alongside [tag-name] for Media Library Tag Gallery URL override-driven text replacement in post titles/content.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When a matching URL tag is found, [tag-description] now resolves to that Library Tag description; if not found, it resolves to an empty string.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.80 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed [tag-name] replacement timing for post titles/content by making placeholder config cache post-specific, preventing early false cache hits.', 'user-manager'); ?></li>
