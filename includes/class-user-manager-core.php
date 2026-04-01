@@ -43,7 +43,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.1';
+	const VERSION = '2.5.3';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8314,15 +8314,15 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Whether Send Email add-on is enabled and not runtime-disabled.
+	 * Whether Send Email add-on is enabled.
+	 *
+	 * Send Email is intentionally always enabled because Login Tools
+	 * and other template-dependent flows rely on it.
 	 *
 	 * @param array<string,mixed> $settings Plugin settings.
 	 */
 	public static function is_send_email_addon_enabled(array $settings): bool {
-		if (self::is_addon_temporarily_disabled('send-email-users')) {
-			return false;
-		}
-		return !empty($settings['send_email_users_enabled']);
+		return true;
 	}
 
 	/**
@@ -9138,7 +9138,10 @@ html body .woocommerce-layout__header {
 	public static function get_settings(): array {
 		$options = get_option(self::OPTION_KEY, []);
 		$options = is_array($options) ? $options : [];
-		return self::apply_runtime_addon_disable_overrides($options);
+		$options = self::apply_runtime_addon_disable_overrides($options);
+		// Send Email add-on is required by Login Tools; keep it always enabled.
+		$options['send_email_users_enabled'] = true;
+		return $options;
 	}
 
 	/**
@@ -9353,6 +9356,7 @@ html body .woocommerce-layout__header {
 		$disable_all = self::is_disable_all_addons_requested_from_url();
 		if ($disable_all) {
 			$disabled = array_keys($map);
+			$disabled = array_values(array_diff($disabled, ['send-email-users']));
 			self::$runtime_disabled_addon_slugs = $disabled;
 			return $disabled;
 		}
@@ -9366,6 +9370,9 @@ html body .woocommerce-layout__header {
 		$parts = array_filter(array_map('trim', explode(',', $raw)));
 		foreach ($parts as $slug) {
 			$slug = sanitize_key(str_replace(' ', '-', $slug));
+			if ($slug === 'send-email-users') {
+				continue;
+			}
 			if ($slug === '' || !isset($map[$slug])) {
 				continue;
 			}
@@ -9382,6 +9389,9 @@ html body .woocommerce-layout__header {
 	public static function is_addon_temporarily_disabled(string $addon_slug): bool {
 		$addon_slug = sanitize_key($addon_slug);
 		if ($addon_slug === '') {
+			return false;
+		}
+		if ($addon_slug === 'send-email-users') {
 			return false;
 		}
 		return in_array($addon_slug, self::get_temporarily_disabled_addons_from_url(), true);
@@ -9401,6 +9411,9 @@ html body .woocommerce-layout__header {
 
 		$map = self::get_addon_runtime_toggle_map(false);
 		foreach ($disabled as $slug) {
+			if ($slug === 'send-email-users') {
+				continue;
+			}
 			if (!isset($map[$slug]['settings_keys']) || !is_array($map[$slug]['settings_keys'])) {
 				continue;
 			}

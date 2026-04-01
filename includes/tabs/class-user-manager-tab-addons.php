@@ -889,7 +889,7 @@ class User_Manager_Tab_Addons {
 				$('#um-send-sms-text-fields').toggle($('#um-send-sms-text-enabled').is(':checked'));
 			}
 			function toggleSendEmailUsersFields() {
-				$('#um-send-email-users-fields').toggle($('#um-send-email-users-enabled').is(':checked'));
+				$('#um-send-email-users-fields').show();
 			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
@@ -1279,7 +1279,7 @@ class User_Manager_Tab_Addons {
 			'send-email-users' => [
 				'label'  => __('Send Email', 'user-manager'),
 				'description' => __('Send bulk emails using template selection, list/role targeting, preview, and batch sending controls.', 'user-manager'),
-				'active' => !empty($settings['send_email_users_enabled']),
+				'active' => true,
 			],
 			'send-sms-text' => [
 				'label'  => __('Send SMS Text', 'user-manager'),

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.1
+ * Version: 2.5.3
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.3 - March 16, 2026
+ * - Send Email add-on is now hard-pinned on: Add-ons save logic, runtime checks, and add-on URL-disable overrides no longer disable send-email-users.
+ * - Add-ons UI now keeps Send Email fields visible even without an activate checkbox so template tools remain reliably available.
+ *
  * 2.5.1 - March 16, 2026
  * - Coupon edit screen: fixed Email List Converter JavaScript to avoid mutating/replacing WooCommerce's native Allowed Emails field, preventing edit-screen loading/spinner conflicts.
  * - Converter now safely reads/writes both native and select2 customer_email field variants without renaming core inputs.

@@ -18,7 +18,7 @@ class User_Manager_Addon_Send_Email {
 
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
-		$enabled = !empty($settings['send_email_users_enabled']);
+		$enabled = true;
 
 		$templates_open = isset($_GET['edit_template']) && sanitize_key(wp_unslash($_GET['edit_template'])) !== '';
 		$templates_toggle_label = $templates_open ? __('Collapse', 'user-manager') : __('Expand', 'user-manager');
@@ -28,19 +28,16 @@ class User_Manager_Addon_Send_Email {
 			User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
 		);
 		?>
-		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-send-email" data-um-active-selectors="#um-send-email-users-enabled">
+		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-send-email">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-email-alt"></span>
 				<h2><?php esc_html_e('Send Email', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
+				<input type="hidden" id="um-send-email-users-enabled" name="send_email_users_enabled" value="1" <?php echo $form_attr; ?> />
 				<div class="um-form-field">
-					<label>
-						<input type="checkbox" id="um-send-email-users-enabled" name="send_email_users_enabled" value="1" <?php checked($enabled); ?><?php echo $form_attr; ?> />
-						<?php esc_html_e('Activate', 'user-manager'); ?>
-					</label>
 					<p class="description">
-						<?php esc_html_e('Send bulk emails to selected users/lists with templates, previews, batching, and saved custom lists.', 'user-manager'); ?>
+						<?php esc_html_e('This add-on is always active because Login Tools relies on these email templates.', 'user-manager'); ?>
 					</p>
 				</div>
 

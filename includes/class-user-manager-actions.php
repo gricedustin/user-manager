@@ -2631,7 +2631,9 @@ class User_Manager_Actions {
 				$settings['order_received_page_customizer_enabled'] = isset($_POST['order_received_page_customizer_enabled']) && $_POST['order_received_page_customizer_enabled'] === '1';
 				$settings['order_received_page_customizer_heading_text'] = isset($_POST['order_received_page_customizer_heading_text']) ? sanitize_text_field(wp_unslash($_POST['order_received_page_customizer_heading_text'])) : 'Order received';
 				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
-				$settings['send_email_users_enabled'] = isset($_POST['send_email_users_enabled']) && $_POST['send_email_users_enabled'] === '1';
+				// Keep Send Email permanently enabled because Login Tools depend on
+				// shared email templates from this add-on context.
+				$settings['send_email_users_enabled'] = true;
 				$settings['send_sms_text_enabled'] = isset($_POST['send_sms_text_enabled']) && $_POST['send_sms_text_enabled'] === '1';
 				$settings['staging_dev_overrides_enabled'] = isset($_POST['staging_dev_overrides_enabled']) && $_POST['staging_dev_overrides_enabled'] === '1';
 				$settings['staging_dev_disable_all_emails'] = isset($_POST['staging_dev_disable_all_emails']) && $_POST['staging_dev_disable_all_emails'] === '1';

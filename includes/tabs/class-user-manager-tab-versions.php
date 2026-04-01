@@ -39,6 +39,20 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.3 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Send Email always-on behavior: URL runtime disable overrides can no longer disable send-email-users.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons UI now forces Send Email fields visible in send-email-users section, even without an Activate checkbox state.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.2 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Send Email add-on is now always active and cannot be deactivated from Add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login Tools and other email-template consumers now always have Send Email templates/features available without activation dependencies.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.1 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Coupon edit screen: fixed Email List Converter field handling to avoid conflicting with WooCommerce\'s native Allowed emails input/select2 behavior.', 'user-manager'); ?></li>
