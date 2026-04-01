@@ -90,47 +90,11 @@ class User_Manager_Tab_Documentation {
 		$tab_cards = [
 			[
 				'icon'    => 'dashicons-admin-users',
-				'title'   => __('Create User Tab', 'user-manager'),
-				'summary' => __('Create one user at a time with full control over role, credentials, login URL, and optional welcome email behavior.', 'user-manager'),
+				'title'   => __('Login Tools Tab', 'user-manager'),
+				'summary' => __('Run day-to-day user lifecycle workflows from one area, including Create User, Bulk Create, Reset Password, Remove User, Deactivate User(s), and Login As.', 'user-manager'),
 				'details' => [
-					__('Great for manual onboarding, support-assisted account setup, and VIP account creation.', 'user-manager'),
-					__('Can pair with coupon and email template settings to provide a guided first-login experience.', 'user-manager'),
-				],
-			],
-			[
-				'icon'    => 'dashicons-upload',
-				'title'   => __('Bulk Create Tab', 'user-manager'),
-				'summary' => __('Import users in bulk via CSV, paste-from-spreadsheet, or directory-based workflows for high-volume admin operations.', 'user-manager'),
-				'details' => [
-					__('Useful for B2B launches, distributor account imports, and migration projects.', 'user-manager'),
-					__('Supports default column mapping and optional update-existing-user behavior.', 'user-manager'),
-				],
-			],
-			[
-				'icon'    => 'dashicons-lock',
-				'title'   => __('Reset Password Tab', 'user-manager'),
-				'summary' => __('Reset passwords in bulk or individually and optionally send secure reset flows with email templates.', 'user-manager'),
-				'details' => [
-					__('Helpful for account recovery campaigns and post-migration security resets.', 'user-manager'),
-					__('Can reduce support time when multiple users need immediate access restoration.', 'user-manager'),
-				],
-			],
-			[
-				'icon'    => 'dashicons-trash',
-				'title'   => __('Remove User Tab', 'user-manager'),
-				'summary' => __('Remove user accounts safely when offboarding users, cleaning invalid accounts, or processing privacy requests.', 'user-manager'),
-				'details' => [
-					__('Useful for lifecycle management and admin cleanup tasks.', 'user-manager'),
-					__('Designed to help teams process account removals consistently.', 'user-manager'),
-				],
-			],
-			[
-				'icon'    => 'dashicons-admin-network',
-				'title'   => __('Login As Tab', 'user-manager'),
-				'summary' => __('Generate controlled temporary login credentials and links so admins can troubleshoot account-specific issues quickly.', 'user-manager'),
-				'details' => [
-					__('Ideal for support teams resolving checkout, order history, and permission-related issues.', 'user-manager'),
-					__('Works well with admin activity logging for accountability.', 'user-manager'),
+					__('Designed for support, onboarding, and account-maintenance teams managing many users quickly.', 'user-manager'),
+					__('Keeps user operations grouped under one top-level tab with section-based navigation.', 'user-manager'),
 				],
 			],
 			[
@@ -167,6 +131,15 @@ class User_Manager_Tab_Documentation {
 				'details' => [
 					__('Each add-on has its own settings card and activation toggle.', 'user-manager'),
 					__('Best for gradually rolling out capabilities by business priority.', 'user-manager'),
+				],
+			],
+			[
+				'icon'    => 'dashicons-layout',
+				'title'   => __('Blocks Tab', 'user-manager'),
+				'summary' => __('Manage content-focused block modules and gallery block defaults from a dedicated area separate from operational add-ons.', 'user-manager'),
+				'details' => [
+					__('Includes block features such as Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Dynamic Photo Gallery with Media Library Tags.', 'user-manager'),
+					__('Useful for content teams building page layouts, visual navigation, and media-rich sections.', 'user-manager'),
 				],
 			],
 			[
@@ -208,6 +181,11 @@ class User_Manager_Tab_Documentation {
 				'icon'    => 'dashicons-screenoptions',
 				'title'   => __('Add to Cart Variation Table', 'user-manager'),
 				'summary' => __('Add a variable-product quantity table so shoppers can add multiple variations in one action with configurable display controls.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-cart',
+				'title'   => __('Add to Cart Min/Max Quantities', 'user-manager'),
+				'summary' => __('Set product-level minimum/maximum quantity rules and enforce them during add-to-cart and cart updates.', 'user-manager'),
 			],
 			[
 				'icon'    => 'dashicons-cart',
@@ -276,8 +254,28 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'icon'    => 'dashicons-shield',
+				'title'   => __('Data Anonymizer', 'user-manager'),
+				'summary' => __('Apply configurable anonymization rules to user/order/form data for privacy workflows, testing environments, and compliance support.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-admin-site',
+				'title'   => __('Staging & Development Environment Overrides', 'user-manager'),
+				'summary' => __('Apply non-production safety controls such as email/payment/webhook/API blocking and visible environment warning notices.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-shield',
 				'title'   => __('Security Hardening', 'user-manager'),
 				'summary' => __('Enable optional hardening controls for REST user endpoints, admin file modification restrictions, SSL admin enforcement, and version output reduction.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-email',
+				'title'   => __('Send Email', 'user-manager'),
+				'summary' => __('Activate email-sending workflows used by Email Users and related campaigns with reusable template integration.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-format-chat',
+				'title'   => __('Send SMS Text', 'user-manager'),
+				'summary' => __('Activate SMS messaging workflows for role/list-based communication from WP-Admin.', 'user-manager'),
 			],
 			[
 				'icon'    => 'dashicons-tickets',
@@ -345,6 +343,37 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Display configurable admin notices with optional URL targeting to communicate internal instructions and process updates.', 'user-manager'),
 			],
 		];
+
+		$block_cards = [
+			[
+				'icon'    => 'dashicons-screenoptions',
+				'title'   => __('Subpages Grid', 'user-manager'),
+				'summary' => __('Display child pages as a visual tile grid using block or shortcode output for directory-style navigation.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-index-card',
+				'title'   => __('Tabbed Content Area', 'user-manager'),
+				'summary' => __('Build tabbed content layouts by sourcing each panel from selected pages/posts for reusable content architecture.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-star-filled',
+				'title'   => __('Simple Icons', 'user-manager'),
+				'summary' => __('Insert configurable icon callouts for features, links, and quick visual messaging in block-based content.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-grid-view',
+				'title'   => __('Menu Tiles', 'user-manager'),
+				'summary' => __('Render WordPress menu items as tile buttons for dashboard-style or portal-style content navigation.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-format-gallery',
+				'title'   => __('Dynamic Photo Gallery with Media Library Tags', 'user-manager'),
+				'summary' => __('Manage Library Tags taxonomy + media tagging tools and power dynamic front-end galleries with block defaults, styles, URL overrides, and filtering options.', 'user-manager'),
+			],
+		];
+
+		$addon_card_count = count($addon_cards);
+		$block_card_count = count($block_cards);
 
 		$use_cases = [
 			[
@@ -503,7 +532,17 @@ class User_Manager_Tab_Documentation {
 					<h2><?php esc_html_e('Add-ons Reference', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
-					<p><?php esc_html_e('Add-ons are optional feature modules you can activate as needed. These cards explain what each add-on is designed to do.', 'user-manager'); ?></p>
+					<p>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d is the number of add-on cards listed below. */
+								__('Add-ons are optional operational feature modules you can activate as needed. This section currently documents %d add-ons.', 'user-manager'),
+								(int) $addon_card_count
+							)
+						);
+						?>
+					</p>
 				</div>
 			</div>
 
@@ -515,6 +554,38 @@ class User_Manager_Tab_Documentation {
 					</div>
 					<div class="um-admin-card-body">
 						<p><?php echo esc_html($addon_card['summary']); ?></p>
+					</div>
+				</div>
+			<?php endforeach; ?>
+
+			<div class="um-admin-card um-docs-filter-card">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-layout"></span>
+					<h2><?php esc_html_e('Blocks Reference', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d is the number of block cards listed below. */
+								__('Blocks are content-focused modules managed from the Blocks tab. This section currently documents %d block modules.', 'user-manager'),
+								(int) $block_card_count
+							)
+						);
+						?>
+					</p>
+				</div>
+			</div>
+
+			<?php foreach ($block_cards as $block_card) : ?>
+				<div class="um-admin-card um-docs-filter-card">
+					<div class="um-admin-card-header">
+						<span class="dashicons <?php echo esc_attr($block_card['icon']); ?>"></span>
+						<h2><?php echo esc_html($block_card['title']); ?></h2>
+					</div>
+					<div class="um-admin-card-body">
+						<p><?php echo esc_html($block_card['summary']); ?></p>
 					</div>
 				</div>
 			<?php endforeach; ?>
@@ -620,13 +691,13 @@ class User_Manager_Tab_Documentation {
 					<h2><?php esc_html_e('Installation', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
-					<p><?php esc_html_e('Activate User Experience Manager from the WordPress Plugins screen, then open User Manager in wp-admin to begin configuring users, emails, settings, and add-ons.', 'user-manager'); ?></p>
+					<p><?php esc_html_e('Activate User Experience Manager from the WordPress Plugins screen, then open User Manager in wp-admin to begin configuring users, emails, settings, add-ons, and blocks.', 'user-manager'); ?></p>
 					<ol>
 						<li><?php esc_html_e('Activate the plugin under Plugins > Installed Plugins.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Open User Manager and configure core user workflows (Create User, Bulk Create, Reset Password, Remove User).', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Set up email templates and email-sending behavior for each user workflow.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Review Settings for global defaults and operational preferences.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Explore Add-ons and activate only the user-experience features you need.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Explore Add-ons for operational modules and Blocks for content modules; activate only what your site needs.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Use Reports > Admin Log to verify setup actions and ongoing activity.', 'user-manager'); ?></li>
 					</ol>
 				</div>
@@ -675,27 +746,24 @@ class User_Manager_Tab_Documentation {
 					<p><?php echo esc_html(implode(', ', $tags)); ?></p>
 
 					<h3><?php esc_html_e('Short Description', 'user-manager'); ?></h3>
-					<p><?php esc_html_e('User Experience Manager is an all-in-one operational toolkit for improving both admin workflows and customer account experiences in WooCommerce-powered stores. It centralizes user management, email workflows, reporting, and modular add-ons in one scalable interface.', 'user-manager'); ?></p>
+					<p><?php esc_html_e('User Experience Manager is an all-in-one operational toolkit for improving both admin workflows and customer account experiences in WooCommerce-powered stores. It centralizes user management, email workflows, reporting, modular add-ons, and content-focused block modules in one scalable interface.', 'user-manager'); ?></p>
 
 					<h3><?php esc_html_e('Long Description (HTML Supported)', 'user-manager'); ?></h3>
 					<div>
-						<p><?php esc_html_e('User Experience Manager was built to replace fragmented, plugin-by-plugin admin workflows with one centralized operations layer for WordPress and WooCommerce teams. It combines user lifecycle tooling, communication templates, reporting visibility, and modular UX add-ons so support, operations, and growth teams can work from one interface.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('User Experience Manager was built to replace fragmented, plugin-by-plugin admin workflows with one centralized operations layer for WordPress and WooCommerce teams. It combines user lifecycle tooling, communication templates, reporting visibility, modular UX add-ons, and dedicated content blocks so support, operations, and growth teams can work from one interface.', 'user-manager'); ?></p>
 						<p><?php esc_html_e('At the core level, the plugin includes account creation and import workflows, password operations, role and access controls, email communication utilities, and reporting surfaces designed for both day-to-day execution and long-term operational visibility. Teams can onboard users faster, reduce repeated manual admin tasks, and standardize customer/account experiences across storefronts.', 'user-manager'); ?></p>
-						<p><?php esc_html_e('On top of core tooling, User Experience Manager includes an extensive add-on catalog that can be activated feature-by-feature. This allows you to turn on only what your store needs—from cart/checkout enhancements and coupon automation to My Account admin experiences, content-generation workflows, webhooks, invoice approvals, and WP-Admin UX customization—without forcing unnecessary complexity into every environment.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('On top of core tooling, User Experience Manager includes an extensive add-on catalog and a dedicated Blocks catalog that can be activated feature-by-feature. This allows you to turn on only what your store needs—from cart/checkout enhancements and coupon automation to My Account admin experiences, content-generation workflows, dynamic photo galleries, and WP-Admin UX customization—without forcing unnecessary complexity into every environment.', 'user-manager'); ?></p>
 						<p><?php esc_html_e('The result is a scalable in-house operations platform for agencies, internal ecommerce teams, and multi-store organizations that need flexible UX controls, faster support resolution, and cleaner admin execution across thousands of products, users, orders, and customer journeys.', 'user-manager'); ?></p>
 					</div>
 
 					<h3><?php esc_html_e('Feature List', 'user-manager'); ?></h3>
 					<h4><?php esc_html_e('Core Tabs and Platform Features', 'user-manager'); ?></h4>
 					<ul>
-						<li><?php esc_html_e('Create User: create single users with role, password, login URL, coupon placeholders, and optional welcome email template sending.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Bulk Create: import users at scale through CSV/paste workflows with update controls and repeatable mapping defaults.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Reset Password: execute user password resets with optional email flow controls.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Remove User: remove/deactivate users with operational logging visibility.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Login As: generate temporary access workflows for support and troubleshooting.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Login Tools: includes Create User, Bulk Create, Reset Password, Remove User, Deactivate User(s), and Login As in one sectioned workspace.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Email Users: send targeted admin-generated communication using reusable templates.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Reports: includes General Reports, User Activity, Admin Log, and Coupon Lookup by Email.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Settings: global defaults, workflow controls, API keys, template utilities, and system behavior configuration.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Blocks: dedicated content module management for Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Dynamic Photo Gallery with Media Library Tags.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Documentation: internal reference, onboarding, installation, support, marketing/about content, and versions/changelog access.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Admin logging and diagnostics: operational event logging with detailed row-level drill-down and filter controls.', 'user-manager'); ?></li>
 					</ul>
@@ -730,6 +798,14 @@ class User_Manager_Tab_Documentation {
 						<li><?php esc_html_e('WP-Admin Bar Quick Search', 'user-manager'); ?></li>
 						<li><?php esc_html_e('WP-Admin CSS', 'user-manager'); ?></li>
 						<li><?php esc_html_e('WP-Admin Notifications', 'user-manager'); ?></li>
+					</ul>
+					<h4><?php esc_html_e('Blocks Catalog (All Current Blocks)', 'user-manager'); ?></h4>
+					<ul>
+						<li><?php esc_html_e('Subpages Grid', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Tabbed Content Area', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Simple Icons', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Menu Tiles', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Dynamic Photo Gallery with Media Library Tags', 'user-manager'); ?></li>
 					</ul>
 
 					<h3><?php esc_html_e('Screenshots', 'user-manager'); ?></h3>
