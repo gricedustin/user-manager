@@ -423,7 +423,7 @@ class User_Manager_Tab_Documentation {
 		];
 
 		$general_reports = [
-			__('Coupon Audit', 'user-manager'),
+			__('Coupons Audit', 'user-manager'),
 			__('Coupons Unused', 'user-manager'),
 			__('Coupons Used', 'user-manager'),
 			__('Coupons with Email Addresses', 'user-manager'),

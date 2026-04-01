@@ -138,7 +138,7 @@ class User_Manager_Tab_Reports {
 			'coupons-free-shipping'       => __('Coupons with Free Shipping', 'user-manager'),
 			'coupons-remaining-balances'  => __('Coupons with Remaining Balances', 'user-manager'),
 			'coupons-unused'              => __('Coupons Unused', 'user-manager'),
-			'coupon-audit'                => __('Coupon Audit', 'user-manager'),
+			'coupon-audit'                => __('Coupons Audit', 'user-manager'),
 			'orders-with-refunds'         => __('Order Refunds', 'user-manager'),
 			'orders-zero-total'           => __('Orders with $0 Total', 'user-manager'),
 			'orders-free-shipping'        => __('Orders with Free Shipping', 'user-manager'),
@@ -1069,7 +1069,7 @@ class User_Manager_Tab_Reports {
 	}
 
 	/**
-	 * Export "Coupon Audit" report to CSV.
+	 * Export "Coupons Audit" report to CSV.
 	 */
 	public static function export_coupon_audit_csv(): void {
 		if (!class_exists('WooCommerce')) {
@@ -2461,7 +2461,7 @@ class User_Manager_Tab_Reports {
 	}
 
 	/**
-	 * Render "Coupon Audit" report.
+	 * Render "Coupons Audit" report.
 	 */
 	private static function render_coupon_audit_report(): void {
 		if (!class_exists('WooCommerce')) {

@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.98 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports label update: renamed "Coupon Audit" to "Coupons Audit" in report naming and documentation references for consistent wording.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.97 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Reports tab: added a contextual "Query summary" description area under the Select report dropdown that appears when a report is selected.', 'user-manager'); ?></li>
