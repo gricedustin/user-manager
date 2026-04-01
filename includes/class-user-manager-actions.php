@@ -2282,12 +2282,6 @@ class User_Manager_Actions {
 				$settings['page_block_tabbed_content_area_enabled'] = isset($_POST['page_block_tabbed_content_area_enabled']) && $_POST['page_block_tabbed_content_area_enabled'] === '1';
 				$settings['page_block_simple_icons_enabled'] = isset($_POST['page_block_simple_icons_enabled']) && $_POST['page_block_simple_icons_enabled'] === '1';
 				$settings['page_block_menu_tiles_enabled'] = isset($_POST['page_block_menu_tiles_enabled']) && $_POST['page_block_menu_tiles_enabled'] === '1';
-				break;
-
-			case 'addons':
-				$redirect_tab = User_Manager_Core::TAB_ADDONS;
-				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
-				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
 				$settings['media_library_tags_enabled'] = isset($_POST['media_library_tags_enabled']) && $_POST['media_library_tags_enabled'] === '1';
 				$settings['media_library_tag_gallery_block_enabled'] = isset($_POST['media_library_tag_gallery_block_enabled']) && $_POST['media_library_tag_gallery_block_enabled'] === '1';
 				$settings['media_library_tag_gallery_columns_desktop'] = isset($_POST['media_library_tag_gallery_columns_desktop']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop']))) : 4;
@@ -2342,6 +2336,12 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_hidden_frontend_tags'] = isset($_POST['media_library_tag_gallery_hidden_frontend_tags'])
 					? sanitize_text_field(wp_unslash($_POST['media_library_tag_gallery_hidden_frontend_tags']))
 					: '';
+				break;
+
+			case 'addons':
+				$redirect_tab = User_Manager_Core::TAB_ADDONS;
+				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
+				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
 				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
 				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';

@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.94 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Renamed "Media Library Tags & Photo Gallery" to "Dynamic Photo Gallery with Media Library Tags" across add-on/runtime labels.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved this gallery add-on into the Blocks tab (tab=blocks) and removed it from Add-ons, including block-section routing/save handling.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.93 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new top-level "Blocks" tab (page=user-manager&tab=blocks) next to Add-ons, with dedicated filtering and section navigation for content blocks.', 'user-manager'); ?></li>

@@ -11,6 +11,7 @@ require_once __DIR__ . '/class-user-manager-addon-page-block-menu-tiles.php';
 require_once __DIR__ . '/class-user-manager-addon-page-block-simple-icons.php';
 require_once __DIR__ . '/class-user-manager-addon-page-block-subpages-grid.php';
 require_once __DIR__ . '/class-user-manager-addon-page-block-tabbed-content-area.php';
+require_once __DIR__ . '/class-user-manager-addon-media-library-tags.php';
 
 class User_Manager_Tab_Blocks {
 
@@ -139,6 +140,9 @@ class User_Manager_Tab_Blocks {
 				</div>
 				<div class="um-block-section" data-block-section="page-block-menu-tiles">
 					<?php User_Manager_Addon_Page_Block_Menu_Tiles::render($settings, $settings_form_id); ?>
+				</div>
+				<div class="um-block-section" data-block-section="media-library-tags">
+					<?php User_Manager_Addon_Media_Library_Tags::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-admin-card um-admin-card-full um-block-save-card">
 					<div class="um-admin-card-body">
@@ -386,6 +390,13 @@ class User_Manager_Tab_Blocks {
 				$('#um-page-block-menu-tiles-fields').toggle($('#um-page-block-menu-tiles-enabled').is(':checked'));
 			}
 
+			function toggleMediaLibraryTagsFields() {
+				$('#um-media-library-tags-fields').toggle($('#um-media-library-tags-enabled').is(':checked'));
+				$('#um-media-library-tags-gallery-settings').toggle(
+					$('#um-media-library-tags-enabled').is(':checked') && $('#um-media-library-tags-gallery-block-enabled').is(':checked')
+				);
+			}
+
 			applyBlockSectionFilter();
 			$('#um-blocks-filter-text').on('input', applyBlocksFilter);
 			$('#um-blocks-filter-clear').on('click', function() {
@@ -397,6 +408,7 @@ class User_Manager_Tab_Blocks {
 			togglePageBlockTabbedContentAreaFields();
 			togglePageBlockSimpleIconsFields();
 			togglePageBlockMenuTilesFields();
+			toggleMediaLibraryTagsFields();
 
 			$('#um-page-block-subpages-grid-enabled').on('change', function() {
 				togglePageBlockSubpagesGridFields();
@@ -413,6 +425,14 @@ class User_Manager_Tab_Blocks {
 			$('#um-page-block-menu-tiles-enabled').on('change', function() {
 				togglePageBlockMenuTilesFields();
 				refreshAddonCardAutoState($('#um-addon-card-page-block-menu-tiles'));
+			});
+			$('#um-media-library-tags-enabled').on('change', function() {
+				toggleMediaLibraryTagsFields();
+				refreshAddonCardAutoState($('#um-addon-card-media-library-tags'));
+			});
+			$('#um-media-library-tags-gallery-block-enabled').on('change', function() {
+				toggleMediaLibraryTagsFields();
+				refreshAddonCardAutoState($('#um-addon-card-media-library-tags'));
 			});
 
 			applyBlocksFilter();
@@ -463,6 +483,16 @@ class User_Manager_Tab_Blocks {
 				'tags' => [
 					'grids' => __('Grids', 'user-manager'),
 					'navigation' => __('Navigation', 'user-manager'),
+				],
+			],
+			'media-library-tags' => [
+				'label' => __('Dynamic Photo Gallery with Media Library Tags', 'user-manager'),
+				'description' => __('Build dynamic tag-driven galleries with URL overrides, layout styles, and media-library tagging tools.', 'user-manager'),
+				'active' => !empty($settings['media_library_tags_enabled']),
+				'tags' => [
+					'galleries' => __('Galleries', 'user-manager'),
+					'media' => __('Media', 'user-manager'),
+					'dynamic' => __('Dynamic', 'user-manager'),
 				],
 			],
 		];
