@@ -43,7 +43,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.98';
+	const VERSION = '2.5.1';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -1499,9 +1499,15 @@ final class User_Manager_Core {
 			 * Helper: locate the "Allowed emails" field (textarea preferred).
 			 */
 			function getAllowedEmailField() {
-				var $field = $('textarea[name="customer_email"], textarea#customer_email');
+				var $field = $('#customer_email');
 				if ($field.length === 0) {
-					$field = $('input[name="customer_email"], #customer_email');
+					$field = $('[name="customer_email"]');
+				}
+				if ($field.length > 1) {
+					var $visible = $field.filter(':visible');
+					if ($visible.length) {
+						$field = $visible;
+					}
 				}
 				return $field.first();
 			}
@@ -1509,11 +1515,18 @@ final class User_Manager_Core {
 			/**
 			 * Helper: parse a string of emails into a unique, normalized array.
 			 */
-			function parseEmails(str) {
-				var emails = (str || '').split(/[\n,;\s]+/);
+			function parseEmails(raw) {
+				var chunks = [];
+				if (Array.isArray(raw)) {
+					raw.forEach(function(item) {
+						chunks = chunks.concat(String(item || '').split(/[\n,;\s]+/));
+					});
+				} else {
+					chunks = String(raw || '').split(/[\n,;\s]+/);
+				}
 				var valid = [];
 				var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-				emails.forEach(function(email) {
+				chunks.forEach(function(email) {
 					email = (email || '').trim().toLowerCase();
 					if (email && emailRegex.test(email) && valid.indexOf(email) === -1) {
 						valid.push(email);
@@ -1532,49 +1545,6 @@ final class User_Manager_Core {
 				}
 				return parseEmails($field.val());
 			}
-
-			/**
-			 * Upgrade a simple input "Allowed emails" field to a larger textarea for easier editing.
-			 * Avoid changing advanced select2 / wc-customer-search fields.
-			 */
-			(function upgradeAllowedEmailsField() {
-				var $input = $('input[name="customer_email"], input#customer_email').first();
-				if (!$input.length) {
-					return;
-				}
-				if ($input.hasClass('wc-customer-search') || $input.data('select2')) {
-					return;
-				}
-
-				var currentVal = $input.val();
-				var textareaId = $input.attr('id') || 'customer_email';
-
-				var $textarea = $('<textarea/>', {
-					id: textareaId,
-					name: 'customer_email',
-					rows: 5,
-					css: {
-						width: '100%',
-						minHeight: '120px',
-						fontFamily: 'monospace',
-						fontSize: '12px'
-					}
-				}).val(currentVal);
-
-				// On keyup, normalize any line-by-line emails into a comma-separated list
-				// by replacing line breaks with ", ".
-				$textarea.on('keyup', function() {
-					var val = $(this).val();
-					if (val.indexOf('\n') !== -1 || val.indexOf('\r') !== -1) {
-						val = val.replace(/\r\n|\r|\n/g, ', ');
-						$(this).val(val);
-					}
-				});
-
-				// Keep original hidden and rename so WooCommerce ignores it on save.
-				$input.attr('name', ($input.attr('name') || 'customer_email') + '_original').hide();
-				$input.after($textarea);
-			})();
 
 			/**
 			 * Update the stats line beneath the converter.
@@ -1643,19 +1613,8 @@ final class User_Manager_Core {
 					return;
 				}
 
-				// Respect select2 / wc-customer-search fields by adding options directly.
-				if ($field.hasClass('wc-customer-search') || $field.data('select2')) {
-					convertedEmails.forEach(function(email) {
-						var option = new Option(email, email, true, true);
-						$field.append(option);
-					});
-					$field.trigger('change');
-					alert('Emails applied! Make sure to save the coupon.');
-					return;
-				}
-
 				var current = parseEmails($field.val());
-				var merged;
+				var merged = [];
 
 				if (mode === 'replace') {
 					merged = convertedEmails.slice();
@@ -1675,7 +1634,20 @@ final class User_Manager_Core {
 					});
 				}
 
-				$field.val(merged.join(', '));
+				// Respect select2 / wc-customer-search fields without replacing
+				// WooCommerce's native field or search behavior.
+				if ($field.hasClass('wc-customer-search') || $field.data('select2')) {
+					merged.forEach(function(email) {
+						if ($field.find('option[value="' + email.replace(/"/g, '\\"') + '"]').length === 0) {
+							$field.append(new Option(email, email, false, false));
+						}
+					});
+					$field.val(merged).trigger('change');
+					alert('Emails applied! Make sure to save the coupon.');
+					return;
+				}
+
+				$field.val(merged.join(', ')).trigger('change');
 				alert('Emails applied! Make sure to save the coupon.');
 			}
 

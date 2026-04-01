@@ -39,6 +39,20 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.1 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Coupon edit screen: fixed Email List Converter field handling to avoid conflicting with WooCommerce\'s native Allowed emails input/select2 behavior.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed runtime replacement of the core customer_email field and now update the native field value directly, preventing editor UI spinner/locking issues.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.99 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports tab: date-based reports now show a Start Date / End Date filter directly under the Query summary when selected.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied date-range filtering to date-enabled report datasets and pagination URLs, including tracking reports in the extracted tracking trait.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.98 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Reports label update: renamed "Coupon Audit" to "Coupons Audit" in report naming and documentation references for consistent wording.', 'user-manager'); ?></li>

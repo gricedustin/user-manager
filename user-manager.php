@@ -2,12 +2,20 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.98
+ * Version: 2.5.1
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.1 - March 16, 2026
+ * - Coupon edit screen: fixed Email List Converter JavaScript to avoid mutating/replacing WooCommerce's native Allowed Emails field, preventing edit-screen loading/spinner conflicts.
+ * - Converter now safely reads/writes both native and select2 customer_email field variants without renaming core inputs.
+ *
+ * 2.4.99 - March 16, 2026
+ * - Reports tab: added a reusable Start Date / End Date filter under the Query summary for reports that include date-based fields.
+ * - Date filters now further narrow matching report results and preserve filter values through pagination and CSV export links.
+ *
  * 2.4.98 - March 16, 2026
  * - Reports label update: retitled "Coupon Audit" to "Coupons Audit" in report naming/documentation copy.
  *
