@@ -926,6 +926,12 @@ JS;
 				'requireTagValue' => ['type' => 'boolean', 'default' => false],
 				'useDefaultColumnsDesktop' => ['type' => 'boolean'],
 				'columnsDesktop' => ['type' => 'integer', 'default' => 4],
+				'useDefaultColumnsDesktopLt50' => ['type' => 'boolean'],
+				'columnsDesktopLt50' => ['type' => 'integer', 'default' => 4],
+				'useDefaultColumnsDesktopLt25' => ['type' => 'boolean'],
+				'columnsDesktopLt25' => ['type' => 'integer', 'default' => 4],
+				'useDefaultColumnsDesktopLt10' => ['type' => 'boolean'],
+				'columnsDesktopLt10' => ['type' => 'integer', 'default' => 4],
 				'useDefaultColumnsMobile' => ['type' => 'boolean'],
 				'columnsMobile' => ['type' => 'integer', 'default' => 2],
 				'useDefaultSortOrder' => ['type' => 'boolean'],
@@ -1081,6 +1087,9 @@ JS;
 	];
 	var fallbackDefaults = {
 		columnsDesktop: parseInt(defaults.columnsDesktop, 10) || 4,
+		columnsDesktopLt50: parseInt(defaults.columnsDesktopLt50, 10) || 4,
+		columnsDesktopLt25: parseInt(defaults.columnsDesktopLt25, 10) || 4,
+		columnsDesktopLt10: parseInt(defaults.columnsDesktopLt10, 10) || 4,
 		columnsMobile: parseInt(defaults.columnsMobile, 10) || 2,
 		sortOrder: defaults.sortOrder || 'date_desc',
 		fileSize: defaults.fileSize || 'thumbnail',
@@ -1102,6 +1111,12 @@ JS;
 			requireTagValue: { type: 'boolean', default: false },
 			useDefaultColumnsDesktop: { type: 'boolean', default: false },
 			columnsDesktop: { type: 'integer', default: parseInt(defaults.columnsDesktop, 10) || 4 },
+			useDefaultColumnsDesktopLt50: { type: 'boolean', default: false },
+			columnsDesktopLt50: { type: 'integer', default: parseInt(defaults.columnsDesktopLt50, 10) || 4 },
+			useDefaultColumnsDesktopLt25: { type: 'boolean', default: false },
+			columnsDesktopLt25: { type: 'integer', default: parseInt(defaults.columnsDesktopLt25, 10) || 4 },
+			useDefaultColumnsDesktopLt10: { type: 'boolean', default: false },
+			columnsDesktopLt10: { type: 'integer', default: parseInt(defaults.columnsDesktopLt10, 10) || 4 },
 			useDefaultColumnsMobile: { type: 'boolean', default: false },
 			columnsMobile: { type: 'integer', default: parseInt(defaults.columnsMobile, 10) || 2 },
 			useDefaultSortOrder: { type: 'boolean', default: false },
@@ -1123,6 +1138,9 @@ JS;
 			var a = props.attributes;
 			var set = props.setAttributes;
 			var useDefaultColumnsDesktop = !!a.useDefaultColumnsDesktop;
+			var useDefaultColumnsDesktopLt50 = !!a.useDefaultColumnsDesktopLt50;
+			var useDefaultColumnsDesktopLt25 = !!a.useDefaultColumnsDesktopLt25;
+			var useDefaultColumnsDesktopLt10 = !!a.useDefaultColumnsDesktopLt10;
 			var useDefaultColumnsMobile = !!a.useDefaultColumnsMobile;
 			var useDefaultSortOrder = !!a.useDefaultSortOrder;
 			var useDefaultFileSize = !!a.useDefaultFileSize;
@@ -1132,6 +1150,9 @@ JS;
 			var useDefaultDescriptionDisplay = !!a.useDefaultDescriptionDisplay;
 			var useDefaultDescriptionValue = !!a.useDefaultDescriptionValue;
 			var effectiveColumnsDesktop = useDefaultColumnsDesktop ? fallbackDefaults.columnsDesktop : (a.columnsDesktop || fallbackDefaults.columnsDesktop);
+			var effectiveColumnsDesktopLt50 = useDefaultColumnsDesktopLt50 ? fallbackDefaults.columnsDesktopLt50 : (a.columnsDesktopLt50 || fallbackDefaults.columnsDesktopLt50);
+			var effectiveColumnsDesktopLt25 = useDefaultColumnsDesktopLt25 ? fallbackDefaults.columnsDesktopLt25 : (a.columnsDesktopLt25 || fallbackDefaults.columnsDesktopLt25);
+			var effectiveColumnsDesktopLt10 = useDefaultColumnsDesktopLt10 ? fallbackDefaults.columnsDesktopLt10 : (a.columnsDesktopLt10 || fallbackDefaults.columnsDesktopLt10);
 			var effectiveColumnsMobile = useDefaultColumnsMobile ? fallbackDefaults.columnsMobile : (a.columnsMobile || fallbackDefaults.columnsMobile);
 			var effectiveSortOrder = useDefaultSortOrder ? fallbackDefaults.sortOrder : (a.sortOrder || fallbackDefaults.sortOrder);
 			var effectiveFileSize = useDefaultFileSize ? fallbackDefaults.fileSize : (a.fileSize || fallbackDefaults.fileSize);
@@ -1187,6 +1208,51 @@ JS;
 							label: 'Use add-on default for Number of Columns (Desktop)',
 							checked: useDefaultColumnsDesktop,
 							onChange: function(v){ set({ useDefaultColumnsDesktop: !!v }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Number of Columns (Desktop) if less than 50 photos',
+							type: 'number',
+							min: 1,
+							max: 8,
+							disabled: useDefaultColumnsDesktopLt50,
+							value: effectiveColumnsDesktopLt50,
+							help: useDefaultColumnsDesktopLt50 ? ('Using add-on default: ' + String(fallbackDefaults.columnsDesktopLt50)) : '',
+							onChange: function(v){ set({ columnsDesktopLt50: Math.max(1, parseInt(v, 10) || 1) }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Number of Columns (Desktop) if less than 50 photos',
+							checked: useDefaultColumnsDesktopLt50,
+							onChange: function(v){ set({ useDefaultColumnsDesktopLt50: !!v }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Number of Columns (Desktop) if less than 25 photos',
+							type: 'number',
+							min: 1,
+							max: 8,
+							disabled: useDefaultColumnsDesktopLt25,
+							value: effectiveColumnsDesktopLt25,
+							help: useDefaultColumnsDesktopLt25 ? ('Using add-on default: ' + String(fallbackDefaults.columnsDesktopLt25)) : '',
+							onChange: function(v){ set({ columnsDesktopLt25: Math.max(1, parseInt(v, 10) || 1) }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Number of Columns (Desktop) if less than 25 photos',
+							checked: useDefaultColumnsDesktopLt25,
+							onChange: function(v){ set({ useDefaultColumnsDesktopLt25: !!v }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Number of Columns (Desktop) if less than 10 photos',
+							type: 'number',
+							min: 1,
+							max: 8,
+							disabled: useDefaultColumnsDesktopLt10,
+							value: effectiveColumnsDesktopLt10,
+							help: useDefaultColumnsDesktopLt10 ? ('Using add-on default: ' + String(fallbackDefaults.columnsDesktopLt10)) : '',
+							onChange: function(v){ set({ columnsDesktopLt10: Math.max(1, parseInt(v, 10) || 1) }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Number of Columns (Desktop) if less than 10 photos',
+							checked: useDefaultColumnsDesktopLt10,
+							onChange: function(v){ set({ useDefaultColumnsDesktopLt10: !!v }); }
 						}),
 						element.createElement(TextControl, {
 							label: 'Number of Columns (Mobile)',
@@ -1322,6 +1388,9 @@ JS;
 		$allow_any_url_param_tag_identifier = !empty($attrs['allowAnyUrlParamTagIdentifier']);
 		$require_tag_value = !empty($attrs['requireTagValue']);
 		$use_default_columns_desktop = !empty($attrs['useDefaultColumnsDesktop']);
+		$use_default_columns_desktop_lt_50 = !empty($attrs['useDefaultColumnsDesktopLt50']);
+		$use_default_columns_desktop_lt_25 = !empty($attrs['useDefaultColumnsDesktopLt25']);
+		$use_default_columns_desktop_lt_10 = !empty($attrs['useDefaultColumnsDesktopLt10']);
 		$use_default_columns_mobile = !empty($attrs['useDefaultColumnsMobile']);
 		$use_default_sort_order = !empty($attrs['useDefaultSortOrder']);
 		$use_default_file_size = !empty($attrs['useDefaultFileSize']);
@@ -1333,6 +1402,15 @@ JS;
 		$columns_desktop = $use_default_columns_desktop
 			? max(1, min(8, absint($defaults['columnsDesktop'])))
 			: max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
+		$columns_desktop_lt_50 = $use_default_columns_desktop_lt_50
+			? max(1, min(8, absint($defaults['columnsDesktopLt50'] ?? $defaults['columnsDesktop'])))
+			: max(1, min(8, absint($attrs['columnsDesktopLt50'] ?? ($defaults['columnsDesktopLt50'] ?? $defaults['columnsDesktop']))));
+		$columns_desktop_lt_25 = $use_default_columns_desktop_lt_25
+			? max(1, min(8, absint($defaults['columnsDesktopLt25'] ?? $defaults['columnsDesktop'])))
+			: max(1, min(8, absint($attrs['columnsDesktopLt25'] ?? ($defaults['columnsDesktopLt25'] ?? $defaults['columnsDesktop']))));
+		$columns_desktop_lt_10 = $use_default_columns_desktop_lt_10
+			? max(1, min(8, absint($defaults['columnsDesktopLt10'] ?? $defaults['columnsDesktop'])))
+			: max(1, min(8, absint($attrs['columnsDesktopLt10'] ?? ($defaults['columnsDesktopLt10'] ?? $defaults['columnsDesktop']))));
 		$columns_mobile = $use_default_columns_mobile
 			? max(1, min(4, absint($defaults['columnsMobile'])))
 			: max(1, min(4, absint($attrs['columnsMobile'] ?? $defaults['columnsMobile'])));
@@ -1490,6 +1568,15 @@ JS;
 		if (!is_array($attachments)) {
 			$attachments = [];
 		}
+		$attachment_count = count($attachments);
+		$effective_columns_desktop = $columns_desktop;
+		if ($attachment_count < 10) {
+			$effective_columns_desktop = $columns_desktop_lt_10;
+		} elseif ($attachment_count < 25) {
+			$effective_columns_desktop = $columns_desktop_lt_25;
+		} elseif ($attachment_count < 50) {
+			$effective_columns_desktop = $columns_desktop_lt_50;
+		}
 
 		$uid = function_exists('wp_unique_id') ? wp_unique_id('um-media-gallery-') : uniqid('um-media-gallery-');
 		$style_class = 'um-media-gallery-style-' . $style;
@@ -1590,7 +1677,7 @@ JS;
 					</div>
 				</div>
 			<?php else : ?>
-				<div class="um-media-library-tag-gallery-grid" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
+				<div class="um-media-library-tag-gallery-grid" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $effective_columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
 					<?php foreach ($attachments as $index => $attachment) : ?>
 						<?php
 						if (!($attachment instanceof WP_Post)) {
@@ -1607,7 +1694,7 @@ JS;
 						$image_alt = trim((string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true));
 						$description_attr = $image_alt !== '' ? $image_alt : $description_text;
 						$date_label = get_the_date($timeline_date_format, $attachment_id);
-						$is_infinite_hidden = $style === 'infinite_scroll' && $index >= max(12, $columns_desktop * 3);
+						$is_infinite_hidden = $style === 'infinite_scroll' && $index >= max(12, $effective_columns_desktop * 3);
 						?>
 						<figure class="um-media-library-tag-gallery-item<?php echo $is_infinite_hidden ? ' um-mltg-infinite-hidden' : ''; ?>"<?php echo $is_infinite_hidden ? ' data-um-infinite-hidden="1"' : ''; ?>>
 							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
@@ -1899,6 +1986,9 @@ JS;
 
 		$defaults = [
 			'columnsDesktop' => 4,
+			'columnsDesktopLt50' => 4,
+			'columnsDesktopLt25' => 4,
+			'columnsDesktopLt10' => 4,
 			'columnsMobile' => 2,
 			'sortOrder' => 'date_desc',
 			'fileSize' => 'thumbnail',
@@ -1911,6 +2001,27 @@ JS;
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
 			$defaults['columnsDesktop'] = max(1, min(8, absint($settings['media_library_tag_gallery_columns_desktop'])));
+		}
+		if (isset($settings['media_library_tag_gallery_columns_desktop_lt_50'])) {
+			$defaults['columnsDesktopLt50'] = max(1, min(8, absint($settings['media_library_tag_gallery_columns_desktop_lt_50'])));
+		}
+		if (isset($settings['media_library_tag_gallery_columns_desktop_lt_25'])) {
+			$defaults['columnsDesktopLt25'] = max(1, min(8, absint($settings['media_library_tag_gallery_columns_desktop_lt_25'])));
+		}
+		if (isset($settings['media_library_tag_gallery_columns_desktop_lt_10'])) {
+			$defaults['columnsDesktopLt10'] = max(1, min(8, absint($settings['media_library_tag_gallery_columns_desktop_lt_10'])));
+		}
+		$defaults['columnsDesktopLt50'] = max(1, min(8, (int) $defaults['columnsDesktopLt50']));
+		$defaults['columnsDesktopLt25'] = max(1, min(8, (int) $defaults['columnsDesktopLt25']));
+		$defaults['columnsDesktopLt10'] = max(1, min(8, (int) $defaults['columnsDesktopLt10']));
+		if ($defaults['columnsDesktopLt50'] <= 0) {
+			$defaults['columnsDesktopLt50'] = (int) $defaults['columnsDesktop'];
+		}
+		if ($defaults['columnsDesktopLt25'] <= 0) {
+			$defaults['columnsDesktopLt25'] = (int) $defaults['columnsDesktopLt50'];
+		}
+		if ($defaults['columnsDesktopLt10'] <= 0) {
+			$defaults['columnsDesktopLt10'] = (int) $defaults['columnsDesktopLt25'];
 		}
 		if (isset($settings['media_library_tag_gallery_columns_mobile'])) {
 			$defaults['columnsMobile'] = max(1, min(4, absint($settings['media_library_tag_gallery_columns_mobile'])));

@@ -2283,6 +2283,9 @@ class User_Manager_Actions {
 				$settings['media_library_tags_enabled'] = isset($_POST['media_library_tags_enabled']) && $_POST['media_library_tags_enabled'] === '1';
 				$settings['media_library_tag_gallery_block_enabled'] = isset($_POST['media_library_tag_gallery_block_enabled']) && $_POST['media_library_tag_gallery_block_enabled'] === '1';
 				$settings['media_library_tag_gallery_columns_desktop'] = isset($_POST['media_library_tag_gallery_columns_desktop']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop']))) : 4;
+				$settings['media_library_tag_gallery_columns_desktop_lt_50'] = isset($_POST['media_library_tag_gallery_columns_desktop_lt_50']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop_lt_50']))) : $settings['media_library_tag_gallery_columns_desktop'];
+				$settings['media_library_tag_gallery_columns_desktop_lt_25'] = isset($_POST['media_library_tag_gallery_columns_desktop_lt_25']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop_lt_25']))) : $settings['media_library_tag_gallery_columns_desktop_lt_50'];
+				$settings['media_library_tag_gallery_columns_desktop_lt_10'] = isset($_POST['media_library_tag_gallery_columns_desktop_lt_10']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop_lt_10']))) : $settings['media_library_tag_gallery_columns_desktop_lt_25'];
 				$settings['media_library_tag_gallery_columns_mobile'] = isset($_POST['media_library_tag_gallery_columns_mobile']) ? max(1, min(4, absint($_POST['media_library_tag_gallery_columns_mobile']))) : 2;
 				$gallery_sort = isset($_POST['media_library_tag_gallery_sort_order']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_sort_order'])) : 'date_desc';
 				$allowed_gallery_sort = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc', 'random'];

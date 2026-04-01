@@ -18,6 +18,15 @@ class User_Manager_Addon_Media_Library_Tags {
 		$columns_desktop = isset($settings['media_library_tag_gallery_columns_desktop'])
 			? max(1, min(8, (int) $settings['media_library_tag_gallery_columns_desktop']))
 			: (int) $defaults['columnsDesktop'];
+		$columns_desktop_lt_50 = isset($settings['media_library_tag_gallery_columns_desktop_lt_50'])
+			? max(1, min(8, (int) $settings['media_library_tag_gallery_columns_desktop_lt_50']))
+			: (int) ($defaults['columnsDesktopLt50'] ?? $columns_desktop);
+		$columns_desktop_lt_25 = isset($settings['media_library_tag_gallery_columns_desktop_lt_25'])
+			? max(1, min(8, (int) $settings['media_library_tag_gallery_columns_desktop_lt_25']))
+			: (int) ($defaults['columnsDesktopLt25'] ?? $columns_desktop);
+		$columns_desktop_lt_10 = isset($settings['media_library_tag_gallery_columns_desktop_lt_10'])
+			? max(1, min(8, (int) $settings['media_library_tag_gallery_columns_desktop_lt_10']))
+			: (int) ($defaults['columnsDesktopLt10'] ?? $columns_desktop);
 		$columns_mobile = isset($settings['media_library_tag_gallery_columns_mobile'])
 			? max(1, min(4, (int) $settings['media_library_tag_gallery_columns_mobile']))
 			: (int) $defaults['columnsMobile'];
@@ -84,6 +93,18 @@ class User_Manager_Addon_Media_Library_Tags {
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-columns-desktop"><?php esc_html_e('Number of Columns (Desktop)', 'user-manager'); ?></label>
 								<input type="number" min="1" max="8" class="small-text" id="um-media-library-tags-gallery-columns-desktop" name="media_library_tag_gallery_columns_desktop" value="<?php echo esc_attr((string) $columns_desktop); ?>"<?php echo $form_attr; ?> />
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-columns-desktop-lt-50"><?php esc_html_e('Number of Columns (Desktop) if less than 50 photos', 'user-manager'); ?></label>
+								<input type="number" min="1" max="8" class="small-text" id="um-media-library-tags-gallery-columns-desktop-lt-50" name="media_library_tag_gallery_columns_desktop_lt_50" value="<?php echo esc_attr((string) $columns_desktop_lt_50); ?>"<?php echo $form_attr; ?> />
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-columns-desktop-lt-25"><?php esc_html_e('Number of Columns (Desktop) if less than 25 photos', 'user-manager'); ?></label>
+								<input type="number" min="1" max="8" class="small-text" id="um-media-library-tags-gallery-columns-desktop-lt-25" name="media_library_tag_gallery_columns_desktop_lt_25" value="<?php echo esc_attr((string) $columns_desktop_lt_25); ?>"<?php echo $form_attr; ?> />
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-columns-desktop-lt-10"><?php esc_html_e('Number of Columns (Desktop) if less than 10 photos', 'user-manager'); ?></label>
+								<input type="number" min="1" max="8" class="small-text" id="um-media-library-tags-gallery-columns-desktop-lt-10" name="media_library_tag_gallery_columns_desktop_lt_10" value="<?php echo esc_attr((string) $columns_desktop_lt_10); ?>"<?php echo $form_attr; ?> />
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-columns-mobile"><?php esc_html_e('Number of Columns (Mobile)', 'user-manager'); ?></label>

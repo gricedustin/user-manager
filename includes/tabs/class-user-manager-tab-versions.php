@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.82 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags add-on defaults: added desktop column thresholds for album size — "Number of Columns (Desktop) if less than 50 photos", "if less than 25 photos", and "if less than 10 photos".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery now auto-selects desktop column count by image count (<10, <25, <50), while the existing Desktop Columns value remains the default for 50+ images.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.81 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added [tag-description] placeholder support alongside [tag-name] for Media Library Tag Gallery URL override-driven text replacement in post titles/content.', 'user-manager'); ?></li>
