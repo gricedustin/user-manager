@@ -47,6 +47,7 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_create_directory', [__CLASS__, 'handle_create_directory']);
 		add_action('admin_post_user_manager_download_sample_csv', [__CLASS__, 'handle_download_sample_csv']);
 		add_action('admin_post_user_manager_import_demo_templates', [__CLASS__, 'handle_import_demo_templates']);
+		add_action('admin_post_user_manager_recreate_demo_template', [__CLASS__, 'handle_recreate_demo_template']);
 		add_action('admin_post_user_manager_import_demo_sms_text_templates', [__CLASS__, 'handle_import_demo_sms_text_templates']);
 		add_action('admin_post_user_manager_clear_activity_log', [__CLASS__, 'handle_clear_activity_log']);
 		add_action('admin_post_user_manager_clear_user_activity_log', [__CLASS__, 'handle_clear_user_activity_log']);
@@ -4723,18 +4724,13 @@ class User_Manager_Actions {
 /**
 	 * AJAX: Insert generated content at the bottom of the page (block format) and log admin activity.
 	 */
-/**
-	 * Import demo templates (core logic, can be called directly).
+	/**
+	 * Get all built-in demo email template presets.
+	 *
+	 * @return array<string,array<string,string>>
 	 */
-	public static function import_demo_templates(): void {
-		// Start with existing templates map (unsorted raw)
-		$existing = get_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, []);
-		if (!is_array($existing)) {
-			$existing = [];
-		}
-		
-		// Define the four desired templates in the required order (1..4)
-		$desired = [
+	private static function get_demo_email_template_presets(): array {
+		return [
 			'tpl_demo_login_info' => [
 				'title' => __('Send login information', 'user-manager'),
 				'description' => __('Send my account link, username and clear text password', 'user-manager'),
@@ -4795,7 +4791,56 @@ class User_Manager_Actions {
 <a href="%SITEURL%/my-account/lost-password/">Click here to set a new password</a></p>',
 			'bcc' => '',
 			],
+			'tpl_auto_coupon' => [
+				'title'       => __('Send automated coupon', 'user-manager'),
+				'description' => __('Configured in settings tab to trigger automated discounts & store credits for new users', 'user-manager'),
+				'subject'     => __('You have a new coupon!', 'user-manager'),
+				'heading'     => __('Login to use your new coupon', 'user-manager'),
+				'body'        => '<p><strong>Coupon Code:</strong><br>
+%COUPONCODE%</p>
+
+<p><strong>Login Page:</strong><br>
+<a href="%SITEURL%%LOGINURL%">%SITEURL%%LOGINURL%</a></p>',
+			],
+			'tpl_auto_coupon_apology_10' => [
+				'title'       => __('Send $10 coupon apology', 'user-manager'),
+				'description' => __('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'),
+				'subject'     => __('You have a new $10 gift code!', 'user-manager'),
+				'heading'     => __('We are so sorry!', 'user-manager'),
+				'body'        => '<p>Here is a $10 one-time use gift code to go towards your next purchase...</p>
+
+<p><strong>Coupon Code:</strong><br>
+%COUPONCODE%</p>',
+			],
+			'tpl_auto_coupon_remaining_balance' => [
+				'title'       => __('Send automated remaining balance coupon', 'user-manager'),
+				'description' => __('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE%.', 'user-manager'),
+				'subject'     => __('You have a remaining balance', 'user-manager'),
+				'heading'     => __('You have a remaining balance', 'user-manager'),
+				'body'        => '<p>Here is your remaining balance Coupon Code:<br>
+%COUPONCODE%</p>',
+			],
 		];
+	}
+
+	/**
+	 * Import demo templates (core logic, can be called directly).
+	 */
+	public static function import_demo_templates(): void {
+		// Start with existing templates map (unsorted raw)
+		$existing = get_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, []);
+		if (!is_array($existing)) {
+			$existing = [];
+		}
+		
+		$all_presets = self::get_demo_email_template_presets();
+		$desired_ids = ['tpl_demo_login_info', 'tpl_demo_activate_account', 'tpl_demo_new_password', 'tpl_demo_password_reset'];
+		$desired = [];
+		foreach ($desired_ids as $desired_id) {
+			if (isset($all_presets[$desired_id])) {
+				$desired[$desired_id] = $all_presets[$desired_id];
+			}
+		}
 		
 		// Merge/overwrite existing with desired content
 		foreach ($desired as $key => $data) {
@@ -4843,6 +4888,37 @@ class User_Manager_Actions {
 	}
 
 	/**
+	 * Recreate a single built-in demo email template by ID.
+	 */
+	public static function recreate_demo_email_template(string $template_id): bool {
+		$template_id = sanitize_key($template_id);
+		$presets = self::get_demo_email_template_presets();
+		if ($template_id === '' || !isset($presets[$template_id])) {
+			return false;
+		}
+
+		$templates = User_Manager_Core::get_email_templates();
+		$existing_order = isset($templates[$template_id]['order']) ? absint($templates[$template_id]['order']) : 0;
+		$templates[$template_id] = array_merge($templates[$template_id] ?? [], $presets[$template_id]);
+
+		if ($existing_order > 0) {
+			$templates[$template_id]['order'] = $existing_order;
+		} else {
+			$max_order = 0;
+			foreach ($templates as $id => $tpl) {
+				if ($id === $template_id) {
+					continue;
+				}
+				$max_order = max($max_order, isset($tpl['order']) ? (int) $tpl['order'] : 0);
+			}
+			$templates[$template_id]['order'] = $max_order + 1;
+		}
+
+		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
+		return true;
+	}
+
+	/**
 	 * Handle import demo templates.
 	 */
 	public static function handle_import_demo_templates(): void {
@@ -4856,6 +4932,33 @@ class User_Manager_Actions {
 		self::import_coupon_template();
 
 		wp_safe_redirect(self::get_email_template_import_redirect_url('demo_templates_imported'));
+		exit;
+	}
+
+	/**
+	 * Handle recreating a single built-in demo email template.
+	 */
+	public static function handle_recreate_demo_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_recreate_demo_template');
+
+		$template_id = isset($_REQUEST['template_id']) ? sanitize_key(wp_unslash($_REQUEST['template_id'])) : '';
+		$presets = self::get_demo_email_template_presets();
+		$template_title = isset($presets[$template_id]['title']) ? sanitize_text_field((string) $presets[$template_id]['title']) : '';
+		$recreated = self::recreate_demo_email_template($template_id);
+		$message = $recreated ? 'demo_template_recreated' : 'error';
+		$redirect = self::get_email_template_import_redirect_url($message);
+		if ($template_id !== '') {
+			$redirect = add_query_arg('template_id', $template_id, $redirect);
+		}
+		if ($template_title !== '') {
+			$redirect = add_query_arg('template_title', $template_title, $redirect);
+		}
+
+		wp_safe_redirect($redirect);
 		exit;
 	}
 
@@ -5002,44 +5105,25 @@ class User_Manager_Actions {
 	 */
 	public static function import_coupon_template(): void {
 		$templates = User_Manager_Core::get_email_templates();
+		$presets = self::get_demo_email_template_presets();
 
 		// Automated coupon template.
 		$auto_id = 'tpl_auto_coupon';
-		$templates[$auto_id] = [
-			'title'       => __('Send automated coupon', 'user-manager'),
-			'description' => __('Configured in settings tab to trigger automated discounts & store credits for new users', 'user-manager'),
-			'subject'     => __('You have a new coupon!', 'user-manager'),
-			'heading'     => __('Login to use your new coupon', 'user-manager'),
-			'body'        => '<p><strong>Coupon Code:</strong><br>
-%COUPONCODE%</p>
-
-<p><strong>Login Page:</strong><br>
-<a href="%SITEURL%%LOGINURL%">%SITEURL%%LOGINURL%</a></p>',
-		];
+		if (isset($presets[$auto_id])) {
+			$templates[$auto_id] = array_merge($templates[$auto_id] ?? [], $presets[$auto_id]);
+		}
 
 		// $10 apology coupon template.
 		$apology_id = 'tpl_auto_coupon_apology_10';
-		$templates[$apology_id] = [
-			'title'       => __('Send $10 coupon apology', 'user-manager'),
-			'description' => __('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'),
-			'subject'     => __('You have a new $10 gift code!', 'user-manager'),
-			'heading'     => __('We are so sorry!', 'user-manager'),
-			'body'        => '<p>Here is a $10 one-time use gift code to go towards your next purchase...</p>
-
-<p><strong>Coupon Code:</strong><br>
-%COUPONCODE%</p>',
-		];
+		if (isset($presets[$apology_id])) {
+			$templates[$apology_id] = array_merge($templates[$apology_id] ?? [], $presets[$apology_id]);
+		}
 
 		// Automated remaining balance coupon template.
 		$remaining_balance_id = 'tpl_auto_coupon_remaining_balance';
-		$templates[$remaining_balance_id] = [
-			'title'       => __('Send automated remaining balance coupon', 'user-manager'),
-			'description' => __('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE%.', 'user-manager'),
-			'subject'     => __('You have a remaining balance', 'user-manager'),
-			'heading'     => __('You have a remaining balance', 'user-manager'),
-			'body'        => '<p>Here is your remaining balance Coupon Code:<br>
-%COUPONCODE%</p>',
-		];
+		if (isset($presets[$remaining_balance_id])) {
+			$templates[$remaining_balance_id] = array_merge($templates[$remaining_balance_id] ?? [], $presets[$remaining_balance_id]);
+		}
 
 		// Assign order after existing ones: auto coupon, apology coupon, then remaining balance coupon.
 		$max_order = 0;

@@ -45,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.8';
+	const VERSION = '2.5.9';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8919,6 +8919,18 @@ html body .woocommerce-layout__header {
 				break;
 			case 'demo_templates_imported':
 				$content = __('Demo email templates imported successfully.', 'user-manager');
+				break;
+			case 'demo_template_recreated':
+				$template_title = isset($_GET['template_title']) ? sanitize_text_field(wp_unslash($_GET['template_title'])) : '';
+				if ($template_title !== '') {
+					$content = sprintf(
+						/* translators: %s: template title */
+						__('Template recreated: %s', 'user-manager'),
+						$template_title
+					);
+				} else {
+					$content = __('Template recreated successfully.', 'user-manager');
+				}
 				break;
 			case 'demo_sms_templates_imported':
 				$content = __('Demo SMS text templates imported successfully.', 'user-manager');

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.8
+ * Version: 2.5.9
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.9 - March 16, 2026
+ * - Email Templates: added per-template "Recreate" links under Import Demo Email Templates so each demo template can be re-seeded individually.
+ * - Added secure individual template import actions for all demo email templates, including automated coupon and remaining-balance coupon templates.
+ *
  * 2.5.8 - March 16, 2026
  * - Import Demo Email Templates now includes a new "Send automated remaining balance coupon" template.
  * - Added default subject/body for the new template with %COUPONCODE% support ("You have a remaining balance").
