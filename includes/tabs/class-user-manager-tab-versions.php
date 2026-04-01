@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.79 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery block URL override setting note now documents [tag-name] placeholder replacement in post titles/content when URL tag override is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When no valid URL tag is found, [tag-name] now resolves to an empty string, as documented in the setting note.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.78 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag Gallery block: added "Allow Any URL Parameter to Be Used as a Tag Identifier such as ?tag-name for Shorter URLs" under URL override settings.', 'user-manager'); ?></li>

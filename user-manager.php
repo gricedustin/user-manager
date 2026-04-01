@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.78
+ * Version: 2.4.79
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.79 - March 16, 2026
+ * - Media Library Tag Gallery URL override: [tag-name] placeholder now supported in post title/content when URL override is enabled on the page's gallery block.
+ * - [tag-name] resolves to the active URL tag name and safely falls back to empty text when no valid URL tag is present.
+ * - Added this behavior note under the "Allow Any URL Parameter..." block setting help text.
+ *
  * 2.4.78 - March 16, 2026
  * - Media Library Tag Gallery block: added "Allow Any URL Parameter to Be Used as a Tag Identifier such as ?tag-name for Shorter URLs" under URL override controls.
  * - When enabled, URL query keys that match Library Tag slugs (e.g. ?my-tag) can act as tag overrides, in addition to the standard ?tag=... parameter.

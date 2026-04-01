@@ -35,6 +35,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_action('wp_ajax_user_manager_bulk_apply_media_library_tag', [__CLASS__, 'ajax_bulk_apply_media_library_tag']);
 		add_filter('attachment_fields_to_edit', [__CLASS__, 'add_media_library_tags_attachment_field'], 10, 2);
 		add_filter('attachment_fields_to_save', [__CLASS__, 'save_media_library_tags_attachment_field'], 10, 2);
+		add_filter('the_content', [__CLASS__, 'replace_media_library_tag_name_placeholder_in_content'], 20);
+		add_filter('the_title', [__CLASS__, 'replace_media_library_tag_name_placeholder_in_title'], 20, 2);
 	}
 
 	/**
@@ -1169,7 +1171,7 @@ JS;
 							label: 'Allow Any URL Parameter to Be Used as a Tag Identifier such as ?tag-name for Shorter URLs',
 							checked: !!a.allowAnyUrlParamTagIdentifier,
 							onChange: function(v){ set({ allowAnyUrlParamTagIdentifier: !!v }); },
-							help: !!a.allowAnyUrlParamTagIdentifier ? 'Any URL query key matching a tag slug can override the block tag.' : 'Only ?tag=tag-slug URL override is used.'
+							help: !!a.allowAnyUrlParamTagIdentifier ? 'Any URL query key matching a tag slug can override the block tag. Also replaces [tag-name] in post titles/content; if no valid URL tag is found, [tag-name] becomes empty.' : 'Only ?tag=tag-slug URL override is used.'
 						}),
 						element.createElement(TextControl, {
 							label: 'Number of Columns (Desktop)',
@@ -2161,6 +2163,142 @@ JS;
 		}
 
 		return null;
+	}
+
+	/**
+	 * Replace [tag-name] placeholder in post content.
+	 */
+	public static function replace_media_library_tag_name_placeholder_in_content(string $content): string {
+		return self::replace_media_library_tag_name_placeholder_in_text($content);
+	}
+
+	/**
+	 * Replace [tag-name] placeholder in post titles.
+	 *
+	 * @param string $title   The title text.
+	 * @param int    $post_id Post ID provided by filter.
+	 */
+	public static function replace_media_library_tag_name_placeholder_in_title(string $title, int $post_id = 0): string {
+		unset($post_id);
+		return self::replace_media_library_tag_name_placeholder_in_text($title);
+	}
+
+	/**
+	 * Replace [tag-name] with active URL tag name when enabled by block settings.
+	 */
+	private static function replace_media_library_tag_name_placeholder_in_text(string $text): string {
+		if (strpos($text, '[tag-name]') === false) {
+			return $text;
+		}
+		if (!self::is_media_library_tag_name_placeholder_enabled_on_current_post()) {
+			return $text;
+		}
+
+		$tag_name = self::get_media_library_tag_name_placeholder_value();
+		return str_replace('[tag-name]', $tag_name, $text);
+	}
+
+	/**
+	 * Determine if current singular post has a gallery block that enables URL tag override.
+	 */
+	private static function is_media_library_tag_name_placeholder_enabled_on_current_post(): bool {
+		$config = self::get_current_post_media_library_tag_placeholder_config();
+		return !empty($config['enabled']);
+	}
+
+	/**
+	 * Resolve active URL tag name used for [tag-name] replacement.
+	 */
+	private static function get_media_library_tag_name_placeholder_value(): string {
+		$config = self::get_current_post_media_library_tag_placeholder_config();
+		if (empty($config['enabled'])) {
+			return '';
+		}
+
+		$allow_any = !empty($config['allowAny']);
+		$slug = self::resolve_media_library_gallery_url_tag_override($allow_any);
+		if ($slug === null || $slug === '') {
+			return '';
+		}
+		$term = get_term_by('slug', $slug, self::media_library_tags_taxonomy());
+		if (!$term instanceof WP_Term) {
+			return '';
+		}
+
+		return trim((string) $term->name);
+	}
+
+	/**
+	 * Collect whether current post enables [tag-name] replacement and any-param mode.
+	 *
+	 * @return array{enabled:bool,allowAny:bool}
+	 */
+	private static function get_current_post_media_library_tag_placeholder_config(): array {
+		static $cache = null;
+		if (is_array($cache)) {
+			return $cache;
+		}
+
+		$cache = ['enabled' => false, 'allowAny' => false];
+		if (is_admin() || !is_singular()) {
+			return $cache;
+		}
+
+		$post = get_post(get_queried_object_id());
+		if (!$post instanceof WP_Post) {
+			return $cache;
+		}
+		$content = (string) $post->post_content;
+		if ($content === '' || !has_blocks($content)) {
+			return $cache;
+		}
+
+		$blocks = parse_blocks($content);
+		if (!is_array($blocks) || empty($blocks)) {
+			return $cache;
+		}
+
+		return self::scan_media_library_tag_placeholder_config_from_blocks($blocks);
+	}
+
+	/**
+	 * Recursively scan parsed blocks for Media Library Tag Gallery URL override settings.
+	 *
+	 * @param array<int,array<string,mixed>> $blocks
+	 * @return array{enabled:bool,allowAny:bool}
+	 */
+	private static function scan_media_library_tag_placeholder_config_from_blocks(array $blocks): array {
+		$config = ['enabled' => false, 'allowAny' => false];
+		foreach ($blocks as $block) {
+			if (!is_array($block)) {
+				continue;
+			}
+
+			$block_name = isset($block['blockName']) ? (string) $block['blockName'] : '';
+			if ($block_name === 'custom/media-library-tag-gallery') {
+				$attrs = isset($block['attrs']) && is_array($block['attrs']) ? $block['attrs'] : [];
+				if (!empty($attrs['allowUrlTagOverride'])) {
+					$config['enabled'] = true;
+					if (!empty($attrs['allowAnyUrlParamTagIdentifier'])) {
+						$config['allowAny'] = true;
+						return $config;
+					}
+				}
+			}
+
+			if (!empty($block['innerBlocks']) && is_array($block['innerBlocks'])) {
+				$inner = self::scan_media_library_tag_placeholder_config_from_blocks($block['innerBlocks']);
+				if (!empty($inner['enabled'])) {
+					$config['enabled'] = true;
+				}
+				if (!empty($inner['allowAny'])) {
+					$config['allowAny'] = true;
+					return $config;
+				}
+			}
+		}
+
+		return $config;
 	}
 
 	/**
