@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.10 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons > User Coupon Remaining Balances: fixed Preview Email button by rendering the shared email preview modal on the Add-ons page context.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preview now correctly opens for the selected template in "Send Email to User when New Remaining Balance Code is Created", including %COUPONCODE% and [coupon_code] placeholder substitution.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.9 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Import Demo Email Templates now includes individual "Recreate" links for each demo template to upsert one template at a time without running the full import.', 'user-manager'); ?></li>

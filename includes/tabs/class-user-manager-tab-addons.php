@@ -48,6 +48,7 @@ class User_Manager_Tab_Addons {
 	public static function render(): void {
 		$settings      = User_Manager_Core::get_settings();
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
+		$email_templates = User_Manager_Core::get_email_templates();
 		$settings_form_id = 'um-addons-settings-form';
 		$addon_sections = self::get_addon_sections($settings);
 		$sorted_addon_sections = $addon_sections;
@@ -300,6 +301,7 @@ class User_Manager_Tab_Addons {
 
 		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template($settings_form_id); ?>
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template($settings_form_id); ?>
+		<?php User_Manager_Tab_Shared::render_email_preview_modal($email_templates); ?>
 
 		<style>
 		.um-admin-grid.um-addons-main-grid {
