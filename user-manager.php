@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.90
+ * Version: 2.4.91
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.91 - March 16, 2026
+ * - [tag-name]/[tag-description] placeholder replacement now also runs for the HTML document title (<title>) via WordPress title filters.
+ * - URL-resolved Library Tag placeholders now stay consistent across page headers, page body content, and browser/page title output.
+ *
  * 2.4.90 - March 16, 2026
  * - Media Library Tag Gallery "Style" options are now sorted A-Z in the Add-ons settings section.
  * - Added gallery "Accent Color (frames/backgrounds)" setting to control white frame/background surfaces (for example Polaroid layout and split-screen panels) for dark mode compatibility.

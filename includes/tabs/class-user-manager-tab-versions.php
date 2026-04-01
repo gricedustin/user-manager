@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.91 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag URL placeholders now also apply to the page document title (<title>) so [tag-name]/[tag-description] can resolve in browser tab titles and SEO title output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Placeholder replacement remains scoped to singular content that contains a Media Library Tag Gallery block with URL override behavior enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.90 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags add-on "Style" setting is now sorted A–Z for easier scanning in addon_section=media-library-tags.', 'user-manager'); ?></li>

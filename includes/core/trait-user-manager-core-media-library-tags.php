@@ -37,6 +37,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_filter('attachment_fields_to_save', [__CLASS__, 'save_media_library_tags_attachment_field'], 10, 2);
 		add_filter('the_content', [__CLASS__, 'replace_media_library_tag_placeholders_in_content'], 20);
 		add_filter('the_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_title'], 20, 2);
+		add_filter('document_title_parts', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title_parts'], 20);
+		add_filter('pre_get_document_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title'], 20);
 		add_action('admin_bar_menu', [__CLASS__, 'add_media_library_tag_admin_bar_shortcut'], 101);
 	}
 
@@ -2547,6 +2549,32 @@ JS;
 	 */
 	public static function replace_media_library_tag_placeholders_in_title(string $title, int $post_id = 0): string {
 		unset($post_id);
+		return self::replace_media_library_tag_placeholders_in_text($title);
+	}
+
+	/**
+	 * Replace placeholders in document title parts (<title> support).
+	 *
+	 * @param array<string,string> $parts Document title parts.
+	 * @return array<string,string>
+	 */
+	public static function replace_media_library_tag_placeholders_in_document_title_parts(array $parts): array {
+		foreach ($parts as $key => $value) {
+			if (!is_string($value)) {
+				continue;
+			}
+			$parts[$key] = self::replace_media_library_tag_placeholders_in_text($value);
+		}
+		return $parts;
+	}
+
+	/**
+	 * Replace placeholders in pre-generated document title fallback.
+	 */
+	public static function replace_media_library_tag_placeholders_in_document_title($title): string {
+		if (!is_string($title) || $title === '') {
+			return is_string($title) ? $title : '';
+		}
 		return self::replace_media_library_tag_placeholders_in_text($title);
 	}
 
