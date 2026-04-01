@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.80 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed [tag-name] replacement timing for post titles/content by making placeholder config cache post-specific, preventing early false cache hits.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When "Allow Any URL Parameter..." is enabled, [tag-name] replacement now activates if either URL override toggle is enabled on the gallery block.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.79 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag Gallery block URL override setting note now documents [tag-name] placeholder replacement in post titles/content when URL tag override is active.', 'user-manager'); ?></li>

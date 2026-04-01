@@ -2234,31 +2234,34 @@ JS;
 	 * @return array{enabled:bool,allowAny:bool}
 	 */
 	private static function get_current_post_media_library_tag_placeholder_config(): array {
-		static $cache = null;
-		if (is_array($cache)) {
-			return $cache;
+		static $cache = [];
+		$post_id = get_queried_object_id();
+		if (isset($cache[$post_id]) && is_array($cache[$post_id])) {
+			return $cache[$post_id];
 		}
 
-		$cache = ['enabled' => false, 'allowAny' => false];
+		$config = ['enabled' => false, 'allowAny' => false];
 		if (is_admin() || !is_singular()) {
-			return $cache;
+			return $config;
 		}
 
-		$post = get_post(get_queried_object_id());
+		$post = get_post($post_id);
 		if (!$post instanceof WP_Post) {
-			return $cache;
+			return $config;
 		}
 		$content = (string) $post->post_content;
 		if ($content === '' || !has_blocks($content)) {
-			return $cache;
+			return $config;
 		}
 
 		$blocks = parse_blocks($content);
 		if (!is_array($blocks) || empty($blocks)) {
-			return $cache;
+			return $config;
 		}
 
-		return self::scan_media_library_tag_placeholder_config_from_blocks($blocks);
+		$config = self::scan_media_library_tag_placeholder_config_from_blocks($blocks);
+		$cache[$post_id] = $config;
+		return $config;
 	}
 
 	/**
@@ -2277,7 +2280,7 @@ JS;
 			$block_name = isset($block['blockName']) ? (string) $block['blockName'] : '';
 			if ($block_name === 'custom/media-library-tag-gallery') {
 				$attrs = isset($block['attrs']) && is_array($block['attrs']) ? $block['attrs'] : [];
-				if (!empty($attrs['allowUrlTagOverride'])) {
+				if (!empty($attrs['allowUrlTagOverride']) || !empty($attrs['allowAnyUrlParamTagIdentifier'])) {
 					$config['enabled'] = true;
 					if (!empty($attrs['allowAnyUrlParamTagIdentifier'])) {
 						$config['allowAny'] = true;

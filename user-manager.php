@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.79
+ * Version: 2.4.80
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.80 - March 16, 2026
+ * - Fixed [tag-name] replacement in post title/content by ensuring block config detection does not cache too early before singular query context is available.
+ * - Treat the "Allow Any URL Parameter..." toggle as enabling URL tag placeholder replacement behavior (including when ?tag= is not explicitly enabled).
+ *
  * 2.4.79 - March 16, 2026
  * - Media Library Tag Gallery URL override: [tag-name] placeholder now supported in post title/content when URL override is enabled on the page's gallery block.
  * - [tag-name] resolves to the active URL tag name and safely falls back to empty text when no valid URL tag is present.
