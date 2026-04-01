@@ -1178,10 +1178,10 @@ JS;
 							onChange: function(v){ set({ tagSlug: String(v || '') }); }
 						}),
 						element.createElement(ToggleControl, {
-							label: 'Allow URL tag override (?tag=tag-slug)',
+							label: 'Allow URL tag override (?tag=tag-slug, ?tag=tag+tag2 for AND, ?tag=tag_tag2 for OR)',
 							checked: !!a.allowUrlTagOverride,
 							onChange: function(v){ set({ allowUrlTagOverride: !!v }); },
-							help: a.allowUrlTagOverride ? 'URL ?tag=... can override selected tag for this block.' : 'Use selected tag only.'
+							help: a.allowUrlTagOverride ? 'URL ?tag=... can override selected tag for this block. Use ?tag=tag+tag2 for AND logic and ?tag=tag_tag2 for OR logic.' : 'Use selected tag only.'
 						}),
 						element.createElement(ToggleControl, {
 							label: 'Do Not Allow Empty Tag/Do Not Load without Tag Value',
@@ -1193,7 +1193,7 @@ JS;
 							label: 'Allow Any URL Parameter to Be Used as a Tag Identifier such as ?tag-name for Shorter URLs',
 							checked: !!a.allowAnyUrlParamTagIdentifier,
 							onChange: function(v){ set({ allowAnyUrlParamTagIdentifier: !!v }); },
-							help: !!a.allowAnyUrlParamTagIdentifier ? 'Any URL query key matching a tag slug can override the block tag. Also replaces [tag-name] and [tag-description] in post titles/content; if no valid URL tag is found, placeholders become empty.' : 'Only ?tag=tag-slug URL override is used.'
+							help: !!a.allowAnyUrlParamTagIdentifier ? 'Any URL query key matching a tag slug expression can override the block tag (examples: ?tag-name, ?tag+tag2 for AND, ?tag_tag2 for OR). Also replaces [tag-name] and [tag-description] in post titles/content using the first resolved tag; if no valid URL tag is found, placeholders become empty.' : 'Only ?tag=tag-slug URL override is used.'
 						}),
 						element.createElement(TextControl, {
 							label: 'Number of Columns (Desktop)',
@@ -1464,13 +1464,20 @@ JS;
 		if (!in_array($description_value, $allowed_description_values, true)) {
 			$description_value = 'caption';
 		}
+		$url_tag_override = [
+			'mode' => 'none',
+			'slugs' => [],
+		];
 		if ($allow_url_tag_override) {
-			$url_tag = self::resolve_media_library_gallery_url_tag_override($allow_any_url_param_tag_identifier);
-			if ($url_tag !== null) {
-				$tag_slug = $url_tag;
+			$url_tag_override = self::resolve_media_library_gallery_url_tag_override($allow_any_url_param_tag_identifier);
+			if ($url_tag_override['mode'] === 'all') {
+				$tag_slug = '';
+			} elseif (!empty($url_tag_override['slugs'])) {
+				$tag_slug = (string) $url_tag_override['slugs'][0];
 			}
 		}
-		if ($require_tag_value && $tag_slug === '') {
+		$has_effective_tag_value = ($tag_slug !== '' || !empty($url_tag_override['slugs']));
+		if ($require_tag_value && !$has_effective_tag_value) {
 			return '';
 		}
 
@@ -1500,28 +1507,37 @@ JS;
 			'no_found_rows' => $page_limit <= 0,
 		];
 
-		if ($tag_slug !== '' && term_exists($tag_slug, self::media_library_tags_taxonomy())) {
-			$query_args['tax_query'] = [
-				[
-					'taxonomy' => self::media_library_tags_taxonomy(),
-					'field' => 'slug',
-					'terms' => [$tag_slug],
-				],
+		$tax_query = [];
+		if (!empty($url_tag_override['slugs']) && in_array($url_tag_override['mode'], ['and', 'or', 'single'], true)) {
+			$tag_override_tax_query = self::build_media_library_gallery_multi_tag_tax_query(
+				array_values(array_map('strval', $url_tag_override['slugs'])),
+				(string) $url_tag_override['mode']
+			);
+			if (!empty($tag_override_tax_query)) {
+				foreach ($tag_override_tax_query as $tag_clause) {
+					$tax_query[] = $tag_clause;
+				}
+			}
+		} elseif ($tag_slug !== '' && term_exists($tag_slug, self::media_library_tags_taxonomy())) {
+			$tax_query[] = [
+				'taxonomy' => self::media_library_tags_taxonomy(),
+				'field' => 'slug',
+				'terms' => [$tag_slug],
 			];
 		}
 		if (!empty($hidden_frontend_tag_slugs)) {
-			if (!isset($query_args['tax_query']) || !is_array($query_args['tax_query'])) {
-				$query_args['tax_query'] = [];
-			}
-			if (!empty($query_args['tax_query'])) {
-				$query_args['tax_query']['relation'] = 'AND';
-			}
-			$query_args['tax_query'][] = [
+			$tax_query[] = [
 				'taxonomy' => self::media_library_tags_taxonomy(),
 				'field' => 'slug',
 				'terms' => $hidden_frontend_tag_slugs,
 				'operator' => 'NOT IN',
 			];
+		}
+		if (!empty($tax_query)) {
+			if (count($tax_query) > 1) {
+				$tax_query['relation'] = 'AND';
+			}
+			$query_args['tax_query'] = $tax_query;
 		}
 
 		switch ($sort_order) {
@@ -2274,44 +2290,212 @@ JS;
 	/**
 	 * Resolve URL-based tag override for Media Library Tag Gallery block.
 	 *
-	 * @param bool $allow_any_parameter Whether any URL parameter key can map to a tag slug.
-	 * @return string|null Returns tag slug, empty string for "all", or null when no valid override is present.
+	 * Supported combinations:
+	 * - single tag: ?tag=tag-one
+	 * - AND logic: ?tag=tag-one+tag-two or ?tag-one+tag-two (allowAny mode)
+	 * - OR logic:  ?tag=tag-one_tag-two or ?tag-one_tag-two (allowAny mode)
+	 *
+	 * @param bool $allow_any_parameter Whether any URL parameter key can map to tag slugs.
+	 * @return array{mode:'none'|'all'|'single'|'and'|'or',slugs:array<int,string>,primarySlug:string}
 	 */
-	private static function resolve_media_library_gallery_url_tag_override(bool $allow_any_parameter = false): ?string {
+	private static function resolve_media_library_gallery_url_tag_override(bool $allow_any_parameter = false): array {
+		$none = [
+			'mode' => 'none',
+			'slugs' => [],
+			'primarySlug' => '',
+		];
 		if (isset($_GET['tag'])) {
-			$url_tag = sanitize_title((string) wp_unslash($_GET['tag']));
-			if ($url_tag === 'all') {
-				return '';
+			$raw_tag_value = self::get_raw_query_string_value('tag');
+			if ($raw_tag_value === null) {
+				$raw_tag_value = (string) wp_unslash($_GET['tag']);
 			}
-			if ($url_tag !== '' && term_exists($url_tag, self::media_library_tags_taxonomy())) {
-				return $url_tag;
+			$parsed = self::parse_media_library_gallery_tag_expression($raw_tag_value);
+			if ($parsed['mode'] !== 'none') {
+				return $parsed;
 			}
 		}
-		if (!$allow_any_parameter || empty($_GET) || !is_array($_GET)) {
+		if (!$allow_any_parameter) {
+			return $none;
+		}
+
+		$raw_keys = self::get_raw_query_string_keys();
+		if (empty($raw_keys)) {
+			return $none;
+		}
+		foreach ($raw_keys as $raw_key) {
+			if (!is_string($raw_key) || $raw_key === '' || $raw_key === 'tag') {
+				continue;
+			}
+			$parsed = self::parse_media_library_gallery_tag_expression($raw_key);
+			if ($parsed['mode'] !== 'none') {
+				return $parsed;
+			}
+		}
+
+		return $none;
+	}
+
+	/**
+	 * Parse a URL tag expression into single/AND/OR mode with validated slugs.
+	 *
+	 * @return array{mode:'none'|'all'|'single'|'and'|'or',slugs:array<int,string>,primarySlug:string}
+	 */
+	private static function parse_media_library_gallery_tag_expression(string $raw_expression): array {
+		$none = [
+			'mode' => 'none',
+			'slugs' => [],
+			'primarySlug' => '',
+		];
+		$raw_expression = trim((string) $raw_expression);
+		if ($raw_expression === '') {
+			return $none;
+		}
+
+		$mode = 'single';
+		$parts = [$raw_expression];
+		if (strpos($raw_expression, '_') !== false) {
+			$mode = 'or';
+			$parts = preg_split('/_+/', $raw_expression) ?: [];
+		} elseif (strpos($raw_expression, '+') !== false || preg_match('/\s+/', $raw_expression)) {
+			$mode = 'and';
+			$parts = preg_split('/(?:\+|\s)+/', $raw_expression) ?: [];
+		}
+
+		$normalized_parts = [];
+		foreach ($parts as $part) {
+			$slug = sanitize_title((string) $part);
+			if ($slug !== '') {
+				$normalized_parts[] = $slug;
+			}
+		}
+		$normalized_parts = array_values(array_unique($normalized_parts));
+		if (empty($normalized_parts)) {
+			return $none;
+		}
+		if (count($normalized_parts) === 1 && $normalized_parts[0] === 'all') {
+			return [
+				'mode' => 'all',
+				'slugs' => [],
+				'primarySlug' => '',
+			];
+		}
+
+		$valid_slugs = [];
+		foreach ($normalized_parts as $candidate_slug) {
+			if ($candidate_slug === 'all') {
+				continue;
+			}
+			if (term_exists($candidate_slug, self::media_library_tags_taxonomy())) {
+				$valid_slugs[] = $candidate_slug;
+			}
+		}
+		$valid_slugs = array_values(array_unique($valid_slugs));
+		if (empty($valid_slugs)) {
+			return $none;
+		}
+		if (count($valid_slugs) === 1) {
+			$mode = 'single';
+		}
+
+		return [
+			'mode' => $mode,
+			'slugs' => $valid_slugs,
+			'primarySlug' => (string) $valid_slugs[0],
+		];
+	}
+
+	/**
+	 * Read raw query-string value for a key while preserving "+" characters.
+	 */
+	private static function get_raw_query_string_value(string $target_key): ?string {
+		$query_string = isset($_SERVER['QUERY_STRING']) ? (string) wp_unslash($_SERVER['QUERY_STRING']) : '';
+		if ($query_string === '') {
 			return null;
 		}
 
-		$raw_query = wp_unslash($_GET);
-		if (!is_array($raw_query)) {
-			return null;
-		}
-		foreach (array_keys($raw_query) as $raw_key) {
-			if (!is_string($raw_key) || $raw_key === 'tag') {
+		foreach (explode('&', $query_string) as $pair) {
+			if ($pair === '') {
 				continue;
 			}
-			$candidate = sanitize_title($raw_key);
-			if ($candidate === '') {
+			$segments = explode('=', $pair, 2);
+			$raw_key = rawurldecode((string) ($segments[0] ?? ''));
+			if ($raw_key !== $target_key) {
 				continue;
 			}
-			if ($candidate === 'all') {
-				return '';
-			}
-			if (term_exists($candidate, self::media_library_tags_taxonomy())) {
-				return $candidate;
-			}
+			$raw_value = isset($segments[1]) ? rawurldecode((string) $segments[1]) : '';
+			return (string) $raw_value;
 		}
 
 		return null;
+	}
+
+	/**
+	 * Read raw query-string keys while preserving "+" characters.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_raw_query_string_keys(): array {
+		$query_string = isset($_SERVER['QUERY_STRING']) ? (string) wp_unslash($_SERVER['QUERY_STRING']) : '';
+		$keys = [];
+		if ($query_string !== '') {
+			foreach (explode('&', $query_string) as $pair) {
+				if ($pair === '') {
+					continue;
+				}
+				$segments = explode('=', $pair, 2);
+				$raw_key = rawurldecode((string) ($segments[0] ?? ''));
+				if ($raw_key !== '') {
+					$keys[] = $raw_key;
+				}
+			}
+		}
+		if (empty($keys) && !empty($_GET) && is_array($_GET)) {
+			$raw_query = wp_unslash($_GET);
+			if (is_array($raw_query)) {
+				foreach (array_keys($raw_query) as $raw_key) {
+					if (is_string($raw_key) && $raw_key !== '') {
+						$keys[] = $raw_key;
+					}
+				}
+			}
+		}
+		return array_values(array_unique(array_map('strval', $keys)));
+	}
+
+	/**
+	 * Build tax_query clauses for single/AND/OR multi-tag URL override logic.
+	 *
+	 * @param array<int,string> $slugs Valid tag slugs.
+	 * @param string            $mode  one of single|and|or.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function build_media_library_gallery_multi_tag_tax_query(array $slugs, string $mode): array {
+		$slugs = array_values(array_unique(array_filter(array_map('sanitize_title', $slugs))));
+		if (empty($slugs)) {
+			return [];
+		}
+		$taxonomy = self::media_library_tags_taxonomy();
+		if ($mode === 'and') {
+			$clauses = [];
+			foreach ($slugs as $slug) {
+				if ($slug === '') {
+					continue;
+				}
+				$clauses[] = [
+					'taxonomy' => $taxonomy,
+					'field' => 'slug',
+					'terms' => [$slug],
+				];
+			}
+			return $clauses;
+		}
+		return [
+			[
+				'taxonomy' => $taxonomy,
+				'field' => 'slug',
+				'terms' => $slugs,
+			],
+		];
 	}
 
 	/**
@@ -2347,8 +2531,9 @@ JS;
 			return;
 		}
 
-		$tag_slug = self::resolve_media_library_gallery_url_tag_override(!empty($config['allowAny']));
-		if (!is_string($tag_slug) || $tag_slug === '') {
+		$tag_override = self::resolve_media_library_gallery_url_tag_override(!empty($config['allowAny']));
+		$tag_slug = isset($tag_override['primarySlug']) ? (string) $tag_override['primarySlug'] : '';
+		if ($tag_slug === '') {
 			return;
 		}
 
@@ -2418,8 +2603,9 @@ JS;
 		}
 
 		$allow_any = !empty($config['allowAny']);
-		$slug = self::resolve_media_library_gallery_url_tag_override($allow_any);
-		if ($slug === null || $slug === '') {
+		$tag_override = self::resolve_media_library_gallery_url_tag_override($allow_any);
+		$slug = isset($tag_override['primarySlug']) ? (string) $tag_override['primarySlug'] : '';
+		if ($slug === '') {
 			return ['name' => '', 'description' => ''];
 		}
 		$term = get_term_by('slug', $slug, self::media_library_tags_taxonomy());
