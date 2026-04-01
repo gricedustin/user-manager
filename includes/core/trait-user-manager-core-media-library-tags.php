@@ -1678,7 +1678,7 @@ JS;
 					</div>
 				</div>
 			<?php else : ?>
-				<div class="um-media-library-tag-gallery-grid" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $effective_columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
+				<div class="um-media-library-tag-gallery-grid" data-um-cols-desktop="<?php echo esc_attr((string) $effective_columns_desktop); ?>" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $effective_columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
 					<?php foreach ($attachments as $index => $attachment) : ?>
 						<?php
 						if (!($attachment instanceof WP_Post)) {
@@ -1749,8 +1749,22 @@ JS;
 		.um-media-gallery-style-circle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; border-radius: 999px; }
 		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid { grid-auto-flow: dense; }
 		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; }
-		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item:nth-child(7n+1) { grid-column: span 2; grid-row: span 2; }
-		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item:nth-child(5n+3) { grid-column: span 2; }
+		/* Column-aware mosaic rules reduce stranded gaps by using lighter spans on tighter grids. */
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="8"] .um-media-library-tag-gallery-item:nth-child(11n+1),
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="7"] .um-media-library-tag-gallery-item:nth-child(11n+1),
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="6"] .um-media-library-tag-gallery-item:nth-child(11n+1),
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="5"] .um-media-library-tag-gallery-item:nth-child(11n+1),
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="4"] .um-media-library-tag-gallery-item:nth-child(11n+1) { grid-column: span 2; grid-row: span 2; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="8"] .um-media-library-tag-gallery-item:nth-child(11n+6),
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="7"] .um-media-library-tag-gallery-item:nth-child(11n+6),
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="6"] .um-media-library-tag-gallery-item:nth-child(11n+6),
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="5"] .um-media-library-tag-gallery-item:nth-child(11n+6),
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="4"] .um-media-library-tag-gallery-item:nth-child(11n+6) { grid-column: span 2; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="3"] .um-media-library-tag-gallery-item:nth-child(8n+2) { grid-column: span 2; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="2"] .um-media-library-tag-gallery-item:nth-child(6n+2) { grid-column: span 2; }
+		@media (max-width: 782px) {
+			.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item { grid-column: auto !important; grid-row: auto !important; }
+		}
 		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-grid { display: block; column-count: var(--um-mltg-cols-desktop); column-gap: 14px; }
 		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-item { break-inside: avoid; margin: 0 0 14px; }
 		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-item img { width: 100%; height: auto; object-fit: cover; }

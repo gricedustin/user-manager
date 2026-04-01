@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.85 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Mosaic Grid layout now uses column-aware tile span patterns to reduce stranded gaps and improve backfilling of smaller images.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('On mobile widths, Mosaic Grid now disables span overrides so tiles flow naturally and avoid empty-looking pockets.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.84 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag Gallery pagination is now rendered as basic links (unstyled link list) instead of button-styled pagination controls.', 'user-manager'); ?></li>
