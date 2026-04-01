@@ -1491,6 +1491,7 @@ JS;
 		$show_description_under_photo = in_array($description_display, ['grid', 'both'], true);
 		$show_description_in_lightbox = in_array($description_display, ['lightbox', 'both'], true);
 		$hidden_frontend_tag_slugs = self::get_hidden_frontend_tag_slugs($settings);
+		$css_crop_styles = ['mosaic_grid', 'square_crop', 'wide_rectangle_crop', 'tall_rectangle_crop', 'circle_crop', 'fullscreen_lightbox_grid'];
 
 		$page_num = isset($_GET['um_media_gallery_page']) ? max(1, absint(wp_unslash($_GET['um_media_gallery_page']))) : 1;
 		$offset = 0;
@@ -1594,9 +1595,18 @@ JS;
 		} elseif ($attachment_count < 50) {
 			$effective_columns_desktop = $columns_desktop_lt_50;
 		}
+		$disable_css_crop_under_total = max(0, absint($defaults['disableCssCropUnderTotal'] ?? 0));
+		$disable_css_crop_for_small_galleries = $disable_css_crop_under_total > 0 && $attachment_count < $disable_css_crop_under_total;
 
 		$uid = function_exists('wp_unique_id') ? wp_unique_id('um-media-gallery-') : uniqid('um-media-gallery-');
 		$style_class = 'um-media-gallery-style-' . $style;
+		if ($disable_css_crop_for_small_galleries && in_array($style, $css_crop_styles, true)) {
+			$style = 'standard';
+			$style_class = 'um-media-gallery-style-standard';
+		}
+		if ($disable_css_crop_for_small_galleries) {
+			$style_class .= ' um-mltg-disable-css-crop';
+		}
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$timeline_date_format = get_option('date_format');
@@ -1714,7 +1724,7 @@ JS;
 						$date_label = get_the_date($timeline_date_format, $attachment_id);
 						$is_infinite_hidden = $style === 'infinite_scroll' && $index >= max(12, $effective_columns_desktop * 3);
 						$item_classes = ['um-media-library-tag-gallery-item'];
-						if ($style === 'mosaic_grid') {
+						if ($style === 'mosaic_grid' && !$disable_css_crop_for_small_galleries) {
 							$pattern_slot = $index % 8;
 							if ($pattern_slot === 0) {
 								$item_classes[] = 'um-mltg-mosaic-large';
@@ -1772,6 +1782,7 @@ JS;
 		}
 		.um-media-library-tag-gallery-item { margin: 0; position: relative; }
 		.um-media-library-tag-gallery-item img { width: 100%; height: auto; display: block; }
+		<?php if (!$disable_css_crop_for_small_galleries) : ?>
 		.um-media-gallery-style-uniform_grid .um-media-library-tag-gallery-item img,
 		.um-media-gallery-style-square_crop .um-media-library-tag-gallery-item img,
 		.um-media-gallery-style-fullscreen_lightbox_grid .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; }
@@ -1790,6 +1801,7 @@ JS;
 		@media (max-width: 782px) {
 			.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item { grid-column: auto !important; grid-row: auto !important; }
 		}
+		<?php endif; ?>
 		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-grid { display: block; column-count: var(--um-mltg-cols-desktop); column-gap: 14px; }
 		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-item { break-inside: avoid; margin: 0 0 14px; }
 		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-item img { width: 100%; height: auto; object-fit: cover; }
@@ -2051,6 +2063,7 @@ JS;
 			'columnsDesktopLt50' => 4,
 			'columnsDesktopLt25' => 4,
 			'columnsDesktopLt10' => 4,
+			'disableCssCropUnderTotal' => 0,
 			'columnsMobile' => 2,
 			'sortOrder' => 'date_desc',
 			'fileSize' => 'thumbnail',
@@ -2072,6 +2085,9 @@ JS;
 		}
 		if (isset($settings['media_library_tag_gallery_columns_desktop_lt_10'])) {
 			$defaults['columnsDesktopLt10'] = max(1, min(8, absint($settings['media_library_tag_gallery_columns_desktop_lt_10'])));
+		}
+		if (isset($settings['media_library_tag_gallery_disable_css_crop_under_total'])) {
+			$defaults['disableCssCropUnderTotal'] = max(0, absint($settings['media_library_tag_gallery_disable_css_crop_under_total']));
 		}
 		$defaults['columnsDesktopLt50'] = max(1, min(8, (int) $defaults['columnsDesktopLt50']));
 		$defaults['columnsDesktopLt25'] = max(1, min(8, (int) $defaults['columnsDesktopLt25']));

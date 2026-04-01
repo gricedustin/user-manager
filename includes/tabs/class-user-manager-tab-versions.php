@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.89 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery defaults now include: "Do Not CSS Crop Any Images if Gallery Photos Total is Less Than..." (0 keeps CSS crop behavior always enabled).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When gallery image total is below this threshold, CSS crop styles are disabled so images render using natural proportions (no CSS crop/aspect-ratio forcing).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.88 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Mosaic Grid layout now uses a deterministic repeating pattern with dedicated large, tall, and wide tiles for more predictable balance.', 'user-manager'); ?></li>

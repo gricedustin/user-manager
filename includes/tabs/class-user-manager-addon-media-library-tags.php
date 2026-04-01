@@ -51,6 +51,9 @@ class User_Manager_Addon_Media_Library_Tags {
 		$description_value = isset($settings['media_library_tag_gallery_description_value']) && is_string($settings['media_library_tag_gallery_description_value']) && $settings['media_library_tag_gallery_description_value'] !== ''
 			? $settings['media_library_tag_gallery_description_value']
 			: (string) $defaults['descriptionValue'];
+		$disable_css_crop_threshold = isset($settings['media_library_tag_gallery_disable_css_crop_under_total'])
+			? max(0, (int) $settings['media_library_tag_gallery_disable_css_crop_under_total'])
+			: (int) ($defaults['disableCssCropUnderTotal'] ?? 0);
 		$show_tags_on_bulk_select = !empty($settings['media_library_tags_show_tags_on_thumbnails_bulk_select']);
 		$sticky_bulk_toolbar_mobile = !empty($settings['media_library_tags_sticky_bulk_toolbar_mobile']);
 		$hidden_frontend_tags = isset($settings['media_library_tag_gallery_hidden_frontend_tags']) && is_string($settings['media_library_tag_gallery_hidden_frontend_tags'])
@@ -182,6 +185,11 @@ class User_Manager_Addon_Media_Library_Tags {
 										<option value="<?php echo esc_attr($value_key); ?>" <?php selected($description_value, $value_key); ?>><?php echo esc_html($value_label); ?></option>
 									<?php endforeach; ?>
 								</select>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-disable-css-crop-below-total"><?php esc_html_e('Do Not CSS Crop Any Images if Gallery Photos Total is Less Than...', 'user-manager'); ?></label>
+								<input type="number" min="0" class="small-text" id="um-media-library-tags-gallery-disable-css-crop-below-total" name="media_library_tag_gallery_disable_css_crop_under_total" value="<?php echo esc_attr((string) $disable_css_crop_threshold); ?>"<?php echo $form_attr; ?> />
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Set to 0 to keep CSS crop styles always active. If the gallery total is below this number, CSS crop styles are disabled and images use natural proportions.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label>

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.88
+ * Version: 2.4.89
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.89 - March 16, 2026
+ * - Added Media Library Tag Gallery default setting: "Do Not CSS Crop Any Images if Gallery Photos Total is Less Than..."
+ * - When gallery image count is below this threshold, CSS crop-based styles are skipped so images render with natural proportions.
+ *
  * 2.4.88 - March 16, 2026
  * - Rebuilt Mosaic Grid into a deterministic repeat pattern (large, tall, wide, standard) with consistent auto-row sizing for cleaner alignment.
  * - Mosaic now uses dense packing with controlled spans and full-height image fill to reduce dead space and improve vertical rhythm.
