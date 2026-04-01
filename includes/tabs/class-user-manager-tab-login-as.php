@@ -13,6 +13,38 @@ class User_Manager_Tab_Login_As {
 	 * Option key for storing active login-as sessions.
 	 */
 	private const OPTION_KEY = 'user_manager_login_as_sessions';
+	private const AUTO_RESTORE_AFTER_SECONDS = 900;
+
+	/**
+	 * Boot Login As runtime hooks.
+	 */
+	public static function init(): void {
+		add_action('init', [__CLASS__, 'maybe_auto_restore_expired_sessions'], 20);
+	}
+
+	/**
+	 * Auto-restore expired Login As sessions.
+	 *
+	 * This intentionally runs on normal page loads so temporary passwords
+	 * cannot remain active indefinitely if an admin forgets to restore them.
+	 */
+	public static function maybe_auto_restore_expired_sessions(): void {
+		if (wp_doing_ajax()) {
+			return;
+		}
+
+		$sessions = get_option(self::OPTION_KEY, []);
+		if (!is_array($sessions) || empty($sessions)) {
+			return;
+		}
+
+		foreach ($sessions as $admin_id => $session) {
+			if (!is_array($session) || !self::is_session_expired($session)) {
+				continue;
+			}
+			self::handle_restore_session((int) $admin_id, $session, true);
+		}
+	}
 
 	public static function render(): void {
 		if (!current_user_can('manage_options')) {
@@ -67,6 +99,9 @@ class User_Manager_Tab_Login_As {
 				<div class="um-admin-card-body">
 					<p class="description" style="margin-top:0;">
 						<?php esc_html_e('Use this tool to temporarily set a random password for a user so you can log in as them in an incognito/private window. When finished, restore their original password.', 'user-manager'); ?>
+					</p>
+					<p class="description" style="margin-top:0;">
+						<?php esc_html_e('Security note: If the password is not manually restored, this tool will automatically restore the user\'s original password after 15 minutes. Automatic restoration runs during normal page loads.', 'user-manager'); ?>
 					</p>
 
 					<h3><?php esc_html_e('Step 1: Choose a user and generate a temporary password', 'user-manager'); ?></h3>
@@ -597,6 +632,7 @@ class User_Manager_Tab_Login_As {
 			'original_hash' => $hash,
 			'temp_password' => $temp_password,
 			'started_at'    => current_time('mysql'),
+			'started_at_ts' => time(),
 		];
 
 		update_option(self::OPTION_KEY, $sessions);
@@ -620,7 +656,7 @@ class User_Manager_Tab_Login_As {
 	 * @param int   $admin_id Admin user ID.
 	 * @param array $session  Session data.
 	 */
-	private static function handle_restore_session(int $admin_id, array $session): void {
+	private static function handle_restore_session(int $admin_id, array $session, bool $automatic = false): void {
 		if (empty($session['user_id']) || empty($session['original_hash'])) {
 			return;
 		}
@@ -662,8 +698,53 @@ class User_Manager_Tab_Login_As {
 			'Login As',
 			[
 				'target_user_id' => $user_id,
+				'restore_mode'   => $automatic ? 'automatic_expired' : 'manual',
 			]
 		);
+	}
+
+	/**
+	 * Determine whether a Login As session is expired.
+	 *
+	 * @param array<string,mixed> $session
+	 */
+	private static function is_session_expired(array $session): bool {
+		$started_at = self::get_session_start_timestamp($session);
+		if ($started_at <= 0) {
+			// If timestamp data is missing/corrupt, fail closed for safety.
+			return true;
+		}
+
+		return (time() - $started_at) >= self::AUTO_RESTORE_AFTER_SECONDS;
+	}
+
+	/**
+	 * Resolve a session start timestamp.
+	 *
+	 * @param array<string,mixed> $session
+	 */
+	private static function get_session_start_timestamp(array $session): int {
+		if (isset($session['started_at_ts']) && is_numeric($session['started_at_ts'])) {
+			return max(0, (int) $session['started_at_ts']);
+		}
+
+		if (!empty($session['started_at'])) {
+			$started_at = (string) $session['started_at'];
+			try {
+				$dt = new DateTimeImmutable($started_at, wp_timezone());
+				$ts = $dt->getTimestamp();
+				if ($ts > 0) {
+					return $ts;
+				}
+			} catch (Exception $e) {
+				$parsed = strtotime($started_at);
+				if (is_int($parsed) && $parsed > 0) {
+					return $parsed;
+				}
+			}
+		}
+
+		return 0;
 	}
 }
 

@@ -43,7 +43,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.95';
+	const VERSION = '2.4.96';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -328,6 +328,9 @@ final class User_Manager_Core {
 		add_action('wp_ajax_user_manager_get_datalist_options', [__CLASS__, 'ajax_get_datalist_options']);
 		// Login As user search endpoint (username/email lookup).
 		add_action('wp_ajax_user_manager_search_users_for_login_as', [__CLASS__, 'ajax_search_users_for_login_as']);
+		if (class_exists('User_Manager_Tab_Login_As')) {
+			User_Manager_Tab_Login_As::init();
+		}
 		
 		// Register action handlers
 		User_Manager_Actions::init();

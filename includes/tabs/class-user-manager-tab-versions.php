@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.96 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login Tools > Login As now includes a security note clarifying that temporary passwords are automatically restored after 15 minutes if not manually restored.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Login As auto-restore expiry handling on normal page loads so original password hashes are reinstated after the 15-minute temporary session window.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.95 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Documentation tab content was refreshed to match the current top-level tab architecture, including Login Tools, Add-ons, Blocks, and Documentation sections.', 'user-manager'); ?></li>
