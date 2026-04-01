@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.83
+ * Version: 2.4.84
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.84 - March 16, 2026
+ * - Simplified Media Library Tag Gallery pagination markup to basic links without button-like styling.
+ * - Current gallery page number now renders as bold text.
+ *
  * 2.4.83 - March 16, 2026
  * - Added a front-end wp-admin top bar shortcut ("Edit Library Tag") when a Media Library Tag Gallery URL tag is active.
  * - Shortcut links directly to the matching Library Tag edit screen and is shown only to users allowed to edit that term.

@@ -1719,7 +1719,11 @@ JS;
 				<div class="um-media-library-tag-gallery-pagination">
 					<?php for ($i = 1; $i <= $total_pages; $i++) : ?>
 						<?php $page_url = add_query_arg('um_media_gallery_page', (string) $i); ?>
-						<a href="<?php echo esc_url($page_url); ?>" class="<?php echo $i === $page_num ? 'current' : ''; ?>"><?php echo esc_html((string) $i); ?></a>
+						<?php if ($i === $page_num) : ?>
+							<strong><?php echo esc_html((string) $i); ?></strong>
+						<?php else : ?>
+							<a href="<?php echo esc_url($page_url); ?>"><?php echo esc_html((string) $i); ?></a>
+						<?php endif; ?>
 					<?php endfor; ?>
 				</div>
 			<?php endif; ?>
@@ -1792,9 +1796,9 @@ JS;
 		.um-media-gallery-style-timeline_story .um-media-library-tag-gallery-item img { max-height:340px; object-fit:cover; border-radius:6px; }
 		.um-mltg-timeline-meta { margin:6px 0 4px; font-size:12px; color:#2271b1; font-weight:600; }
 		.um-media-library-tag-gallery-caption { margin-top: 6px; font-size: 12px; color: #50575e; }
-		.um-media-library-tag-gallery-pagination { margin-top: 14px; display:flex; gap:8px; flex-wrap:wrap; }
-		.um-media-library-tag-gallery-pagination a { text-decoration:none; padding:4px 8px; border:1px solid #dcdcde; border-radius:4px; }
-		.um-media-library-tag-gallery-pagination a.current { background:#2271b1; border-color:#2271b1; color:#fff; }
+		.um-media-library-tag-gallery-pagination { margin-top: 14px; }
+		.um-media-library-tag-gallery-pagination a,
+		.um-media-library-tag-gallery-pagination strong { margin-right: 8px; }
 		.um-mltg-lightbox-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.86); z-index: 999999; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 30px; }
 		.um-mltg-lightbox-overlay img { max-width: min(95vw, 1600px); max-height: 88vh; width: auto; height: auto; display: block; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
 		.um-mltg-lightbox-caption { margin-top: 10px; color: #fff; font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }

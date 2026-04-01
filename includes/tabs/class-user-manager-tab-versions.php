@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.84 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery pagination is now rendered as basic links (unstyled link list) instead of button-styled pagination controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The current gallery page number now displays in bold text for clearer active-page visibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.83 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a front-end WP-Admin top bar shortcut: "Edit Library Tag" when a Media Library Tag Gallery URL tag is actively being viewed.', 'user-manager'); ?></li>
