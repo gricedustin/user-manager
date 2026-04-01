@@ -37,6 +37,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_filter('attachment_fields_to_save', [__CLASS__, 'save_media_library_tags_attachment_field'], 10, 2);
 		add_filter('the_content', [__CLASS__, 'replace_media_library_tag_placeholders_in_content'], 20);
 		add_filter('the_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_title'], 20, 2);
+		add_action('admin_bar_menu', [__CLASS__, 'add_media_library_tag_admin_bar_shortcut'], 101);
 	}
 
 	/**
@@ -2292,6 +2293,54 @@ JS;
 	public static function replace_media_library_tag_placeholders_in_title(string $title, int $post_id = 0): string {
 		unset($post_id);
 		return self::replace_media_library_tag_placeholders_in_text($title);
+	}
+
+	/**
+	 * Add "Edit Library Tag" shortcut to front-end admin bar when URL tag override is active.
+	 *
+	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
+	 */
+	public static function add_media_library_tag_admin_bar_shortcut($wp_admin_bar): void {
+		if (!($wp_admin_bar instanceof WP_Admin_Bar) || is_admin() || !is_admin_bar_showing()) {
+			return;
+		}
+
+		$config = self::get_current_post_media_library_tag_placeholder_config();
+		if (empty($config['enabled'])) {
+			return;
+		}
+
+		$tag_slug = self::resolve_media_library_gallery_url_tag_override(!empty($config['allowAny']));
+		if (!is_string($tag_slug) || $tag_slug === '') {
+			return;
+		}
+
+		$taxonomy = self::media_library_tags_taxonomy();
+		$term = get_term_by('slug', $tag_slug, $taxonomy);
+		if (!$term instanceof WP_Term) {
+			return;
+		}
+		if (!current_user_can('edit_term', (int) $term->term_id)) {
+			return;
+		}
+
+		$edit_link = add_query_arg(
+			[
+				'taxonomy' => $taxonomy,
+				'tag_ID' => (int) $term->term_id,
+				'post_type' => 'attachment',
+			],
+			admin_url('term.php')
+		);
+		$wp_admin_bar->add_node([
+			'id' => 'um-edit-library-tag',
+			'title' => __('Edit Library Tag', 'user-manager'),
+			'href' => esc_url($edit_link),
+			'parent' => 'top-secondary',
+			'meta' => [
+				'title' => sprintf(__('Edit Library Tag: %s', 'user-manager'), (string) $term->name),
+			],
+		]);
 	}
 
 	/**

@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.83 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a front-end WP-Admin top bar shortcut: "Edit Library Tag" when a Media Library Tag Gallery URL tag is actively being viewed.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The shortcut only appears for users who can edit the resolved Library Tag and links directly to that term\'s edit screen in wp-admin.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.82 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags add-on defaults: added desktop column thresholds for album size — "Number of Columns (Desktop) if less than 50 photos", "if less than 25 photos", and "if less than 10 photos".', 'user-manager'); ?></li>

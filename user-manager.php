@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.82
+ * Version: 2.4.83
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.83 - March 16, 2026
+ * - Added a front-end wp-admin top bar shortcut ("Edit Library Tag") when a Media Library Tag Gallery URL tag is active.
+ * - Shortcut links directly to the matching Library Tag edit screen and is shown only to users allowed to edit that term.
+ *
  * 2.4.82 - March 16, 2026
  * - Media Library Tag Gallery defaults: added desktop column threshold settings for albums with fewer than 50, 25, and 10 photos.
  * - Gallery rendering now auto-adjusts desktop columns by attachment count thresholds (<50, <25, <10), while existing Number of Columns (Desktop) remains the default for 50+ photos.
