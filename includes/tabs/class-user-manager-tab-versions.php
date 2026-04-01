@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.97 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports tab: added a contextual "Query summary" description area under the Select report dropdown that appears when a report is selected.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added human-readable query explanations for all report options so admins can understand what each report is querying at a glance.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.96 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Login Tools > Login As now includes a security note clarifying that temporary passwords are automatically restored after 15 minutes if not manually restored.', 'user-manager'); ?></li>

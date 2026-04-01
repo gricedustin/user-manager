@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.96
+ * Version: 2.4.97
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.97 - March 16, 2026
+ * - Reports tab: added a dynamic "Query summary" description panel under the Select report dropdown.
+ * - Every General Report now has a human-readable query description shown when selected, clarifying what records/conditions each report uses.
+ *
  * 2.4.96 - March 16, 2026
  * - Login Tools > Login As now includes a note that temporary passwords are automatically restored after 15 minutes if not manually restored.
  * - Added automatic Login As session expiry restoration on normal page loads, so original user password hashes are reinstated after the 15-minute window.
