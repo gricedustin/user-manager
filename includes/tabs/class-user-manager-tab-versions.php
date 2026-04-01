@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.11 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('User Coupon Remaining Balances runtime now fully respects add-on activation state before registering checkout/thank-you hooks, so no remainder notices or processing run when the add-on is turned off.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added defensive error handling around remainder coupon generation to prevent checkout/order completion from failing if coupon processing encounters an exception.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.10 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons > User Coupon Remaining Balances: fixed Preview Email button by rendering the shared email preview modal on the Add-ons page context.', 'user-manager'); ?></li>

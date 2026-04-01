@@ -45,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.10';
+	const VERSION = '2.5.11';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -230,16 +230,19 @@ final class User_Manager_Core {
 		add_action('template_redirect', [__CLASS__, 'maybe_log_404_error'], 20);
 		// Search query monitoring: log front-end search queries (?s=) for reporting.
 		add_action('template_redirect', [__CLASS__, 'maybe_log_search_query'], 20);
-		add_action('woocommerce_order_status_completed', [__CLASS__, 'maybe_generate_fixed_cart_coupon_remainders'], 20, 1);
-		add_action('woocommerce_thankyou', [__CLASS__, 'handle_coupon_remainder_thankyou'], 5, 1);
-		add_action('woocommerce_thankyou', [__CLASS__, 'render_coupon_remainder_debug_notice'], 8, 1);
-		add_action('woocommerce_thankyou', [__CLASS__, 'render_order_received_remaining_balance_notice'], 10, 1);
-		add_action('woocommerce_review_order_after_submit', [__CLASS__, 'render_checkout_coupon_remainder_debug'], 10);
-		add_action('woocommerce_review_order_before_submit', [__CLASS__, 'render_checkout_remaining_balance_notice'], 10);
-		// Block checkout support
-		add_filter('render_block', [__CLASS__, 'maybe_detect_checkout_block'], 10, 2);
-		add_action('wp_footer', [__CLASS__, 'inject_checkout_remaining_balance_notice'], 5);
-		add_action('wp_footer', [__CLASS__, 'render_public_coupon_debug_output'], 999);
+		$coupon_remainder_enabled = self::is_coupon_remainder_feature_enabled($settings);
+		if ($coupon_remainder_enabled) {
+			add_action('woocommerce_order_status_completed', [__CLASS__, 'maybe_generate_fixed_cart_coupon_remainders'], 20, 1);
+			add_action('woocommerce_thankyou', [__CLASS__, 'handle_coupon_remainder_thankyou'], 5, 1);
+			add_action('woocommerce_thankyou', [__CLASS__, 'render_coupon_remainder_debug_notice'], 8, 1);
+			add_action('woocommerce_thankyou', [__CLASS__, 'render_order_received_remaining_balance_notice'], 10, 1);
+			add_action('woocommerce_review_order_after_submit', [__CLASS__, 'render_checkout_coupon_remainder_debug'], 10);
+			add_action('woocommerce_review_order_before_submit', [__CLASS__, 'render_checkout_remaining_balance_notice'], 10);
+			// Block checkout support
+			add_filter('render_block', [__CLASS__, 'maybe_detect_checkout_block'], 10, 2);
+			add_action('wp_footer', [__CLASS__, 'inject_checkout_remaining_balance_notice'], 5);
+			add_action('wp_footer', [__CLASS__, 'render_public_coupon_debug_output'], 999);
+		}
 		add_action('admin_notices', [__CLASS__, 'render_non_production_admin_notice'], 6);
 		add_action('wp_footer', [__CLASS__, 'render_non_production_frontend_notice_bar_fallback'], 0);
 		add_action('wp_body_open', [__CLASS__, 'render_non_production_frontend_notice_bar'], 1);
@@ -5303,6 +5306,16 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
+	 * Whether the Coupon Remaining Balances add-on is active and allowed to run.
+	 */
+	private static function is_coupon_remainder_feature_enabled(?array $settings = null): bool {
+		if ($settings === null) {
+			$settings = self::get_settings();
+		}
+		return !empty($settings['coupon_remainder_enabled']) && !self::is_addon_temporarily_disabled('coupon-remaining-balances');
+	}
+
+	/**
 	 * Determine if the user has completed at least one WooCommerce order.
 	 */
 	private static function user_has_completed_first_order(int $user_id): bool {
@@ -5322,157 +5335,166 @@ html body .woocommerce-layout__header {
 	 */
 	public static function maybe_generate_fixed_cart_coupon_remainders($order_id): void {
 		$settings = self::get_settings();
-		if (empty($settings['coupon_remainder_enabled'])) {
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
 			return;
 		}
 		if (!function_exists('wc_get_order')) {
 			return;
 		}
-		$order = wc_get_order($order_id);
-		if (!$order || !method_exists($order, 'get_coupon_codes')) {
-			return;
-		}
-		$codes = $order->get_coupon_codes();
-		if (empty($codes)) {
-			return;
-		}
-
-		$processed = get_post_meta($order_id, '_um_coupon_remainder_processed', true);
-		if (!is_array($processed)) {
-			$processed = [];
-		}
-
-		$min_remaining = isset($settings['coupon_remainder_min_amount']) ? max(0, (float) $settings['coupon_remainder_min_amount']) : 0;
-		$generated_prefix = isset($settings['coupon_remainder_generated_prefix']) && $settings['coupon_remainder_generated_prefix'] !== ''
-			? trim((string) $settings['coupon_remainder_generated_prefix'])
-			: 'remaining-balance-';
-
-		// Always use billing email from the order, never fall back to logged-in user email
-		$user_email = $order->get_billing_email();
-		if (empty($user_email)) {
-			// Only use billing email meta as a last resort if get_billing_email() returns empty
-			$user_email = $order->get_meta('_billing_email');
-		}
-
-		$processed_updated = false;
-		$should_debug = !empty($settings['coupon_remainder_debug']) && current_user_can('manage_options');
-		$debug_messages = [];
-
-		foreach ($codes as $code) {
-			$code_key = strtolower($code);
-			if (!empty($processed[$code_key])) {
-				continue;
+		try {
+			$order = wc_get_order($order_id);
+			if (!$order || !method_exists($order, 'get_coupon_codes')) {
+				return;
+			}
+			$codes = $order->get_coupon_codes();
+			if (empty($codes)) {
+				return;
 			}
 
-			$coupon = new WC_Coupon($code);
-			if (!$coupon || $coupon->get_discount_type() !== 'fixed_cart') {
-				continue;
+			$processed = get_post_meta($order_id, '_um_coupon_remainder_processed', true);
+			if (!is_array($processed)) {
+				$processed = [];
 			}
 
-			// Check if coupon code matches source requirements (prefix, contains, suffix)
-			if (!self::coupon_code_matches_source_requirements($code, $settings)) {
-				continue;
+			$min_remaining = isset($settings['coupon_remainder_min_amount']) ? max(0, (float) $settings['coupon_remainder_min_amount']) : 0;
+			$generated_prefix = isset($settings['coupon_remainder_generated_prefix']) && $settings['coupon_remainder_generated_prefix'] !== ''
+				? trim((string) $settings['coupon_remainder_generated_prefix'])
+				: 'remaining-balance-';
+
+			// Always use billing email from the order, never fall back to logged-in user email
+			$user_email = $order->get_billing_email();
+			if (empty($user_email)) {
+				// Only use billing email meta as a last resort if get_billing_email() returns empty
+				$user_email = $order->get_meta('_billing_email');
 			}
 
-			// Calculate remaining amount and get discount details
-			$discount_details = self::get_coupon_discount_details($order, $code);
-			$remaining = self::calculate_coupon_remaining_amount($order, $coupon, $code);
-			if ($remaining <= 0 || $remaining < $min_remaining) {
-				continue;
-			}
+			$processed_updated = false;
+			$should_debug = !empty($settings['coupon_remainder_debug']) && current_user_can('manage_options');
+			$debug_messages = [];
 
-			$new_code = self::create_remainder_coupon_from_source($coupon, $order, $remaining, $generated_prefix, $user_email);
-			if (!$new_code) {
-				continue;
-			}
+			foreach ($codes as $code) {
+				$code_key = strtolower($code);
+				if (!empty($processed[$code_key])) {
+					continue;
+				}
 
-			if (!empty($settings['coupon_remainder_send_email']) && !empty($user_email) && is_email($user_email)) {
-				$template_id = isset($settings['coupon_remainder_email_template']) ? (string) $settings['coupon_remainder_email_template'] : '__um_default__';
-				self::send_coupon_email_to_address((string) $user_email, (string) $new_code, $template_id);
-			}
+				$coupon = new WC_Coupon($code);
+				if (!$coupon || $coupon->get_discount_type() !== 'fixed_cart') {
+					continue;
+				}
 
-			$processed[$code_key] = $new_code;
-			$processed_updated = true;
+				// Check if coupon code matches source requirements (prefix, contains, suffix)
+				if (!self::coupon_code_matches_source_requirements($code, $settings)) {
+					continue;
+				}
 
-			// Create detailed private order note
-			$original_amount = (float) $coupon->get_amount();
-			$discount_used = $discount_details['discount'];
-			// Only use discount amount, not discount tax (matches how WooCommerce calculates cart totals)
-			
-			$note = sprintf(
-				/* translators: 1: new coupon code, 2: remaining value */
-				__("New Remaining Balance Coupon Code Created: %1\$s with value %2\$s\n\n", 'user-manager'),
-				strtoupper($new_code),
-				wc_price($remaining)
-			);
-			
-			$note .= __('Here is how the remaining balance was calculated:', 'user-manager') . "\n";
-			$note .= sprintf(
-				/* translators: 1: original amount */
-				__('Original Coupon Amount: %s', 'user-manager'),
-				wc_price($original_amount)
-			) . "\n";
-			$note .= sprintf(
-				/* translators: 1: discount amount */
-				__('Discount Applied: %s', 'user-manager'),
-				wc_price($discount_used)
-			) . "\n";
-			$note .= sprintf(
-				/* translators: 1: calculation formula, 2: remaining amount */
-				__('Calculation: %1$s - %2$s = %3$s', 'user-manager'),
-				wc_price($original_amount),
-				wc_price($discount_used),
-				wc_price($remaining)
-			);
-			
-			// Add as private note (second parameter false = private, true = customer-facing)
-			$order->add_order_note($note, false);
+				// Calculate remaining amount and get discount details
+				$discount_details = self::get_coupon_discount_details($order, $code);
+				$remaining = self::calculate_coupon_remaining_amount($order, $coupon, $code);
+				if ($remaining <= 0 || $remaining < $min_remaining) {
+					continue;
+				}
 
-			$user_id = $order->get_user_id() ? (int) $order->get_user_id() : 0;
-			self::add_activity_log('coupon_remainder_created', $user_id, 'Coupons', [
-				'order_id' => (int) $order->get_id(),
-				'source_coupon' => $code,
-				'new_coupon' => $new_code,
-				'remaining' => $remaining,
-			]);
+				$new_code = self::create_remainder_coupon_from_source($coupon, $order, $remaining, $generated_prefix, $user_email);
+				if (!$new_code) {
+					continue;
+				}
 
-			if ($should_debug) {
-				$debug_messages[] = sprintf(
-					/* translators: 1: old code, 2: new code, 3: amount */
-					__('Converted %1$s to %2$s with %3$s remaining.', 'user-manager'),
-					strtoupper($code),
-					$new_code,
+				if (!empty($settings['coupon_remainder_send_email']) && !empty($user_email) && is_email($user_email)) {
+					$template_id = isset($settings['coupon_remainder_email_template']) ? (string) $settings['coupon_remainder_email_template'] : '__um_default__';
+					self::send_coupon_email_to_address((string) $user_email, (string) $new_code, $template_id);
+				}
+
+				$processed[$code_key] = $new_code;
+				$processed_updated = true;
+
+				// Create detailed private order note
+				$original_amount = (float) $coupon->get_amount();
+				$discount_used = $discount_details['discount'];
+				// Only use discount amount, not discount tax (matches how WooCommerce calculates cart totals)
+				
+				$note = sprintf(
+					/* translators: 1: new coupon code, 2: remaining value */
+					__("New Remaining Balance Coupon Code Created: %1\$s with value %2\$s\n\n", 'user-manager'),
+					strtoupper($new_code),
 					wc_price($remaining)
 				);
-			}
-		}
+				
+				$note .= __('Here is how the remaining balance was calculated:', 'user-manager') . "\n";
+				$note .= sprintf(
+					/* translators: 1: original amount */
+					__('Original Coupon Amount: %s', 'user-manager'),
+					wc_price($original_amount)
+				) . "\n";
+				$note .= sprintf(
+					/* translators: 1: discount amount */
+					__('Discount Applied: %s', 'user-manager'),
+					wc_price($discount_used)
+				) . "\n";
+				$note .= sprintf(
+					/* translators: 1: calculation formula, 2: remaining amount */
+					__('Calculation: %1$s - %2$s = %3$s', 'user-manager'),
+					wc_price($original_amount),
+					wc_price($discount_used),
+					wc_price($remaining)
+				);
+				
+				// Add as private note (second parameter false = private, true = customer-facing)
+				$order->add_order_note($note, false);
 
-		if ($processed_updated) {
-			update_post_meta($order_id, '_um_coupon_remainder_processed', $processed);
-			// Record in User Activity (Login History tab) so the user has a visible record when a remaining balance code was created for them.
-			$activity_user_id = $order->get_user_id() ? (int) $order->get_user_id() : 0;
-			if ($activity_user_id <= 0 && !empty($user_email)) {
-				$user_by_email = get_user_by('email', $user_email);
-				if ($user_by_email) {
-					$activity_user_id = (int) $user_by_email->ID;
+				$user_id = $order->get_user_id() ? (int) $order->get_user_id() : 0;
+				self::add_activity_log('coupon_remainder_created', $user_id, 'Coupons', [
+					'order_id' => (int) $order->get_id(),
+					'source_coupon' => $code,
+					'new_coupon' => $new_code,
+					'remaining' => $remaining,
+				]);
+
+				if ($should_debug) {
+					$debug_messages[] = sprintf(
+						/* translators: 1: old code, 2: new code, 3: amount */
+						__('Converted %1$s to %2$s with %3$s remaining.', 'user-manager'),
+						strtoupper($code),
+						$new_code,
+						wc_price($remaining)
+					);
 				}
 			}
-			if ($activity_user_id > 0) {
-				$order_received_url = '';
-				if (function_exists('wc_get_checkout_url')) {
-					$order_received_url = wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url());
-					if (method_exists($order, 'get_order_key')) {
-						$order_received_url = add_query_arg('key', $order->get_order_key(), $order_received_url);
+
+			if ($processed_updated) {
+				update_post_meta($order_id, '_um_coupon_remainder_processed', $processed);
+				// Record in User Activity (Login History tab) so the user has a visible record when a remaining balance code was created for them.
+				$activity_user_id = $order->get_user_id() ? (int) $order->get_user_id() : 0;
+				if ($activity_user_id <= 0 && !empty($user_email)) {
+					$user_by_email = get_user_by('email', $user_email);
+					if ($user_by_email) {
+						$activity_user_id = (int) $user_by_email->ID;
 					}
 				}
-				self::add_user_activity($activity_user_id, __('Remaining balance code created', 'user-manager'), $order_received_url);
+				if ($activity_user_id > 0) {
+					$order_received_url = '';
+					if (function_exists('wc_get_checkout_url')) {
+						$order_received_url = wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url());
+						if (method_exists($order, 'get_order_key')) {
+							$order_received_url = add_query_arg('key', $order->get_order_key(), $order_received_url);
+						}
+					}
+					self::add_user_activity($activity_user_id, __('Remaining balance code created', 'user-manager'), $order_received_url);
+				}
+			} elseif ($should_debug) {
+				$debug_messages[] = __('No remainder coupons were created for this order.', 'user-manager');
 			}
-		} elseif ($should_debug) {
-			$debug_messages[] = __('No remainder coupons were created for this order.', 'user-manager');
-		}
 
-		if ($should_debug) {
-			self::$coupon_remainder_debug_messages[(int) $order_id] = $debug_messages;
+			if ($should_debug) {
+				self::$coupon_remainder_debug_messages[(int) $order_id] = $debug_messages;
+			}
+		} catch (\Throwable $throwable) {
+			self::maybe_debug_log('Coupon remainder processing failed', [
+				'order_id' => (int) $order_id,
+				'message' => $throwable->getMessage(),
+				'file' => $throwable->getFile(),
+				'line' => $throwable->getLine(),
+			]);
 		}
 	}
 
@@ -5841,6 +5863,9 @@ html body .woocommerce-layout__header {
 	}
 
 	public static function handle_coupon_remainder_thankyou($order_id): void {
+		if (!self::is_coupon_remainder_feature_enabled()) {
+			return;
+		}
 		$order = wc_get_order($order_id);
 		if (!$order) {
 			return;
@@ -5858,6 +5883,9 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		if (empty($settings['coupon_remainder_debug']) || !current_user_can('manage_options')) {
 			return;
 		}
@@ -5885,6 +5913,9 @@ html body .woocommerce-layout__header {
 		}
 		
 		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		if (empty($settings['coupon_remainder_checkout_debug']) || !is_user_logged_in()) {
 			return;
 		}
@@ -6020,6 +6051,10 @@ html body .woocommerce-layout__header {
 	 * Shows all applied coupons and remaining balance calculations.
 	 */
 	public static function render_public_coupon_debug_output(): void {
+		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		// Check for URL parameter
 		if (!isset($_GET['debug_coupons']) || $_GET['debug_coupons'] !== '1') {
 			return;
@@ -6041,7 +6076,6 @@ html body .woocommerce-layout__header {
 
 		$cart = WC()->cart;
 		$applied_coupons = $cart->get_applied_coupons();
-		$settings = self::get_settings();
 		$min_remaining = isset($settings['coupon_remainder_min_amount']) ? max(0, (float) $settings['coupon_remainder_min_amount']) : 0;
 		$generated_prefix = isset($settings['coupon_remainder_generated_prefix']) && $settings['coupon_remainder_generated_prefix'] !== ''
 			? trim((string) $settings['coupon_remainder_generated_prefix'])
@@ -6463,6 +6497,9 @@ html body .woocommerce-layout__header {
 		}
 		
 		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		if (empty($settings['coupon_remainder_checkout_notice'])) {
 			return;
 		}
@@ -6590,6 +6627,9 @@ html body .woocommerce-layout__header {
 	 * Detect WooCommerce checkout block for remaining balance notice injection.
 	 */
 	public static function maybe_detect_checkout_block(string $content, array $block): string {
+		if (!self::is_coupon_remainder_feature_enabled()) {
+			return $content;
+		}
 		if (empty($block['blockName']) || is_admin()) {
 			return $content;
 		}
@@ -6603,6 +6643,10 @@ html body .woocommerce-layout__header {
 	 * Inject remaining balance notice into block checkout.
 	 */
 	public static function inject_checkout_remaining_balance_notice(): void {
+		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		// Bail early if WooCommerce's checkout helpers aren't available
 		if (!function_exists('is_checkout') || !is_checkout()) {
 			return;
@@ -6612,7 +6656,6 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		
-		$settings = self::get_settings();
 		if (empty($settings['coupon_remainder_checkout_notice_block'])) {
 			return;
 		}
@@ -6860,6 +6903,9 @@ html body .woocommerce-layout__header {
 		}
 		
 		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		if (empty($settings['coupon_remainder_order_received_notice'])) {
 			return;
 		}
