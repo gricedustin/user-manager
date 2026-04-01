@@ -20,7 +20,8 @@ class User_Manager_Addon_Send_Email {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$enabled = true;
 
-		$templates_open = isset($_GET['edit_template']) && sanitize_key(wp_unslash($_GET['edit_template'])) !== '';
+		$templates_open = (isset($_GET['edit_template']) && sanitize_key(wp_unslash($_GET['edit_template'])) !== '')
+			|| (isset($_GET['open_email_templates']) && $_GET['open_email_templates'] === '1');
 		$templates_toggle_label = $templates_open ? __('Collapse', 'user-manager') : __('Expand', 'user-manager');
 		$templates_base_url = add_query_arg(
 			'addon_section',

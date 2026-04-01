@@ -338,11 +338,13 @@ class User_Manager_Tab_Shared {
 	 */
 	public static function get_template_settings_url(string $template_type = 'email'): string {
 		$addon_section = $template_type === 'sms' ? 'send-sms-text' : 'send-email-users';
-		return add_query_arg(
-			'addon_section',
-			$addon_section,
-			User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
-		);
+		$query_args = [
+			'addon_section' => $addon_section,
+		];
+		if ($template_type !== 'sms') {
+			$query_args['open_email_templates'] = '1';
+		}
+		return add_query_arg($query_args, User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS));
 	}
 
 	/**

@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.5 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Edit Email Templates shortcut links now pass an auto-expand flag so Add-ons > Send Email opens with the Email Templates panel expanded.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.4 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Send Email > Custom Email Lists table: action buttons (Edit, CSV, Delete) now render one-per-line for clearer row layout and easier click targets.', 'user-manager'); ?></li>
