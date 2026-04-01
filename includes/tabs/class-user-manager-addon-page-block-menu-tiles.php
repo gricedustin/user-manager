@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Page Block: Tile Grid for Menu.
+ * Block card: Menu Tiles.
  */
 
 if (!defined('ABSPATH')) {
@@ -16,7 +16,7 @@ class User_Manager_Addon_Page_Block_Menu_Tiles {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-page-block-menu-tiles" data-um-active-selectors="#um-page-block-menu-tiles-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-screenoptions"></span>
-				<h2><?php esc_html_e('Page Block: Tile Grid for Menu', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Menu Tiles', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
@@ -25,11 +25,11 @@ class User_Manager_Addon_Page_Block_Menu_Tiles {
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
-						<?php esc_html_e('Registers dynamic Gutenberg block "custom/menu-tiles" (Menu Tile Buttons) and its editor UI.', 'user-manager'); ?>
+						<?php esc_html_e('Activate the Menu Tiles block to turn a WordPress menu into a visual grid of tile buttons.', 'user-manager'); ?>
 					</p>
 				</div>
 				<div id="um-page-block-menu-tiles-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
-					<p class="description"><?php esc_html_e('When active, add the Menu Tile Buttons block in the editor to render primary-menu items as tile buttons.', 'user-manager'); ?></p>
+					<p class="description"><?php esc_html_e('Best for quick-link sections, portal pages, and dashboard-style navigation layouts.', 'user-manager'); ?></p>
 				</div>
 			</div>
 		</div>

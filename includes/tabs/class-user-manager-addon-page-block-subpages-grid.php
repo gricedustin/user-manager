@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Page Block: Tile Grid for Subpages.
+ * Add-on card: Subpages Grid block.
  */
 
 if (!defined('ABSPATH')) {
@@ -16,7 +16,7 @@ class User_Manager_Addon_Page_Block_Subpages_Grid {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-page-block-subpages-grid" data-um-active-selectors="#um-page-block-subpages-grid-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-screenoptions"></span>
-				<h2><?php esc_html_e('Page Block: Tile Grid for Subpages', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Subpages Grid', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
@@ -25,12 +25,12 @@ class User_Manager_Addon_Page_Block_Subpages_Grid {
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
-						<?php esc_html_e('Registers the Subpages Grid tools: shortcode [subpages_grid] and dynamic block custom/subpages-grid (with block editor controls).', 'user-manager'); ?>
+						<?php esc_html_e('Adds the Subpages Grid block and [subpages_grid] shortcode so you can display child pages as a clean tile grid.', 'user-manager'); ?>
 					</p>
 				</div>
 
 				<div id="um-page-block-subpages-grid-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
-					<p class="description"><?php esc_html_e('Use shortcode [subpages_grid] or block custom/subpages-grid after activation.', 'user-manager'); ?></p>
+					<p class="description"><?php esc_html_e('Use either block custom/subpages-grid in the editor or shortcode [subpages_grid] where shortcode output is preferred.', 'user-manager'); ?></p>
 				</div>
 			</div>
 		</div>

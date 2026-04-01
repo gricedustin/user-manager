@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.92
+ * Version: 2.4.93
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.93 - March 16, 2026
+ * - Added a new top-level Blocks tab (page=user-manager&tab=blocks) next to Add-ons and moved the four Page Block add-ons into this dedicated content-block area.
+ * - Blocks now use content-focused labels/tags/descriptions (for example Icons, Grids, Tabs, Navigation, Content) to improve discoverability.
+ *
  * 2.4.92 - March 16, 2026
  * - [tag-description] placeholder output now appends an "Edit Tag Description" link for WordPress administrators, linking directly to the active Library Tag edit screen.
  * - The admin edit link is added only to front-end content placeholder output; title and document title placeholder replacements remain plain text.

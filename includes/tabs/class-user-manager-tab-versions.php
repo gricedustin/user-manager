@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.93 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new top-level "Blocks" tab (page=user-manager&tab=blocks) next to Add-ons, with dedicated filtering and section navigation for content blocks.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved the four Page Block add-ons (Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles) out of Add-ons into the new Blocks tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Refined block tags and copy to be content-focused (for example Icons, Grids, Tabs, Content, Navigation, Shortcodes) and updated block card descriptions/titles accordingly.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.92 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('When [tag-description] resolves from URL-based Library Tag context, WordPress administrators now see an inline "Edit Tag Description" link appended to that placeholder output for faster term editing.', 'user-manager'); ?></li>

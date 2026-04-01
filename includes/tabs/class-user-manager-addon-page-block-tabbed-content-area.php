@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Page Block - Tabs with Content from Other Pages.
+ * Block card: Tabbed Content Area.
  */
 
 if (!defined('ABSPATH')) {
@@ -16,7 +16,7 @@ class User_Manager_Addon_Page_Block_Tabbed_Content_Area {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-page-block-tabbed-content-area" data-um-active-selectors="#um-page-block-tabbed-content-area-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-index-card"></span>
-				<h2><?php esc_html_e('Page Block: Tabs with Content from Other Pages', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Block: Tabbed Content Area', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
@@ -25,12 +25,12 @@ class User_Manager_Addon_Page_Block_Tabbed_Content_Area {
 						<?php esc_html_e('Activate', 'user-manager'); ?>
 					</label>
 					<p class="description">
-						<?php esc_html_e('Registers dynamic blocks custom/tabbed-content-area (plus legacy alias custom/tabbed-content-area) so tab panels can render content from selected pages/posts.', 'user-manager'); ?>
+						<?php esc_html_e('Enable a tabs content block that loads panel content from selected pages or posts.', 'user-manager'); ?>
 					</p>
 				</div>
 				<div id="um-page-block-tabbed-content-area-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
 					<p class="description">
-						<?php esc_html_e('Use in the block editor: add tabs, set tab labels, and assign Page/Post IDs for each panel.', 'user-manager'); ?>
+						<?php esc_html_e('Use in the block editor to build tabbed sections, set labels, and choose source page/post IDs for each tab.', 'user-manager'); ?>
 					</p>
 				</div>
 			</div>

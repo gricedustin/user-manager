@@ -43,7 +43,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.92';
+	const VERSION = '2.4.93';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -109,6 +109,7 @@ final class User_Manager_Core {
 	const TAB_TOOLS           = 'tools';
 	const TAB_SETTINGS        = 'settings';
 	const TAB_ADDONS         = 'addons';
+	const TAB_BLOCKS         = 'blocks';
 	const TAB_REPORTS         = 'reports';
 	const TAB_DOCUMENTATION   = 'documentation';
 	const TAB_VERSIONS        = 'versions';
@@ -7025,6 +7026,7 @@ html body .woocommerce-layout__header {
 			self::TAB_SETTINGS      => __('Settings', 'user-manager'),
 			self::TAB_REPORTS       => __('Reports', 'user-manager'),
 			self::TAB_ADDONS        => __('Add-ons', 'user-manager'),
+			self::TAB_BLOCKS        => __('Blocks', 'user-manager'),
 			self::TAB_DOCUMENTATION => __('Documentation', 'user-manager'),
 		];
 
@@ -7854,10 +7856,14 @@ html body .woocommerce-layout__header {
 		$current_addon_section = $active_tab === self::TAB_ADDONS && isset($_GET['addon_section'])
 			? sanitize_key(wp_unslash($_GET['addon_section']))
 			: '';
+		$current_block_section = $active_tab === self::TAB_BLOCKS && isset($_GET['block_section'])
+			? sanitize_key(wp_unslash($_GET['block_section']))
+			: '';
+		$current_shortcut_section = $current_addon_section !== '' ? $current_addon_section : $current_block_section;
 		$active_addon_shortcut_slug = '';
 		foreach ($addon_main_navigation_tabs as $addon_tab_meta) {
-			if ($current_addon_section === (string) ($addon_tab_meta['slug'] ?? '')) {
-				$active_addon_shortcut_slug = $current_addon_section;
+			if ($current_shortcut_section === (string) ($addon_tab_meta['slug'] ?? '')) {
+				$active_addon_shortcut_slug = $current_shortcut_section;
 				break;
 			}
 		}
@@ -7881,6 +7887,10 @@ html body .woocommerce-layout__header {
 				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS && $active_addon_shortcut_slug === '' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
 					<span class="dashicons dashicons-admin-plugins" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Add-ons', 'user-manager'); ?>
+				</a>
+				<a class="nav-tab <?php echo $active_tab === self::TAB_BLOCKS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_BLOCKS)); ?>">
+					<span class="dashicons dashicons-screenoptions" style="font-size:16px;line-height:1.4;"></span>
+					<?php esc_html_e('Blocks', 'user-manager'); ?>
 				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_DOCUMENTATION ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_DOCUMENTATION)); ?>">
 					<span class="dashicons dashicons-book" style="font-size:16px;line-height:1.4;"></span>
@@ -7961,6 +7971,7 @@ html body .woocommerce-layout__header {
 			self::TAB_TOOLS,
 			self::TAB_SETTINGS,
 			self::TAB_ADDONS,
+			self::TAB_BLOCKS,
 			self::TAB_REPORTS,
 			self::TAB_DOCUMENTATION,
 			self::TAB_VERSIONS,
@@ -8384,14 +8395,32 @@ html body .woocommerce-layout__header {
 			if (!self::is_addon_enabled_for_main_navigation($slug, $settings)) {
 				continue;
 			}
+			$is_blocks_shortcut = in_array($slug, self::get_blocks_tab_section_slugs(), true);
+			$shortcut_url = $is_blocks_shortcut
+				? add_query_arg('block_section', $slug, self::get_page_url(self::TAB_BLOCKS))
+				: add_query_arg('addon_section', $slug, self::get_page_url(self::TAB_ADDONS));
 			$tabs[] = [
 				'slug'  => $slug,
 				'label' => isset($map[$slug]['label']) ? (string) $map[$slug]['label'] : $slug,
-				'url'   => add_query_arg('addon_section', $slug, self::get_page_url(self::TAB_ADDONS)),
+				'url'   => $shortcut_url,
 			];
 		}
 
 		return $tabs;
+	}
+
+	/**
+	 * Add-on slugs that now render inside the Blocks tab.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_blocks_tab_section_slugs(): array {
+		return [
+			'page-block-subpages-grid',
+			'page-block-tabbed-content-area',
+			'page-block-simple-icons',
+			'page-block-menu-tiles',
+		];
 	}
 
 	/**

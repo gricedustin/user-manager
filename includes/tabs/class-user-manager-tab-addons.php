@@ -25,10 +25,6 @@ require_once __DIR__ . '/class-user-manager-addon-data-anonymizer.php';
 require_once __DIR__ . '/class-user-manager-addon-database-table-browser.php';
 require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
 require_once __DIR__ . '/class-user-manager-addon-invoice-approval.php';
-require_once __DIR__ . '/class-user-manager-addon-page-block-menu-tiles.php';
-require_once __DIR__ . '/class-user-manager-addon-page-block-simple-icons.php';
-require_once __DIR__ . '/class-user-manager-addon-page-block-subpages-grid.php';
-require_once __DIR__ . '/class-user-manager-addon-page-block-tabbed-content-area.php';
 require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
 require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
 require_once __DIR__ . '/class-user-manager-addon-staging-development-environment-overrides.php';
@@ -223,18 +219,6 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="bulk-page-creator">
 					<?php User_Manager_Addon_Bulk_Page_Creator::render($settings); ?>
-				</div>
-				<div class="um-addon-section" data-addon-section="page-block-subpages-grid">
-					<?php User_Manager_Addon_Page_Block_Subpages_Grid::render($settings, $settings_form_id); ?>
-				</div>
-				<div class="um-addon-section" data-addon-section="page-block-tabbed-content-area">
-					<?php User_Manager_Addon_Page_Block_Tabbed_Content_Area::render($settings, $settings_form_id); ?>
-				</div>
-				<div class="um-addon-section" data-addon-section="page-block-simple-icons">
-					<?php User_Manager_Addon_Page_Block_Simple_Icons::render($settings, $settings_form_id); ?>
-				</div>
-				<div class="um-addon-section" data-addon-section="page-block-menu-tiles">
-					<?php User_Manager_Addon_Page_Block_Menu_Tiles::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="database-table-browser">
 					<?php User_Manager_Addon_Database_Table_Browser::render($settings); ?>
@@ -893,18 +877,6 @@ class User_Manager_Tab_Addons {
 				$('#um-bulk-page-creator-fields').toggle(enabled);
 				$('#um-bulk-page-creator-run-card').toggle(enabled);
 			}
-			function togglePageBlockSubpagesGridFields() {
-				$('#um-page-block-subpages-grid-fields').toggle($('#um-page-block-subpages-grid-enabled').is(':checked'));
-			}
-			function togglePageBlockTabbedContentAreaFields() {
-				$('#um-page-block-tabbed-content-area-fields').toggle($('#um-page-block-tabbed-content-area-enabled').is(':checked'));
-			}
-			function togglePageBlockSimpleIconsFields() {
-				$('#um-page-block-simple-icons-fields').toggle($('#um-page-block-simple-icons-enabled').is(':checked'));
-			}
-			function togglePageBlockMenuTilesFields() {
-				$('#um-page-block-menu-tiles-fields').toggle($('#um-page-block-menu-tiles-enabled').is(':checked'));
-			}
 			function toggleDatabaseTableBrowserFields() {
 				$('#um-database-table-browser-fields').toggle($('#um-database-table-browser-enabled').is(':checked'));
 			}
@@ -949,10 +921,6 @@ class User_Manager_Tab_Addons {
 			toggleCartPricePerPieceFields();
 			toggleCartTotalItemsFields();
 			toggleBulkPageCreatorFields();
-			togglePageBlockSubpagesGridFields();
-			togglePageBlockTabbedContentAreaFields();
-			togglePageBlockSimpleIconsFields();
-			togglePageBlockMenuTilesFields();
 			toggleDatabaseTableBrowserFields();
 			toggleWebhookUrlsFields();
 			toggleInvoiceApprovalFields();
@@ -1135,22 +1103,6 @@ class User_Manager_Tab_Addons {
 				toggleBulkPageCreatorFields();
 				refreshAddonCardAutoState($('#um-addon-card-bulk-page-creator'));
 			});
-			$('#um-page-block-subpages-grid-enabled').on('change', function() {
-				togglePageBlockSubpagesGridFields();
-				refreshAddonCardAutoState($('#um-addon-card-page-block-subpages-grid'));
-			});
-			$('#um-page-block-tabbed-content-area-enabled').on('change', function() {
-				togglePageBlockTabbedContentAreaFields();
-				refreshAddonCardAutoState($('#um-addon-card-page-block-tabbed-content-area'));
-			});
-			$('#um-page-block-simple-icons-enabled').on('change', function() {
-				togglePageBlockSimpleIconsFields();
-				refreshAddonCardAutoState($('#um-addon-card-page-block-simple-icons'));
-			});
-			$('#um-page-block-menu-tiles-enabled').on('change', function() {
-				togglePageBlockMenuTilesFields();
-				refreshAddonCardAutoState($('#um-addon-card-page-block-menu-tiles'));
-			});
 			$('#um-database-table-browser-enabled').on('change', function() {
 				toggleDatabaseTableBrowserFields();
 				refreshAddonCardAutoState($('#um-addon-card-database-table-browser'));
@@ -1322,26 +1274,6 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Page Creator', 'user-manager'),
 				'description' => __('Generate multiple AI-written pages from Title|Prompt rows using your configured OpenAI API key and optional images for page/post campaigns.', 'user-manager'),
 				'active' => !empty($settings['bulk_page_creator_enabled']),
-			],
-			'page-block-subpages-grid' => [
-				'label'  => __('Page Block: Tile Grid for Subpages', 'user-manager'),
-				'description' => __('Registers custom/subpages-grid plus the [subpages_grid] shortcode and editor controls.', 'user-manager'),
-				'active' => !empty($settings['page_block_subpages_grid_enabled']),
-			],
-			'page-block-tabbed-content-area' => [
-				'label'  => __('Page Block: Tabs with Content from Other Pages', 'user-manager'),
-				'description' => __('Registers dynamic block custom/tabbed-content-area with editor controls for tabs sourced from other pages/posts.', 'user-manager'),
-				'active' => !empty($settings['page_block_tabbed_content_area_enabled']),
-			],
-			'page-block-simple-icons' => [
-				'label'  => __('Page Block: Simple Icons', 'user-manager'),
-				'description' => __('Registers custom/simple-icon (Quick Icon) with Font Awesome rendering and editor controls.', 'user-manager'),
-				'active' => !empty($settings['page_block_simple_icons_enabled']),
-			],
-			'page-block-menu-tiles' => [
-				'label'  => __('Page Block: Tile Grid for Menu', 'user-manager'),
-				'description' => __('Registers custom/menu-tiles (Menu Tile Buttons) with menu filtering and editor controls.', 'user-manager'),
-				'active' => !empty($settings['page_block_menu_tiles_enabled']),
 			],
 			'database-table-browser' => [
 				'label'  => __('Database Table Browser', 'user-manager'),
