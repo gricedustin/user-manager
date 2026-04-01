@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.12 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('User Coupon Remaining Balances generation is now deferred to a scheduled background event from order status hooks, preventing checkout/order-status transition errors from bubbling into customer-facing order-processing failures.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added per-order processing lock for remaining-balance generation to avoid duplicate/concurrent processing and to harden reliability under multiple status/thank-you triggers.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.11 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('User Coupon Remaining Balances runtime now fully respects add-on activation state before registering checkout/thank-you hooks, so no remainder notices or processing run when the add-on is turned off.', 'user-manager'); ?></li>

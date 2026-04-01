@@ -45,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.11';
+	const VERSION = '2.5.12';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -232,7 +232,8 @@ final class User_Manager_Core {
 		add_action('template_redirect', [__CLASS__, 'maybe_log_search_query'], 20);
 		$coupon_remainder_enabled = self::is_coupon_remainder_feature_enabled($settings);
 		if ($coupon_remainder_enabled) {
-			add_action('woocommerce_order_status_completed', [__CLASS__, 'maybe_generate_fixed_cart_coupon_remainders'], 20, 1);
+			add_action('woocommerce_order_status_completed', [__CLASS__, 'queue_coupon_remainder_generation'], 20, 1);
+			add_action('user_manager_process_coupon_remainder_async', [__CLASS__, 'maybe_generate_fixed_cart_coupon_remainders'], 10, 1);
 			add_action('woocommerce_thankyou', [__CLASS__, 'handle_coupon_remainder_thankyou'], 5, 1);
 			add_action('woocommerce_thankyou', [__CLASS__, 'render_coupon_remainder_debug_notice'], 8, 1);
 			add_action('woocommerce_thankyou', [__CLASS__, 'render_order_received_remaining_balance_notice'], 10, 1);
@@ -5316,6 +5317,36 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
+	 * Queue remainder generation off checkout requests to avoid
+	 * interfering with payment gateway order-processing responses.
+	 */
+	public static function queue_coupon_remainder_generation($order_id): void {
+		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
+		$order_id = absint($order_id);
+		if ($order_id <= 0) {
+			return;
+		}
+
+		$is_checkout_request = function_exists('is_checkout') && is_checkout();
+		$is_wc_checkout_ajax = wp_doing_ajax()
+			&& isset($_REQUEST['wc-ajax'])
+			&& in_array(sanitize_key((string) wp_unslash($_REQUEST['wc-ajax'])), ['checkout', 'update_order_review'], true);
+
+		$hook = 'user_manager_process_coupon_remainder_async';
+		if ($is_checkout_request || $is_wc_checkout_ajax) {
+			if (!wp_next_scheduled($hook, [$order_id])) {
+				wp_schedule_single_event(time() + 15, $hook, [$order_id]);
+			}
+			return;
+		}
+
+		self::maybe_generate_fixed_cart_coupon_remainders($order_id);
+	}
+
+	/**
 	 * Determine if the user has completed at least one WooCommerce order.
 	 */
 	private static function user_has_completed_first_order(int $user_id): bool {
@@ -5334,12 +5365,29 @@ html body .woocommerce-layout__header {
 	 * Create fixed cart remainder coupons after checkout when enabled.
 	 */
 	public static function maybe_generate_fixed_cart_coupon_remainders($order_id): void {
+		$order_id = absint($order_id);
+		if ($order_id <= 0) {
+			return;
+		}
 		$settings = self::get_settings();
 		if (!self::is_coupon_remainder_feature_enabled($settings)) {
 			return;
 		}
 		if (!function_exists('wc_get_order')) {
 			return;
+		}
+		$lock_key = '_um_coupon_remainder_processing_lock';
+		$lock_acquired = false;
+		if (add_post_meta($order_id, $lock_key, time(), true)) {
+			$lock_acquired = true;
+		} else {
+			$existing_lock = (int) get_post_meta($order_id, $lock_key, true);
+			// Stale lock recovery (e.g., interrupted request/crash).
+			if ($existing_lock > 0 && (time() - $existing_lock) < 300) {
+				return;
+			}
+			update_post_meta($order_id, $lock_key, time());
+			$lock_acquired = true;
 		}
 		try {
 			$order = wc_get_order($order_id);
@@ -5495,6 +5543,10 @@ html body .woocommerce-layout__header {
 				'file' => $throwable->getFile(),
 				'line' => $throwable->getLine(),
 			]);
+		} finally {
+			if ($lock_acquired) {
+				delete_post_meta($order_id, $lock_key);
+			}
 		}
 	}
 

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.11
+ * Version: 2.5.12
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.12 - March 16, 2026
+ * - User Coupon Remaining Balances: moved remainder generation off synchronous checkout status transitions and onto a short deferred WP-Cron event to avoid checkout/order-processing interruptions.
+ * - Added per-order processing lock for remainder generation to prevent duplicate processing/race conditions when both thank-you/status hooks can fire close together.
+ *
  * 2.5.11 - March 16, 2026
  * - User Coupon Remaining Balances now fully respects add-on activation state before registering front-end/checkout hooks, so notice/debug/runtime output no longer runs when the add-on is turned off.
  * - Added defensive error handling around remaining-balance coupon generation to prevent checkout/order flow failures from surfacing as generic WooCommerce order-processing errors.
