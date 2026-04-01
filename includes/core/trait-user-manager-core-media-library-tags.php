@@ -920,6 +920,7 @@ JS;
 			'attributes' => [
 				'tagSlug' => ['type' => 'string', 'default' => ''],
 				'allowUrlTagOverride' => ['type' => 'boolean', 'default' => false],
+				'requireTagValue' => ['type' => 'boolean', 'default' => false],
 				'useDefaultColumnsDesktop' => ['type' => 'boolean'],
 				'columnsDesktop' => ['type' => 'integer', 'default' => 4],
 				'useDefaultColumnsMobile' => ['type' => 'boolean'],
@@ -1094,6 +1095,7 @@ JS;
 		attributes: {
 			tagSlug: { type: 'string', default: '' },
 			allowUrlTagOverride: { type: 'boolean', default: false },
+			requireTagValue: { type: 'boolean', default: false },
 			useDefaultColumnsDesktop: { type: 'boolean', default: false },
 			columnsDesktop: { type: 'integer', default: parseInt(defaults.columnsDesktop, 10) || 4 },
 			useDefaultColumnsMobile: { type: 'boolean', default: false },
@@ -1154,6 +1156,12 @@ JS;
 							checked: !!a.allowUrlTagOverride,
 							onChange: function(v){ set({ allowUrlTagOverride: !!v }); },
 							help: a.allowUrlTagOverride ? 'URL ?tag=... can override selected tag for this block.' : 'Use selected tag only.'
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Do Not Allow Empty Tag/Do Not Load without Tag Value',
+							checked: !!a.requireTagValue,
+							onChange: function(v){ set({ requireTagValue: !!v }); },
+							help: !!a.requireTagValue ? 'Block will not load when effective tag is empty.' : 'Block can load when no tag value is set (shows all tags).'
 						}),
 						element.createElement(TextControl, {
 							label: 'Number of Columns (Desktop)',
@@ -1301,6 +1309,7 @@ JS;
 
 		$tag_slug = isset($attrs['tagSlug']) ? sanitize_title((string) $attrs['tagSlug']) : '';
 		$allow_url_tag_override = !empty($attrs['allowUrlTagOverride']);
+		$require_tag_value = !empty($attrs['requireTagValue']);
 		$use_default_columns_desktop = !empty($attrs['useDefaultColumnsDesktop']);
 		$use_default_columns_mobile = !empty($attrs['useDefaultColumnsMobile']);
 		$use_default_sort_order = !empty($attrs['useDefaultSortOrder']);
@@ -1372,6 +1381,9 @@ JS;
 			} elseif ($url_tag !== '' && term_exists($url_tag, self::media_library_tags_taxonomy())) {
 				$tag_slug = $url_tag;
 			}
+		}
+		if ($require_tag_value && $tag_slug === '') {
+			return '';
 		}
 
 		$effective_link_to = $link_to;

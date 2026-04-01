@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.77 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery block: added "Do Not Allow Empty Tag / Do Not Load without Tag Value" setting under URL tag override options.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, the gallery block returns no output unless a tag is selected (via block setting or URL override), preventing all-images loads on empty tag values.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.76 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library "No tags" filter: fixed query handling to remove conflicting Library Tag clauses before applying the no-tags condition.', 'user-manager'); ?></li>
