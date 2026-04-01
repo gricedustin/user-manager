@@ -20,13 +20,74 @@ trait User_Manager_Core_Order_Received_Page_Customizer_Trait {
 		}
 
 		add_filter('woocommerce_page_title', [__CLASS__, 'filter_order_received_page_title'], 20, 1);
+		add_filter('the_title', [__CLASS__, 'filter_order_received_page_theme_title'], 20, 2);
+		add_filter('document_title_parts', [__CLASS__, 'filter_order_received_document_title_parts'], 20, 1);
+		add_filter('pre_get_document_title', [__CLASS__, 'filter_order_received_document_title'], 20, 1);
 		add_filter('woocommerce_thankyou_order_received_text', [__CLASS__, 'filter_order_received_page_notice_text'], 20, 2);
+		add_action('wp_footer', [__CLASS__, 'print_order_received_heading_override_script'], 99);
 	}
 
 	/**
 	 * Override Order Received H1 title when enabled.
 	 */
 	public static function filter_order_received_page_title(string $title): string {
+		if (!self::is_order_received_page_customizer_context()) {
+			return $title;
+		}
+
+		$custom_title = self::get_order_received_page_customizer_heading_text();
+		return $custom_title !== '' ? $custom_title : $title;
+	}
+
+	/**
+	 * Override theme-provided checkout page titles on order-received context.
+	 *
+	 * Many themes output the H1 via the_title() instead of woocommerce_page_title().
+	 *
+	 * @param string $title   Existing title text.
+	 * @param int    $post_id Post ID.
+	 */
+	public static function filter_order_received_page_theme_title(string $title, int $post_id): string {
+		if (!self::is_order_received_page_customizer_context()) {
+			return $title;
+		}
+
+		if (!function_exists('wc_get_page_id')) {
+			return $title;
+		}
+
+		$checkout_page_id = (int) wc_get_page_id('checkout');
+		if ($checkout_page_id <= 0 || $post_id !== $checkout_page_id) {
+			return $title;
+		}
+
+		$custom_title = self::get_order_received_page_customizer_heading_text();
+		return $custom_title !== '' ? $custom_title : $title;
+	}
+
+	/**
+	 * Override browser/page title parts on order-received context.
+	 *
+	 * @param array<string,string> $parts Document title parts.
+	 * @return array<string,string>
+	 */
+	public static function filter_order_received_document_title_parts(array $parts): array {
+		if (!self::is_order_received_page_customizer_context()) {
+			return $parts;
+		}
+
+		$custom_title = self::get_order_received_page_customizer_heading_text();
+		if ($custom_title !== '') {
+			$parts['title'] = $custom_title;
+		}
+
+		return $parts;
+	}
+
+	/**
+	 * Override full document title on order-received context.
+	 */
+	public static function filter_order_received_document_title(string $title): string {
 		if (!self::is_order_received_page_customizer_context()) {
 			return $title;
 		}
@@ -50,6 +111,53 @@ trait User_Manager_Core_Order_Received_Page_Customizer_Trait {
 
 		$custom_notice = self::get_order_received_page_customizer_paragraph_text();
 		return $custom_notice !== '' ? $custom_notice : $notice_text;
+	}
+
+	/**
+	 * Front-end fallback to update H1 in themes/templates that bypass filters.
+	 */
+	public static function print_order_received_heading_override_script(): void {
+		if (!self::is_order_received_page_customizer_context()) {
+			return;
+		}
+
+		$custom_title = self::get_order_received_page_customizer_heading_text();
+		if ($custom_title === '') {
+			return;
+		}
+		?>
+		<script>
+		(function() {
+			var customTitle = <?php echo wp_json_encode($custom_title); ?>;
+			if (!customTitle) {
+				return;
+			}
+
+			function applyHeadingOverride() {
+				var selectors = [
+					'.woocommerce-order h1',
+					'.woocommerce-order-received h1',
+					'.entry-header .entry-title',
+					'h1.entry-title',
+					'.woocommerce h1.page-title'
+				];
+				for (var i = 0; i < selectors.length; i++) {
+					var heading = document.querySelector(selectors[i]);
+					if (heading) {
+						heading.textContent = customTitle;
+						return;
+					}
+				}
+			}
+
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', applyHeadingOverride);
+			} else {
+				applyHeadingOverride();
+			}
+		})();
+		</script>
+		<?php
 	}
 
 	/**
