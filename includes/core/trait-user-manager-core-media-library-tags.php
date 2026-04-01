@@ -1582,6 +1582,7 @@ JS;
 		$uid = function_exists('wp_unique_id') ? wp_unique_id('um-media-gallery-') : uniqid('um-media-gallery-');
 		$style_class = 'um-media-gallery-style-' . $style;
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
+		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$timeline_date_format = get_option('date_format');
 		if (!is_string($timeline_date_format) || $timeline_date_format === '') {
 			$timeline_date_format = 'F j, Y';
@@ -1617,7 +1618,7 @@ JS;
 									<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 										<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?>><?php echo $image_html; ?></a>
+										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>><?php echo $image_html; ?></a>
 									<?php else : ?>
 										<?php echo $image_html; ?>
 									<?php endif; ?>
@@ -1700,8 +1701,8 @@ JS;
 						<figure class="um-media-library-tag-gallery-item<?php echo $is_infinite_hidden ? ' um-mltg-infinite-hidden' : ''; ?>"<?php echo $is_infinite_hidden ? ' data-um-infinite-hidden="1"' : ''; ?>>
 							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 								<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
-							<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-								<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?>><?php echo $image_html; ?></a>
+									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
+										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>><?php echo $image_html; ?></a>
 							<?php else : ?>
 								<?php echo $image_html; ?>
 							<?php endif; ?>
@@ -1816,12 +1817,15 @@ JS;
 		.um-mltg-lightbox-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.86); z-index: 999999; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 30px; }
 		.um-mltg-lightbox-overlay img { max-width: min(95vw, 1600px); max-height: 88vh; width: auto; height: auto; display: block; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
 		.um-mltg-lightbox-caption { margin-top: 10px; color: #fff; font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }
+		.um-mltg-lightbox-edit-link { margin-top: 8px; color: #fff; text-decoration: underline; display: none; font-size: 13px; }
+		.um-mltg-lightbox-edit-link:hover { color: #cfe7ff; }
 		.um-mltg-lightbox-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: #fff; font-size: 36px; line-height: 1; cursor: pointer; }
 		</style>
 		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true">
 			<button type="button" class="um-mltg-lightbox-close" aria-label="<?php esc_attr_e('Close image', 'user-manager'); ?>">&times;</button>
 			<img src="" alt="" />
 			<p class="um-mltg-lightbox-caption"></p>
+			<a href="#" class="um-mltg-lightbox-edit-link" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Edit image', 'user-manager'); ?></a>
 		</div>
 		<script>
 		(function() {
@@ -1832,6 +1836,7 @@ JS;
 			var closeBtn = overlay.querySelector('.um-mltg-lightbox-close');
 			var image = overlay.querySelector('img');
 			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
+			var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
 			var bodyPrevOverflow = '';
 			function closeOverlay() {
 				overlay.style.display = 'none';
@@ -1842,6 +1847,10 @@ JS;
 				if (captionEl) {
 					captionEl.textContent = '';
 					captionEl.style.display = 'none';
+				}
+				if (editLinkEl) {
+					editLinkEl.setAttribute('href', '#');
+					editLinkEl.style.display = 'none';
 				}
 				if (document && document.body) {
 					document.body.style.overflow = bodyPrevOverflow;
@@ -1855,11 +1864,21 @@ JS;
 				if (!src || !image) { return; }
 				var caption = link.getAttribute('data-um-lightbox-caption') || '';
 				var altText = link.getAttribute('data-um-lightbox-alt') || '';
+				var editUrl = link.getAttribute('data-um-lightbox-edit-url') || '';
 				image.setAttribute('src', src);
 				image.setAttribute('alt', altText);
 				if (captionEl) {
 					captionEl.textContent = caption;
 					captionEl.style.display = caption ? 'block' : 'none';
+				}
+				if (editLinkEl) {
+					if (editUrl) {
+						editLinkEl.setAttribute('href', editUrl);
+						editLinkEl.style.display = 'inline-block';
+					} else {
+						editLinkEl.setAttribute('href', '#');
+						editLinkEl.style.display = 'none';
+					}
 				}
 				if (document && document.body) {
 					bodyPrevOverflow = document.body.style.overflow || '';
