@@ -5030,13 +5030,25 @@ class User_Manager_Actions {
 %COUPONCODE%</p>',
 		];
 
-		// Assign order after existing ones: auto coupon, then apology coupon.
+		// Automated remaining balance coupon template.
+		$remaining_balance_id = 'tpl_auto_coupon_remaining_balance';
+		$templates[$remaining_balance_id] = [
+			'title'       => __('Send automated remaining balance coupon', 'user-manager'),
+			'description' => __('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE%.', 'user-manager'),
+			'subject'     => __('You have a remaining balance', 'user-manager'),
+			'heading'     => __('You have a remaining balance', 'user-manager'),
+			'body'        => '<p>Here is your remaining balance Coupon Code:<br>
+%COUPONCODE%</p>',
+		];
+
+		// Assign order after existing ones: auto coupon, apology coupon, then remaining balance coupon.
 		$max_order = 0;
 		foreach ($templates as $tpl) {
 			$max_order = max($max_order, isset($tpl['order']) ? (int) $tpl['order'] : 0);
 		}
-		$templates[$auto_id]['order']    = $max_order + 1;
-		$templates[$apology_id]['order'] = $max_order + 2;
+		$templates[$auto_id]['order']              = $max_order + 1;
+		$templates[$apology_id]['order']           = $max_order + 2;
+		$templates[$remaining_balance_id]['order'] = $max_order + 3;
 
 		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
 	}
