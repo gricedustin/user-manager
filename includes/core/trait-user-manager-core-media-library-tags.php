@@ -2538,7 +2538,7 @@ JS;
 	 * Replace tag placeholders in post content.
 	 */
 	public static function replace_media_library_tag_placeholders_in_content(string $content): string {
-		return self::replace_media_library_tag_placeholders_in_text($content);
+		return self::replace_media_library_tag_placeholders_in_text($content, true);
 	}
 
 	/**
@@ -2549,7 +2549,7 @@ JS;
 	 */
 	public static function replace_media_library_tag_placeholders_in_title(string $title, int $post_id = 0): string {
 		unset($post_id);
-		return self::replace_media_library_tag_placeholders_in_text($title);
+		return self::replace_media_library_tag_placeholders_in_text($title, false);
 	}
 
 	/**
@@ -2563,7 +2563,7 @@ JS;
 			if (!is_string($value)) {
 				continue;
 			}
-			$parts[$key] = self::replace_media_library_tag_placeholders_in_text($value);
+			$parts[$key] = self::replace_media_library_tag_placeholders_in_text($value, false);
 		}
 		return $parts;
 	}
@@ -2575,7 +2575,7 @@ JS;
 		if (!is_string($title) || $title === '') {
 			return is_string($title) ? $title : '';
 		}
-		return self::replace_media_library_tag_placeholders_in_text($title);
+		return self::replace_media_library_tag_placeholders_in_text($title, false);
 	}
 
 	/**
@@ -2630,7 +2630,7 @@ JS;
 	/**
 	 * Replace [tag-name]/[tag-description] with active URL tag values when enabled by block settings.
 	 */
-	private static function replace_media_library_tag_placeholders_in_text(string $text): string {
+	private static function replace_media_library_tag_placeholders_in_text(string $text, bool $allow_html = false): string {
 		if (strpos($text, '[tag-name]') === false && strpos($text, '[tag-description]') === false) {
 			return $text;
 		}
@@ -2639,9 +2639,19 @@ JS;
 		}
 
 		$placeholder_values = self::get_media_library_tag_placeholder_values();
+		$description = (string) ($placeholder_values['description'] ?? '');
+		$edit_description_url = (string) ($placeholder_values['editDescriptionUrl'] ?? '');
+		if ($allow_html && $edit_description_url !== '' && $description !== '') {
+			$description .= sprintf(
+				' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+				esc_url($edit_description_url),
+				esc_html__('Edit Tag Description', 'user-manager')
+			);
+		}
+
 		return strtr($text, [
 			'[tag-name]' => (string) ($placeholder_values['name'] ?? ''),
-			'[tag-description]' => (string) ($placeholder_values['description'] ?? ''),
+			'[tag-description]' => $description,
 		]);
 	}
 
@@ -2656,28 +2666,41 @@ JS;
 	/**
 	 * Resolve active URL tag placeholder values.
 	 *
-	 * @return array{name:string,description:string}
+	 * @return array{name:string,description:string,editDescriptionUrl:string}
 	 */
 	private static function get_media_library_tag_placeholder_values(): array {
 		$config = self::get_current_post_media_library_tag_placeholder_config();
 		if (empty($config['enabled'])) {
-			return ['name' => '', 'description' => ''];
+			return ['name' => '', 'description' => '', 'editDescriptionUrl' => ''];
 		}
 
 		$allow_any = !empty($config['allowAny']);
 		$tag_override = self::resolve_media_library_gallery_url_tag_override($allow_any);
 		$slug = isset($tag_override['primarySlug']) ? (string) $tag_override['primarySlug'] : '';
 		if ($slug === '') {
-			return ['name' => '', 'description' => ''];
+			return ['name' => '', 'description' => '', 'editDescriptionUrl' => ''];
 		}
 		$term = get_term_by('slug', $slug, self::media_library_tags_taxonomy());
 		if (!$term instanceof WP_Term) {
-			return ['name' => '', 'description' => ''];
+			return ['name' => '', 'description' => '', 'editDescriptionUrl' => ''];
+		}
+
+		$edit_description_url = '';
+		if (current_user_can('manage_options') && current_user_can('edit_term', (int) $term->term_id)) {
+			$edit_description_url = add_query_arg(
+				[
+					'taxonomy' => self::media_library_tags_taxonomy(),
+					'tag_ID' => (int) $term->term_id,
+					'post_type' => 'attachment',
+				],
+				admin_url('term.php')
+			);
 		}
 
 		return [
 			'name' => trim((string) $term->name),
 			'description' => trim((string) $term->description),
+			'editDescriptionUrl' => $edit_description_url,
 		];
 	}
 

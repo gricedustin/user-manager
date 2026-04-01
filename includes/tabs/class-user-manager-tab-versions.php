@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.92 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('When [tag-description] resolves from URL-based Library Tag context, WordPress administrators now see an inline "Edit Tag Description" link appended to that placeholder output for faster term editing.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new edit link is intentionally limited to front-end content replacement only; title and document-title placeholder replacement remain plain text.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.91 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag URL placeholders now also apply to the page document title (<title>) so [tag-name]/[tag-description] can resolve in browser tab titles and SEO title output.', 'user-manager'); ?></li>
