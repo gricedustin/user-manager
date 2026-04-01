@@ -34,6 +34,7 @@ require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
 require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-order-received-page-customizer.php';
+require_once __DIR__ . '/class-user-manager-addon-restricted-access.php';
 require_once __DIR__ . '/class-user-manager-addon-send-email.php';
 require_once __DIR__ . '/class-user-manager-addon-send-sms-text.php';
 require_once __DIR__ . '/class-user-manager-addon-webhook-urls.php';
@@ -275,6 +276,9 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-addon-section" data-addon-section="order-received-page-customizer">
 				<?php User_Manager_Addon_Order_Received_Page_Customizer::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="restricted-access">
+				<?php User_Manager_Addon_Restricted_Access::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="send-email-users">
 				<?php User_Manager_Addon_Send_Email::render($settings, $settings_form_id); ?>
@@ -885,6 +889,9 @@ class User_Manager_Tab_Addons {
 			function toggleOrderReceivedPageCustomizerFields() {
 				$('#um-order-received-page-customizer-fields').toggle($('#um-order-received-page-customizer-enabled').is(':checked'));
 			}
+			function toggleRestrictedAccessFields() {
+				$('#um-restricted-access-fields').toggle($('#um-restricted-access-enabled').is(':checked'));
+			}
 			function toggleSendSmsTextFields() {
 				$('#um-send-sms-text-fields').toggle($('#um-send-sms-text-enabled').is(':checked'));
 			}
@@ -915,6 +922,7 @@ class User_Manager_Tab_Addons {
 			toggleWebhookUrlsFields();
 			toggleInvoiceApprovalFields();
 			toggleOrderReceivedPageCustomizerFields();
+			toggleRestrictedAccessFields();
 			toggleSendEmailUsersFields();
 			toggleSendSmsTextFields();
 			toggleSecurityHardeningFields();
@@ -1108,6 +1116,10 @@ class User_Manager_Tab_Addons {
 				toggleOrderReceivedPageCustomizerFields();
 				refreshAddonCardAutoState($('#um-addon-card-order-received-page-customizer'));
 			});
+			$('#um-restricted-access-enabled').on('change', function() {
+				toggleRestrictedAccessFields();
+				refreshAddonCardAutoState($('#um-addon-card-restricted-access'));
+			});
 			$('#um-send-email-users-enabled').on('change', function() {
 				toggleSendEmailUsersFields();
 				refreshAddonCardAutoState($('#um-addon-card-send-email'));
@@ -1275,6 +1287,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Order Received Page Customizer', 'user-manager'),
 				'description' => __('Customize the Order Received heading and success text after checkout.', 'user-manager'),
 				'active' => !empty($settings['order_received_page_customizer_enabled']),
+			],
+			'restricted-access' => [
+				'label'  => __('Restricted Access', 'user-manager'),
+				'description' => __('Gate site access with redirect/overlay behavior, shared password or URL token access, role exclusions, and configurable full-screen lock messaging.', 'user-manager'),
+				'active' => !empty($settings['restricted_access_enabled']),
 			],
 			'send-email-users' => [
 				'label'  => __('Send Email', 'user-manager'),

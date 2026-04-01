@@ -20,6 +20,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-my-account-menu-tiles.php'
 require_once __DIR__ . '/core/trait-user-manager-core-order-received-page-customizer.php';
 require_once __DIR__ . '/core/trait-user-manager-core-page-blocks.php';
 require_once __DIR__ . '/core/trait-user-manager-core-plugin-tags-notes.php';
+require_once __DIR__ . '/core/trait-user-manager-core-restricted-access.php';
 require_once __DIR__ . '/core/trait-user-manager-core-security-hardening.php';
 require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
 final class User_Manager_Core {
@@ -35,6 +36,7 @@ final class User_Manager_Core {
 	use User_Manager_Core_Order_Received_Page_Customizer_Trait;
 	use User_Manager_Core_Page_Blocks_Trait;
 	use User_Manager_Core_Plugin_Tags_Notes_Trait;
+	use User_Manager_Core_Restricted_Access_Trait;
 	use User_Manager_Core_Security_Hardening_Trait;
 	use User_Manager_Core_Webhook_URLs_Trait;
 	const OPTION_KEY = 'user_manager_settings';
@@ -43,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.6';
+	const VERSION = '2.5.7';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -177,6 +179,7 @@ final class User_Manager_Core {
 		self::maybe_boot_order_received_page_customizer($settings);
 		self::maybe_boot_page_blocks($settings);
 		self::maybe_boot_plugin_tags_notes($settings);
+		self::maybe_boot_restricted_access($settings);
 		self::maybe_apply_security_hardening($settings);
 		self::maybe_boot_webhook_urls($settings);
 		if (!empty($settings['coupon_email_converter'])) {
@@ -9227,6 +9230,10 @@ html body .woocommerce-layout__header {
 			'security-hardening' => [
 				'label' => 'Security Hardening',
 				'settings_keys' => ['security_hardening_enabled'],
+			],
+			'restricted-access' => [
+				'label' => 'Restricted Access',
+				'settings_keys' => ['restricted_access_enabled'],
 			],
 			'fatal-error-debugger' => [
 				'label' => 'Fatal Error Debugger',

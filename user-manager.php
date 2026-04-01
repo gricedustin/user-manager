@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.6
+ * Version: 2.5.7
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.7 - March 16, 2026
+ * - Added new Restricted Access add-on with controls for logged-out behavior (My Account redirect, WP-Admin redirect, or full-screen overlay), shared password access, appended URL-string access, timed re-authentication, and role-based blocking for logged-in users.
+ * - Added configurable restricted-access overlay options for custom no-access message, background color, text color, and optional background image with centered layout.
+ *
  * 2.5.6 - March 16, 2026
  * - Order Received Page Customizer: improved H1 override reliability by adding multiple fallback hooks (page title, checkout thank-you title, template title, and thank-you heading output) to support different WooCommerce/theme rendering paths.
  * - Existing custom paragraph override remains active via woocommerce_thankyou_order_received_text.

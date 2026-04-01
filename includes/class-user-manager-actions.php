@@ -2631,6 +2631,28 @@ class User_Manager_Actions {
 				$settings['order_received_page_customizer_enabled'] = isset($_POST['order_received_page_customizer_enabled']) && $_POST['order_received_page_customizer_enabled'] === '1';
 				$settings['order_received_page_customizer_heading_text'] = isset($_POST['order_received_page_customizer_heading_text']) ? sanitize_text_field(wp_unslash($_POST['order_received_page_customizer_heading_text'])) : 'Order received';
 				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
+				$settings['restricted_access_enabled'] = isset($_POST['restricted_access_enabled']) && $_POST['restricted_access_enabled'] === '1';
+				$restricted_logged_out_behavior = isset($_POST['restricted_access_logged_out_behavior']) ? sanitize_key(wp_unslash($_POST['restricted_access_logged_out_behavior'])) : 'overlay';
+				if ($restricted_logged_out_behavior === 'my-account') {
+					$restricted_logged_out_behavior = 'redirect_my_account';
+				} elseif ($restricted_logged_out_behavior === 'wp-admin') {
+					$restricted_logged_out_behavior = 'redirect_wp_admin';
+				}
+				$allowed_restricted_logged_out_behaviors = ['redirect_my_account', 'redirect_wp_admin', 'overlay'];
+				$settings['restricted_access_logged_out_behavior'] = in_array($restricted_logged_out_behavior, $allowed_restricted_logged_out_behaviors, true) ? $restricted_logged_out_behavior : 'overlay';
+				$settings['restricted_access_shared_password'] = isset($_POST['restricted_access_shared_password']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_shared_password'])) : '';
+				$settings['restricted_access_url_string'] = isset($_POST['restricted_access_url_string']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_url_string'])) : '';
+				$settings['restricted_access_time_limit_minutes'] = isset($_POST['restricted_access_time_limit_minutes']) ? max(1, absint($_POST['restricted_access_time_limit_minutes'])) : 30;
+				$settings['restricted_access_excluded_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['restricted_access_excluded_roles']) ? wp_unslash($_POST['restricted_access_excluded_roles']) : []
+				);
+				$restricted_access_no_access_message = isset($_POST['restricted_access_no_access_message']) ? sanitize_textarea_field(wp_unslash($_POST['restricted_access_no_access_message'])) : '';
+				$settings['restricted_access_no_access_message'] = $restricted_access_no_access_message !== '' ? $restricted_access_no_access_message : 'This is a private page';
+				$restricted_overlay_bg = isset($_POST['restricted_access_overlay_background_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_background_color'])) : '#000000';
+				$settings['restricted_access_overlay_background_color'] = $restricted_overlay_bg ? $restricted_overlay_bg : '#000000';
+				$restricted_overlay_text = isset($_POST['restricted_access_overlay_text_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_text_color'])) : '#ffffff';
+				$settings['restricted_access_overlay_text_color'] = $restricted_overlay_text ? $restricted_overlay_text : '#ffffff';
+				$settings['restricted_access_overlay_image_url'] = isset($_POST['restricted_access_overlay_image_url']) ? esc_url_raw(wp_unslash($_POST['restricted_access_overlay_image_url'])) : '';
 				// Keep Send Email permanently enabled because Login Tools depend on
 				// shared email templates from this add-on context.
 				$settings['send_email_users_enabled'] = true;
