@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.90 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags add-on "Style" setting is now sorted A–Z for easier scanning in addon_section=media-library-tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new "Accent Color (frames/backgrounds)" setting so white UI surfaces in gallery styles (such as Polaroid/Split/Carousel controls) can be recolored for dark mode websites.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.89 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag Gallery defaults now include: "Do Not CSS Crop Any Images if Gallery Photos Total is Less Than..." (0 keeps CSS crop behavior always enabled).', 'user-manager'); ?></li>

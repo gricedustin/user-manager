@@ -63,6 +63,13 @@ class User_Manager_Addon_Media_Library_Tags {
 		$image_sizes = User_Manager_Core::get_available_image_sizes_for_media_gallery();
 		$description_display_options = User_Manager_Core::get_media_library_gallery_description_display_options();
 		$description_value_options = User_Manager_Core::get_media_library_gallery_description_value_options();
+		$style_options = User_Manager_Core::get_media_library_gallery_style_options();
+		$accent_color = isset($settings['media_library_tag_gallery_accent_color']) && is_string($settings['media_library_tag_gallery_accent_color']) && $settings['media_library_tag_gallery_accent_color'] !== ''
+			? sanitize_hex_color($settings['media_library_tag_gallery_accent_color'])
+			: (string) ($defaults['accentColor'] ?? '#ffffff');
+		if (!is_string($accent_color) || $accent_color === '') {
+			$accent_color = '#ffffff';
+		}
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-media-library-tags" data-um-active-selectors="#um-media-library-tags-enabled">
 			<div class="um-admin-card-header">
@@ -138,23 +145,9 @@ class User_Manager_Addon_Media_Library_Tags {
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-style"><?php esc_html_e('Style', 'user-manager'); ?></label>
 								<select id="um-media-library-tags-gallery-style" name="media_library_tag_gallery_style"<?php echo $form_attr; ?>>
-									<option value="standard" <?php selected($style, 'standard'); ?>><?php esc_html_e('Standard', 'user-manager'); ?></option>
-									<option value="mosaic_grid" <?php selected($style, 'mosaic_grid'); ?>><?php esc_html_e('Mosaic Grid (Irregular Tiles)', 'user-manager'); ?></option>
-									<option value="masonry_pinterest" <?php selected($style, 'masonry_pinterest'); ?>><?php esc_html_e('Masonry / Pinterest Layout', 'user-manager'); ?></option>
-									<option value="uniform_grid" <?php selected($style, 'uniform_grid'); ?>><?php esc_html_e('Uniform Grid (Classic Gallery)', 'user-manager'); ?></option>
-									<option value="justified_rows" <?php selected($style, 'justified_rows'); ?>><?php esc_html_e('Justified Row Layout', 'user-manager'); ?></option>
-									<option value="square_crop" <?php selected($style, 'square_crop'); ?>><?php esc_html_e('Square CSS Crop', 'user-manager'); ?></option>
-									<option value="wide_rectangle_crop" <?php selected($style, 'wide_rectangle_crop'); ?>><?php esc_html_e('Wide Rectangle CSS Crop', 'user-manager'); ?></option>
-									<option value="tall_rectangle_crop" <?php selected($style, 'tall_rectangle_crop'); ?>><?php esc_html_e('Tall Rectangle CSS Crop', 'user-manager'); ?></option>
-									<option value="circle_crop" <?php selected($style, 'circle_crop'); ?>><?php esc_html_e('Circle CSS Crop', 'user-manager'); ?></option>
-									<option value="carousel_slider" <?php selected($style, 'carousel_slider'); ?>><?php esc_html_e('Carousel / Slider Gallery', 'user-manager'); ?></option>
-									<option value="fullscreen_lightbox_grid" <?php selected($style, 'fullscreen_lightbox_grid'); ?>><?php esc_html_e('Fullscreen Lightbox Grid', 'user-manager'); ?></option>
-									<option value="horizontal_scroll" <?php selected($style, 'horizontal_scroll'); ?>><?php esc_html_e('Horizontal Scroll Gallery', 'user-manager'); ?></option>
-									<option value="polaroid_scrapbook" <?php selected($style, 'polaroid_scrapbook'); ?>><?php esc_html_e('Polaroid / Scrapbook Layout', 'user-manager'); ?></option>
-									<option value="split_screen_feature" <?php selected($style, 'split_screen_feature'); ?>><?php esc_html_e('Split Screen Feature Gallery', 'user-manager'); ?></option>
-									<option value="infinite_scroll" <?php selected($style, 'infinite_scroll'); ?>><?php esc_html_e('Infinite Scroll Gallery', 'user-manager'); ?></option>
-									<option value="perspective_3d" <?php selected($style, 'perspective_3d'); ?>><?php esc_html_e('3D Perspective Gallery', 'user-manager'); ?></option>
-									<option value="timeline_story" <?php selected($style, 'timeline_story'); ?>><?php esc_html_e('Timeline / Story Gallery', 'user-manager'); ?></option>
+									<?php foreach ($style_options as $style_key => $style_label) : ?>
+										<option value="<?php echo esc_attr((string) $style_key); ?>" <?php selected($style, (string) $style_key); ?>><?php echo esc_html((string) $style_label); ?></option>
+									<?php endforeach; ?>
 								</select>
 							</div>
 							<div class="um-form-field">
@@ -190,6 +183,11 @@ class User_Manager_Addon_Media_Library_Tags {
 								<label for="um-media-library-tags-gallery-disable-css-crop-below-total"><?php esc_html_e('Do Not CSS Crop Any Images if Gallery Photos Total is Less Than...', 'user-manager'); ?></label>
 								<input type="number" min="0" class="small-text" id="um-media-library-tags-gallery-disable-css-crop-below-total" name="media_library_tag_gallery_disable_css_crop_under_total" value="<?php echo esc_attr((string) $disable_css_crop_threshold); ?>"<?php echo $form_attr; ?> />
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Set to 0 to keep CSS crop styles always active. If the gallery total is below this number, CSS crop styles are disabled and images use natural proportions.', 'user-manager'); ?></p>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-accent-color"><?php esc_html_e('Accent Color (frames/backgrounds)', 'user-manager'); ?></label>
+								<input type="color" id="um-media-library-tags-gallery-accent-color" name="media_library_tag_gallery_accent_color" value="<?php echo esc_attr((string) $accent_color); ?>"<?php echo $form_attr; ?> />
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Used by styles with frame/background surfaces (for example Polaroid cards, split-screen panels, and carousel/split controls) so white backgrounds can be replaced for dark-mode sites.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label>

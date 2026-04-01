@@ -1048,23 +1048,23 @@ JS;
 		{ label: 'Random', value: 'random' }
 	];
 	var styleOptions = [
-		{ label: 'Mosaic Grid (Irregular Tiles)', value: 'mosaic_grid' },
-		{ label: 'Masonry / Pinterest Layout', value: 'masonry_pinterest' },
-		{ label: 'Uniform Grid (Classic Gallery)', value: 'uniform_grid' },
-		{ label: 'Justified Row Layout', value: 'justified_rows' },
+		{ label: '3D Perspective Gallery', value: 'perspective_3d' },
 		{ label: 'Carousel / Slider Gallery', value: 'carousel_slider' },
+		{ label: 'Circle CSS Crop', value: 'circle_crop' },
 		{ label: 'Fullscreen Lightbox Grid', value: 'fullscreen_lightbox_grid' },
 		{ label: 'Horizontal Scroll Gallery', value: 'horizontal_scroll' },
+		{ label: 'Infinite Scroll Gallery', value: 'infinite_scroll' },
+		{ label: 'Justified Row Layout', value: 'justified_rows' },
+		{ label: 'Masonry / Pinterest Layout', value: 'masonry_pinterest' },
+		{ label: 'Mosaic Grid (Irregular Tiles)', value: 'mosaic_grid' },
 		{ label: 'Polaroid / Scrapbook Layout', value: 'polaroid_scrapbook' },
 		{ label: 'Split Screen Feature Gallery', value: 'split_screen_feature' },
-		{ label: 'Infinite Scroll Gallery', value: 'infinite_scroll' },
-		{ label: '3D Perspective Gallery', value: 'perspective_3d' },
-		{ label: 'Timeline / Story Gallery', value: 'timeline_story' },
-		{ label: 'Standard', value: 'standard' },
 		{ label: 'Square CSS Crop', value: 'square_crop' },
-		{ label: 'Wide Rectangle CSS Crop', value: 'wide_rectangle_crop' },
+		{ label: 'Standard', value: 'standard' },
 		{ label: 'Tall Rectangle CSS Crop', value: 'tall_rectangle_crop' },
-		{ label: 'Circle CSS Crop', value: 'circle_crop' }
+		{ label: 'Timeline / Story Gallery', value: 'timeline_story' },
+		{ label: 'Uniform Grid (Classic Gallery)', value: 'uniform_grid' },
+		{ label: 'Wide Rectangle CSS Crop', value: 'wide_rectangle_crop' }
 	];
 	var linkToOptions = [
 		{ label: 'Nothing', value: 'none' },
@@ -1418,6 +1418,10 @@ JS;
 		$sort_order = $use_default_sort_order
 			? sanitize_key((string) $defaults['sortOrder'])
 			: (isset($attrs['sortOrder']) ? sanitize_key((string) $attrs['sortOrder']) : (string) $defaults['sortOrder']);
+		$accent_color = sanitize_hex_color((string) ($defaults['accentColor'] ?? '#ffffff'));
+		if (!is_string($accent_color) || $accent_color === '') {
+			$accent_color = '#ffffff';
+		}
 		$file_size = $use_default_file_size
 			? sanitize_key((string) $defaults['fileSize'])
 			: (isset($attrs['fileSize']) ? sanitize_key((string) $attrs['fileSize']) : (string) $defaults['fileSize']);
@@ -1604,9 +1608,6 @@ JS;
 			$style = 'standard';
 			$style_class = 'um-media-gallery-style-standard';
 		}
-		if ($disable_css_crop_for_small_galleries) {
-			$style_class .= ' um-mltg-disable-css-crop';
-		}
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$timeline_date_format = get_option('date_format');
@@ -1616,7 +1617,7 @@ JS;
 
 		ob_start();
 		?>
-		<div id="<?php echo esc_attr($uid); ?>" class="um-media-library-tag-gallery <?php echo esc_attr($style_class); ?>">
+		<div id="<?php echo esc_attr($uid); ?>" class="um-media-library-tag-gallery <?php echo esc_attr($style_class); ?>" style="--um-mltg-accent-color:<?php echo esc_attr($accent_color); ?>;">
 			<?php if (empty($attachments)) : ?>
 				<p class="um-media-library-tag-gallery-empty"><?php esc_html_e('No images found for this gallery.', 'user-manager'); ?></p>
 			<?php elseif ($style === 'carousel_slider') : ?>
@@ -1814,23 +1815,23 @@ JS;
 		.um-mltg-carousel-track { display:flex; transition: transform .35s ease; }
 		.um-mltg-carousel-slide { min-width:100%; }
 		.um-mltg-carousel-slide img { width:100%; max-height:70vh; object-fit:contain; background:#f6f7f7; }
-		.um-mltg-carousel-nav { border:1px solid #c3c4c7; background:#fff; border-radius:4px; width:34px; height:34px; line-height:1; font-size:24px; cursor:pointer; }
+		.um-mltg-carousel-nav { border:1px solid #c3c4c7; background:var(--um-mltg-accent-color, #fff); border-radius:4px; width:34px; height:34px; line-height:1; font-size:24px; cursor:pointer; }
 		.um-mltg-carousel-dots { display:flex; gap:6px; justify-content:center; margin-top:10px; }
 		.um-mltg-carousel-dots button { width:9px; height:9px; border-radius:50%; border:0; background:#c3c4c7; cursor:pointer; }
 		.um-mltg-carousel-dots button.is-active { background:#2271b1; }
 		.um-media-gallery-style-horizontal_scroll .um-media-library-tag-gallery-grid { display:flex; overflow-x:auto; gap:12px; scroll-snap-type:x mandatory; padding-bottom:6px; }
 		.um-media-gallery-style-horizontal_scroll .um-media-library-tag-gallery-item { min-width:min(320px, 85vw); flex:0 0 auto; scroll-snap-align:start; }
 		.um-media-gallery-style-horizontal_scroll .um-media-library-tag-gallery-item img { height:260px; object-fit:cover; }
-		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item { background:#fff; padding:10px 10px 18px; box-shadow:0 8px 18px rgba(0,0,0,0.12); border:1px solid #e5e5e5; }
+		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item { background:var(--um-mltg-accent-color, #fff); padding:10px 10px 18px; box-shadow:0 8px 18px rgba(0,0,0,0.12); border:1px solid #e5e5e5; }
 		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item:nth-child(odd) { transform: rotate(-2.3deg); }
 		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item:nth-child(even) { transform: rotate(2.1deg); }
 		.um-media-gallery-style-polaroid_scrapbook .um-media-library-tag-gallery-item:hover { transform: rotate(0deg) scale(1.02); z-index:2; }
 		.um-mltg-split-screen { display:grid; grid-template-columns:minmax(0, 2fr) minmax(180px, 1fr); gap:14px; }
-		.um-mltg-split-main { border:1px solid #dcdcde; border-radius:6px; padding:8px; background:#fff; }
+		.um-mltg-split-main { border:1px solid #dcdcde; border-radius:6px; padding:8px; background:var(--um-mltg-accent-color, #fff); }
 		.um-mltg-split-main-image { width:100%; height:auto; max-height:70vh; object-fit:contain; display:block; }
 		.um-mltg-split-main-caption { margin:8px 0 2px; font-size:13px; color:#50575e; }
 		.um-mltg-split-thumbs { display:grid; gap:8px; max-height:70vh; overflow:auto; }
-		.um-mltg-split-thumb { border:1px solid #c3c4c7; background:#fff; padding:3px; cursor:pointer; border-radius:4px; }
+		.um-mltg-split-thumb { border:1px solid #c3c4c7; background:var(--um-mltg-accent-color, #fff); padding:3px; cursor:pointer; border-radius:4px; }
 		.um-mltg-split-thumb.is-active { border-color:#2271b1; box-shadow:0 0 0 1px #2271b1 inset; }
 		.um-mltg-split-thumb img { width:100%; height:84px; object-fit:cover; display:block; }
 		@media (max-width: 782px) { .um-mltg-split-screen { grid-template-columns:1fr; } }
@@ -2064,6 +2065,7 @@ JS;
 			'columnsDesktopLt25' => 4,
 			'columnsDesktopLt10' => 4,
 			'disableCssCropUnderTotal' => 0,
+			'accentColor' => '#ffffff',
 			'columnsMobile' => 2,
 			'sortOrder' => 'date_desc',
 			'fileSize' => 'thumbnail',
@@ -2088,6 +2090,12 @@ JS;
 		}
 		if (isset($settings['media_library_tag_gallery_disable_css_crop_under_total'])) {
 			$defaults['disableCssCropUnderTotal'] = max(0, absint($settings['media_library_tag_gallery_disable_css_crop_under_total']));
+		}
+		if (!empty($settings['media_library_tag_gallery_accent_color']) && is_string($settings['media_library_tag_gallery_accent_color'])) {
+			$accent_color = sanitize_hex_color($settings['media_library_tag_gallery_accent_color']);
+			if (is_string($accent_color) && $accent_color !== '') {
+				$defaults['accentColor'] = $accent_color;
+			}
 		}
 		$defaults['columnsDesktopLt50'] = max(1, min(8, (int) $defaults['columnsDesktopLt50']));
 		$defaults['columnsDesktopLt25'] = max(1, min(8, (int) $defaults['columnsDesktopLt25']));
@@ -2236,20 +2244,22 @@ JS;
 	 * @return array<string,string>
 	 */
 	public static function get_media_library_gallery_style_options(): array {
-		return [
-			'mosaic_grid' => __('Mosaic Grid (Irregular Tiles)', 'user-manager'),
-			'masonry_pinterest' => __('Masonry / Pinterest Layout', 'user-manager'),
-			'uniform_grid' => __('Uniform Grid (Classic Gallery)', 'user-manager'),
-			'justified_rows' => __('Justified Row Layout', 'user-manager'),
+		$options = [
 			'carousel_slider' => __('Carousel / Slider Gallery', 'user-manager'),
 			'fullscreen_lightbox_grid' => __('Fullscreen Lightbox Grid', 'user-manager'),
 			'horizontal_scroll' => __('Horizontal Scroll Gallery', 'user-manager'),
+			'infinite_scroll' => __('Infinite Scroll Gallery', 'user-manager'),
+			'justified_rows' => __('Justified Row Layout', 'user-manager'),
+			'masonry_pinterest' => __('Masonry / Pinterest Layout', 'user-manager'),
+			'mosaic_grid' => __('Mosaic Grid (Irregular Tiles)', 'user-manager'),
+			'perspective_3d' => __('3D Perspective Gallery', 'user-manager'),
 			'polaroid_scrapbook' => __('Polaroid / Scrapbook Layout', 'user-manager'),
 			'split_screen_feature' => __('Split Screen Feature Gallery', 'user-manager'),
-			'infinite_scroll' => __('Infinite Scroll Gallery', 'user-manager'),
-			'perspective_3d' => __('3D Perspective Gallery', 'user-manager'),
 			'timeline_story' => __('Timeline / Story Gallery', 'user-manager'),
+			'uniform_grid' => __('Uniform Grid (Classic Gallery)', 'user-manager'),
 		];
+		asort($options, SORT_NATURAL | SORT_FLAG_CASE);
+		return $options;
 	}
 
 	/**
