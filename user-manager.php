@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.87
+ * Version: 2.4.88
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.4.88 - March 16, 2026
+ * - Rebuilt Mosaic Grid into a deterministic repeat pattern (large, tall, wide, standard) with consistent auto-row sizing for cleaner alignment.
+ * - Mosaic now uses dense packing with controlled spans and full-height image fill to reduce dead space and improve vertical rhythm.
+ *
  * 2.4.87 - March 16, 2026
  * - URL tag override now supports multi-tag logic in the gallery query: ?tag=tag+tag2 requires BOTH tags (AND), while ?tag=tag_tag2 matches EITHER tag (OR).
  * - Multi-tag expressions are also supported for "Allow Any URL Parameter..." mode via query keys (for example: ?tag+tag2 or ?tag_tag2).

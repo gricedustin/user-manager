@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.4.88 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Mosaic Grid layout now uses a deterministic repeating pattern with dedicated large, tall, and wide tiles for more predictable balance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added consistent grid auto-row sizing plus dense packing behavior so smaller items backfill gaps more reliably and reduce dead space.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.87 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag Gallery URL override now supports multiple-tag expressions in the standard ?tag= parameter.', 'user-manager'); ?></li>
