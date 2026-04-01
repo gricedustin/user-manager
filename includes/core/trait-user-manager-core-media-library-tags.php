@@ -920,6 +920,7 @@ JS;
 			'attributes' => [
 				'tagSlug' => ['type' => 'string', 'default' => ''],
 				'allowUrlTagOverride' => ['type' => 'boolean', 'default' => false],
+				'allowAnyUrlParamTagIdentifier' => ['type' => 'boolean', 'default' => false],
 				'requireTagValue' => ['type' => 'boolean', 'default' => false],
 				'useDefaultColumnsDesktop' => ['type' => 'boolean'],
 				'columnsDesktop' => ['type' => 'integer', 'default' => 4],
@@ -1095,6 +1096,7 @@ JS;
 		attributes: {
 			tagSlug: { type: 'string', default: '' },
 			allowUrlTagOverride: { type: 'boolean', default: false },
+			allowAnyUrlParamTagIdentifier: { type: 'boolean', default: false },
 			requireTagValue: { type: 'boolean', default: false },
 			useDefaultColumnsDesktop: { type: 'boolean', default: false },
 			columnsDesktop: { type: 'integer', default: parseInt(defaults.columnsDesktop, 10) || 4 },
@@ -1162,6 +1164,12 @@ JS;
 							checked: !!a.requireTagValue,
 							onChange: function(v){ set({ requireTagValue: !!v }); },
 							help: !!a.requireTagValue ? 'Block will not load when effective tag is empty.' : 'Block can load when no tag value is set (shows all tags).'
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Allow Any URL Parameter to Be Used as a Tag Identifier such as ?tag-name for Shorter URLs',
+							checked: !!a.allowAnyUrlParamTagIdentifier,
+							onChange: function(v){ set({ allowAnyUrlParamTagIdentifier: !!v }); },
+							help: !!a.allowAnyUrlParamTagIdentifier ? 'Any URL query key matching a tag slug can override the block tag.' : 'Only ?tag=tag-slug URL override is used.'
 						}),
 						element.createElement(TextControl, {
 							label: 'Number of Columns (Desktop)',
@@ -1309,6 +1317,7 @@ JS;
 
 		$tag_slug = isset($attrs['tagSlug']) ? sanitize_title((string) $attrs['tagSlug']) : '';
 		$allow_url_tag_override = !empty($attrs['allowUrlTagOverride']);
+		$allow_any_url_param_tag_identifier = !empty($attrs['allowAnyUrlParamTagIdentifier']);
 		$require_tag_value = !empty($attrs['requireTagValue']);
 		$use_default_columns_desktop = !empty($attrs['useDefaultColumnsDesktop']);
 		$use_default_columns_mobile = !empty($attrs['useDefaultColumnsMobile']);
@@ -1374,11 +1383,9 @@ JS;
 		if (!in_array($description_value, $allowed_description_values, true)) {
 			$description_value = 'caption';
 		}
-		if ($allow_url_tag_override && isset($_GET['tag'])) {
-			$url_tag = sanitize_title((string) wp_unslash($_GET['tag']));
-			if ($url_tag === 'all') {
-				$tag_slug = '';
-			} elseif ($url_tag !== '' && term_exists($url_tag, self::media_library_tags_taxonomy())) {
+		if ($allow_url_tag_override) {
+			$url_tag = self::resolve_media_library_gallery_url_tag_override($allow_any_url_param_tag_identifier);
+			if ($url_tag !== null) {
 				$tag_slug = $url_tag;
 			}
 		}
@@ -2111,6 +2118,49 @@ JS;
 	 */
 	private static function get_media_library_no_tags_filter_value(): string {
 		return '__um_no_tags__';
+	}
+
+	/**
+	 * Resolve URL-based tag override for Media Library Tag Gallery block.
+	 *
+	 * @param bool $allow_any_parameter Whether any URL parameter key can map to a tag slug.
+	 * @return string|null Returns tag slug, empty string for "all", or null when no valid override is present.
+	 */
+	private static function resolve_media_library_gallery_url_tag_override(bool $allow_any_parameter = false): ?string {
+		if (isset($_GET['tag'])) {
+			$url_tag = sanitize_title((string) wp_unslash($_GET['tag']));
+			if ($url_tag === 'all') {
+				return '';
+			}
+			if ($url_tag !== '' && term_exists($url_tag, self::media_library_tags_taxonomy())) {
+				return $url_tag;
+			}
+		}
+		if (!$allow_any_parameter || empty($_GET) || !is_array($_GET)) {
+			return null;
+		}
+
+		$raw_query = wp_unslash($_GET);
+		if (!is_array($raw_query)) {
+			return null;
+		}
+		foreach (array_keys($raw_query) as $raw_key) {
+			if (!is_string($raw_key) || $raw_key === 'tag') {
+				continue;
+			}
+			$candidate = sanitize_title($raw_key);
+			if ($candidate === '') {
+				continue;
+			}
+			if ($candidate === 'all') {
+				return '';
+			}
+			if (term_exists($candidate, self::media_library_tags_taxonomy())) {
+				return $candidate;
+			}
+		}
+
+		return null;
 	}
 
 	/**
