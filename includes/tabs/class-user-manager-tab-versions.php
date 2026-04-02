@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.14 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Core hook registration hardening: New User Coupons, Checkout Address Selector (including debug footer hook), Quick Search, and Staging & Development Environment Overrides hooks now only register when their associated add-on is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Prevents add-on behavior from running when the add-on is disabled, reducing lingering side effects from inactive modules.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.13 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Staging & Development Environment Overrides: made the WooCommerce webhook-delivery filter callback signature backward-compatible with both 3-argument and 4-argument WooCommerce hook calls to prevent fatal argument-count exceptions.', 'user-manager'); ?></li>

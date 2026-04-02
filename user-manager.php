@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.13
+ * Version: 2.5.14
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.14 - March 16, 2026
+ * - Hardened add-on runtime gating so key hook registrations only run when their add-on is active (including URL-based temporary disable support): Checkout Address Selector, New User Coupons, Quick Search, User Coupon Notifications cart-empty coupon cleanup, and Staging/Development Overrides.
+ * - Prevents inactive add-ons from registering related runtime hooks and eliminates lingering side effects when an add-on is turned off.
+ *
  * 2.5.13 - March 16, 2026
  * - Fixed staging/dev webhook-delivery filter callback signature to accept WooCommerce versions that pass 3 arguments, preventing fatal "Too few arguments" exceptions during webhook-triggering order flows.
  *

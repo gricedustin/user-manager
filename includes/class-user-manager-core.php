@@ -45,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.13';
+	const VERSION = '2.5.14';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -191,15 +191,20 @@ final class User_Manager_Core {
 		}
 
 		// User Activity: log WooCommerce orders when available.
-		if (class_exists('WooCommerce')) {
+		// Keep this scoped to the New User Coupons add-on context.
+		if (class_exists('WooCommerce') && !empty($settings['nuc_enabled']) && !self::is_addon_temporarily_disabled('coupon-for-new-user')) {
 			// Fire after order is marked processing or completed.
 			add_action('woocommerce_order_status_processing', [__CLASS__, 'log_user_order_activity'], 20, 1);
 			add_action('woocommerce_order_status_completed', [__CLASS__, 'log_user_order_activity'], 20, 1);
 		}
-		// Checkout: Ship To Pre-Defined Addresses — init after WooCommerce is loaded so class_exists('WooCommerce') is true.
-		add_action('woocommerce_loaded', [__CLASS__, 'init_checkout_ship_to'], 5, 0);
-		// Debug box: show on checkout for admins when "Show debugging info" is on, even if Ship To init returned early.
-		add_action('wp_footer', [__CLASS__, 'maybe_render_checkout_ship_to_debug'], 5, 0);
+		$checkout_ship_to_enabled = !empty($settings['checkout_ship_to_predefined_enabled']) && !self::is_addon_temporarily_disabled('checkout-pre-defined-addresses');
+		$checkout_ship_to_debug_enabled = !empty($settings['checkout_ship_to_show_debug']) && !self::is_addon_temporarily_disabled('checkout-pre-defined-addresses');
+		if ($checkout_ship_to_enabled || $checkout_ship_to_debug_enabled) {
+			// Checkout: Ship To Pre-Defined Addresses — init after WooCommerce is loaded so class_exists('WooCommerce') is true.
+			add_action('woocommerce_loaded', [__CLASS__, 'init_checkout_ship_to'], 5, 0);
+			// Debug box: show on checkout for admins when "Show debugging info" is on.
+			add_action('wp_footer', [__CLASS__, 'maybe_render_checkout_ship_to_debug'], 5, 0);
+		}
 		if (is_admin() && !empty($settings['coupon_show_email_column'])) {
 			// Use a late priority so we can adjust columns after WooCommerce or other plugins.
 			add_filter('manage_edit-shop_coupon_columns', [__CLASS__, 'add_coupon_email_column'], 99);
@@ -212,7 +217,7 @@ final class User_Manager_Core {
 		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_admin_bar_link'], 98);
 		add_action('admin_bar_menu', [__CLASS__, 'add_custom_admin_bar_menu_items'], 99);
 		// Quick Search add-on runs only when explicitly activated.
-		$quick_search_enabled = !empty($settings['um_quick_search_enabled']);
+		$quick_search_enabled = !empty($settings['um_quick_search_enabled']) && !self::is_addon_temporarily_disabled('quick-search');
 		if ($quick_search_enabled) {
 			add_action('admin_bar_menu', [__CLASS__, 'add_quick_search_admin_bar_item'], 100);
 			add_action('admin_footer', [__CLASS__, 'render_quick_search_dropdown']);
@@ -223,7 +228,9 @@ final class User_Manager_Core {
 		}
 		
 		// New User Coupons: defer creation to front-end visits.
-		add_action('template_redirect', [__CLASS__, 'maybe_create_new_user_coupon_on_visit'], 9);
+		if (!empty($settings['nuc_enabled']) && !self::is_addon_temporarily_disabled('coupon-for-new-user')) {
+			add_action('template_redirect', [__CLASS__, 'maybe_create_new_user_coupon_on_visit'], 9);
+		}
 		// View monitoring: log page/post/product and archive views for reporting.
 		add_action('template_redirect', [__CLASS__, 'maybe_log_view_reports'], 19);
 		// 404 monitoring: log front-end 404 hits for reporting.
@@ -244,14 +251,16 @@ final class User_Manager_Core {
 			add_action('wp_footer', [__CLASS__, 'inject_checkout_remaining_balance_notice'], 5);
 			add_action('wp_footer', [__CLASS__, 'render_public_coupon_debug_output'], 999);
 		}
-		add_action('admin_notices', [__CLASS__, 'render_non_production_admin_notice'], 6);
-		add_action('wp_footer', [__CLASS__, 'render_non_production_frontend_notice_bar_fallback'], 0);
-		add_action('wp_body_open', [__CLASS__, 'render_non_production_frontend_notice_bar'], 1);
-		add_filter('pre_wp_mail', [__CLASS__, 'maybe_block_staging_dev_wp_mail'], 10, 2);
-		add_filter('woocommerce_available_payment_gateways', [__CLASS__, 'maybe_disable_staging_dev_payment_gateways'], 999);
-		add_filter('pre_http_request', [__CLASS__, 'maybe_block_staging_dev_http_requests'], 10, 3);
-		add_filter('rest_pre_dispatch', [__CLASS__, 'maybe_block_staging_dev_rest_requests'], 10, 3);
-		add_filter('woocommerce_webhook_should_deliver', [__CLASS__, 'maybe_block_staging_dev_woocommerce_webhook'], 10, 4);
+		if (self::is_staging_dev_overrides_enabled($settings)) {
+			add_action('admin_notices', [__CLASS__, 'render_non_production_admin_notice'], 6);
+			add_action('wp_footer', [__CLASS__, 'render_non_production_frontend_notice_bar_fallback'], 0);
+			add_action('wp_body_open', [__CLASS__, 'render_non_production_frontend_notice_bar'], 1);
+			add_filter('pre_wp_mail', [__CLASS__, 'maybe_block_staging_dev_wp_mail'], 10, 2);
+			add_filter('woocommerce_available_payment_gateways', [__CLASS__, 'maybe_disable_staging_dev_payment_gateways'], 999);
+			add_filter('pre_http_request', [__CLASS__, 'maybe_block_staging_dev_http_requests'], 10, 3);
+			add_filter('rest_pre_dispatch', [__CLASS__, 'maybe_block_staging_dev_rest_requests'], 10, 3);
+			add_filter('woocommerce_webhook_should_deliver', [__CLASS__, 'maybe_block_staging_dev_woocommerce_webhook'], 10, 4);
+		}
 		
 		// Frontend/site-wide behavior toggles based on settings.
 		$settings = self::get_settings();
@@ -266,7 +275,8 @@ final class User_Manager_Core {
 
 		// When enabled, clear applied coupons automatically whenever the cart
 		// becomes empty (e.g. quantity changed from 1 to 0 or last item removed).
-		if (!empty($settings['coupon_notifications_clear_coupons_when_cart_empty']) && class_exists('WooCommerce')) {
+		$coupon_notifications_enabled = !empty($settings['user_coupon_notifications_enabled']) && !self::is_addon_temporarily_disabled('coupon-notifications-for-users-with-coupons');
+		if ($coupon_notifications_enabled && !empty($settings['coupon_notifications_clear_coupons_when_cart_empty']) && class_exists('WooCommerce')) {
 			add_action('woocommerce_cart_updated', [__CLASS__, 'maybe_clear_coupons_when_cart_empty']);
 		}
 
