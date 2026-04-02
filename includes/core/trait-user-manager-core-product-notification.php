@@ -60,7 +60,7 @@ trait User_Manager_Core_Product_Notification_Trait {
 			'label' => __('Display a Woocommerce Notification Above Product at All Times?', 'user-manager'),
 			'desc_tip' => true,
 			'description' => __('If this field has text, a WooCommerce-style message displays above this product at all times.', 'user-manager'),
-			'placeholder' => __('"%PRODUCT_TITLE%" has been added to your cart.', 'user-manager'),
+			'placeholder' => __('Customers have reported that this item runs small', 'user-manager'),
 			'value' => $message,
 		]);
 

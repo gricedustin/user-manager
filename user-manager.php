@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.26
+ * Version: 2.5.27
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.27 - March 16, 2026
+ * - Product Notification: updated the default placeholder text for "Display a Woocommerce Notification Above Product at All Times?" to "Customers have reported that this item runs small".
+ *
  * 2.5.26 - March 16, 2026
  * - Added new Add-on: Product Notification.
  * - When activated, WooCommerce products get new Product Data > General fields: "Display a Woocommerce Notification Above Product at All Times?", "Optional Button Title", and "Optional Button URL".
