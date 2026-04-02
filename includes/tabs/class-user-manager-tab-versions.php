@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.18 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Remaining Balance notices (checkout + order received) now suppress currency labels when the configured currency symbol/name is longer than 1 character (e.g. "Points"), showing numeric-only values like 90.00.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Single-character currency symbols (such as $) continue to display as before.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.17 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings > Email Settings now defaults empty "Send From Name" to the website title, and defaults empty "Send From Email Address" / "Reply To Email Address" to noreply@{site-domain}.', 'user-manager'); ?></li>

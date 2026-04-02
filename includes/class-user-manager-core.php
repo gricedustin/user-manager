@@ -45,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.17';
+	const VERSION = '2.5.18';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -6656,17 +6656,17 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		
-		// Format the remaining amount as plain text (no HTML classes)
-		$formatted_remaining = $currency_symbol . number_format($total_remaining, 2, '.', '');
+		// Format amounts; hide long currency labels (e.g. "Points") in checkout notices.
+		$formatted_remaining = self::format_checkout_remainder_amount($total_remaining, $currency_symbol);
 		
 		// Build calculation text
 		$calculation_text = '';
 		if (count($calculations) === 1) {
 			// Single coupon
 			$calc = $calculations[0];
-			$formatted_original = $currency_symbol . number_format($calc['original'], 2, '.', '');
-			$formatted_discount = $currency_symbol . number_format($calc['discount'], 2, '.', '');
-			$formatted_remaining_single = $currency_symbol . number_format($calc['remaining'], 2, '.', '');
+			$formatted_original = self::format_checkout_remainder_amount((float) $calc['original'], $currency_symbol);
+			$formatted_discount = self::format_checkout_remainder_amount((float) $calc['discount'], $currency_symbol);
+			$formatted_remaining_single = self::format_checkout_remainder_amount((float) $calc['remaining'], $currency_symbol);
 			$calculation_text = sprintf(
 				/* translators: 1: original amount, 2: discount used, 3: remaining amount */
 				esc_html__('%1$s (Original) - %2$s (Discount Applied) = %3$s (Remaining)', 'user-manager'),
@@ -6682,8 +6682,8 @@ html body .woocommerce-layout__header {
 				$total_original += $calc['original'];
 				$total_discount += $calc['discount'];
 			}
-			$formatted_original = $currency_symbol . number_format($total_original, 2, '.', '');
-			$formatted_discount = $currency_symbol . number_format($total_discount, 2, '.', '');
+			$formatted_original = self::format_checkout_remainder_amount($total_original, $currency_symbol);
+			$formatted_discount = self::format_checkout_remainder_amount($total_discount, $currency_symbol);
 			$calculation_text = sprintf(
 				/* translators: 1: total original amount, 2: total discount used, 3: total remaining amount */
 				esc_html__('%1$s (Total Original) - %2$s (Total Discount Applied) = %3$s (Total Remaining)', 'user-manager'),
@@ -6808,17 +6808,17 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		
-		// Format the remaining amount as plain text (no HTML classes)
-		$formatted_remaining = $currency_symbol . number_format($total_remaining, 2, '.', '');
+		// Format amounts; hide long currency labels (e.g. "Points") in checkout notices.
+		$formatted_remaining = self::format_checkout_remainder_amount($total_remaining, $currency_symbol);
 		
 		// Build calculation text
 		$calculation_text = '';
 		if (count($calculations) === 1) {
 			// Single coupon
 			$calc = $calculations[0];
-			$formatted_original = $currency_symbol . number_format($calc['original'], 2, '.', '');
-			$formatted_discount = $currency_symbol . number_format($calc['discount'], 2, '.', '');
-			$formatted_remaining_single = $currency_symbol . number_format($calc['remaining'], 2, '.', '');
+			$formatted_original = self::format_checkout_remainder_amount((float) $calc['original'], $currency_symbol);
+			$formatted_discount = self::format_checkout_remainder_amount((float) $calc['discount'], $currency_symbol);
+			$formatted_remaining_single = self::format_checkout_remainder_amount((float) $calc['remaining'], $currency_symbol);
 			$calculation_text = sprintf(
 				/* translators: 1: original amount, 2: discount used, 3: remaining amount */
 				esc_html__('%1$s (Original) - %2$s (Discount Applied) = %3$s (Remaining)', 'user-manager'),
@@ -6834,8 +6834,8 @@ html body .woocommerce-layout__header {
 				$total_original += $calc['original'];
 				$total_discount += $calc['discount'];
 			}
-			$formatted_original = $currency_symbol . number_format($total_original, 2, '.', '');
-			$formatted_discount = $currency_symbol . number_format($total_discount, 2, '.', '');
+			$formatted_original = self::format_checkout_remainder_amount($total_original, $currency_symbol);
+			$formatted_discount = self::format_checkout_remainder_amount($total_discount, $currency_symbol);
 			$calculation_text = sprintf(
 				/* translators: 1: total original amount, 2: total discount used, 3: total remaining amount */
 				esc_html__('%1$s (Total Original) - %2$s (Total Discount Applied) = %3$s (Total Remaining)', 'user-manager'),
@@ -7035,7 +7035,7 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		
-		$formatted_total = $currency_symbol . number_format($total_remaining, 2, '.', '');
+		$formatted_total = self::format_checkout_remainder_amount($total_remaining, $currency_symbol);
 		
 		?>
 		<div class="woocommerce-message um-remainder-notice" role="alert" style="display:block;">
@@ -7058,7 +7058,7 @@ html body .woocommerce-layout__header {
 				echo '<span style="font-weight:600;">' . esc_html__('Coupon codes:', 'user-manager') . '</span>';
 				echo '<ul style="margin:6px 0 0;padding-left:1.25em;list-style:disc;">';
 				foreach ($coupon_codes as $coupon_info) {
-					$formatted_amount = $currency_symbol . number_format($coupon_info['amount'], 2, '.', '');
+					$formatted_amount = self::format_checkout_remainder_amount((float) $coupon_info['amount'], $currency_symbol);
 					echo '<li style="margin-bottom:4px;word-break:break-all;">' . esc_html(strtoupper($coupon_info['code'])) . ' <strong>(' . esc_html($formatted_amount) . ')</strong></li>';
 				}
 				echo '</ul></div>';
@@ -7066,6 +7066,21 @@ html body .woocommerce-layout__header {
 			?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Format remainder notice amounts for checkout/order-received UI.
+	 *
+	 * If the currency symbol is longer than 1 character (e.g. "Points"),
+	 * hide it and show numeric-only value in these notices.
+	 */
+	private static function format_checkout_remainder_amount(float $amount, string $currency_symbol): string {
+		$symbol = trim((string) $currency_symbol);
+		$formatted_number = number_format($amount, 2, '.', '');
+		if (strlen($symbol) > 1) {
+			return $formatted_number;
+		}
+		return $symbol . $formatted_number;
 	}
 
 	/**

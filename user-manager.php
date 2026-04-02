@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.17
+ * Version: 2.5.18
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.18 - March 16, 2026
+ * - Remaining balance checkout + order-received notices now hide currency text when the currency symbol/label is longer than 1 character (example: "Points"), showing numeric-only amounts for cleaner display.
+ * - Applies to classic checkout notice, block checkout notice, and order received remaining-balance confirmation amounts/calculations.
+ *
  * 2.5.17 - March 16, 2026
  * - Email Settings defaults: when sender fields are left empty, User Manager now defaults to Site Title for "Send From Name" and noreply@{site-domain} for both "Send From Email Address" and "Reply To Email Address".
  * - Updated Settings tab field rendering and runtime header generation so defaults are consistent across UI and outgoing email behavior.
