@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.24 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on description now explicitly includes "Security" phrasing so it appears under Add-ons > Security filter tagging.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.23 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Post Meta Viewer edit mode no longer posts every existing meta field on save; unchanged rows are now excluded from form submission to prevent oversized product-edit requests.', 'user-manager'); ?></li>

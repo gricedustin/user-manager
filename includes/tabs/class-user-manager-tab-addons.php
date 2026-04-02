@@ -1304,7 +1304,7 @@ class User_Manager_Tab_Addons {
 			],
 			'restricted-access' => [
 				'label'  => __('Restricted Access', 'user-manager'),
-				'description' => __('Gate site access with redirect/overlay behavior, shared password or URL token access, role exclusions, and configurable full-screen lock messaging.', 'user-manager'),
+				'description' => __('Security: gate site access with redirect/overlay behavior, shared password or URL token access, role exclusions, and configurable full-screen lock messaging.', 'user-manager'),
 				'active' => !empty($settings['restricted_access_enabled']),
 			],
 			'send-email-users' => [
