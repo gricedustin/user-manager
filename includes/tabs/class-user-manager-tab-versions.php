@@ -39,9 +39,9 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.5.27 <span>(March 16, 2026)</span></h4>
+						<h4>2.5.28 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Product Notification: updated the default placeholder text for "Display a Woocommerce Notification Above Product at All Times?" to "Customers have reported that this item runs small".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Product Notification: removed the default View cart button fallback. The button now renders only when both Optional Button Title and Optional Button URL are explicitly provided.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

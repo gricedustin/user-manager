@@ -143,14 +143,7 @@ trait User_Manager_Core_Product_Notification_Trait {
 		$resolved_message = wp_kses_post($resolved_message);
 
 		$button_title = trim((string) get_post_meta($product_id, self::$product_notification_button_title_meta_key, true));
-		if ($button_title === '') {
-			$button_title = __('View cart', 'user-manager');
-		}
-
 		$button_url = trim((string) get_post_meta($product_id, self::$product_notification_button_url_meta_key, true));
-		if ($button_url === '' && function_exists('wc_get_cart_url')) {
-			$button_url = wc_get_cart_url();
-		}
 
 		$settings = self::get_settings();
 		$colors = self::get_product_notification_color_settings($settings);
@@ -176,7 +169,7 @@ trait User_Manager_Core_Product_Notification_Trait {
 		</style>
 		<div class="woocommerce-message um-product-notification-message" role="alert" style="<?php echo $notice_style; ?>" tabindex="-1">
 			<?php echo wp_kses_post($resolved_message); ?>
-			<?php if ($button_url !== '') : ?>
+			<?php if ($button_title !== '' && $button_url !== '') : ?>
 				<a href="<?php echo esc_url($button_url); ?>" class="button wc-forward um-product-notification-button" style="<?php echo $button_style; ?>"><?php echo esc_html($button_title); ?></a>
 			<?php endif; ?>
 		</div>
