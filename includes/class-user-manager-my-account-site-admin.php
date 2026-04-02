@@ -42,6 +42,14 @@ final class User_Manager_My_Account_Site_Admin {
 		if (self::$initialized) {
 			return;
 		}
+
+		if (!class_exists('User_Manager_Core') || !method_exists('User_Manager_Core', 'get_settings')) {
+			return;
+		}
+		$settings = User_Manager_Core::get_settings();
+		if (!self::is_addon_enabled($settings)) {
+			return;
+		}
 		self::$initialized = true;
 
 		add_action('init', [__CLASS__, 'register_rewrite_endpoints'], 20, 0);
@@ -1427,6 +1435,10 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @return bool
 	 */
 	private static function is_addon_enabled(array $settings): bool {
+		if (class_exists('User_Manager_Core') && method_exists('User_Manager_Core', 'is_addon_temporarily_disabled')
+			&& User_Manager_Core::is_addon_temporarily_disabled('my-account-site-admin')) {
+			return false;
+		}
 		if (array_key_exists('my_account_site_admin_enabled', $settings)) {
 			return !empty($settings['my_account_site_admin_enabled']);
 		}

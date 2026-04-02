@@ -45,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.18';
+	const VERSION = '2.5.19';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -192,7 +192,8 @@ final class User_Manager_Core {
 
 		// User Activity: log WooCommerce orders when available.
 		// Keep this scoped to the New User Coupons add-on context.
-		if (class_exists('WooCommerce') && !empty($settings['nuc_enabled']) && !self::is_addon_temporarily_disabled('coupon-for-new-user')) {
+		$new_user_coupons_enabled = self::is_new_user_coupons_enabled($settings);
+		if (class_exists('WooCommerce') && $new_user_coupons_enabled) {
 			// Fire after order is marked processing or completed.
 			add_action('woocommerce_order_status_processing', [__CLASS__, 'log_user_order_activity'], 20, 1);
 			add_action('woocommerce_order_status_completed', [__CLASS__, 'log_user_order_activity'], 20, 1);
@@ -210,7 +211,7 @@ final class User_Manager_Core {
 			add_filter('manage_edit-shop_coupon_columns', [__CLASS__, 'add_coupon_email_column'], 99);
 			add_action('manage_shop_coupon_posts_custom_column', [__CLASS__, 'render_coupon_email_column'], 10, 2);
 		}
-		if (class_exists('User_Manager_My_Account_Site_Admin')) {
+		if (class_exists('User_Manager_My_Account_Site_Admin') && self::is_my_account_site_admin_enabled($settings)) {
 			User_Manager_My_Account_Site_Admin::init();
 		}
 
@@ -228,7 +229,7 @@ final class User_Manager_Core {
 		}
 		
 		// New User Coupons: defer creation to front-end visits.
-		if (!empty($settings['nuc_enabled']) && !self::is_addon_temporarily_disabled('coupon-for-new-user')) {
+		if ($new_user_coupons_enabled) {
 			add_action('template_redirect', [__CLASS__, 'maybe_create_new_user_coupon_on_visit'], 9);
 		}
 		// View monitoring: log page/post/product and archive views for reporting.
@@ -269,7 +270,7 @@ final class User_Manager_Core {
 			add_action('wp_footer', [__CLASS__, 'print_lost_password_rebrand_script']);
 			add_filter('password_change_email', [__CLASS__, 'filter_password_change_email'], 10, 3);
 		}
-		if (!empty($settings['nuc_debug_mode'])) {
+		if (!empty($settings['nuc_debug_mode']) && $new_user_coupons_enabled) {
 			add_action('wp_footer', [__CLASS__, 'render_new_user_coupon_debug_panel'], 1000);
 		}
 
@@ -399,6 +400,39 @@ final class User_Manager_Core {
 			$settings = self::get_settings();
 		}
 		return !empty($settings['staging_dev_overrides_enabled']) && !self::is_addon_temporarily_disabled('staging-development-environment-overrides');
+	}
+
+	/**
+	 * Whether New User Coupons add-on is active.
+	 *
+	 * @param array<string,mixed>|null $settings Optional settings cache.
+	 */
+	private static function is_new_user_coupons_enabled(?array $settings = null): bool {
+		if ($settings === null) {
+			$settings = self::get_settings();
+		}
+		return !empty($settings['nuc_enabled']) && !self::is_addon_temporarily_disabled('coupon-for-new-user');
+	}
+
+	/**
+	 * Whether My Account Site Admin add-on is active.
+	 *
+	 * @param array<string,mixed>|null $settings Optional settings cache.
+	 */
+	private static function is_my_account_site_admin_enabled(?array $settings = null): bool {
+		if ($settings === null) {
+			$settings = self::get_settings();
+		}
+		$enabled = false;
+		if (array_key_exists('my_account_site_admin_enabled', $settings)) {
+			$enabled = !empty($settings['my_account_site_admin_enabled']);
+		} else {
+			$enabled = !empty($settings['my_account_admin_order_viewer_enabled'])
+				|| !empty($settings['my_account_admin_product_viewer_enabled'])
+				|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
+				|| !empty($settings['my_account_admin_user_viewer_enabled']);
+		}
+		return $enabled && !self::is_addon_temporarily_disabled('my-account-site-admin');
 	}
 
 	/**

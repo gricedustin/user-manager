@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.18
+ * Version: 2.5.19
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.19 - March 16, 2026
+ * - Add-on runtime-gating hardening follow-up: My Account Site Admin hooks now only initialize when its add-on is enabled (including URL temporary-disable support), preventing endpoint/query-var hooks from registering while inactive.
+ * - New User Coupons debug panel hook now only registers when the New User Coupons add-on is active, eliminating debug panel runtime when the add-on is disabled.
+ *
  * 2.5.18 - March 16, 2026
  * - Remaining balance checkout + order-received notices now hide currency text when the currency symbol/label is longer than 1 character (example: "Points"), showing numeric-only amounts for cleaner display.
  * - Applies to classic checkout notice, block checkout notice, and order received remaining-balance confirmation amounts/calculations.

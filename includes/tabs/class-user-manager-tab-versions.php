@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.19 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-on runtime gating hardening: My Account Site Admin hooks are now only initialized when that add-on is active (including URL temporary disable support).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('New User Coupons debug panel hook now registers only when the New User Coupons add-on is active, preventing debug UI from running while the add-on is off.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.18 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Remaining Balance notices (checkout + order received) now suppress currency labels when the configured currency symbol/name is longer than 1 character (e.g. "Points"), showing numeric-only values like 90.00.', 'user-manager'); ?></li>
