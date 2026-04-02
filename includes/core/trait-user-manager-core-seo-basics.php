@@ -52,6 +52,12 @@ trait User_Manager_Core_SEO_Basics_Trait {
 		$title_override = (string) get_post_meta($post->ID, '_um_seo_basics_title_override', true);
 		$description_override = (string) get_post_meta($post->ID, '_um_seo_basics_description_override', true);
 		$image_url = self::get_seo_basics_meta_image_url((int) $post->ID);
+		$title_limit = 60;
+		$description_limit = 160;
+		$title_length = function_exists('mb_strlen') ? mb_strlen($title_override) : strlen($title_override);
+		$description_length = function_exists('mb_strlen') ? mb_strlen($description_override) : strlen($description_override);
+		$title_remaining = $title_limit - $title_length;
+		$description_remaining = $description_limit - $description_length;
 
 		wp_nonce_field('um_save_seo_basics_meta', 'um_seo_basics_meta_nonce');
 		?>
@@ -67,6 +73,11 @@ trait User_Manager_Core_SEO_Basics_Trait {
 					placeholder="<?php esc_attr_e('Optional custom <title> text', 'user-manager'); ?>"
 				/>
 			</p>
+			<p class="description" style="margin-top:-6px;">
+				<?php esc_html_e('Recommended length: 60 characters.', 'user-manager'); ?>
+				<?php esc_html_e('Characters left:', 'user-manager'); ?>
+				<strong id="um-seo-basics-title-countdown" data-limit="<?php echo esc_attr((string) $title_limit); ?>"><?php echo esc_html((string) $title_remaining); ?></strong>
+			</p>
 			<p>
 				<label for="um-seo-basics-description-override"><strong><?php esc_html_e('Page Description Override', 'user-manager'); ?></strong></label><br />
 				<textarea
@@ -76,6 +87,11 @@ trait User_Manager_Core_SEO_Basics_Trait {
 					rows="4"
 					placeholder="<?php esc_attr_e('Optional meta description text', 'user-manager'); ?>"
 				><?php echo esc_textarea($description_override); ?></textarea>
+			</p>
+			<p class="description" style="margin-top:-6px;">
+				<?php esc_html_e('Recommended length: 160 characters.', 'user-manager'); ?>
+				<?php esc_html_e('Characters left:', 'user-manager'); ?>
+				<strong id="um-seo-basics-description-countdown" data-limit="<?php echo esc_attr((string) $description_limit); ?>"><?php echo esc_html((string) $description_remaining); ?></strong>
 			</p>
 			<p class="description" style="margin-bottom:0;">
 				<?php esc_html_e('Meta Image: uses Featured Image first. If none is set, falls back to the first image found in page/post content.', 'user-manager'); ?>
@@ -92,6 +108,41 @@ trait User_Manager_Core_SEO_Basics_Trait {
 				</p>
 			<?php endif; ?>
 		</div>
+		<script>
+		(function() {
+			var titleField = document.getElementById('um-seo-basics-title-override');
+			var titleCountdown = document.getElementById('um-seo-basics-title-countdown');
+			var descriptionField = document.getElementById('um-seo-basics-description-override');
+			var descriptionCountdown = document.getElementById('um-seo-basics-description-countdown');
+			function updateCountdown(field, countdown) {
+				if (!field || !countdown) {
+					return;
+				}
+				var limit = parseInt(countdown.getAttribute('data-limit') || '0', 10);
+				if (!limit || isNaN(limit)) {
+					limit = 0;
+				}
+				var value = field.value || '';
+				var remaining = limit - value.length;
+				countdown.textContent = String(remaining);
+				countdown.style.color = remaining < 0 ? '#b32d2e' : '';
+			}
+			function bindCountdown(field, countdown) {
+				if (!field || !countdown) {
+					return;
+				}
+				field.addEventListener('input', function() {
+					updateCountdown(field, countdown);
+				});
+				field.addEventListener('change', function() {
+					updateCountdown(field, countdown);
+				});
+				updateCountdown(field, countdown);
+			}
+			bindCountdown(titleField, titleCountdown);
+			bindCountdown(descriptionField, descriptionCountdown);
+		})();
+		</script>
 		<?php
 	}
 
