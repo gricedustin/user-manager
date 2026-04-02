@@ -182,7 +182,7 @@ class User_Manager_Tab_Shared {
 			umCurrentFormType = formType;
 			umIsConfirmation = isConfirmation || false;
 			
-			var email = '', username = '', firstName = '', lastName = '', loginUrl = '/my-account/', templateId = '', couponCode = '';
+			var email = '', username = '', firstName = '', lastName = '', loginUrl = '/my-account/', templateId = '', couponCode = '', couponCodeValue = '';
 			var subject = umDefaultSubject;
 			
 			if (formType === 'single') {
@@ -258,6 +258,7 @@ class User_Manager_Tab_Shared {
 				loginUrl   = '/my-account/';
 				templateId = jQuery('#um-coupon-remainder-email-template').val();
 				couponCode = 'REMAINING-BALANCE-123456';
+				couponCodeValue = '$25.00';
 			} else if (formType === 'email-users') {
 				// Email Users: get values from email-users form
 				var emailsRaw = jQuery('#um-email-users-list').val();
@@ -289,6 +290,7 @@ class User_Manager_Tab_Shared {
 				.replace(/%EMAIL%/g, email)
 				.replace(/%FIRSTNAME%/g, firstName)
 				.replace(/%LASTNAME%/g, lastName)
+				.replace(/%COUPONCODEVALUE%/g, couponCodeValue || '')
 				.replace(/%COUPONCODE%/g, couponCode || 'SAMPLECOUPON123')
 				.replace(/\[coupon_code\]/g, couponCode || 'SAMPLECOUPON123');
 			
@@ -305,6 +307,7 @@ class User_Manager_Tab_Shared {
 				'&first_name=' + encodeURIComponent(firstName) +
 				'&last_name=' + encodeURIComponent(lastName) +
 				'&login_url=' + encodeURIComponent(loginUrl) +
+				'&coupon_code_value=' + encodeURIComponent(couponCodeValue || '') +
 				'&coupon_code=' + encodeURIComponent(couponCode || 'SAMPLECOUPON123');
 			
 			// Load preview in iframe

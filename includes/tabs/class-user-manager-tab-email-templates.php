@@ -224,6 +224,7 @@ class User_Manager_Tab_Email_Templates {
 									<code>%LASTNAME%</code>
 									<code>%PASSWORDRESETURL%</code>
 									<code>%COUPONCODE%</code>
+									<code>%COUPONCODEVALUE%</code>
 								</p>
 							</div>
 							
@@ -274,7 +275,7 @@ class User_Manager_Tab_Email_Templates {
 					<li><strong><?php esc_html_e('Send automated coupon', 'user-manager'); ?></strong> — <?php esc_html_e('Configured in Settings to trigger automated discounts & store credits for new users. Supports %COUPONCODE%.', 'user-manager'); ?>
 						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_auto_coupon', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
 					</li>
-					<li><strong><?php esc_html_e('Send automated remaining balance coupon', 'user-manager'); ?></strong> — <?php esc_html_e('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE%.', 'user-manager'); ?>
+					<li><strong><?php esc_html_e('Send automated remaining balance coupon', 'user-manager'); ?></strong> — <?php esc_html_e('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE% and %COUPONCODEVALUE%.', 'user-manager'); ?>
 						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_auto_coupon_remaining_balance', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
 					</li>
 					<li><strong><?php esc_html_e('Send $10 coupon apology', 'user-manager'); ?></strong> — <?php esc_html_e('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'); ?>

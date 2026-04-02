@@ -149,7 +149,7 @@ promo"><?php echo esc_textarea($settings['coupon_remainder_source_contains'] ?? 
 								<option value="<?php echo esc_attr($id); ?>" <?php selected($selected_template, $id); ?>><?php echo esc_html($template['title'] ?? $id); ?></option>
 							<?php endforeach; ?>
 						</select>
-						<p class="description"><?php esc_html_e('Supports both %COUPONCODE% and [coupon_code] variables.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Supports %COUPONCODEVALUE%, %COUPONCODE%, and [coupon_code] variables.', 'user-manager'); ?></p>
 						<p style="margin-top:8px;">
 							<button type="button" class="button" id="um-preview-coupon-remainder-email-btn"><?php esc_html_e('Preview Email', 'user-manager'); ?></button>
 						</p>

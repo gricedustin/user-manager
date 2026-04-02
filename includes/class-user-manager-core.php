@@ -45,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.15';
+	const VERSION = '2.5.16';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -4850,6 +4850,7 @@ html body .woocommerce-layout__header {
 		if (!$template || empty($user->user_email) || !is_email($user->user_email)) {
 			return;
 		}
+		$coupon_code_value = self::format_coupon_code_value_for_placeholder($coupon_code);
 		$replacements = [
 			'%SITEURL%' => home_url(),
 			'%LOGINURL%' => '/my-account/',
@@ -4860,6 +4861,7 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%' => $user->last_name,
 			'%PASSWORDRESETURL%' => home_url('/my-account/lost-password/'),
 			'%COUPONCODE%' => $coupon_code,
+			'%COUPONCODEVALUE%' => $coupon_code_value,
 			'[coupon_code]' => $coupon_code,
 		];
 		$subject = str_replace(array_keys($replacements), array_values($replacements), $template['subject'] ?? 'Your Coupon');
@@ -4889,6 +4891,7 @@ html body .woocommerce-layout__header {
 
 		$login_url = '/my-account/';
 		$username  = strstr($email, '@', true) ?: $email;
+		$coupon_code_value = self::format_coupon_code_value_for_placeholder($coupon_code);
 
 		$replacements = [
 			'%SITEURL%'         => home_url(),
@@ -4900,6 +4903,7 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%'        => '',
 			'%PASSWORDRESETURL%' => home_url('/my-account/lost-password/'),
 			'%COUPONCODE%'      => $coupon_code,
+			'%COUPONCODEVALUE%' => $coupon_code_value,
 			'[coupon_code]'     => $coupon_code,
 		];
 
@@ -4932,6 +4936,26 @@ html body .woocommerce-layout__header {
 		$templates = self::get_email_templates();
 		$template = $templates[$template_id] ?? null;
 		return is_array($template) ? $template : null;
+	}
+
+	/**
+	 * Format coupon amount for %COUPONCODEVALUE% placeholder.
+	 */
+	private static function format_coupon_code_value_for_placeholder(string $coupon_code): string {
+		$coupon_code = trim($coupon_code);
+		if ($coupon_code === '' || !class_exists('WC_Coupon')) {
+			return '';
+		}
+		try {
+			$coupon = new WC_Coupon($coupon_code);
+			if (!$coupon || !$coupon->get_id()) {
+				return '';
+			}
+			$amount = (float) $coupon->get_amount();
+			return function_exists('wc_price') ? (string) wc_price($amount) : (string) $amount;
+		} catch (\Throwable $throwable) {
+			return '';
+		}
 	}
 	
 	/**
@@ -9640,10 +9664,14 @@ html body .woocommerce-layout__header {
 		
 		// Ensure each template has an order; assign sequentially if missing.
 		$needs_persist = false;
+		$needs_template_migration = false;
 		$order = 1;
 		foreach ($templates as $id => &$tpl) {
 			if (!is_array($tpl)) {
 				$tpl = [];
+			}
+			if (self::normalize_legacy_remaining_balance_template($id, $tpl)) {
+				$needs_template_migration = true;
 			}
 			if (!isset($tpl['order']) || !is_numeric($tpl['order'])) {
 				$tpl['order'] = $order;
@@ -9661,12 +9689,61 @@ html body .woocommerce-layout__header {
 			return ($oa < $ob) ? -1 : 1;
 		});
 		
-		// Persist back if we had to assign order
-		if ($needs_persist) {
+		// Persist back if we had to assign order or migrate a legacy template preset body.
+		if ($needs_persist || $needs_template_migration) {
 			update_option(self::EMAIL_TEMPLATES_KEY, $templates);
 		}
 		
 		return $templates;
+	}
+
+	/**
+	 * Normalize legacy default remaining-balance email template content in-place.
+	 *
+	 * Only updates the template when it still matches the old shipped defaults,
+	 * so customized templates are preserved.
+	 *
+	 * @param string              $template_id Template identifier.
+	 * @param array<string,mixed> $template    Template payload (mutated by reference).
+	 */
+	private static function normalize_legacy_remaining_balance_template(string $template_id, array &$template): bool {
+		if ($template_id !== 'tpl_auto_coupon_remaining_balance') {
+			return false;
+		}
+
+		$updated = false;
+		$legacy_description = 'Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE%.';
+		$new_description = 'Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODEVALUE% and %COUPONCODE%.';
+		$legacy_body = '<p>Here is your remaining balance Coupon Code:<br>' . "\n" . '%COUPONCODE%</p>';
+		$new_body = self::get_coupon_remainder_template_default_body();
+
+		$normalize_newlines = static function (string $value): string {
+			return str_replace(["\r\n", "\r"], "\n", trim($value));
+		};
+
+		$current_description = isset($template['description']) && is_string($template['description']) ? $template['description'] : '';
+		if ($normalize_newlines($current_description) === $legacy_description) {
+			$template['description'] = $new_description;
+			$updated = true;
+		}
+
+		$current_body = isset($template['body']) && is_string($template['body']) ? $template['body'] : '';
+		if ($normalize_newlines($current_body) === '' || $normalize_newlines($current_body) === $normalize_newlines($legacy_body)) {
+			$template['body'] = $new_body;
+			$updated = true;
+		}
+
+		return $updated;
+	}
+
+	/**
+	 * Default body for the remaining-balance coupon email template.
+	 */
+	private static function get_coupon_remainder_template_default_body(): string {
+		return '<p>Remaining Balance:<br>' . "\n" .
+			'%COUPONCODEVALUE%</p>' . "\n\n" .
+			'<p>Coupon Code:<br>' . "\n" .
+			'%COUPONCODE%</p>';
 	}
 
 	/**
@@ -9977,6 +10054,10 @@ html body .woocommerce-layout__header {
 		$last_name   = isset($_GET['last_name']) ? sanitize_text_field($_GET['last_name']) : '';
 		$login_url   = isset($_GET['login_url']) ? sanitize_text_field($_GET['login_url']) : '/my-account/';
 		$coupon_code = isset($_GET['coupon_code']) ? sanitize_text_field($_GET['coupon_code']) : 'SAMPLECOUPON123';
+		$coupon_code_value = isset($_GET['coupon_code_value']) ? sanitize_text_field($_GET['coupon_code_value']) : '';
+		if ($coupon_code_value === '') {
+			$coupon_code_value = self::format_coupon_code_value_for_placeholder($coupon_code);
+		}
 
 		// Get template (supports custom "__um_default__" coupon template token).
 		$template = null;
@@ -10018,6 +10099,7 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%'        => $last_name,
 			'%PASSWORDRESETURL%' => $password_reset_url,
 			'%COUPONCODE%'      => $coupon_code,
+			'%COUPONCODEVALUE%' => $coupon_code_value,
 			'[coupon_code]'     => $coupon_code,
 		];
 

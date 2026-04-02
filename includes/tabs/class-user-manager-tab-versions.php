@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.16 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated "Send automated remaining balance coupon" demo email body to include both remaining balance amount and coupon code using %COUPONCODEVALUE% and %COUPONCODE%.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added %COUPONCODEVALUE% placeholder support across remaining-balance email send and preview flows, including automatic value resolution from the coupon amount.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.15 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons > User Coupon Remaining Balances: fixed Preview Email button reliability by binding the click handler with delegated events, so it works consistently even when the add-on card is conditionally rendered/toggled after page load.', 'user-manager'); ?></li>

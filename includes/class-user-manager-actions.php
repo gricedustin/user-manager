@@ -4814,10 +4814,13 @@ class User_Manager_Actions {
 			],
 			'tpl_auto_coupon_remaining_balance' => [
 				'title'       => __('Send automated remaining balance coupon', 'user-manager'),
-				'description' => __('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE%.', 'user-manager'),
+				'description' => __('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODEVALUE% and %COUPONCODE%.', 'user-manager'),
 				'subject'     => __('You have a remaining balance', 'user-manager'),
 				'heading'     => __('You have a remaining balance', 'user-manager'),
-				'body'        => '<p>Here is your remaining balance Coupon Code:<br>
+				'body'        => '<p>Remaining Balance:<br>
+%COUPONCODEVALUE%</p>
+
+<p>Coupon Code:<br>
 %COUPONCODE%</p>',
 			],
 		];

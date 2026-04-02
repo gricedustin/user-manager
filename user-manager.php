@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.15
+ * Version: 2.5.16
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.16 - March 16, 2026
+ * - Updated "Send automated remaining balance coupon" demo template body to include both Remaining Balance (%COUPONCODEVALUE%) and Coupon Code (%COUPONCODE%).
+ * - Added %COUPONCODEVALUE% placeholder support to coupon email sends and preview rendering, including remainder-coupon workflows.
+ * - Existing default remaining-balance template entries are auto-updated to the new body when unchanged/customization-safe.
+ *
  * 2.5.15 - March 16, 2026
  * - Add-ons > User Coupon Remaining Balances: fixed Preview Email button to use delegated click binding so it works reliably when Add-ons cards/toggles are re-rendered or initially hidden.
  * - Preview now uses the same shared modal invocation pattern as other working preview buttons, restoring consistent behavior for coupon remainder template previews.
