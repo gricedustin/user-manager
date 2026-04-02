@@ -39,10 +39,10 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.5.22 <span>(March 16, 2026)</span></h4>
+						<h4>2.5.23 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('SEO Basics meta box now shows recommended character lengths for Page Title Override and Page Description Override.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Added live character countdown indicators so editors can see how many characters are left for each SEO field while typing.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Post Meta Viewer edit mode no longer posts every existing meta field on save; unchanged rows are now excluded from form submission to prevent oversized product-edit requests.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixes WooCommerce product fields (including price and related settings) being dropped when "Allow editing of post meta values" is enabled and forms exceed PHP input limits.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

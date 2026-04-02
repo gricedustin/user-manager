@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.22
+ * Version: 2.5.23
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.23 - March 16, 2026
+ * - Fixed Post Meta Viewer edit mode on high-meta screens (like WooCommerce products): existing meta values now submit only when changed, preventing oversized form submissions that can block core product fields (such as price) from saving.
+ * - Existing meta fields in the Post Meta Viewer now use data-meta-key + lightweight JS mirrors so unchanged rows do not inflate POST payload size.
+ *
  * 2.5.22 - March 16, 2026
  * - SEO Basics meta box now shows recommended character targets (Title: 60, Description: 160).
  * - Added live character countdown indicators for title/description override fields to show how many characters are left.

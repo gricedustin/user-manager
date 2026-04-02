@@ -47,7 +47,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.22';
+	const VERSION = '2.5.23';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -1308,6 +1308,7 @@ final class User_Manager_Core {
 			.um-all-post-meta-table .um-post-meta-new-sep { background: #f6f7f7; font-weight: 600; }
 			.um-all-post-meta-table .um-post-meta-new-sep td { border-top: 2px solid #c3c4c7; padding-top: 10px; }
 			.um-all-post-meta-table .um-post-meta-add-row td { border-top: 1px solid #c3c4c7; padding-top: 8px; }
+			.um-all-post-meta-table .um-post-meta-unchanged { opacity: 0.6; }
 		</style>
 		<table class="um-all-post-meta-table widefat striped">
 			<thead>
@@ -1328,7 +1329,13 @@ final class User_Manager_Core {
 							<td>
 								<?php if ($can_edit) : ?>
 									<label for="um_pm_<?php echo esc_attr(sanitize_html_class($key)); ?>" class="screen-reader-text"><?php echo esc_html($key); ?></label>
-									<textarea name="um_post_meta_edit[<?php echo esc_attr($key); ?>]" id="um_pm_<?php echo esc_attr(sanitize_html_class($key)); ?>" rows="2"><?php echo esc_textarea($display_val); ?></textarea>
+									<textarea
+										name="um_post_meta_edit[<?php echo esc_attr($key); ?>]"
+										id="um_pm_<?php echo esc_attr(sanitize_html_class($key)); ?>"
+										rows="2"
+										data-um-original-value="<?php echo esc_attr($display_val); ?>"
+										class="um-post-meta-edit-field um-post-meta-unchanged"
+									><?php echo esc_textarea($display_val); ?></textarea>
 								<?php else : ?>
 									<pre style="margin:0; white-space: pre-wrap; word-break: break-word; font-size: 12px;"><?php echo esc_html($display_val); ?></pre>
 								<?php endif; ?>
@@ -1364,11 +1371,13 @@ final class User_Manager_Core {
 		<?php if ($can_edit) : ?>
 			<?php wp_nonce_field('um_save_post_meta_meta_box', 'um_post_meta_meta_box_nonce'); ?>
 			<p class="description" style="margin-top: 8px;"><?php esc_html_e('Save the post to apply changes. Edit existing meta above or add new key/value pairs below.', 'user-manager'); ?></p>
+			<p class="description" style="margin-top: 4px;"><?php esc_html_e('Performance tip: only changed meta values are submitted to avoid oversized save requests on Products.', 'user-manager'); ?></p>
 			<script>
 			(function() {
 				var template = document.getElementById('um-post-meta-new-template');
 				var addRowTr = document.getElementById('um-post-meta-add-row-tr');
 				var btn = document.getElementById('um-post-meta-add-row');
+				var form = document.getElementById('post');
 				if (!template || !addRowTr || !btn) return;
 				btn.addEventListener('click', function() {
 					var clone = template.cloneNode(true);
@@ -1377,6 +1386,35 @@ final class User_Manager_Core {
 					clone.querySelector('textarea').value = '';
 					addRowTr.parentNode.insertBefore(clone, addRowTr);
 				});
+				function syncChangedState(field) {
+					if (!field) { return; }
+					var original = field.getAttribute('data-um-original-value') || '';
+					if (field.value === original) {
+						field.classList.add('um-post-meta-unchanged');
+					} else {
+						field.classList.remove('um-post-meta-unchanged');
+					}
+				}
+				var fields = document.querySelectorAll('.um-post-meta-edit-field');
+				fields.forEach(function(field) {
+					syncChangedState(field);
+					field.addEventListener('input', function() {
+						syncChangedState(field);
+					});
+					field.addEventListener('change', function() {
+						syncChangedState(field);
+					});
+				});
+				if (form) {
+					form.addEventListener('submit', function() {
+						fields.forEach(function(field) {
+							var original = field.getAttribute('data-um-original-value') || '';
+							if (field.value === original) {
+								field.disabled = true;
+							}
+						});
+					});
+				}
 			})();
 			</script>
 		<?php endif;
