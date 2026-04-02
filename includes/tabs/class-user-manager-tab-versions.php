@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.17 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > Email Settings now defaults empty "Send From Name" to the website title, and defaults empty "Send From Email Address" / "Reply To Email Address" to noreply@{site-domain}.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Email header generation now applies the same fallbacks at runtime so outbound emails remain consistent even when those fields are left blank.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.16 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated "Send automated remaining balance coupon" demo email body to include both remaining balance amount and coupon code using %COUPONCODEVALUE% and %COUPONCODE%.', 'user-manager'); ?></li>

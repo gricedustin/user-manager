@@ -10,6 +10,41 @@ if (!defined('ABSPATH')) {
 class User_Manager_Email {
 
 	/**
+	 * Default sender name when setting is empty.
+	 */
+	public static function get_default_from_name(): string {
+		$site_title = wp_strip_all_tags((string) get_bloginfo('name'));
+		$site_title = trim($site_title);
+		if ($site_title !== '') {
+			return $site_title;
+		}
+
+		return 'WordPress';
+	}
+
+	/**
+	 * Default noreply sender/reply-to email derived from website domain.
+	 */
+	public static function get_default_noreply_email(): string {
+		$home_host = wp_parse_url(home_url('/'), PHP_URL_HOST);
+		$host = is_string($home_host) ? trim(strtolower($home_host)) : '';
+		if ($host !== '') {
+			$host = preg_replace('/^www\./i', '', $host) ?: $host;
+			$candidate = 'noreply@' . $host;
+			if (is_email($candidate)) {
+				return $candidate;
+			}
+		}
+
+		$admin_email = (string) get_option('admin_email');
+		if ($admin_email !== '' && is_email($admin_email)) {
+			return $admin_email;
+		}
+
+		return 'noreply@example.com';
+	}
+
+	/**
 	 * Build email headers with From and Reply-To based on settings.
 	 *
 	 * @param array $additional_headers Optional additional headers to include.
@@ -20,31 +55,28 @@ class User_Manager_Email {
 		
 		$settings = User_Manager_Core::get_settings();
 		
-		// Set From header if configured
-		$from_name = $settings['send_from_name'] ?? '';
-		$from_email = $settings['send_from_email'] ?? '';
-		
-		if (!empty($from_email) && is_email($from_email)) {
-			if (!empty($from_name)) {
-				$headers[] = 'From: ' . $from_name . ' <' . $from_email . '>';
-			} else {
-				$headers[] = 'From: ' . $from_email;
-			}
-		} elseif (!empty($from_name)) {
-			// If only name is set, use default WordPress email with custom name
-			$default_email = get_option('admin_email');
-			if ($default_email && is_email($default_email)) {
-				$headers[] = 'From: ' . $from_name . ' <' . $default_email . '>';
-			}
+		$from_name = isset($settings['send_from_name']) ? trim((string) $settings['send_from_name']) : '';
+		if ($from_name === '') {
+			$from_name = self::get_default_from_name();
 		}
-		
-		// Set Reply-To header if configured
-		$reply_to = $settings['reply_to_email'] ?? '';
+
+		$from_email = isset($settings['send_from_email']) ? sanitize_email((string) $settings['send_from_email']) : '';
+		if (empty($from_email) || !is_email($from_email)) {
+			$from_email = self::get_default_noreply_email();
+		}
+
+		if (!empty($from_name)) {
+			$headers[] = 'From: ' . $from_name . ' <' . $from_email . '>';
+		} else {
+			$headers[] = 'From: ' . $from_email;
+		}
+
+		$reply_to = isset($settings['reply_to_email']) ? sanitize_email((string) $settings['reply_to_email']) : '';
+		if (empty($reply_to) || !is_email($reply_to)) {
+			$reply_to = self::get_default_noreply_email();
+		}
 		if (!empty($reply_to) && is_email($reply_to)) {
 			$headers[] = 'Reply-To: ' . $reply_to;
-		} elseif (!empty($from_email) && is_email($from_email)) {
-			// If no Reply-To is set but From is set, use From as Reply-To
-			$headers[] = 'Reply-To: ' . $from_email;
 		}
 		
 		// Merge with additional headers

@@ -94,20 +94,32 @@ if (!defined('ABSPATH')) {
 						<h2><?php esc_html_e('Email Settings', 'user-manager'); ?></h2>
 					</div>
 					<div class="um-admin-card-body">
+						<?php
+						$default_send_from_name = get_bloginfo('name');
+						if (!is_string($default_send_from_name)) {
+							$default_send_from_name = '';
+						}
+						$default_send_from_name = trim($default_send_from_name);
+						if ($default_send_from_name === '') {
+							$default_send_from_name = 'WordPress';
+						}
+
+						$default_send_from_email = User_Manager_Email::get_default_noreply_email();
+						?>
 						<div class="um-form-field">
 							<label for="um-send-from-name"><?php esc_html_e('Send From Name', 'user-manager'); ?></label>
-							<input type="text" name="send_from_name" id="um-send-from-name" class="regular-text" value="<?php echo esc_attr($settings['send_from_name'] ?? ''); ?>" />
-							<p class="description"><?php esc_html_e('The name that appears in the "From" field of emails sent by User Manager. Leave empty to use WordPress default.', 'user-manager'); ?></p>
+							<input type="text" name="send_from_name" id="um-send-from-name" class="regular-text" value="<?php echo esc_attr($settings['send_from_name'] ?? ''); ?>" placeholder="<?php echo esc_attr($default_send_from_name); ?>" />
+							<p class="description"><?php esc_html_e('The name that appears in the "From" field of emails sent by User Manager. Leave empty to use your website title.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
 							<label for="um-send-from-email"><?php esc_html_e('Send From Email Address', 'user-manager'); ?></label>
-							<input type="email" name="send_from_email" id="um-send-from-email" class="regular-text" value="<?php echo esc_attr($settings['send_from_email'] ?? ''); ?>" />
-							<p class="description"><?php esc_html_e('The email address that appears in the "From" field of emails sent by User Manager. Leave empty to use WordPress default.', 'user-manager'); ?></p>
+							<input type="email" name="send_from_email" id="um-send-from-email" class="regular-text" value="<?php echo esc_attr($settings['send_from_email'] ?? ''); ?>" placeholder="<?php echo esc_attr($default_send_from_email); ?>" />
+							<p class="description"><?php esc_html_e('The email address that appears in the "From" field of emails sent by User Manager. Leave empty to use noreply@your-domain.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
 							<label for="um-reply-to-email"><?php esc_html_e('Reply To Email Address', 'user-manager'); ?></label>
-							<input type="email" name="reply_to_email" id="um-reply-to-email" class="regular-text" value="<?php echo esc_attr($settings['reply_to_email'] ?? ''); ?>" />
-							<p class="description"><?php esc_html_e('The email address that appears in the "Reply-To" field of emails sent by User Manager. Leave empty to use the From address.', 'user-manager'); ?></p>
+							<input type="email" name="reply_to_email" id="um-reply-to-email" class="regular-text" value="<?php echo esc_attr($settings['reply_to_email'] ?? ''); ?>" placeholder="<?php echo esc_attr($default_send_from_email); ?>" />
+							<p class="description"><?php esc_html_e('The email address that appears in the "Reply-To" field of emails sent by User Manager. Leave empty to use noreply@your-domain.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
 							<label>
