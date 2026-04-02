@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.19
+ * Version: 2.5.20
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.20 - March 16, 2026
+ * - Fixed Media Library Tag placeholder replacement in the HTML document <title> path by adding fallback context detection when queried object IDs are unavailable at title-filter time.
+ * - [tag-name]/[tag-description] now resolve in browser title tags more reliably, matching page title/body behavior for URL tag override-enabled gallery blocks.
+ *
  * 2.5.19 - March 16, 2026
  * - Add-on runtime-gating hardening follow-up: My Account Site Admin hooks now only initialize when its add-on is enabled (including URL temporary-disable support), preventing endpoint/query-var hooks from registering while inactive.
  * - New User Coupons debug panel hook now only registers when the New User Coupons add-on is active, eliminating debug panel runtime when the add-on is disabled.

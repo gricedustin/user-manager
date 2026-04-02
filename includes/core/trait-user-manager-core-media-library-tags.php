@@ -2559,6 +2559,8 @@ JS;
 	 * @return array<string,string>
 	 */
 	public static function replace_media_library_tag_placeholders_in_document_title_parts(array $parts): array {
+		// Ensure config is initialized before themes/SEO plugins build title parts.
+		self::prime_media_library_tag_placeholder_config();
 		foreach ($parts as $key => $value) {
 			if (!is_string($value)) {
 				continue;
@@ -2575,6 +2577,8 @@ JS;
 		if (!is_string($title) || $title === '') {
 			return is_string($title) ? $title : '';
 		}
+		// Ensure config is initialized before themes/SEO plugins build raw title string.
+		self::prime_media_library_tag_placeholder_config();
 		return self::replace_media_library_tag_placeholders_in_text($title, false);
 	}
 
@@ -2712,6 +2716,12 @@ JS;
 	private static function get_current_post_media_library_tag_placeholder_config(): array {
 		static $cache = [];
 		$post_id = get_queried_object_id();
+		if ($post_id <= 0 && is_singular()) {
+			$global_post = get_post();
+			if ($global_post instanceof WP_Post) {
+				$post_id = (int) $global_post->ID;
+			}
+		}
 		if (isset($cache[$post_id]) && is_array($cache[$post_id])) {
 			return $cache[$post_id];
 		}
@@ -2738,6 +2748,18 @@ JS;
 		$config = self::scan_media_library_tag_placeholder_config_from_blocks($blocks);
 		$cache[$post_id] = $config;
 		return $config;
+	}
+
+	/**
+	 * Prime placeholder config cache early so title filters can resolve [tag-name].
+	 */
+	private static function prime_media_library_tag_placeholder_config(): void {
+		static $primed = false;
+		if ($primed) {
+			return;
+		}
+		$primed = true;
+		self::get_current_post_media_library_tag_placeholder_config();
 	}
 
 	/**
