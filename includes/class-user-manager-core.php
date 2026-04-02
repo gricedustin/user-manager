@@ -20,6 +20,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-my-account-menu-tiles.php'
 require_once __DIR__ . '/core/trait-user-manager-core-order-received-page-customizer.php';
 require_once __DIR__ . '/core/trait-user-manager-core-page-blocks.php';
 require_once __DIR__ . '/core/trait-user-manager-core-plugin-tags-notes.php';
+require_once __DIR__ . '/core/trait-user-manager-core-product-notification.php';
 require_once __DIR__ . '/core/trait-user-manager-core-restricted-access.php';
 require_once __DIR__ . '/core/trait-user-manager-core-security-hardening.php';
 require_once __DIR__ . '/core/trait-user-manager-core-seo-basics.php';
@@ -37,6 +38,7 @@ final class User_Manager_Core {
 	use User_Manager_Core_Order_Received_Page_Customizer_Trait;
 	use User_Manager_Core_Page_Blocks_Trait;
 	use User_Manager_Core_Plugin_Tags_Notes_Trait;
+	use User_Manager_Core_Product_Notification_Trait;
 	use User_Manager_Core_Restricted_Access_Trait;
 	use User_Manager_Core_Security_Hardening_Trait;
 	use User_Manager_Core_SEO_Basics_Trait;
@@ -47,7 +49,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.25';
+	const VERSION = '2.5.26';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -179,6 +181,7 @@ final class User_Manager_Core {
 		self::maybe_boot_media_library_tags($settings);
 		self::maybe_boot_my_account_menu_tiles($settings);
 		self::maybe_boot_order_received_page_customizer($settings);
+		self::maybe_boot_product_notification($settings);
 		self::maybe_boot_page_blocks($settings);
 		self::maybe_boot_plugin_tags_notes($settings);
 		self::maybe_boot_restricted_access($settings);
@@ -9509,6 +9512,10 @@ html body .woocommerce-layout__header {
 			'product-search-by-sku' => [
 				'label' => 'Product Search by SKU',
 				'settings_keys' => ['search_redirect_by_sku'],
+			],
+			'product-notification' => [
+				'label' => 'Product Notification',
+				'settings_keys' => ['product_notification_enabled'],
 			],
 			'post-content-generator' => [
 				'label' => 'Post Content Generator',

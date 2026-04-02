@@ -2343,6 +2343,25 @@ class User_Manager_Actions {
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
 				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
+				$settings['product_notification_enabled'] = isset($_POST['product_notification_enabled']) && $_POST['product_notification_enabled'] === '1';
+				$settings['product_notification_bg_color'] = isset($_POST['product_notification_bg_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_bg_color']))
+					: '';
+				$settings['product_notification_text_color'] = isset($_POST['product_notification_text_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_text_color']))
+					: '';
+				$settings['product_notification_button_bg_color'] = isset($_POST['product_notification_button_bg_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_bg_color']))
+					: '';
+				$settings['product_notification_button_text_color'] = isset($_POST['product_notification_button_text_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_text_color']))
+					: '';
+				$settings['product_notification_button_hover_bg_color'] = isset($_POST['product_notification_button_hover_bg_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_hover_bg_color']))
+					: '';
+				$settings['product_notification_button_hover_text_color'] = isset($_POST['product_notification_button_hover_text_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_hover_text_color']))
+					: '';
 				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
 				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
 				$settings['seo_basics_enabled'] = isset($_POST['seo_basics_enabled']) && $_POST['seo_basics_enabled'] === '1';

@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.26 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-ons card: Product Notification, including global style controls for notification and button colors (normal + hover states).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When Product Notification is active, WooCommerce Product Data > General now includes a per-product field: "Display a Woocommerce Notification Above Product at All Times?" plus optional button title and URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('If a product notification message is set, a WooCommerce-style message now renders above the single product page at all times, with support for %PRODUCT_TITLE% replacement and optional custom button link.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.25 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Restricted Access logged-out redirect modes are now authoritative: "Redirect to My Account" and "Redirect to WP-Admin" always redirect blocked visitors and never render the full-screen overlay for those modes.', 'user-manager'); ?></li>

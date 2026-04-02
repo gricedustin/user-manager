@@ -2,12 +2,18 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.25
+ * Version: 2.5.26
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.26 - March 16, 2026
+ * - Added new Add-on: Product Notification.
+ * - When activated, WooCommerce products get new Product Data > General fields: "Display a Woocommerce Notification Above Product at All Times?", "Optional Button Title", and "Optional Button URL".
+ * - If the product notification field has content, a persistent WooCommerce-style message now renders above the product page at all times.
+ * - Added Product Notification add-on color override settings for notification background/text and button default/hover colors.
+ *
  * 2.5.25 - March 16, 2026
  * - Restricted Access redirect modes now enforce hard redirects for logged-out users across all front-end pages: "Redirect to My Account" and "Redirect to WP-Admin" no longer render the full-screen overlay fallback.
  * - Prevents redirect targets from showing the overlay page when already on the destination URL; requests now remain on the intended login destination.

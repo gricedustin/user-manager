@@ -32,6 +32,7 @@ require_once __DIR__ . '/class-user-manager-addon-staging-development-environmen
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
+require_once __DIR__ . '/class-user-manager-addon-product-notification.php';
 require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-order-received-page-customizer.php';
@@ -248,6 +249,9 @@ class User_Manager_Tab_Addons {
 		<div class="um-admin-grid um-admin-grid-single um-addons-main-grid" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 			<div class="um-addon-section" data-addon-section="post-meta">
 				<?php User_Manager_Addon_Post_Meta::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="product-notification">
+				<?php User_Manager_Addon_Product_Notification::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="product-search-by-sku">
 				<?php User_Manager_Addon_Product_Search_By_SKU::render($settings, $settings_form_id); ?>
@@ -913,6 +917,9 @@ class User_Manager_Tab_Addons {
 			function toggleSeoBasicsFields() {
 				$('#um-seo-basics-fields').toggle($('#um-seo-basics-enabled').is(':checked'));
 			}
+			function toggleProductNotificationFields() {
+				$('#um-product-notification-fields').toggle($('#um-product-notification-enabled').is(':checked'));
+			}
 			$('#um-bulk-coupons-enabled').on('change', toggleBulkCouponsFields);
 			toggleBulkCouponsFields();
 			toggleBulkAddToCartAddonFields();
@@ -937,6 +944,7 @@ class User_Manager_Tab_Addons {
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
 			toggleSeoBasicsFields();
+			toggleProductNotificationFields();
 			$('.um-addon-action-submit').on('click', function() {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
 				$('#um-addons-form-action').val(targetAction);
@@ -1093,6 +1101,10 @@ class User_Manager_Tab_Addons {
 			$('#um-seo-basics-enabled').on('change', function() {
 				toggleSeoBasicsFields();
 				refreshAddonCardAutoState($('#um-addon-card-seo-basics'));
+			});
+			$('#um-product-notification-enabled').on('change', function() {
+				toggleProductNotificationFields();
+				refreshAddonCardAutoState($('#um-addon-card-product-notification'));
 			});
 			$('#um-my-account-coupon-screen-enabled').on('change', function() {
 				toggleMyAccountCouponScreenFields();
@@ -1386,6 +1398,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Post Meta Viewer', 'user-manager'),
 				'description' => __('Show all post meta keys and values in a dedicated editor box with configurable role/user access controls for security.', 'user-manager'),
 				'active' => !empty($settings['display_post_meta_meta_box']),
+			],
+			'product-notification' => [
+				'label'  => __('Product Notification', 'user-manager'),
+				'description' => __('Display a persistent WooCommerce-style notification above product pages with per-product message/button fields and add-on-level color override controls.', 'user-manager'),
+				'active' => !empty($settings['product_notification_enabled']),
 			],
 			'product-search-by-sku' => [
 				'label'  => __('Product Search by SKU', 'user-manager'),
