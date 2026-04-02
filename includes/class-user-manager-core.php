@@ -22,6 +22,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-page-blocks.php';
 require_once __DIR__ . '/core/trait-user-manager-core-plugin-tags-notes.php';
 require_once __DIR__ . '/core/trait-user-manager-core-restricted-access.php';
 require_once __DIR__ . '/core/trait-user-manager-core-security-hardening.php';
+require_once __DIR__ . '/core/trait-user-manager-core-seo-basics.php';
 require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
 final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
@@ -38,6 +39,7 @@ final class User_Manager_Core {
 	use User_Manager_Core_Plugin_Tags_Notes_Trait;
 	use User_Manager_Core_Restricted_Access_Trait;
 	use User_Manager_Core_Security_Hardening_Trait;
+	use User_Manager_Core_SEO_Basics_Trait;
 	use User_Manager_Core_Webhook_URLs_Trait;
 	const OPTION_KEY = 'user_manager_settings';
 	const ACTIVITY_LOG_KEY = 'user_manager_activity_log';
@@ -45,7 +47,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.20';
+	const VERSION = '2.5.21';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -181,6 +183,7 @@ final class User_Manager_Core {
 		self::maybe_boot_plugin_tags_notes($settings);
 		self::maybe_boot_restricted_access($settings);
 		self::maybe_apply_security_hardening($settings);
+		self::maybe_boot_seo_basics($settings);
 		self::maybe_boot_webhook_urls($settings);
 		if (!empty($settings['coupon_email_converter'])) {
 			add_action('add_meta_boxes', [__CLASS__, 'add_coupon_email_converter_meta_box']);
@@ -9426,6 +9429,10 @@ html body .woocommerce-layout__header {
 			'security-hardening' => [
 				'label' => 'Security Hardening',
 				'settings_keys' => ['security_hardening_enabled'],
+			],
+			'seo-basics' => [
+				'label' => 'SEO Basics',
+				'settings_keys' => ['seo_basics_enabled'],
 			],
 			'restricted-access' => [
 				'label' => 'Restricted Access',

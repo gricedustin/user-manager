@@ -2,12 +2,18 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.20
+ * Version: 2.5.21
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.21 - March 16, 2026
+ * - Added new Add-ons card: "SEO Basics" with activation toggle.
+ * - When active, adds an "SEO Basics" meta box on every page and post with Page Title Override and Page Description Override fields.
+ * - Front-end SEO image now resolves by default to Featured Image first; if no featured image exists, it falls back to the first image found in page/post content.
+ * - Applies title override to browser document titles and outputs description/image meta tags in wp_head.
+ *
  * 2.5.20 - March 16, 2026
  * - Fixed Media Library Tag placeholder replacement in the HTML document <title> path by adding fallback context detection when queried object IDs are unavailable at title-filter time.
  * - [tag-name]/[tag-description] now resolve in browser title tags more reliably, matching page title/body behavior for URL tag override-enabled gallery blocks.

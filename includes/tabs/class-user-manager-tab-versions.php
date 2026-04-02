@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.21 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new SEO Basics add-on with activation toggle in Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When active, adds an "SEO Basics" meta box to Posts and Pages with Page Title Override and Page Description Override fields.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end meta image now resolves automatically using Featured Image first, then falls back to the first image found in the page/post content.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.20 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Gallery placeholder fix: [tag-name]/[tag-description] replacement in HTML document titles now resolves the current singular post context directly from the queried object when get_queried_object_id() is unavailable during title-generation timing.', 'user-manager'); ?></li>

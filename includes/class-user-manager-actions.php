@@ -2345,6 +2345,7 @@ class User_Manager_Actions {
 				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
 				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
 				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
+				$settings['seo_basics_enabled'] = isset($_POST['seo_basics_enabled']) && $_POST['seo_basics_enabled'] === '1';
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
 				$settings['security_hardening_enabled'] = isset($_POST['security_hardening_enabled']) && $_POST['security_hardening_enabled'] === '1';
 				$settings['security_hardening_block_rest_user_enumeration'] = isset($_POST['security_hardening_block_rest_user_enumeration']) && $_POST['security_hardening_block_rest_user_enumeration'] === '1';

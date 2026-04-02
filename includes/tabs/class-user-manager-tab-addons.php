@@ -27,6 +27,7 @@ require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
 require_once __DIR__ . '/class-user-manager-addon-invoice-approval.php';
 require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
 require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
+require_once __DIR__ . '/class-user-manager-addon-seo-basics.php';
 require_once __DIR__ . '/class-user-manager-addon-staging-development-environment-overrides.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
@@ -226,6 +227,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="security-hardening">
 					<?php User_Manager_Addon_Security_Hardening::render($settings, $settings_form_id); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="seo-basics">
+					<?php User_Manager_Addon_SEO_Basics::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="fatal-error-debugger">
 					<?php User_Manager_Addon_Fatal_Error_Debugger::render($settings, $settings_form_id); ?>
@@ -906,6 +910,9 @@ class User_Manager_Tab_Addons {
 			function toggleFatalErrorDebuggerFields() {
 				$('#um-fatal-error-debugger-fields').toggle($('#um-fatal-error-debugger-enabled').is(':checked'));
 			}
+			function toggleSeoBasicsFields() {
+				$('#um-seo-basics-fields').toggle($('#um-seo-basics-enabled').is(':checked'));
+			}
 			$('#um-bulk-coupons-enabled').on('change', toggleBulkCouponsFields);
 			toggleBulkCouponsFields();
 			toggleBulkAddToCartAddonFields();
@@ -929,6 +936,7 @@ class User_Manager_Tab_Addons {
 			toggleSendSmsTextFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
+			toggleSeoBasicsFields();
 			$('.um-addon-action-submit').on('click', function() {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
 				$('#um-addons-form-action').val(targetAction);
@@ -1081,6 +1089,10 @@ class User_Manager_Tab_Addons {
 			$('#um-fatal-error-debugger-enabled').on('change', function() {
 				toggleFatalErrorDebuggerFields();
 				refreshAddonCardAutoState($('#um-addon-card-fatal-error-debugger'));
+			});
+			$('#um-seo-basics-enabled').on('change', function() {
+				toggleSeoBasicsFields();
+				refreshAddonCardAutoState($('#um-addon-card-seo-basics'));
 			});
 			$('#um-my-account-coupon-screen-enabled').on('change', function() {
 				toggleMyAccountCouponScreenFields();
@@ -1344,6 +1356,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Security Hardening', 'user-manager'),
 				'description' => __('Apply optional hardening controls for REST, WP-Admin file access, SSL admin, and version visibility.', 'user-manager'),
 				'active' => !empty($settings['security_hardening_enabled']),
+			],
+			'seo-basics' => [
+				'label'  => __('SEO Basics', 'user-manager'),
+				'description' => __('Add simple SEO overrides on pages/posts: title, description, and social image fallback handling.', 'user-manager'),
+				'active' => !empty($settings['seo_basics_enabled']),
 			],
 			'fatal-error-debugger' => [
 				'label'  => __('Fatal Error Debugger', 'user-manager'),
