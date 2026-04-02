@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.13 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Staging & Development Environment Overrides: made the WooCommerce webhook-delivery filter callback signature backward-compatible with both 3-argument and 4-argument WooCommerce hook calls to prevent fatal argument-count exceptions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Prevents uncaught exceptions like "Too few arguments to function maybe_block_staging_dev_woocommerce_webhook()" from interrupting checkout/account flows when webhook delivery checks run.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.12 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('User Coupon Remaining Balances generation is now deferred to a scheduled background event from order status hooks, preventing checkout/order-status transition errors from bubbling into customer-facing order-processing failures.', 'user-manager'); ?></li>

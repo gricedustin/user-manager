@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.12
+ * Version: 2.5.13
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.13 - March 16, 2026
+ * - Fixed staging/dev webhook-delivery filter callback signature to accept WooCommerce versions that pass 3 arguments, preventing fatal "Too few arguments" exceptions during webhook-triggering order flows.
+ *
  * 2.5.12 - March 16, 2026
  * - User Coupon Remaining Balances: moved remainder generation off synchronous checkout status transitions and onto a short deferred WP-Cron event to avoid checkout/order-processing interruptions.
  * - Added per-order processing lock for remainder generation to prevent duplicate processing/race conditions when both thank-you/status hooks can fire close together.

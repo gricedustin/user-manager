@@ -45,7 +45,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.12';
+	const VERSION = '2.5.13';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -657,8 +657,11 @@ final class User_Manager_Core {
 
 	/**
 	 * Disable WooCommerce webhook delivery when override is active.
+	 *
+	 * WooCommerce has used different callback signatures over time (3 or 4 args),
+	 * so keep trailing params optional for compatibility.
 	 */
-	public static function maybe_block_staging_dev_woocommerce_webhook(bool $should_deliver, $webhook, $arg, $resource): bool {
+	public static function maybe_block_staging_dev_woocommerce_webhook(bool $should_deliver, $webhook = null, $arg = null, $resource = null): bool {
 		$settings = self::get_settings();
 		if (!self::is_staging_dev_overrides_enabled($settings)) {
 			return $should_deliver;
