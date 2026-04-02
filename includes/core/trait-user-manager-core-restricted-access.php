@@ -62,31 +62,29 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			return;
 		}
 
-		$shared_password = self::restricted_access_get_shared_password($settings);
-		$has_password    = $shared_password !== '';
-
-		// If a shared password is set, always show the gate screen so users can authenticate.
-		if ($has_password) {
-			self::restricted_access_maybe_handle_password_submission($settings);
-			self::render_restricted_access_overlay_and_exit($settings, true);
-		}
-
 		$behavior = self::restricted_access_get_logged_out_behavior($settings);
 		if ($behavior === 'redirect_my_account') {
 			$target_url = self::restricted_access_get_my_account_url();
+			// On the target login page, allow rendering and do not show overlay.
 			if (self::restricted_access_current_request_matches_url($target_url)) {
-				self::render_restricted_access_overlay_and_exit($settings, false);
+				return;
 			}
 			wp_safe_redirect($target_url);
 			exit;
 		}
 		if ($behavior === 'redirect_wp_admin') {
-			$target_url = wp_login_url(self::restricted_access_get_current_url());
-			if (self::restricted_access_current_request_matches_url($target_url)) {
-				self::render_restricted_access_overlay_and_exit($settings, false);
-			}
+			$target_url = admin_url();
 			wp_safe_redirect($target_url);
 			exit;
+		}
+
+		$shared_password = self::restricted_access_get_shared_password($settings);
+		$has_password    = $shared_password !== '';
+
+		// Overlay mode: when a shared password is set, show a gate form.
+		if ($has_password) {
+			self::restricted_access_maybe_handle_password_submission($settings);
+			self::render_restricted_access_overlay_and_exit($settings, true);
 		}
 
 		self::render_restricted_access_overlay_and_exit($settings, false);
