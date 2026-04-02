@@ -823,7 +823,7 @@ class User_Manager_Tab_Addons {
 				$('#um-coupon-remainder-email-template-wrap').toggle(this.checked);
 			});
 			$('#um-coupon-remainder-email-template-wrap').toggle($('#um-coupon-remainder-send-email').is(':checked'));
-			$('#um-preview-coupon-remainder-email-btn').on('click', function() {
+			$(document).on('click', '#um-preview-coupon-remainder-email-btn', function() {
 				if (typeof window.umShowEmailPreview === 'function') {
 					window.umShowEmailPreview('coupon-remainder');
 				}

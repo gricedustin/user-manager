@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.15 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons > User Coupon Remaining Balances: fixed Preview Email button reliability by binding the click handler with delegated events, so it works consistently even when the add-on card is conditionally rendered/toggled after page load.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This now matches the proven preview-modal flow used by other template preview buttons and avoids missed direct-bind timing issues.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.14 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Core hook registration hardening: New User Coupons, Checkout Address Selector (including debug footer hook), Quick Search, and Staging & Development Environment Overrides hooks now only register when their associated add-on is active.', 'user-manager'); ?></li>
