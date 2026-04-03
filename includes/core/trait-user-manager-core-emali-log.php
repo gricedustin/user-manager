@@ -21,6 +21,16 @@ trait User_Manager_Core_Emali_Log_Trait {
 	private static bool $emali_log_table_checked = false;
 
 	/**
+	 * WP-Cron hook used for automatic Emali Log cleanup.
+	 */
+	private static string $emali_log_cleanup_hook = 'user_manager_emali_log_cleanup_event';
+
+	/**
+	 * Option key for storing the last cleanup timestamp.
+	 */
+	private static string $emali_log_last_cleanup_option = 'um_emali_log_last_cleanup_ts';
+
+	/**
 	 * Boot hooks for Emali Log add-on.
 	 *
 	 * @param array<string,mixed> $settings Plugin settings.
@@ -34,6 +44,9 @@ trait User_Manager_Core_Emali_Log_Trait {
 		add_filter('wp_mail', [__CLASS__, 'emali_log_capture_wp_mail'], 5, 1);
 		add_action('wp_mail_succeeded', [__CLASS__, 'emali_log_mark_wp_mail_succeeded'], 10, 1);
 		add_action('wp_mail_failed', [__CLASS__, 'emali_log_mark_wp_mail_failed'], 10, 1);
+		add_action(self::$emali_log_cleanup_hook, [__CLASS__, 'run_emali_log_auto_cleanup']);
+		self::maybe_schedule_emali_log_auto_cleanup();
+		self::maybe_run_emali_log_auto_cleanup_on_request($settings);
 	}
 
 	/**
@@ -346,6 +359,25 @@ trait User_Manager_Core_Emali_Log_Trait {
 		global $wpdb;
 		$table_name = self::get_emali_log_table_name();
 		$wpdb->query("TRUNCATE TABLE {$table_name}");
+		delete_option(self::$emali_log_last_cleanup_option);
+	}
+
+	/**
+	 * Run auto cleanup callback (cron-safe).
+	 */
+	public static function run_emali_log_auto_cleanup(): void {
+		$settings = self::get_raw_settings();
+		if (empty($settings['emali_log_enabled'])) {
+			return;
+		}
+
+		$days = self::get_emali_log_auto_delete_days($settings);
+		if ($days <= 0) {
+			return;
+		}
+
+		self::delete_emali_log_older_than_days($days);
+		update_option(self::$emali_log_last_cleanup_option, current_time('timestamp'));
 	}
 
 	/**
@@ -430,6 +462,59 @@ trait User_Manager_Core_Emali_Log_Trait {
 			}
 		}
 		return (int) $wpdb->get_var("SELECT id FROM " . self::get_emali_log_table_name() . " WHERE status = 'pending' ORDER BY id DESC LIMIT 1");
+	}
+
+	/**
+	 * Ensure cleanup event is scheduled.
+	 */
+	private static function maybe_schedule_emali_log_auto_cleanup(): void {
+		if (!wp_next_scheduled(self::$emali_log_cleanup_hook)) {
+			wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', self::$emali_log_cleanup_hook);
+		}
+	}
+
+	/**
+	 * Opportunistic cleanup during normal requests.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function maybe_run_emali_log_auto_cleanup_on_request(array $settings): void {
+		$days = self::get_emali_log_auto_delete_days($settings);
+		if ($days <= 0) {
+			return;
+		}
+
+		$last_cleanup = (int) get_option(self::$emali_log_last_cleanup_option, 0);
+		$now = current_time('timestamp');
+		if ($last_cleanup > 0 && ($now - $last_cleanup) < DAY_IN_SECONDS) {
+			return;
+		}
+
+		self::delete_emali_log_older_than_days($days);
+		update_option(self::$emali_log_last_cleanup_option, $now);
+	}
+
+	/**
+	 * Read auto-delete retention days from settings.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function get_emali_log_auto_delete_days(array $settings): int {
+		$days = isset($settings['emali_log_auto_delete_days']) ? absint($settings['emali_log_auto_delete_days']) : 0;
+		return max(0, min(3650, $days));
+	}
+
+	/**
+	 * Delete log rows older than the given retention days.
+	 */
+	private static function delete_emali_log_older_than_days(int $days): int {
+		$days = max(1, min(3650, absint($days)));
+		self::ensure_emali_log_table();
+		global $wpdb;
+		$table_name = self::get_emali_log_table_name();
+		$threshold = wp_date('Y-m-d H:i:s', current_time('timestamp') - ($days * DAY_IN_SECONDS), wp_timezone());
+		$deleted = $wpdb->query($wpdb->prepare("DELETE FROM {$table_name} WHERE created_at < %s", $threshold));
+		return $deleted !== false ? (int) $deleted : 0;
 	}
 
 	/**

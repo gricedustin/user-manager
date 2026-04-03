@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.43 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Emali Log now includes a configurable retention setting: "Auto-delete log entries after X days" (0 keeps logs forever).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added automatic Emali Log cleanup of old rows using daily WP-Cron scheduling plus a once-per-day fallback on normal requests.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clear Emali Log History now also resets cleanup timing metadata so future retention cleanup restarts cleanly.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.42 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Add-on: Emali Log.', 'user-manager'); ?></li>

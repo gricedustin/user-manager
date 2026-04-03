@@ -51,7 +51,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.42';
+	const VERSION = '2.5.43';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -196,6 +196,7 @@ final class User_Manager_Core {
 		self::maybe_apply_security_hardening($settings);
 		self::maybe_boot_seo_basics($settings);
 		self::maybe_boot_webhook_urls($settings);
+		add_action('user_manager_emali_log_daily_cleanup', [__CLASS__, 'run_emali_log_daily_cleanup']);
 		if (!empty($settings['coupon_email_converter'])) {
 			add_action('add_meta_boxes', [__CLASS__, 'add_coupon_email_converter_meta_box']);
 		}
@@ -8865,6 +8866,9 @@ html body .woocommerce-layout__header {
 				break;
 			case 'emali_log_cleared':
 				$content = __('Emali Log history has been cleared.', 'user-manager');
+				break;
+			case 'emali_log_auto_cleanup_saved':
+				$content = __('Emali Log auto-delete retention was updated.', 'user-manager');
 				break;
 			case 'view_reports_reset':
 				$content = __('All view-related reports (Page Views, Product Views, 404 Errors, Search Queries) have been reset.', 'user-manager');

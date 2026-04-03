@@ -11,6 +11,7 @@ class User_Manager_Addon_Emali_Log {
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$enabled = !empty($settings['emali_log_enabled']);
+		$auto_delete_days = isset($settings['emali_log_auto_delete_days']) ? max(0, absint($settings['emali_log_auto_delete_days'])) : 0;
 
 		$current_status = isset($_GET['emali_log_status']) ? sanitize_key(wp_unslash($_GET['emali_log_status'])) : '';
 		if (!in_array($current_status, ['sent', 'failed', 'pending'], true)) {
@@ -59,6 +60,18 @@ class User_Manager_Addon_Emali_Log {
 				</div>
 
 				<div id="um-emali-log-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
+					<div class="um-admin-card" style="margin-bottom:12px;">
+						<div class="um-admin-card-body">
+							<div class="um-form-field">
+								<label for="um-emali-log-auto-delete-days"><strong><?php esc_html_e('Auto-delete log entries after X days', 'user-manager'); ?></strong></label><br />
+								<input type="number" id="um-emali-log-auto-delete-days" min="0" step="1" name="emali_log_auto_delete_days" value="<?php echo esc_attr((string) $auto_delete_days); ?>" <?php echo $form_attr; ?> />
+								<p class="description">
+									<?php esc_html_e('Set to 0 to keep all entries forever. Any value greater than 0 automatically removes rows older than that many days.', 'user-manager'); ?>
+								</p>
+							</div>
+						</div>
+					</div>
+
 					<div class="um-admin-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-bottom:14px;">
 						<?php self::render_stat_card(__('Past hour', 'user-manager'), (int) ($stats['hour'] ?? 0)); ?>
 						<?php self::render_stat_card(__('Past day', 'user-manager'), (int) ($stats['day'] ?? 0)); ?>

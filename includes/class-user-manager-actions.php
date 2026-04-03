@@ -2407,6 +2407,9 @@ class User_Manager_Actions {
 					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_hover_text_color']))
 					: '';
 				$settings['emali_log_enabled'] = isset($_POST['emali_log_enabled']) && $_POST['emali_log_enabled'] === '1';
+				$settings['emali_log_auto_delete_days'] = isset($_POST['emali_log_auto_delete_days'])
+					? max(0, absint($_POST['emali_log_auto_delete_days']))
+					: 0;
 				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
 				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
 				$settings['seo_basics_enabled'] = isset($_POST['seo_basics_enabled']) && $_POST['seo_basics_enabled'] === '1';
