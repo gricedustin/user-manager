@@ -18,6 +18,7 @@ class User_Manager_Tab_Blocks {
 	public static function render(): void {
 		$settings = User_Manager_Core::get_settings();
 		$settings_form_id = 'um-blocks-settings-form';
+		$temporarily_disable_all = !empty($settings['temporarily_disable_all_addons_blocks']);
 		$block_sections = self::get_block_sections($settings);
 		$sorted_block_sections = $block_sections;
 		uasort($sorted_block_sections, static function (array $a, array $b): int {
@@ -151,6 +152,24 @@ class User_Manager_Tab_Blocks {
 						</p>
 					</div>
 				</div>
+				<div class="um-admin-card um-admin-card-full um-block-temporary-disable-card">
+					<div class="um-admin-card-header">
+						<span class="dashicons dashicons-hidden"></span>
+						<h2><?php esc_html_e('Temporarily Disable All', 'user-manager'); ?></h2>
+					</div>
+					<div class="um-admin-card-body">
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="temporarily_disable_all_addons_blocks" value="1" <?php checked($temporarily_disable_all); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
+								<?php esc_html_e('Temporarily disable all add-ons & blocks (except required Send Email).', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('This override temporarily disables all individual add-on/block features at runtime. Uncheck and save to restore normal behavior.', 'user-manager'); ?></p>
+						</div>
+						<p style="margin:0;">
+							<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
+						</p>
+					</div>
+				</div>
 			</div>
 		</form>
 
@@ -272,6 +291,7 @@ class User_Manager_Tab_Blocks {
 						}
 					});
 					$('.um-block-save-card').show();
+					$('.um-block-temporary-disable-card').show();
 				}
 
 				$('#um-blocks-filter-empty').toggle(keyword !== '' && !anyVisible);
@@ -366,12 +386,14 @@ class User_Manager_Tab_Blocks {
 					$('.um-blocks-empty-state').show();
 					$('.um-block-section').hide();
 					$('.um-block-save-card').hide();
+					$('.um-block-temporary-disable-card').hide();
 					return;
 				}
 				$('.um-blocks-empty-state').hide();
 				$('.um-block-section').hide();
 				$('.um-block-section[data-block-section="' + currentBlockSection + '"]').show();
 				$('.um-block-save-card').show();
+				$('.um-block-temporary-disable-card').show();
 			}
 
 			function togglePageBlockSubpagesGridFields() {

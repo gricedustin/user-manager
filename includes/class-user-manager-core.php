@@ -49,7 +49,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.28';
+	const VERSION = '2.5.29';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -96,6 +96,11 @@ final class User_Manager_Core {
 	 * Cached runtime "disable all add-ons" URL flag.
 	 */
 	private static ?bool $runtime_disable_all_addons = null;
+
+	/**
+	 * Cached runtime "disable all add-ons" settings flag.
+	 */
+	private static ?bool $runtime_disable_all_addons_from_settings = null;
 
 	// Tab constants
 	const TAB_LOGIN_TOOLS     = 'login-tools';
@@ -9383,7 +9388,9 @@ html body .woocommerce-layout__header {
 		$options = is_array($options) ? $options : [];
 		$options = self::apply_runtime_addon_disable_overrides($options);
 		// Send Email add-on is required by Login Tools; keep it always enabled.
-		$options['send_email_users_enabled'] = true;
+		if (!self::is_disable_all_addons_requested()) {
+			$options['send_email_users_enabled'] = true;
+		}
 		return $options;
 	}
 
@@ -9608,10 +9615,9 @@ html body .woocommerce-layout__header {
 
 		$map = self::get_addon_runtime_toggle_map(false);
 		$disabled = [];
-		$disable_all = self::is_disable_all_addons_requested_from_url();
+		$disable_all = self::is_disable_all_addons_requested();
 		if ($disable_all) {
 			$disabled = array_keys($map);
-			$disabled = array_values(array_diff($disabled, ['send-email-users']));
 			self::$runtime_disabled_addon_slugs = $disabled;
 			return $disabled;
 		}
@@ -9646,7 +9652,7 @@ html body .woocommerce-layout__header {
 		if ($addon_slug === '') {
 			return false;
 		}
-		if ($addon_slug === 'send-email-users') {
+		if ($addon_slug === 'send-email-users' && !self::is_disable_all_addons_requested()) {
 			return false;
 		}
 		return in_array($addon_slug, self::get_temporarily_disabled_addons_from_url(), true);
@@ -9700,6 +9706,27 @@ html body .woocommerce-layout__header {
 
 		self::$runtime_disable_all_addons = in_array($all_flag, $truthy, true) || $list_flag === 'all';
 		return self::$runtime_disable_all_addons;
+	}
+
+	/**
+	 * Whether settings requested "temporarily disable all add-ons and blocks".
+	 */
+	private static function is_disable_all_addons_requested_from_settings(): bool {
+		if (self::$runtime_disable_all_addons_from_settings !== null) {
+			return self::$runtime_disable_all_addons_from_settings;
+		}
+
+		$options = get_option(self::OPTION_KEY, []);
+		$options = is_array($options) ? $options : [];
+		self::$runtime_disable_all_addons_from_settings = !empty($options['temporarily_disable_all_addons_blocks']);
+		return self::$runtime_disable_all_addons_from_settings;
+	}
+
+	/**
+	 * Whether all add-ons/blocks should be temporarily disabled for this request.
+	 */
+	private static function is_disable_all_addons_requested(): bool {
+		return self::is_disable_all_addons_requested_from_url() || self::is_disable_all_addons_requested_from_settings();
 	}
 
 	/**

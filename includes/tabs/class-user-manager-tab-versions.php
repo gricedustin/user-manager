@@ -39,9 +39,10 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.5.28 <span>(March 16, 2026)</span></h4>
+						<h4>2.5.29 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Product Notification: removed the default View cart button fallback. The button now renders only when both Optional Button Title and Optional Button URL are explicitly provided.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons + Blocks tabs now include a bottom "Temporarily Disable All" card with checkbox and Save button to temporarily override and disable all add-ons/blocks runtime functionality.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Runtime disable-all now supports both URL-based override and saved settings-based override, and applies to all add-ons/blocks (including Send Email) until unchecked and saved.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

@@ -2279,6 +2279,7 @@ class User_Manager_Actions {
 
 			case 'blocks':
 				$redirect_tab = User_Manager_Core::TAB_BLOCKS;
+				$settings['temporarily_disable_all_addons_blocks'] = isset($_POST['temporarily_disable_all_addons_blocks']) && $_POST['temporarily_disable_all_addons_blocks'] === '1';
 				$settings['page_block_subpages_grid_enabled'] = isset($_POST['page_block_subpages_grid_enabled']) && $_POST['page_block_subpages_grid_enabled'] === '1';
 				$settings['page_block_tabbed_content_area_enabled'] = isset($_POST['page_block_tabbed_content_area_enabled']) && $_POST['page_block_tabbed_content_area_enabled'] === '1';
 				$settings['page_block_simple_icons_enabled'] = isset($_POST['page_block_simple_icons_enabled']) && $_POST['page_block_simple_icons_enabled'] === '1';
@@ -2341,6 +2342,7 @@ class User_Manager_Actions {
 
 			case 'addons':
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
+				$settings['temporarily_disable_all_addons_blocks'] = isset($_POST['temporarily_disable_all_addons_blocks']) && $_POST['temporarily_disable_all_addons_blocks'] === '1';
 				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
 				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
 				$settings['product_notification_enabled'] = isset($_POST['product_notification_enabled']) && $_POST['product_notification_enabled'] === '1';
