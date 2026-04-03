@@ -16,9 +16,12 @@ require_once __DIR__ . '/class-user-manager-addon-media-library-tags.php';
 class User_Manager_Tab_Blocks {
 
 	public static function render(): void {
-		$settings = User_Manager_Core::get_settings();
+		$settings = User_Manager_Core::get_raw_settings();
 		$settings_form_id = 'um-blocks-settings-form';
-		$temporarily_disable_all = !empty($settings['temporarily_disable_all_addons_blocks']);
+		$temporarily_disable_all = !empty($settings['temporarily_disable_blocks']);
+		$temporarily_disabled_badge = $temporarily_disable_all
+			? '<span class="um-temp-disabled-badge" title="' . esc_attr__('Temporarily disabled at runtime', 'user-manager') . '"><span class="dashicons dashicons-hidden" aria-hidden="true"></span> ' . esc_html__('Temporarily disabled', 'user-manager') . '</span>'
+			: '';
 		$block_sections = self::get_block_sections($settings);
 		$sorted_block_sections = $block_sections;
 		uasort($sorted_block_sections, static function (array $a, array $b): int {
@@ -63,6 +66,11 @@ class User_Manager_Tab_Blocks {
 					<h2><?php esc_html_e('Blocks Filter', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+					<?php if ($temporarily_disable_all) : ?>
+						<p class="description" style="margin-top:0; margin-bottom:10px;">
+							<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+						</p>
+					<?php endif; ?>
 					<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
 						<div style="min-width:280px; flex:1;">
 							<label for="um-blocks-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
@@ -86,6 +94,11 @@ class User_Manager_Tab_Blocks {
 					<h2><?php esc_html_e('Choose a Block', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+					<?php if ($temporarily_disable_all) : ?>
+						<p class="description" style="margin-top:0; margin-bottom:10px;">
+							<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+						</p>
+					<?php endif; ?>
 					<div class="um-block-tile-grid">
 						<?php
 						$visible_tiles = 0;
@@ -127,14 +140,17 @@ class User_Manager_Tab_Blocks {
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-hidden"></span>
 					<h2><?php esc_html_e('Temporarily Disable All', 'user-manager'); ?></h2>
+					<?php if ($temporarily_disable_all) : ?>
+						<span class="um-temp-disabled-chip" title="<?php esc_attr_e('Temporarily disabled', 'user-manager'); ?>">⏸ <?php esc_html_e('Temporarily disabled', 'user-manager'); ?></span>
+					<?php endif; ?>
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-form-field">
 						<label>
-							<input type="checkbox" name="temporarily_disable_all_addons_blocks" value="1" <?php checked($temporarily_disable_all); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
-							<?php esc_html_e('Temporarily disable all add-ons & blocks (except required Send Email).', 'user-manager'); ?>
+							<input type="checkbox" name="temporarily_disable_blocks" value="1" <?php checked($temporarily_disable_all); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
+							<?php esc_html_e('Temporarily disable all blocks runtime functionality.', 'user-manager'); ?>
 						</label>
-						<p class="description"><?php esc_html_e('This override temporarily disables all individual add-on/block features at runtime. Uncheck and save to restore normal behavior.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('This override temporarily disables block runtime behavior only. It does not uncheck or deactivate block settings.', 'user-manager'); ?></p>
 					</div>
 					<p style="margin:0;">
 						<?php submit_button(__('Save', 'user-manager'), 'primary', 'um_save_temporary_disable_only', false, ['form' => $settings_form_id]); ?>
@@ -170,6 +186,11 @@ class User_Manager_Tab_Blocks {
 						<p style="margin:0;">
 							<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
 						</p>
+						<?php if ($temporarily_disable_all) : ?>
+							<p style="margin:10px 0 0 0;">
+								<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+							</p>
+						<?php endif; ?>
 					</div>
 				</div>
 			</div>
@@ -246,6 +267,37 @@ class User_Manager_Tab_Blocks {
 			font-size: 12px;
 			color: #50575e;
 			margin-bottom: 6px;
+		}
+		.um-temp-disabled-chip {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			background: #fff8e5;
+			border: 1px solid #dba617;
+			color: #8a4b00;
+			font-size: 12px;
+			font-weight: 600;
+		}
+		.um-temp-disabled-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			background: #fff8e5;
+			border: 1px solid #dba617;
+			color: #8a4b00;
+			font-size: 12px;
+			font-weight: 600;
+		}
+		.um-temp-disabled-badge .dashicons {
+			font-size: 14px;
+			width: 14px;
+			height: 14px;
+			line-height: 14px;
 		}
 		@media (max-width: 600px) {
 			.um-block-tile-grid {

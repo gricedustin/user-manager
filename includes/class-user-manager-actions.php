@@ -2280,7 +2280,8 @@ class User_Manager_Actions {
 
 			case 'blocks':
 				$redirect_tab = User_Manager_Core::TAB_BLOCKS;
-				$settings['temporarily_disable_all_addons_blocks'] = isset($_POST['temporarily_disable_all_addons_blocks']) && $_POST['temporarily_disable_all_addons_blocks'] === '1';
+				$settings['temporarily_disable_blocks'] = isset($_POST['temporarily_disable_blocks']) && $_POST['temporarily_disable_blocks'] === '1';
+				// Backward compatibility with legacy combined setting key.
 				$is_blocks_temp_disable_only = isset($_POST['um_save_temporary_disable_only']) && $_POST['um_save_temporary_disable_only'] !== '';
 				if ($is_blocks_temp_disable_only) {
 					break;
@@ -2347,7 +2348,8 @@ class User_Manager_Actions {
 
 			case 'addons':
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
-				$settings['temporarily_disable_all_addons_blocks'] = isset($_POST['temporarily_disable_all_addons_blocks']) && $_POST['temporarily_disable_all_addons_blocks'] === '1';
+				$settings['temporarily_disable_addons'] = isset($_POST['temporarily_disable_addons']) && $_POST['temporarily_disable_addons'] === '1';
+				// Backward compatibility with legacy combined setting key.
 				$is_addons_temp_disable_only = isset($_POST['um_save_temporary_disable_only']) && $_POST['um_save_temporary_disable_only'] !== '';
 				if ($is_addons_temp_disable_only) {
 					break;

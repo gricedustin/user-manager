@@ -48,10 +48,10 @@ require_once __DIR__ . '/class-user-manager-addon-role-switching.php';
 class User_Manager_Tab_Addons {
 
 	public static function render(): void {
-		$settings      = User_Manager_Core::get_settings();
+		$settings      = User_Manager_Core::get_raw_settings();
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		$email_templates = User_Manager_Core::get_email_templates();
-		$temporarily_disable_all = !empty($settings['temporarily_disable_all_addons_blocks']);
+		$temporarily_disable_addons = !empty($settings['temporarily_disable_addons']);
 		$settings_form_id = 'um-addons-settings-form';
 		$addon_sections = self::get_addon_sections($settings);
 		$sorted_addon_sections = $addon_sections;
@@ -93,6 +93,9 @@ class User_Manager_Tab_Addons {
 			];
 		}
 		$selected_addon_main_navigation_tabs = User_Manager_Core::get_selected_addon_main_navigation_tabs($settings);
+		$temporarily_disabled_badge = !empty($settings['temporarily_disable_addons'])
+			? '<span class="um-temp-disabled-badge" title="' . esc_attr__('Temporarily disabled at runtime', 'user-manager') . '"><span class="dashicons dashicons-hidden" aria-hidden="true"></span> ' . esc_html__('Temporarily disabled', 'user-manager') . '</span>'
+			: '';
 		?>
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
 			<?php $tag_total = count($addon_tags); $tag_index = 0; ?>
@@ -118,6 +121,11 @@ class User_Manager_Tab_Addons {
 					<h2><?php esc_html_e('Add-ons Filter', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+						<?php if (!empty($settings['temporarily_disable_addons'])) : ?>
+							<p class="description" style="margin-top:0; margin-bottom:10px;">
+								<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+							</p>
+						<?php endif; ?>
 					<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
 						<div style="min-width:280px; flex:1;">
 							<label for="um-addons-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
@@ -141,6 +149,11 @@ class User_Manager_Tab_Addons {
 					<h2><?php esc_html_e('Choose an Add-on', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+					<?php if (!empty($settings['temporarily_disable_addons'])) : ?>
+						<p class="description" style="margin-top:0; margin-bottom:10px;">
+							<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+						</p>
+					<?php endif; ?>
 					<div class="um-addon-tile-grid">
 						<?php
 						$visible_tiles = 0;
@@ -182,14 +195,17 @@ class User_Manager_Tab_Addons {
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-controls-pause"></span>
 					<h2><?php esc_html_e('Temporarily Disable All', 'user-manager'); ?></h2>
+					<?php if ($temporarily_disable_addons) : ?>
+						<span class="um-temp-disabled-chip" title="<?php esc_attr_e('Temporarily disabled', 'user-manager'); ?>">⏸ <?php esc_html_e('Temporarily disabled', 'user-manager'); ?></span>
+					<?php endif; ?>
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-form-field">
 						<label>
-							<input type="checkbox" name="temporarily_disable_all_addons_blocks" value="1" <?php checked($temporarily_disable_all); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
-							<?php esc_html_e('Temporarily disable all add-ons and blocks runtime functionality.', 'user-manager'); ?>
+							<input type="checkbox" name="temporarily_disable_addons" value="1" <?php checked($temporarily_disable_addons); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
+							<?php esc_html_e('Temporarily disable all add-ons runtime functionality.', 'user-manager'); ?>
 						</label>
-						<p class="description"><?php esc_html_e('This override temporarily disables all individual add-on and block features. Uncheck and save to restore normal behavior.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('This override temporarily disables add-on runtime features only. Active add-ons stay checked and highlighted.', 'user-manager'); ?></p>
 					</div>
 					<p style="margin:0;">
 						<?php submit_button(__('Save', 'user-manager'), 'primary', 'um_save_temporary_disable_only', false, ['form' => $settings_form_id]); ?>
@@ -368,6 +384,20 @@ class User_Manager_Tab_Addons {
 			background: #e7f1ff;
 			border-color: #72aee6;
 		}
+		.um-temp-disabled-chip {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			font-size: 12px;
+			line-height: 1.5;
+			font-weight: 600;
+			background: #fff4e5;
+			border: 1px solid #f2c185;
+			color: #8a4b00;
+		}
 		.um-addon-tile-title {
 			display: block;
 			font-weight: 600;
@@ -542,6 +572,24 @@ class User_Manager_Tab_Addons {
 		}
 		.um-addon-main-nav-toggle input {
 			margin: 0;
+		}
+		.um-temp-disabled-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			border: 1px solid #dba617;
+			background: #fff8e5;
+			color: #7a5a00;
+			font-size: 12px;
+			font-weight: 600;
+		}
+		.um-temp-disabled-badge .dashicons {
+			font-size: 14px;
+			width: 14px;
+			height: 14px;
+			line-height: 14px;
 		}
 		@media (max-width: 600px) {
 			.um-checkbox-grid {

@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.35 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Temporarily Disable controls are now split and independent: Add-ons has its own temporary-disable toggle, and Blocks has its own temporary-disable toggle.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons/Blocks screens now read saved (raw) activation states so cards remain checked/highlighted while temporary-disable is active; runtime behavior is disabled without changing active checkbox values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added temporary-disabled visual badges/icons on Add-ons and Blocks index views while their respective temporary-disable toggle is enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.34 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed "Temporarily Disable All" save behavior so using that card no longer unchecks/deactivates individual add-ons or blocks in saved settings.', 'user-manager'); ?></li>

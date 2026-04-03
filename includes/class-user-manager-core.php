@@ -49,7 +49,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.34';
+	const VERSION = '2.5.35';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -97,10 +97,6 @@ final class User_Manager_Core {
 	 */
 	private static ?bool $runtime_disable_all_addons = null;
 
-	/**
-	 * Cached runtime "disable all add-ons" settings flag.
-	 */
-	private static ?bool $runtime_disable_all_addons_from_settings = null;
 
 	// Tab constants
 	const TAB_LOGIN_TOOLS     = 'login-tools';
@@ -183,11 +179,15 @@ final class User_Manager_Core {
 		self::maybe_boot_cart_price_per_piece($settings);
 		self::maybe_boot_cart_total_items($settings);
 		self::maybe_boot_invoice_approval($settings);
-		self::maybe_boot_media_library_tags($settings);
+		if (!self::is_disable_blocks_requested()) {
+			self::maybe_boot_media_library_tags($settings);
+		}
 		self::maybe_boot_my_account_menu_tiles($settings);
 		self::maybe_boot_order_received_page_customizer($settings);
 		self::maybe_boot_product_notification($settings);
-		self::maybe_boot_page_blocks($settings);
+		if (!self::is_disable_blocks_requested()) {
+			self::maybe_boot_page_blocks($settings);
+		}
 		self::maybe_boot_plugin_tags_notes($settings);
 		self::maybe_boot_restricted_access($settings);
 		self::maybe_apply_security_hardening($settings);
@@ -8664,6 +8664,7 @@ html body .woocommerce-layout__header {
 			'page-block-tabbed-content-area',
 			'page-block-simple-icons',
 			'page-block-menu-tiles',
+			'media-library-tags',
 		];
 	}
 
@@ -9420,8 +9421,8 @@ html body .woocommerce-layout__header {
 		$options = get_option(self::OPTION_KEY, []);
 		$options = is_array($options) ? $options : [];
 		$options = self::apply_runtime_addon_disable_overrides($options);
-		// Send Email defaults on unless temporary disable-all is requested.
-		if (!self::is_disable_all_addons_requested()) {
+		// Send Email defaults on unless add-ons temporary disable is requested.
+		if (!self::is_disable_addons_requested()) {
 			$options['send_email_users_enabled'] = true;
 		}
 		return $options;
@@ -9637,7 +9638,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Add-on slugs currently disabled by URL/query or saved disable-all override.
+	 * Add-on slugs currently disabled by URL/query or add-ons temporary-disable settings override.
 	 *
 	 * @return array<int,string>
 	 */
@@ -9648,7 +9649,7 @@ html body .woocommerce-layout__header {
 
 		$map = self::get_addon_runtime_toggle_map(false);
 		$disabled = [];
-		$disable_all = self::is_disable_all_addons_requested();
+		$disable_all = self::is_disable_addons_requested();
 		if ($disable_all) {
 			$disabled = array_keys($map);
 			self::$runtime_disabled_addon_slugs = $disabled;
@@ -9664,9 +9665,6 @@ html body .woocommerce-layout__header {
 		$parts = array_filter(array_map('trim', explode(',', $raw)));
 		foreach ($parts as $slug) {
 			$slug = sanitize_key(str_replace(' ', '-', $slug));
-			if ($slug === 'send-email-users') {
-				continue;
-			}
 			if ($slug === '' || !isset($map[$slug])) {
 				continue;
 			}
@@ -9678,14 +9676,14 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Determine if an add-on is temporarily disabled by URL/query or settings override.
+	 * Determine if an add-on is temporarily disabled by URL/query or add-ons settings override.
 	 */
 	public static function is_addon_temporarily_disabled(string $addon_slug): bool {
 		$addon_slug = sanitize_key($addon_slug);
 		if ($addon_slug === '') {
 			return false;
 		}
-		if ($addon_slug === 'send-email-users' && !self::is_disable_all_addons_requested()) {
+		if ($addon_slug === 'send-email-users' && !self::is_disable_addons_requested()) {
 			return false;
 		}
 		return in_array($addon_slug, self::get_temporarily_disabled_addons_from_url(), true);
@@ -9704,7 +9702,7 @@ html body .woocommerce-layout__header {
 		}
 
 		$map = self::get_addon_runtime_toggle_map(false);
-		$disable_all = self::is_disable_all_addons_requested();
+		$disable_all = self::is_disable_addons_requested();
 		foreach ($disabled as $slug) {
 			if (!isset($map[$slug]['settings_keys']) || !is_array($map[$slug]['settings_keys'])) {
 				continue;
@@ -9746,24 +9744,35 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Whether settings requested "temporarily disable all add-ons and blocks".
+	 * Whether settings requested temporary disable for add-ons.
 	 */
-	private static function is_disable_all_addons_requested_from_settings(): bool {
-		if (self::$runtime_disable_all_addons_from_settings !== null) {
-			return self::$runtime_disable_all_addons_from_settings;
-		}
-
+	private static function is_disable_addons_requested_from_settings(): bool {
 		$options = get_option(self::OPTION_KEY, []);
 		$options = is_array($options) ? $options : [];
-		self::$runtime_disable_all_addons_from_settings = !empty($options['temporarily_disable_all_addons_blocks']);
-		return self::$runtime_disable_all_addons_from_settings;
+		return !empty($options['temporarily_disable_addons']);
 	}
 
 	/**
-	 * Whether all add-ons/blocks should be temporarily disabled for this request.
+	 * Whether settings requested temporary disable for blocks.
 	 */
-	private static function is_disable_all_addons_requested(): bool {
-		return self::is_disable_all_addons_requested_from_url() || self::is_disable_all_addons_requested_from_settings();
+	public static function is_disable_blocks_requested_from_settings(): bool {
+		$options = get_option(self::OPTION_KEY, []);
+		$options = is_array($options) ? $options : [];
+		return !empty($options['temporarily_disable_blocks']);
+	}
+
+	/**
+	 * Whether add-ons should be temporarily disabled for this request.
+	 */
+	private static function is_disable_addons_requested(): bool {
+		return self::is_disable_all_addons_requested_from_url() || self::is_disable_addons_requested_from_settings();
+	}
+
+	/**
+	 * Whether blocks should be temporarily disabled for this request.
+	 */
+	private static function is_disable_blocks_requested(): bool {
+		return self::is_disable_all_addons_requested_from_url() || self::is_disable_blocks_requested_from_settings();
 	}
 
 	/**
