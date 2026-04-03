@@ -177,6 +177,26 @@ class User_Manager_Tab_Addons {
 				</div>
 			</div>
 		</div>
+		<div class="um-admin-grid um-admin-grid-single um-addon-temporary-disable-card" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-controls-pause"></span>
+					<h2><?php esc_html_e('Temporarily Disable All', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" name="temporarily_disable_all_addons_blocks" value="1" <?php checked($temporarily_disable_all); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
+							<?php esc_html_e('Temporarily disable all add-ons and blocks runtime functionality.', 'user-manager'); ?>
+						</label>
+						<p class="description"><?php esc_html_e('This override temporarily disables all individual add-on and block features. Uncheck and save to restore normal behavior.', 'user-manager'); ?></p>
+					</div>
+					<p style="margin:0;">
+						<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
+					</p>
+				</div>
+			</div>
+		</div>
 
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="<?php echo esc_attr($settings_form_id); ?>">
 			<input type="hidden" name="action" id="um-addons-form-action" value="user_manager_save_settings" />
@@ -301,24 +321,6 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-admin-card um-admin-card-full um-addon-save-card">
 				<div class="um-admin-card-body">
-					<p style="margin:0;">
-						<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
-					</p>
-				</div>
-			</div>
-			<div class="um-admin-card um-admin-card-full um-addon-temporary-disable-card">
-				<div class="um-admin-card-header">
-					<span class="dashicons dashicons-controls-pause"></span>
-					<h2><?php esc_html_e('Temporarily Disable All', 'user-manager'); ?></h2>
-				</div>
-				<div class="um-admin-card-body">
-					<div class="um-form-field">
-						<label>
-							<input type="checkbox" name="temporarily_disable_all_addons_blocks" value="1" <?php checked($temporarily_disable_all); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
-							<?php esc_html_e('Temporarily disable all add-ons and blocks runtime functionality.', 'user-manager'); ?>
-						</label>
-						<p class="description"><?php esc_html_e('This override temporarily disables all individual add-on and block features. Uncheck and save to restore normal behavior.', 'user-manager'); ?></p>
-					</div>
 					<p style="margin:0;">
 						<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
 					</p>
@@ -593,6 +595,7 @@ class User_Manager_Tab_Addons {
 							anyVisible = true;
 						}
 					});
+					$('.um-addon-temporary-disable-card').show();
 				} else {
 					$('.um-addon-section[data-addon-section="' + currentAddonSection + '"] .um-admin-card').each(function() {
 						var $card = $(this);
@@ -603,7 +606,7 @@ class User_Manager_Tab_Addons {
 						}
 					});
 					$('.um-addon-save-card').show();
-					$('.um-addon-temporary-disable-card').show();
+					$('.um-addon-temporary-disable-card').hide();
 				}
 
 				$('#um-addons-filter-empty').toggle(keyword !== '' && !anyVisible);
@@ -614,14 +617,14 @@ class User_Manager_Tab_Addons {
 					$('.um-addons-empty-state').show();
 					$('.um-addon-section').hide();
 					$('.um-addon-save-card').hide();
-					$('.um-addon-temporary-disable-card').hide();
+					$('.um-addon-temporary-disable-card').show();
 					return;
 				}
 				$('.um-addons-empty-state').hide();
 				$('.um-addon-section').hide();
 				$('.um-addon-section[data-addon-section="' + currentAddonSection + '"]').show();
 				$('.um-addon-save-card').show();
-				$('.um-addon-temporary-disable-card').show();
+				$('.um-addon-temporary-disable-card').hide();
 			}
 
 			function isAddonCardActive($card) {
