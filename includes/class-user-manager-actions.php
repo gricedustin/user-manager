@@ -2151,7 +2151,9 @@ class User_Manager_Actions {
 		check_admin_referer('user_manager_save_settings');
 
 		$section = isset($_POST['settings_section']) ? sanitize_key($_POST['settings_section']) : 'general';
-		$settings = User_Manager_Core::get_settings();
+		// Use persisted settings (no runtime overrides) so toggling temporary-disable
+		// never mutates real add-on activation checkboxes.
+		$settings = User_Manager_Core::get_raw_settings();
 		if (!is_array($settings)) {
 			$settings = [];
 		}

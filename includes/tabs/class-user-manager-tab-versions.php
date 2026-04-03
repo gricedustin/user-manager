@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.39 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Add-ons temporary-disable toggle save flow so unchecking "Temporarily disable all add-ons runtime functionality" no longer clears active add-on checkboxes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Settings saves now start from persisted raw settings (without runtime disable overrides), preventing runtime-disabled values from being written back as false.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.38 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Invoice Approval invoice page now shows a summary directly under "Products & Services" with total line item count and total quantity (for example: "Total Line Items: 3 (Total Quantity: 14)").', 'user-manager'); ?></li>
