@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.36 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated AI Notes/rules for Documentation > Versions updates so new changelog entries must use the real current date at edit time.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Prevents stale hardcoded changelog dates from being reused for future docs_section=versions updates.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.35 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Temporarily Disable controls are now split and independent: Add-ons has its own temporary-disable toggle, and Blocks has its own temporary-disable toggle.', 'user-manager'); ?></li>

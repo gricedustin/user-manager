@@ -17,3 +17,10 @@ Required updates:
 
 3) Keep version number and release date consistent across all version/changelog locations.
 
+4) When updating Documentation > Versions (`docs_section=versions`) and related changelog metadata:
+- Always use the real current date from the time the work is performed.
+- Do not reuse a previously used hardcoded date (for example, do not keep using "March 16, 2026" for new entries).
+- Ensure the new version's date matches in both:
+  - `user-manager.php` top changelog entry
+  - `includes/tabs/class-user-manager-tab-versions.php` top entry
+
