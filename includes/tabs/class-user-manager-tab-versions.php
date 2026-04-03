@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.41 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons filter tags now include two new categories: Email and SMS.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Email/SMS tag matching is keyword-driven so messaging-related add-ons appear under those new filters.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.40 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Add-ons/Blocks save regression where normal section saves could be incorrectly treated as temporary-disable-only saves, preventing per add-on/block deactivation.', 'user-manager'); ?></li>

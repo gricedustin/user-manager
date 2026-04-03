@@ -1617,6 +1617,14 @@ class User_Manager_Tab_Addons {
 				'label'    => __('Security', 'user-manager'),
 				'keywords' => ['security', 'secure', 'hardening', 'harden', 'permission', 'permissions', 'access control', 'access controls', 'ssl'],
 			],
+			'email'      => [
+				'label'    => __('Email', 'user-manager'),
+				'keywords' => ['email', 'emails', 'template', 'templates', 'smtp'],
+			],
+			'sms'        => [
+				'label'    => __('SMS', 'user-manager'),
+				'keywords' => ['sms', 'text message', 'text messages', 'simple texting', 'twilio'],
+			],
 			'wp-admin'   => [
 				'label'    => __('WP-Admin', 'user-manager'),
 				'keywords' => ['wp-admin', 'wp admin'],
