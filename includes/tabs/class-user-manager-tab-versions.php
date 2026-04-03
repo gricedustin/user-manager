@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.45 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Email Log add-on UI wording was corrected from "Emali" to "Email" for user-facing labels/buttons, including "Clear Email Log History".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new modal HTML preview action in Email Log rows so rendered email HTML can be opened in a popup window without leaving the table.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.44 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Documentation tab content to reflect the current tab architecture and new sub-page routing patterns.', 'user-manager'); ?></li>
@@ -49,18 +56,18 @@ class User_Manager_Tab_Versions {
 					<div class="um-changelog-item">
 						<h4>2.5.43 <span>(April 3, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Emali Log now includes a configurable retention setting: "Auto-delete log entries after X days" (0 keeps logs forever).', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Added automatic Emali Log cleanup of old rows using daily WP-Cron scheduling plus a once-per-day fallback on normal requests.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Clear Emali Log History now also resets cleanup timing metadata so future retention cleanup restarts cleanly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Email Log now includes a configurable retention setting: "Auto-delete log entries after X days" (0 keeps logs forever).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added automatic Email Log cleanup of old rows using daily WP-Cron scheduling plus a once-per-day fallback on normal requests.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clear Email Log History now also resets cleanup timing metadata so future retention cleanup restarts cleanly.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
 						<h4>2.5.42 <span>(April 3, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Added new Add-on: Emali Log.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('When activated, Emali Log records outgoing wp_mail events with full email header columns (To, From, Reply-To, CC, BCC, Content-Type), subject, status, and message body data.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Added Emali Log tools for HTML email preview + raw source, resend email, forward email to another address, status/search filters, pagination, and clear-history controls.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Added Emali Log stats cards for sent volume in the past hour, day, week, month, plus total logged emails.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new Add-on: Email Log.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When activated, Email Log records outgoing wp_mail events with full email header columns (To, From, Reply-To, CC, BCC, Content-Type), subject, status, and message body data.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Email Log tools for HTML email preview + raw source, resend email, forward email to another address, status/search filters, pagination, and clear-history controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Email Log stats cards for sent volume in the past hour, day, week, month, plus total logged emails.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

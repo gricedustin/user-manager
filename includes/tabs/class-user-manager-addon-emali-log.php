@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Emali Log.
+ * Add-on card: Email Log.
  */
 if (!defined('ABSPATH')) {
 	exit;
@@ -12,6 +12,7 @@ class User_Manager_Addon_Emali_Log {
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$enabled = !empty($settings['emali_log_enabled']);
 		$auto_delete_days = isset($settings['emali_log_auto_delete_days']) ? max(0, absint($settings['emali_log_auto_delete_days'])) : 0;
+		$modal_payload = [];
 
 		$current_status = isset($_GET['emali_log_status']) ? sanitize_key(wp_unslash($_GET['emali_log_status'])) : '';
 		if (!in_array($current_status, ['sent', 'failed', 'pending'], true)) {
@@ -46,7 +47,7 @@ class User_Manager_Addon_Emali_Log {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-emali-log" data-um-active-selectors="#um-emali-log-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-email-alt2"></span>
-				<h2><?php esc_html_e('Emali Log', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Email Log', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
@@ -143,6 +144,13 @@ class User_Manager_Addon_Emali_Log {
 										$cc_header = isset($entry['cc_header']) ? (string) $entry['cc_header'] : '';
 										$bcc_header = isset($entry['bcc_header']) ? (string) $entry['bcc_header'] : '';
 										$content_type = isset($entry['content_type']) ? (string) $entry['content_type'] : '';
+										$raw_message = isset($entry['message']) ? (string) $entry['message'] : '';
+										if ($entry_id > 0) {
+											$modal_payload[(string) $entry_id] = [
+												'subject' => $subject,
+												'html'    => $raw_message,
+											];
+										}
 										$preview_url = add_query_arg([
 											'emali_log_preview' => $entry_id,
 											'emali_log_page' => $current_page,
@@ -168,6 +176,7 @@ class User_Manager_Addon_Emali_Log {
 											<td>
 												<div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
 													<a class="button button-small" href="<?php echo esc_url($preview_url); ?>"><?php esc_html_e('View Email', 'user-manager'); ?></a>
+													<button type="button" class="button button-small um-email-log-open-html-modal" data-log-id="<?php echo esc_attr((string) $entry_id); ?>"><?php esc_html_e('Open HTML Modal', 'user-manager'); ?></button>
 													<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:flex; gap:6px; flex-wrap:wrap;">
 														<input type="hidden" name="action" value="user_manager_emali_log_resend" />
 														<input type="hidden" name="log_id" value="<?php echo esc_attr((string) $entry_id); ?>" />
@@ -234,6 +243,9 @@ class User_Manager_Addon_Emali_Log {
 							</div>
 							<div class="um-admin-card-body">
 								<p><strong><?php esc_html_e('Subject:', 'user-manager'); ?></strong> <?php echo esc_html($preview_subject); ?></p>
+								<p style="margin-top:8px;">
+									<button type="button" class="button um-email-log-open-html-modal" data-log-id="<?php echo esc_attr((string) absint($preview_entry['id'] ?? 0)); ?>"><?php esc_html_e('Open HTML in Modal Window', 'user-manager'); ?></button>
+								</p>
 								<div style="padding:12px; border:1px solid #dcdcde; border-radius:4px; background:#fff; max-height:420px; overflow:auto;">
 									<?php echo wp_kses_post($preview_message); ?>
 								</div>
@@ -257,18 +269,67 @@ class User_Manager_Addon_Emali_Log {
 						<input type="hidden" name="addon_section" value="emali-log" />
 						<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
 						<?php wp_nonce_field('user_manager_emali_log_clear'); ?>
-						<?php submit_button(__('Clear Emali Log History', 'user-manager'), 'delete', 'submit', false); ?>
+						<?php submit_button(__('Clear Email Log History', 'user-manager'), 'delete', 'submit', false); ?>
 					</form>
+				</div>
+			</div>
+		</div>
+		<div id="um-email-log-html-modal" style="display:none; position:fixed; inset:0; z-index:100000;">
+			<div class="um-email-log-html-modal-backdrop" data-close-modal="1" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
+			<div style="position:relative; width:min(1100px, calc(100vw - 40px)); margin:24px auto; background:#fff; border-radius:8px; box-shadow:0 20px 50px rgba(0,0,0,0.35); overflow:hidden;">
+				<div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #dcdcde;">
+					<h2 id="um-email-log-html-modal-title" style="margin:0; font-size:16px;"><?php esc_html_e('Email HTML Preview', 'user-manager'); ?></h2>
+					<button type="button" class="button" data-close-modal="1"><?php esc_html_e('Close', 'user-manager'); ?></button>
+				</div>
+				<div style="padding:0;">
+					<iframe id="um-email-log-html-modal-iframe" sandbox="" style="width:100%; height:72vh; border:0; display:block;"></iframe>
 				</div>
 			</div>
 		</div>
 		<script>
 		jQuery(function($) {
-			function toggleEmaliLogFields() {
+			var emailModalData = <?php echo wp_json_encode($modal_payload); ?>;
+			var $htmlModal = $('#um-email-log-html-modal');
+			var $htmlModalTitle = $('#um-email-log-html-modal-title');
+			var htmlModalIframe = document.getElementById('um-email-log-html-modal-iframe');
+
+			function toggleEmailLogFields() {
 				$('#um-emali-log-fields').toggle($('#um-emali-log-enabled').is(':checked'));
 			}
-			$('#um-emali-log-enabled').on('change', toggleEmaliLogFields);
-			toggleEmaliLogFields();
+			function openHtmlModal(logId) {
+				var payload = emailModalData[String(logId)] || emailModalData[logId];
+				if (!payload || !htmlModalIframe) {
+					return;
+				}
+				var subject = payload.subject ? (' — ' + payload.subject) : '';
+				$htmlModalTitle.text('<?php echo esc_js(__('Email HTML Preview', 'user-manager')); ?> #' + logId + subject);
+				htmlModalIframe.srcdoc = payload.html || '<p style="font-family:Arial,sans-serif;padding:20px;"><?php echo esc_js(__('No HTML body found for this email.', 'user-manager')); ?></p>';
+				$htmlModal.show();
+			}
+			function closeHtmlModal() {
+				$htmlModal.hide();
+				if (htmlModalIframe) {
+					htmlModalIframe.srcdoc = '';
+				}
+			}
+
+			$('#um-emali-log-enabled').on('change', toggleEmailLogFields);
+			$(document).on('click', '.um-email-log-open-html-modal', function() {
+				var logId = parseInt($(this).data('log-id'), 10);
+				if (!logId) {
+					return;
+				}
+				openHtmlModal(logId);
+			});
+			$htmlModal.on('click', '[data-close-modal="1"]', function() {
+				closeHtmlModal();
+			});
+			$(document).on('keydown', function(event) {
+				if (event.key === 'Escape' && $htmlModal.is(':visible')) {
+					closeHtmlModal();
+				}
+			});
+			toggleEmailLogFields();
 		});
 		</script>
 		<?php

@@ -51,7 +51,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.44';
+	const VERSION = '2.5.45';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8851,24 +8851,24 @@ html body .woocommerce-layout__header {
 				$content = __('Settings saved successfully.', 'user-manager');
 				break;
 			case 'emali_log_resent':
-				$content = __('Email resent successfully from Emali Log.', 'user-manager');
+				$content = __('Email resent successfully from Email Log.', 'user-manager');
 				break;
 			case 'emali_log_resend_failed':
-				$content = __('Unable to resend this Emali Log email entry.', 'user-manager');
+				$content = __('Unable to resend this Email Log email entry.', 'user-manager');
 				$type = 'error';
 				break;
 			case 'emali_log_forwarded':
-				$content = __('Email forwarded successfully from Emali Log.', 'user-manager');
+				$content = __('Email forwarded successfully from Email Log.', 'user-manager');
 				break;
 			case 'emali_log_forward_failed':
-				$content = __('Unable to forward this Emali Log email entry. Check the forward address and try again.', 'user-manager');
+				$content = __('Unable to forward this Email Log email entry. Check the forward address and try again.', 'user-manager');
 				$type = 'error';
 				break;
 			case 'emali_log_cleared':
-				$content = __('Emali Log history has been cleared.', 'user-manager');
+				$content = __('Email Log history has been cleared.', 'user-manager');
 				break;
 			case 'emali_log_auto_cleanup_saved':
-				$content = __('Emali Log auto-delete retention was updated.', 'user-manager');
+				$content = __('Email Log auto-delete retention was updated.', 'user-manager');
 				break;
 			case 'view_reports_reset':
 				$content = __('All view-related reports (Page Views, Product Views, 404 Errors, Search Queries) have been reset.', 'user-manager');
@@ -9546,7 +9546,7 @@ html body .woocommerce-layout__header {
 				'settings_keys' => ['database_table_browser_enabled'],
 			],
 			'emali-log' => [
-				'label' => 'Emali Log',
+				'label' => 'Email Log',
 				'settings_keys' => ['emali_log_enabled'],
 			],
 			'security-hardening' => [

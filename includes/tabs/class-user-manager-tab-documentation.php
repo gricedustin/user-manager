@@ -797,7 +797,7 @@ class User_Manager_Tab_Documentation {
 						<li><?php esc_html_e('Cart Total Items', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Page Creator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Database Table Browser', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Emali Log', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Email Log', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Webhook URLs', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Order Invoice & Approval', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Order Received Page Customizer', 'user-manager'); ?></li>

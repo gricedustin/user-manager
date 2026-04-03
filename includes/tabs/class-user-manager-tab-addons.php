@@ -1381,7 +1381,7 @@ class User_Manager_Tab_Addons {
 				'active' => !empty($settings['database_table_browser_enabled']),
 			],
 			'emali-log' => [
-				'label'  => __('Emali Log', 'user-manager'),
+				'label'  => __('Email Log', 'user-manager'),
 				'description' => __('Capture a history of outgoing emails with header columns, HTML preview, resend/forward tools, and recent volume stats.', 'user-manager'),
 				'active' => !empty($settings['emali_log_enabled']),
 			],
