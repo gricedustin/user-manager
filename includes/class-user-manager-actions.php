@@ -2151,9 +2151,11 @@ class User_Manager_Actions {
 		check_admin_referer('user_manager_save_settings');
 
 		$section = isset($_POST['settings_section']) ? sanitize_key($_POST['settings_section']) : 'general';
-		// Use persisted settings (no runtime overrides) so toggling temporary-disable
-		// never mutates real add-on activation checkboxes.
-		$settings = User_Manager_Core::get_raw_settings();
+		// Normal settings saves should use runtime-aware values (matches legacy behavior).
+		// For the dedicated "temporary disable only" save action, we switch to raw
+		// settings later inside the addons/blocks cases to preserve saved activation
+		// states while toggling temporary runtime disable.
+		$settings = User_Manager_Core::get_settings();
 		if (!is_array($settings)) {
 			$settings = [];
 		}
@@ -2282,9 +2284,21 @@ class User_Manager_Actions {
 
 			case 'blocks':
 				$redirect_tab = User_Manager_Core::TAB_BLOCKS;
+				$is_blocks_temp_disable_only = isset($_POST['um_save_temporary_disable_only'])
+					&& $_POST['um_save_temporary_disable_only'] !== ''
+					&& (
+						!isset($_POST['submit'])
+						|| $_POST['submit'] === ''
+						|| $_POST['submit'] === '0'
+					)
+					&& empty($_POST['block_section']);
+				if ($is_blocks_temp_disable_only) {
+					$settings = User_Manager_Core::get_raw_settings();
+					if (!is_array($settings)) {
+						$settings = [];
+					}
+				}
 				$settings['temporarily_disable_blocks'] = isset($_POST['temporarily_disable_blocks']) && $_POST['temporarily_disable_blocks'] === '1';
-				// Backward compatibility with legacy combined setting key.
-				$is_blocks_temp_disable_only = isset($_POST['um_save_temporary_disable_only']) && $_POST['um_save_temporary_disable_only'] !== '';
 				if ($is_blocks_temp_disable_only) {
 					break;
 				}
@@ -2350,9 +2364,21 @@ class User_Manager_Actions {
 
 			case 'addons':
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
+				$is_addons_temp_disable_only = isset($_POST['um_save_temporary_disable_only'])
+					&& $_POST['um_save_temporary_disable_only'] !== ''
+					&& (
+						!isset($_POST['submit'])
+						|| $_POST['submit'] === ''
+						|| $_POST['submit'] === '0'
+					)
+					&& empty($_POST['addon_section']);
+				if ($is_addons_temp_disable_only) {
+					$settings = User_Manager_Core::get_raw_settings();
+					if (!is_array($settings)) {
+						$settings = [];
+					}
+				}
 				$settings['temporarily_disable_addons'] = isset($_POST['temporarily_disable_addons']) && $_POST['temporarily_disable_addons'] === '1';
-				// Backward compatibility with legacy combined setting key.
-				$is_addons_temp_disable_only = isset($_POST['um_save_temporary_disable_only']) && $_POST['um_save_temporary_disable_only'] !== '';
 				if ($is_addons_temp_disable_only) {
 					break;
 				}

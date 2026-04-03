@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.40 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Add-ons/Blocks save regression where normal section saves could be incorrectly treated as temporary-disable-only saves, preventing per add-on/block deactivation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Temporary-disable-only flow now starts from persisted raw settings only for that dedicated save action, while regular saves continue to process activation checkbox changes normally.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.39 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Add-ons temporary-disable toggle save flow so unchecking "Temporarily disable all add-ons runtime functionality" no longer clears active add-on checkboxes.', 'user-manager'); ?></li>
