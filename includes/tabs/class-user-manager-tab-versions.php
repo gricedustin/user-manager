@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.37 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed fatal error on Add-ons/Blocks screens by adding missing User_Manager_Core::get_raw_settings() compatibility method.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('get_raw_settings() now returns persisted plugin options without runtime temporary-disable overrides, restoring admin screen rendering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.36 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated AI Notes/rules for Documentation > Versions updates so new changelog entries must use the real current date at edit time.', 'user-manager'); ?></li>

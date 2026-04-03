@@ -49,7 +49,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.36';
+	const VERSION = '2.5.37';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -9426,6 +9426,19 @@ html body .woocommerce-layout__header {
 			$options['send_email_users_enabled'] = true;
 		}
 		return $options;
+	}
+
+	/**
+	 * Get persisted settings without runtime temporary-disable overrides.
+	 *
+	 * This is used by admin UI screens that must reflect saved checkbox state
+	 * even when runtime temporary-disable flags are currently active.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function get_raw_settings(): array {
+		$options = get_option(self::OPTION_KEY, []);
+		return is_array($options) ? $options : [];
 	}
 
 	/**

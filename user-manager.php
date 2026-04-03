@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.36
+ * Version: 2.5.37
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.37 - April 3, 2026
+ * - Fixed fatal error on Add-ons/Blocks screens by adding missing User_Manager_Core::get_raw_settings() compatibility method.
+ * - get_raw_settings() now returns persisted plugin options without runtime temporary-disable overrides, restoring admin screen rendering.
+ *
  * 2.5.36 - April 3, 2026
  * - Updated AI Notes/rules for Documentation > Versions updates so new changelog entries must use the real current date at edit time.
  * - Prevents stale hardcoded changelog dates from being reused for future docs_section=versions updates.
