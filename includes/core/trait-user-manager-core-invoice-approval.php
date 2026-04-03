@@ -484,6 +484,13 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		$issued_date = wc_format_datetime($order->get_date_created(), get_option('date_format'));
 		$items = $order->get_items();
 		$item_count = count($items);
+		$total_quantity = 0;
+		foreach ($items as $invoice_item) {
+			if (!is_object($invoice_item) || !method_exists($invoice_item, 'get_quantity')) {
+				continue;
+			}
+			$total_quantity += (int) $invoice_item->get_quantity();
+		}
 		$currency = $order->get_currency();
 
 		$checkout_base = remove_query_arg(['store', 'brand'], wc_get_checkout_url());
@@ -617,6 +624,18 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 				<?php endif; ?>
 
 				<h3><?php esc_html_e('Products & Services', 'user-manager'); ?></h3>
+				<p style="margin:-4px 0 12px; color:#555; font-size:0.95em;">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: 1: total line items count, 2: total order quantity */
+							__('Total Line Items: %1$d (Total Quantity: %2$d)', 'user-manager'),
+							$item_count,
+							$total_quantity
+						)
+					);
+					?>
+				</p>
 				<?php if ($scroll_threshold > 0 && $item_count > $scroll_threshold) : ?><div class="invoice-items-scrollable"><?php endif; ?>
 				<table>
 					<thead>
