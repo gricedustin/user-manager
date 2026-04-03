@@ -23,6 +23,7 @@ require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
 require_once __DIR__ . '/class-user-manager-addon-data-anonymizer.php';
 require_once __DIR__ . '/class-user-manager-addon-database-table-browser.php';
+require_once __DIR__ . '/class-user-manager-addon-emali-log.php';
 require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
 require_once __DIR__ . '/class-user-manager-addon-invoice-approval.php';
 require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
@@ -262,6 +263,9 @@ class User_Manager_Tab_Addons {
 				</div>
 				<div class="um-addon-section" data-addon-section="database-table-browser">
 					<?php User_Manager_Addon_Database_Table_Browser::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="emali-log">
+					<?php User_Manager_Addon_Emali_Log::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="security-hardening">
 					<?php User_Manager_Addon_Security_Hardening::render($settings, $settings_form_id); ?>
@@ -1203,6 +1207,10 @@ class User_Manager_Tab_Addons {
 				toggleDatabaseTableBrowserFields();
 				refreshAddonCardAutoState($('#um-addon-card-database-table-browser'));
 			});
+			$('#um-emali-log-enabled').on('change', function() {
+				$('#um-emali-log-fields').toggle($('#um-emali-log-enabled').is(':checked'));
+				refreshAddonCardAutoState($('#um-addon-card-emali-log'));
+			});
 			$('#um-webhook-urls-enabled').on('change', function() {
 				toggleWebhookUrlsFields();
 				refreshAddonCardAutoState($('#um-addon-card-webhook-urls'));
@@ -1371,6 +1379,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Database Table Browser', 'user-manager'),
 				'description' => __('Browse database tables, review structure, and view paginated row data directly in WP-Admin for troubleshooting and QA.', 'user-manager'),
 				'active' => !empty($settings['database_table_browser_enabled']),
+			],
+			'emali-log' => [
+				'label'  => __('Emali Log', 'user-manager'),
+				'description' => __('Capture a history of outgoing emails with header columns, HTML preview, resend/forward tools, and recent volume stats.', 'user-manager'),
+				'active' => !empty($settings['emali_log_enabled']),
 			],
 			'webhook-urls' => [
 				'label'  => __('Webhook URLs', 'user-manager'),

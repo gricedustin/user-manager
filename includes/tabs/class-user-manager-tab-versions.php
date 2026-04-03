@@ -39,6 +39,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.42 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: Emali Log.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When activated, Emali Log records outgoing wp_mail events with full email header columns (To, From, Reply-To, CC, BCC, Content-Type), subject, status, and message body data.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Emali Log tools for HTML email preview + raw source, resend email, forward email to another address, status/search filters, pagination, and clear-history controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Emali Log stats cards for sent volume in the past hour, day, week, month, plus total logged emails.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.41 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons filter tags now include two new categories: Email and SMS.', 'user-manager'); ?></li>

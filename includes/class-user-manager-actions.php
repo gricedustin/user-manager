@@ -51,6 +51,9 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_import_demo_sms_text_templates', [__CLASS__, 'handle_import_demo_sms_text_templates']);
 		add_action('admin_post_user_manager_clear_activity_log', [__CLASS__, 'handle_clear_activity_log']);
 		add_action('admin_post_user_manager_clear_user_activity_log', [__CLASS__, 'handle_clear_user_activity_log']);
+		add_action('admin_post_user_manager_emali_log_resend', [__CLASS__, 'handle_emali_log_resend']);
+		add_action('admin_post_user_manager_emali_log_forward', [__CLASS__, 'handle_emali_log_forward']);
+		add_action('admin_post_user_manager_emali_log_clear', [__CLASS__, 'handle_emali_log_clear']);
 		add_action('admin_post_user_manager_move_template', [__CLASS__, 'handle_move_template']);
 		add_action('admin_post_user_manager_import_coupon_template', [__CLASS__, 'handle_import_coupon_template']);
 		add_action('admin_post_user_manager_migrate_store_credit_coupons', [__CLASS__, 'handle_migrate_store_credit_coupons']);
@@ -2403,6 +2406,7 @@ class User_Manager_Actions {
 				$settings['product_notification_button_hover_text_color'] = isset($_POST['product_notification_button_hover_text_color'])
 					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_hover_text_color']))
 					: '';
+				$settings['emali_log_enabled'] = isset($_POST['emali_log_enabled']) && $_POST['emali_log_enabled'] === '1';
 				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
 				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
 				$settings['seo_basics_enabled'] = isset($_POST['seo_basics_enabled']) && $_POST['seo_basics_enabled'] === '1';
@@ -3014,6 +3018,74 @@ class User_Manager_Actions {
 		}
 
 		wp_safe_redirect($redirect_url);
+		exit;
+	}
+
+	/**
+	 * Handle resend action for an Emali Log row.
+	 */
+	public static function handle_emali_log_resend(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		$log_id = isset($_POST['log_id']) ? absint($_POST['log_id']) : 0;
+		check_admin_referer('user_manager_emali_log_resend_' . $log_id);
+		$ok = User_Manager_Core::resend_emali_log_entry($log_id);
+		$msg = $ok ? 'emali_log_resent' : 'emali_log_resend_failed';
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, $msg, [
+				'addon_section' => 'emali-log',
+				'addon_tag'     => isset($_POST['addon_tag']) ? sanitize_title(wp_unslash($_POST['addon_tag'])) : '',
+				'emali_log_status' => isset($_POST['emali_log_status']) ? sanitize_key(wp_unslash($_POST['emali_log_status'])) : '',
+				'emali_log_search' => isset($_POST['emali_log_search']) ? sanitize_text_field(wp_unslash($_POST['emali_log_search'])) : '',
+				'emali_log_page'   => isset($_POST['emali_log_page']) ? max(1, absint($_POST['emali_log_page'])) : 1,
+			])
+		);
+		exit;
+	}
+
+	/**
+	 * Handle forward action for an Emali Log row.
+	 */
+	public static function handle_emali_log_forward(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		$log_id = isset($_POST['log_id']) ? absint($_POST['log_id']) : 0;
+		check_admin_referer('user_manager_emali_log_forward_' . $log_id);
+		$forward_email = isset($_POST['forward_email']) ? sanitize_email(wp_unslash($_POST['forward_email'])) : '';
+		$ok = User_Manager_Core::forward_emali_log_entry($log_id, $forward_email);
+		$msg = $ok ? 'emali_log_forwarded' : 'emali_log_forward_failed';
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, $msg, [
+				'addon_section' => 'emali-log',
+				'addon_tag'     => isset($_POST['addon_tag']) ? sanitize_title(wp_unslash($_POST['addon_tag'])) : '',
+				'emali_log_status' => isset($_POST['emali_log_status']) ? sanitize_key(wp_unslash($_POST['emali_log_status'])) : '',
+				'emali_log_search' => isset($_POST['emali_log_search']) ? sanitize_text_field(wp_unslash($_POST['emali_log_search'])) : '',
+				'emali_log_page'   => isset($_POST['emali_log_page']) ? max(1, absint($_POST['emali_log_page'])) : 1,
+			])
+		);
+		exit;
+	}
+
+	/**
+	 * Handle clear-all action for Emali Log history.
+	 */
+	public static function handle_emali_log_clear(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_emali_log_clear');
+		User_Manager_Core::clear_emali_log_history();
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, 'emali_log_cleared', [
+				'addon_section' => 'emali-log',
+				'addon_tag'     => isset($_POST['addon_tag']) ? sanitize_title(wp_unslash($_POST['addon_tag'])) : '',
+				'emali_log_status' => isset($_POST['emali_log_status']) ? sanitize_key(wp_unslash($_POST['emali_log_status'])) : '',
+				'emali_log_search' => isset($_POST['emali_log_search']) ? sanitize_text_field(wp_unslash($_POST['emali_log_search'])) : '',
+				'emali_log_page'   => isset($_POST['emali_log_page']) ? max(1, absint($_POST['emali_log_page'])) : 1,
+			])
+		);
 		exit;
 	}
 

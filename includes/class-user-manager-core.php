@@ -13,6 +13,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-min-max-quanti
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-price-per-piece.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-total-items.php';
+require_once __DIR__ . '/core/trait-user-manager-core-emali-log.php';
 require_once __DIR__ . '/core/trait-user-manager-core-fatal-error-debugger.php';
 require_once __DIR__ . '/core/trait-user-manager-core-invoice-approval.php';
 require_once __DIR__ . '/core/trait-user-manager-core-media-library-tags.php';
@@ -31,6 +32,7 @@ final class User_Manager_Core {
 	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
 	use User_Manager_Core_Cart_Price_Per_Piece_Trait;
 	use User_Manager_Core_Cart_Total_Items_Trait;
+	use User_Manager_Core_Emali_Log_Trait;
 	use User_Manager_Core_Fatal_Error_Debugger_Trait;
 	use User_Manager_Core_Invoice_Approval_Trait;
 	use User_Manager_Core_Media_Library_Tags_Trait;
@@ -49,7 +51,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.41';
+	const VERSION = '2.5.42';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -178,6 +180,7 @@ final class User_Manager_Core {
 		self::maybe_boot_add_to_cart_min_max_quantities($settings);
 		self::maybe_boot_cart_price_per_piece($settings);
 		self::maybe_boot_cart_total_items($settings);
+		self::maybe_boot_emali_log($settings);
 		self::maybe_boot_invoice_approval($settings);
 		if (!self::is_disable_blocks_requested()) {
 			self::maybe_boot_media_library_tags($settings);
@@ -8846,6 +8849,23 @@ html body .woocommerce-layout__header {
 			case 'settings_saved':
 				$content = __('Settings saved successfully.', 'user-manager');
 				break;
+			case 'emali_log_resent':
+				$content = __('Email resent successfully from Emali Log.', 'user-manager');
+				break;
+			case 'emali_log_resend_failed':
+				$content = __('Unable to resend this Emali Log email entry.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'emali_log_forwarded':
+				$content = __('Email forwarded successfully from Emali Log.', 'user-manager');
+				break;
+			case 'emali_log_forward_failed':
+				$content = __('Unable to forward this Emali Log email entry. Check the forward address and try again.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'emali_log_cleared':
+				$content = __('Emali Log history has been cleared.', 'user-manager');
+				break;
 			case 'view_reports_reset':
 				$content = __('All view-related reports (Page Views, Product Views, 404 Errors, Search Queries) have been reset.', 'user-manager');
 				break;
@@ -9520,6 +9540,10 @@ html body .woocommerce-layout__header {
 			'database-table-browser' => [
 				'label' => 'Database Table Browser',
 				'settings_keys' => ['database_table_browser_enabled'],
+			],
+			'emali-log' => [
+				'label' => 'Emali Log',
+				'settings_keys' => ['emali_log_enabled'],
 			],
 			'security-hardening' => [
 				'label' => 'Security Hardening',
