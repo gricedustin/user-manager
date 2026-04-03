@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.46 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed My Account Admin search form button clickability on frontend endpoint pages by strengthening stacking and pointer-event styles for the search form and submit button.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.45 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Email Log add-on UI wording was corrected from "Emali" to "Email" for user-facing labels/buttons, including "Clear Email Log History".', 'user-manager'); ?></li>

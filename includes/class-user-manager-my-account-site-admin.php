@@ -1578,7 +1578,7 @@ final class User_Manager_My_Account_Site_Admin {
 			echo '<input type="hidden" name="um_order_status" value="' . esc_attr($selected_status_key) . '" />';
 		}
 		echo '<input type="search" name="um_search" value="' . esc_attr($search) . '" placeholder="' . esc_attr($placeholder) . '" />';
-		echo '<button type="submit" class="button">' . esc_html__('Search', 'user-manager') . '</button>';
+		echo '<button type="submit" class="button um-my-account-admin-search-submit">' . esc_html__('Search', 'user-manager') . '</button>';
 		if ($search !== '') {
 			$clear_args = [];
 			if ($selected_status_key !== '') {
@@ -2047,12 +2047,22 @@ final class User_Manager_My_Account_Site_Admin {
 				gap: 8px;
 				flex-wrap: wrap;
 				align-items: center;
+				position: relative;
+				z-index: 5;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form,
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form * {
+				pointer-events: auto !important;
 			}
 			.woocommerce-MyAccount-content .um-my-account-admin-search-form input[type="search"] {
 				min-width: 260px;
 				max-width: 420px;
 				width: 100%;
 				padding: 6px 8px;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form .um-my-account-admin-search-submit {
+				cursor: pointer;
+				opacity: 1 !important;
 			}
 			table.express_checkout_order_approvals {
 				width: 100%;
