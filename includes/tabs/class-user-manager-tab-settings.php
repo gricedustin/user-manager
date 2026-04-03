@@ -225,6 +225,13 @@ if (!defined('ABSPATH')) {
 							</label>
 							<p class="description"><?php esc_html_e('Disabled by default. Enable to show the top notice with quick links on user-edit.php and profile.php.', 'user-manager'); ?></p>
 						</div>
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="show_user_manager_admin_bar_link" value="1" <?php checked($settings['show_user_manager_admin_bar_link'] ?? false); ?> />
+								<?php esc_html_e('Show User Experience Manager link in WP-Admin top bar', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('Disabled by default. Enable to show the "User Experience Manager" shortcut in the admin bar.', 'user-manager'); ?></p>
+						</div>
 					<div class="um-form-field">
 						<label for="um-legacy-noop-shortcodes"><?php esc_html_e('Legacy/Broken Shortcodes (comma-separated)', 'user-manager'); ?></label>
 						<input type="text" name="legacy_noop_shortcodes_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($settings['legacy_noop_shortcodes_list'] ?? ''); ?>" placeholder="old_shortcode_one, old_shortcode_two" />

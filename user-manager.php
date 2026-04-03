@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.29
+ * Version: 2.5.30
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.30 - March 16, 2026
+ * - Added a new Settings > User Experience checkbox to control the "User Experience Manager" WP-Admin top-bar shortcut.
+ * - The top-bar shortcut is now disabled by default and only appears when that setting is enabled.
+ *
  * 2.5.29 - March 16, 2026
  * - Add-ons tab and Blocks tab now include a new bottom card: "Temporarily Disable All" with a checkbox and Save button.
  * - The new temporary override disables all add-ons and blocks runtime behavior individually when enabled, and restores normal behavior when unchecked and saved.
