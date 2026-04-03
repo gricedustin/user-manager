@@ -49,7 +49,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.33';
+	const VERSION = '2.5.34';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8591,7 +8591,7 @@ html body .woocommerce-layout__header {
 	 * @param array<string,mixed> $settings Plugin settings.
 	 */
 	public static function is_send_email_addon_enabled(array $settings): bool {
-		return true;
+		return !self::is_addon_temporarily_disabled('send-email-users');
 	}
 
 	/**
@@ -9420,7 +9420,7 @@ html body .woocommerce-layout__header {
 		$options = get_option(self::OPTION_KEY, []);
 		$options = is_array($options) ? $options : [];
 		$options = self::apply_runtime_addon_disable_overrides($options);
-		// Send Email add-on is required by Login Tools; keep it always enabled.
+		// Send Email defaults on unless temporary disable-all is requested.
 		if (!self::is_disable_all_addons_requested()) {
 			$options['send_email_users_enabled'] = true;
 		}
@@ -9637,7 +9637,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Add-on slugs currently disabled by URL override.
+	 * Add-on slugs currently disabled by URL/query or saved disable-all override.
 	 *
 	 * @return array<int,string>
 	 */
@@ -9678,7 +9678,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Determine if an add-on is temporarily disabled by URL parameter.
+	 * Determine if an add-on is temporarily disabled by URL/query or settings override.
 	 */
 	public static function is_addon_temporarily_disabled(string $addon_slug): bool {
 		$addon_slug = sanitize_key($addon_slug);
@@ -9692,7 +9692,7 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
-	 * Apply URL-driven add-on disable overrides to current settings.
+	 * Apply runtime add-on disable overrides to current settings.
 	 *
 	 * @param array<string,mixed> $settings Settings array from option.
 	 * @return array<string,mixed>
@@ -9704,16 +9704,20 @@ html body .woocommerce-layout__header {
 		}
 
 		$map = self::get_addon_runtime_toggle_map(false);
+		$disable_all = self::is_disable_all_addons_requested();
 		foreach ($disabled as $slug) {
-			if ($slug === 'send-email-users') {
-				continue;
-			}
 			if (!isset($map[$slug]['settings_keys']) || !is_array($map[$slug]['settings_keys'])) {
 				continue;
 			}
 			foreach ($map[$slug]['settings_keys'] as $settings_key) {
 				$settings_key = (string) $settings_key;
-				if ($settings_key === '' || $settings_key === '__role_switching_option_enabled') {
+				if ($settings_key === '') {
+					continue;
+				}
+				if ($settings_key === '__role_switching_option_enabled') {
+					// Role switching state lives in a dedicated option.
+					// Runtime disable is enforced via is_addon_temporarily_disabled()
+					// so we do not mutate persisted role-switch settings here.
 					continue;
 				}
 				$settings[$settings_key] = false;

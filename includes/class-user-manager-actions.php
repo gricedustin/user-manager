@@ -2281,6 +2281,10 @@ class User_Manager_Actions {
 			case 'blocks':
 				$redirect_tab = User_Manager_Core::TAB_BLOCKS;
 				$settings['temporarily_disable_all_addons_blocks'] = isset($_POST['temporarily_disable_all_addons_blocks']) && $_POST['temporarily_disable_all_addons_blocks'] === '1';
+				$is_blocks_temp_disable_only = isset($_POST['um_save_temporary_disable_only']) && $_POST['um_save_temporary_disable_only'] !== '';
+				if ($is_blocks_temp_disable_only) {
+					break;
+				}
 				$settings['page_block_subpages_grid_enabled'] = isset($_POST['page_block_subpages_grid_enabled']) && $_POST['page_block_subpages_grid_enabled'] === '1';
 				$settings['page_block_tabbed_content_area_enabled'] = isset($_POST['page_block_tabbed_content_area_enabled']) && $_POST['page_block_tabbed_content_area_enabled'] === '1';
 				$settings['page_block_simple_icons_enabled'] = isset($_POST['page_block_simple_icons_enabled']) && $_POST['page_block_simple_icons_enabled'] === '1';
@@ -2344,6 +2348,10 @@ class User_Manager_Actions {
 			case 'addons':
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
 				$settings['temporarily_disable_all_addons_blocks'] = isset($_POST['temporarily_disable_all_addons_blocks']) && $_POST['temporarily_disable_all_addons_blocks'] === '1';
+				$is_addons_temp_disable_only = isset($_POST['um_save_temporary_disable_only']) && $_POST['um_save_temporary_disable_only'] !== '';
+				if ($is_addons_temp_disable_only) {
+					break;
+				}
 				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
 				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
 				$settings['product_notification_enabled'] = isset($_POST['product_notification_enabled']) && $_POST['product_notification_enabled'] === '1';
@@ -2803,9 +2811,16 @@ class User_Manager_Actions {
 				$old_hidden_roles        = isset($role_switch_settings['hidden_roles']) && is_array($role_switch_settings['hidden_roles']) ? $role_switch_settings['hidden_roles'] : [];
 				$old_allow_reset         = !empty($role_switch_settings['allow_reset']);
 
-				$new_role_switch_enabled = isset($_POST['role_switching_enabled']) && $_POST['role_switching_enabled'] === '1';
-				$new_hidden_roles        = isset($_POST['hidden_roles']) ? array_map('sanitize_text_field', (array) wp_unslash($_POST['hidden_roles'])) : [];
-				$new_allow_reset         = isset($_POST['allow_reset']) && $_POST['allow_reset'] === '1';
+				$is_addons_temp_disable_only = isset($is_addons_temp_disable_only) && $is_addons_temp_disable_only;
+				$new_role_switch_enabled = $is_addons_temp_disable_only
+					? $old_role_switch_enabled
+					: (isset($_POST['role_switching_enabled']) && $_POST['role_switching_enabled'] === '1');
+				$new_hidden_roles = $is_addons_temp_disable_only
+					? $old_hidden_roles
+					: (isset($_POST['hidden_roles']) ? array_map('sanitize_text_field', (array) wp_unslash($_POST['hidden_roles'])) : []);
+				$new_allow_reset = $is_addons_temp_disable_only
+					? $old_allow_reset
+					: (isset($_POST['allow_reset']) && $_POST['allow_reset'] === '1');
 
 				$role_switch_settings_after = [
 					'enabled'      => $new_role_switch_enabled,

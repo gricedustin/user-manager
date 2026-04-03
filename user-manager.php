@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.33
+ * Version: 2.5.34
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.34 - March 16, 2026
+ * - Fixed Temporarily Disable All save behavior so using the index-level toggle no longer unchecks/deactivates existing add-on/block activation settings.
+ * - Temporarily Disable All now truly disables runtime behavior for all add-ons/blocks (including User Role Switching and Send Email) while preserving their saved active checkbox states.
+ *
  * 2.5.33 - March 16, 2026
  * - Blocks tab: the "Temporarily Disable All" card now appears only on the main Blocks index view and is hidden when viewing a specific block section.
  *

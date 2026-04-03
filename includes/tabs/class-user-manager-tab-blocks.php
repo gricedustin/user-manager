@@ -137,7 +137,7 @@ class User_Manager_Tab_Blocks {
 						<p class="description"><?php esc_html_e('This override temporarily disables all individual add-on/block features at runtime. Uncheck and save to restore normal behavior.', 'user-manager'); ?></p>
 					</div>
 					<p style="margin:0;">
-						<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
+						<?php submit_button(__('Save', 'user-manager'), 'primary', 'um_save_temporary_disable_only', false, ['form' => $settings_form_id]); ?>
 					</p>
 				</div>
 			</div>
