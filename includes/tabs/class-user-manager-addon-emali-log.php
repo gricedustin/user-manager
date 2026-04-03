@@ -81,13 +81,7 @@ class User_Manager_Addon_Emali_Log {
 						<?php self::render_stat_card(__('Total logged', 'user-manager'), (int) ($stats['total'] ?? 0)); ?>
 					</div>
 
-					<form method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>" style="margin-bottom:12px;">
-						<input type="hidden" name="page" value="<?php echo esc_attr(User_Manager_Core::SETTINGS_PAGE_SLUG); ?>" />
-						<input type="hidden" name="tab" value="<?php echo esc_attr(User_Manager_Core::TAB_ADDONS); ?>" />
-						<input type="hidden" name="addon_section" value="emali-log" />
-						<?php if ($current_addon_tag !== '') : ?>
-							<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
-						<?php endif; ?>
+					<form method="get" action="<?php echo esc_url($emali_log_base_url); ?>" style="margin-bottom:12px;">
 						<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
 							<div>
 								<label for="um-emali-log-status"><strong><?php esc_html_e('Status', 'user-manager'); ?></strong></label><br />
@@ -180,7 +174,6 @@ class User_Manager_Addon_Emali_Log {
 													<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:flex; gap:6px; flex-wrap:wrap;">
 														<input type="hidden" name="action" value="user_manager_emali_log_resend" />
 														<input type="hidden" name="log_id" value="<?php echo esc_attr((string) $entry_id); ?>" />
-														<input type="hidden" name="addon_section" value="emali-log" />
 														<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
 														<input type="hidden" name="emali_log_status" value="<?php echo esc_attr($current_status); ?>" />
 														<input type="hidden" name="emali_log_search" value="<?php echo esc_attr($current_search); ?>" />
@@ -191,7 +184,6 @@ class User_Manager_Addon_Emali_Log {
 													<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:flex; gap:6px; flex-wrap:wrap;">
 														<input type="hidden" name="action" value="user_manager_emali_log_forward" />
 														<input type="hidden" name="log_id" value="<?php echo esc_attr((string) $entry_id); ?>" />
-														<input type="hidden" name="addon_section" value="emali-log" />
 														<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
 														<input type="hidden" name="emali_log_status" value="<?php echo esc_attr($current_status); ?>" />
 														<input type="hidden" name="emali_log_search" value="<?php echo esc_attr($current_search); ?>" />
@@ -266,7 +258,6 @@ class User_Manager_Addon_Emali_Log {
 
 					<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top:14px;" onsubmit="return confirm('<?php echo esc_js(__('Are you sure you want to clear all logged emails?', 'user-manager')); ?>');">
 						<input type="hidden" name="action" value="user_manager_emali_log_clear" />
-						<input type="hidden" name="addon_section" value="emali-log" />
 						<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
 						<?php wp_nonce_field('user_manager_emali_log_clear'); ?>
 						<?php submit_button(__('Clear Email Log History', 'user-manager'), 'delete', 'submit', false); ?>

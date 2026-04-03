@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.46
+ * Version: 2.5.47
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.47 - March 16, 2026
+ * - Fixed Add-ons settings save redirect context so saving a non-Email Log add-on no longer jumps to addon_section=emali-log.
+ * - Email Log nested forms now avoid emitting conflicting addon_section fields that could override the main Add-ons form section on save.
+ * - Email Log filter form now targets its section URL directly, preserving current section context without introducing duplicate hidden routing fields.
+ *
  * 2.5.46 - April 3, 2026
  * - My Account Admin Orders search form button clickability fix: raised search form stacking context and ensured pointer events are enabled on the submit button/input so Search is always clickable.
  *

@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.47 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Add-ons section save redirect sticking to the wrong add-on after save in nested-form contexts.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Email Log filter form now uses the prebuilt add-on base URL directly and no longer injects duplicate addon_section fields that can leak into unrelated Add-ons settings saves.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed redundant addon_section hidden inputs from Email Log action forms (resend/forward/clear) to prevent Add-ons save routing collisions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.46 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed My Account Admin search form button clickability on frontend endpoint pages by strengthening stacking and pointer-event styles for the search form and submit button.', 'user-manager'); ?></li>
