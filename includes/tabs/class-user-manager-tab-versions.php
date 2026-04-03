@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.44 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Documentation tab content to reflect the current tab architecture and new sub-page routing patterns.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Docs now explicitly describe Login Tools sub-pages (tab=login-tools with login_tools_section), Settings-related sub-pages (tab=settings/tab=email-templates/tab=tools), Add-ons block-specific deep links (addon_section/block_section), and Documentation docs_section sub-pages.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation catalogs were refreshed to include current Add-ons/Blocks naming and recent modules.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.43 <span>(April 3, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Emali Log now includes a configurable retention setting: "Auto-delete log entries after X days" (0 keeps logs forever).', 'user-manager'); ?></li>

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.43
+ * Version: 2.5.44
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.44 - April 3, 2026
+ * - Updated Documentation tab content to reflect the current top-level tabs and newer sub-page navigation patterns (login_tools_section, addon_section, block_section, docs_section).
+ * - Refreshed tab reference cards and About > Feature List entries so current navigation routes and section naming are documented in one place.
+ *
  * 2.5.43 - April 3, 2026
  * - Emali Log now includes an "Auto-delete log entries after X days" setting (0 = keep forever).
  * - Added automatic Emali Log retention cleanup (daily scheduled event + request fallback) to purge rows older than the configured number of days.

@@ -91,19 +91,23 @@ class User_Manager_Tab_Documentation {
 			[
 				'icon'    => 'dashicons-admin-users',
 				'title'   => __('Login Tools Tab', 'user-manager'),
-				'summary' => __('Run day-to-day user lifecycle workflows from one area, including Create User, Bulk Create, Reset Password, Remove User, Deactivate User(s), and Login As.', 'user-manager'),
+				'summary' => __('Run day-to-day user lifecycle workflows from one area, including Create Single User, Create Multiple Users, Reset Password(s), Remove User(s), Deactivate User(s), and Login As a User.', 'user-manager'),
 				'details' => [
+					__('Navigation path: tab=login-tools with login_tools_section sub-pages.', 'user-manager'),
 					__('Designed for support, onboarding, and account-maintenance teams managing many users quickly.', 'user-manager'),
-					__('Keeps user operations grouped under one top-level tab with section-based navigation.', 'user-manager'),
 				],
 			],
 			[
-				'icon'    => 'dashicons-email-alt',
-				'title'   => __('Email Users Tab', 'user-manager'),
-				'summary' => __('Send targeted user emails with reusable templates for onboarding, reminders, campaigns, and service communications.', 'user-manager'),
+				'icon'    => 'dashicons-list-view',
+				'title'   => __('Login Tools Sub-pages', 'user-manager'),
+				'summary' => __('Login Tools now uses section-based sub-page navigation under one tab.', 'user-manager'),
 				'details' => [
-					__('Useful for lifecycle messaging such as welcome, activation, and account-update notices.', 'user-manager'),
-					__('Supports consistent branding via WooCommerce-style email presentation.', 'user-manager'),
+					__('Create Single User', 'user-manager'),
+					__('Create Multiple Users', 'user-manager'),
+					__('Reset Password(s)', 'user-manager'),
+					__('Remove User(s)', 'user-manager'),
+					__('Deactivate User(s)', 'user-manager'),
+					__('Login As a User', 'user-manager'),
 				],
 			],
 			[
@@ -121,7 +125,7 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Configure global behavior across General Settings, Email Templates, and Tools to control defaults, branding, and operational workflows.', 'user-manager'),
 				'details' => [
 					__('Central place for environment-level options used by multiple tabs and add-ons.', 'user-manager'),
-					__('Includes template management and utility actions that support daily admin operations.', 'user-manager'),
+					__('Includes built-in sub-pages via tab=settings, tab=email-templates, and tab=tools.', 'user-manager'),
 				],
 			],
 			[
@@ -130,6 +134,7 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Activate feature modules only when needed so your site stays focused, modular, and easier to maintain.', 'user-manager'),
 				'details' => [
 					__('Each add-on has its own settings card and activation toggle.', 'user-manager'),
+					__('Use addon_section=... to open a specific add-on sub-page directly.', 'user-manager'),
 					__('Best for gradually rolling out capabilities by business priority.', 'user-manager'),
 				],
 			],
@@ -139,6 +144,7 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Manage content-focused block modules and gallery block defaults from a dedicated area separate from operational add-ons.', 'user-manager'),
 				'details' => [
 					__('Includes block features such as Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Dynamic Photo Gallery with Media Library Tags.', 'user-manager'),
+					__('Use block_section=... to open a specific block module sub-page directly.', 'user-manager'),
 					__('Useful for content teams building page layouts, visual navigation, and media-rich sections.', 'user-manager'),
 				],
 			],
@@ -149,6 +155,19 @@ class User_Manager_Tab_Documentation {
 				'details' => [
 					__('Designed to help admins understand what each tab and add-on does in plain language.', 'user-manager'),
 					__('Updated alongside feature growth to reduce training and handoff friction.', 'user-manager'),
+				],
+			],
+			[
+				'icon'    => 'dashicons-index-card',
+				'title'   => __('Documentation Sub-pages', 'user-manager'),
+				'summary' => __('Documentation now includes dedicated sub-pages for setup, support, troubleshooting, and release notes.', 'user-manager'),
+				'details' => [
+					__('documentation', 'user-manager'),
+					__('installation', 'user-manager'),
+					__('about', 'user-manager'),
+					__('troubleshooting', 'user-manager'),
+					__('versions', 'user-manager'),
+					__('support', 'user-manager'),
 				],
 			],
 			[
@@ -760,35 +779,46 @@ class User_Manager_Tab_Documentation {
 					<h4><?php esc_html_e('Core Tabs and Platform Features', 'user-manager'); ?></h4>
 					<ul>
 						<li><?php esc_html_e('Login Tools: includes Create User, Bulk Create, Reset Password, Remove User, Deactivate User(s), and Login As in one sectioned workspace.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Email Users: send targeted admin-generated communication using reusable templates.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Login Tools sub-page routing uses tab=login-tools with login_tools_section for each workflow screen.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Reports: includes General Reports, User Activity, Admin Log, and Coupon Lookup by Email.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Settings: global defaults, workflow controls, API keys, template utilities, and system behavior configuration.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Settings-related sub-pages include tab=settings, tab=email-templates, and tab=tools.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Add-ons and Blocks support direct deep-link sub-pages using addon_section and block_section URL parameters.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Blocks: dedicated content module management for Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Dynamic Photo Gallery with Media Library Tags.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Documentation: internal reference, onboarding, installation, support, marketing/about content, and versions/changelog access.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Documentation: internal reference, onboarding, installation, support, troubleshooting tools, and versions/changelog access via docs_section sub-pages.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Admin logging and diagnostics: operational event logging with detailed row-level drill-down and filter controls.', 'user-manager'); ?></li>
 					</ul>
 					<h4><?php esc_html_e('Add-on Catalog (All Current Add-ons)', 'user-manager'); ?></h4>
 					<ul>
 						<li><?php esc_html_e('Add to Cart Bulk Import', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Add to Cart Variation Table', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Add to Cart Min/Max Quantities', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Cart Price Per-Piece', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Cart Total Items', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Page Creator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Database Table Browser', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Emali Log', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Webhook URLs', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Order Invoice & Approval', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Order Received Page Customizer', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Restricted Access', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Send Email', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Send SMS Text', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Checkout Address Selector', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Coupon Creator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('New User Coupons', 'user-manager'); ?></li>
 						<li><?php esc_html_e('User Coupon Notifications', 'user-manager'); ?></li>
 						<li><?php esc_html_e('User Coupon Remaining Balances', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Data Anonymizer', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Fatal Error Debugger', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Staging & Development Environment Overrides', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Security Hardening', 'user-manager'); ?></li>
+						<li><?php esc_html_e('SEO Basics', 'user-manager'); ?></li>
 						<li><?php esc_html_e('My Account Coupons Page', 'user-manager'); ?></li>
 						<li><?php esc_html_e('My Account Menu Tiles', 'user-manager'); ?></li>
 						<li><?php esc_html_e('My Account Admin', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Post Meta Viewer', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Product Notification', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Product Search by SKU', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Post Content Generator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Post Idea Generator', 'user-manager'); ?></li>
