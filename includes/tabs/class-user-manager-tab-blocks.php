@@ -122,6 +122,26 @@ class User_Manager_Tab_Blocks {
 				</div>
 			</div>
 		</div>
+		<div class="um-admin-grid um-admin-grid-single um-block-temporary-disable-card" style="<?php echo $current_block_section === '' ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-hidden"></span>
+					<h2><?php esc_html_e('Temporarily Disable All', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" name="temporarily_disable_all_addons_blocks" value="1" <?php checked($temporarily_disable_all); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
+							<?php esc_html_e('Temporarily disable all add-ons & blocks (except required Send Email).', 'user-manager'); ?>
+						</label>
+						<p class="description"><?php esc_html_e('This override temporarily disables all individual add-on/block features at runtime. Uncheck and save to restore normal behavior.', 'user-manager'); ?></p>
+					</div>
+					<p style="margin:0;">
+						<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
+					</p>
+				</div>
+			</div>
+		</div>
 
 		<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="<?php echo esc_attr($settings_form_id); ?>">
 			<input type="hidden" name="action" value="user_manager_save_settings" />
@@ -147,24 +167,6 @@ class User_Manager_Tab_Blocks {
 				</div>
 				<div class="um-admin-card um-admin-card-full um-block-save-card">
 					<div class="um-admin-card-body">
-						<p style="margin:0;">
-							<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
-						</p>
-					</div>
-				</div>
-				<div class="um-admin-card um-admin-card-full um-block-temporary-disable-card">
-					<div class="um-admin-card-header">
-						<span class="dashicons dashicons-hidden"></span>
-						<h2><?php esc_html_e('Temporarily Disable All', 'user-manager'); ?></h2>
-					</div>
-					<div class="um-admin-card-body">
-						<div class="um-form-field">
-							<label>
-								<input type="checkbox" name="temporarily_disable_all_addons_blocks" value="1" <?php checked($temporarily_disable_all); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
-								<?php esc_html_e('Temporarily disable all add-ons & blocks (except required Send Email).', 'user-manager'); ?>
-							</label>
-							<p class="description"><?php esc_html_e('This override temporarily disables all individual add-on/block features at runtime. Uncheck and save to restore normal behavior.', 'user-manager'); ?></p>
-						</div>
 						<p style="margin:0;">
 							<?php submit_button(__('Save', 'user-manager'), 'primary', 'submit', false, ['form' => $settings_form_id]); ?>
 						</p>
@@ -281,6 +283,7 @@ class User_Manager_Tab_Blocks {
 							anyVisible = true;
 						}
 					});
+					$('.um-block-temporary-disable-card').show();
 				} else {
 					$('.um-block-section[data-block-section="' + currentBlockSection + '"] .um-admin-card').each(function() {
 						var $card = $(this);
@@ -291,7 +294,7 @@ class User_Manager_Tab_Blocks {
 						}
 					});
 					$('.um-block-save-card').show();
-					$('.um-block-temporary-disable-card').show();
+					$('.um-block-temporary-disable-card').hide();
 				}
 
 				$('#um-blocks-filter-empty').toggle(keyword !== '' && !anyVisible);
@@ -386,14 +389,14 @@ class User_Manager_Tab_Blocks {
 					$('.um-blocks-empty-state').show();
 					$('.um-block-section').hide();
 					$('.um-block-save-card').hide();
-					$('.um-block-temporary-disable-card').hide();
+					$('.um-block-temporary-disable-card').show();
 					return;
 				}
 				$('.um-blocks-empty-state').hide();
 				$('.um-block-section').hide();
 				$('.um-block-section[data-block-section="' + currentBlockSection + '"]').show();
 				$('.um-block-save-card').show();
-				$('.um-block-temporary-disable-card').show();
+				$('.um-block-temporary-disable-card').hide();
 			}
 
 			function togglePageBlockSubpagesGridFields() {

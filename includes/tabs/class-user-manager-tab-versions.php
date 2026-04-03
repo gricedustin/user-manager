@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.33 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Blocks tab: moved the "Temporarily Disable All" card to the main tab=blocks index view (where all blocks are listed).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When viewing/editing an individual block via block_section, the temporary-disable card is now hidden.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.32 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('WP-Admin Bar Quick Search add-on now includes a new checkbox list setting: "Priority Post Types to Display Before All Remaining Post Types".', 'user-manager'); ?></li>
