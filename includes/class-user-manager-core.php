@@ -49,7 +49,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.31';
+	const VERSION = '2.5.32';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -2300,46 +2300,75 @@ html body .woocommerce-layout__header {
 			return;
 		}
 
+		$settings = self::get_settings();
 		// Build one search field per active post type (show_ui => true) on this site.
 		$post_types     = get_post_types(['show_ui' => true], 'objects');
+		$post_types     = is_array($post_types) ? $post_types : [];
 		$excluded_types = ['attachment']; // Media is handled via its own screen.
+		$priority_post_types = [];
+		if (!empty($settings['um_quick_search_priority_post_types']) && is_array($settings['um_quick_search_priority_post_types'])) {
+			$priority_post_types = array_values(array_unique(array_map('sanitize_key', $settings['um_quick_search_priority_post_types'])));
+		}
+		$priority_rank = array_flip($priority_post_types);
 
-		$search_items = [];
-
-		// Always include a Users search first so it appears before post type fields.
-		$search_items[] = [
+		// Always include a Users search first.
+		$users_item = [
 			'label'       => __('Users', 'user-manager'),
 			'type'        => 'users',
 			'post_type'   => '',
 			'placeholder' => __('Users', 'user-manager'),
 		];
-
+		$post_type_items = [];
 		foreach ($post_types as $post_type) {
-			if (in_array($post_type->name, $excluded_types, true)) {
+			if (!is_object($post_type) || empty($post_type->name)) {
+				continue;
+			}
+			$post_type_slug = sanitize_key((string) $post_type->name);
+			if ($post_type_slug === '' || in_array($post_type_slug, $excluded_types, true)) {
 				continue;
 			}
 
-			$label = $post_type->labels->name;
+			$label = isset($post_type->labels->name) ? (string) $post_type->labels->name : $post_type_slug;
 
 			// Provide friendlier labels for some common core / WooCommerce types.
-			if ($post_type->name === 'shop_order') {
-				$label = 'Orders';
-			} elseif ($post_type->name === 'product') {
-				$label = 'Products';
+			if ($post_type_slug === 'shop_order') {
+				$label = __('Orders', 'user-manager');
+			} elseif ($post_type_slug === 'product') {
+				$label = __('Products', 'user-manager');
 			}
 
-			$search_items[] = [
+			$item = [
 				'label'       => $label,
 				'type'        => 'post_type',
-				'post_type'   => $post_type->name,
+				'post_type'   => $post_type_slug,
 				'placeholder' => $label,
+				'_sort_group' => array_key_exists($post_type_slug, $priority_rank) ? 0 : 1,
+				'_sort_rank'  => array_key_exists($post_type_slug, $priority_rank) ? (int) $priority_rank[$post_type_slug] : PHP_INT_MAX,
 			];
+			$post_type_items[] = $item;
 		}
-
-		// Sort all items alphabetically by label so the grid reflects the active post types cleanly.
-		usort($search_items, static function ($a, $b) {
-			return strcasecmp($a['label'], $b['label']);
+		usort($post_type_items, static function ($a, $b) use ($priority_rank) {
+			$a_group = isset($a['_sort_group']) ? (int) $a['_sort_group'] : 1;
+			$b_group = isset($b['_sort_group']) ? (int) $b['_sort_group'] : 1;
+			if ($a_group !== $b_group) {
+				return $a_group <=> $b_group;
+			}
+			if ($a_group === 0) {
+				$a_rank = isset($a['_sort_rank']) ? (int) $a['_sort_rank'] : PHP_INT_MAX;
+				$b_rank = isset($b['_sort_rank']) ? (int) $b['_sort_rank'] : PHP_INT_MAX;
+				if ($a_rank !== $b_rank) {
+					return $a_rank <=> $b_rank;
+				}
+			}
+			return strcasecmp((string) ($a['label'] ?? ''), (string) ($b['label'] ?? ''));
 		});
+
+		foreach ($post_type_items as &$post_type_item) {
+			unset($post_type_item['_sort_group'], $post_type_item['_sort_rank']);
+		}
+		unset($post_type_item);
+
+		$search_items = array_merge([$users_item], $post_type_items);
 
 		?>
 		<div id="um-admin-search-dropdown" style="display: none; position: fixed; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 999999; min-width: 320px; max-width: 400px; max-height: 80vh; overflow-y: auto;">

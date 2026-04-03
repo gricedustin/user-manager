@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.31
+ * Version: 2.5.32
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.32 - March 16, 2026
+ * - WP-Admin Bar Quick Search add-on now includes "Priority Post Types to Display Before All Remaining Post Types" with a checkbox per available post type.
+ * - Checked priority post types are shown first in the quick-search dropdown, while all remaining post types still appear after them.
+ *
  * 2.5.31 - March 16, 2026
  * - Add-ons tab: the "Temporarily Disable All" card now appears only on the main Add-ons index view and is hidden when viewing a specific add-on section.
  *

@@ -2369,6 +2369,16 @@ class User_Manager_Actions {
 				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
 				$settings['seo_basics_enabled'] = isset($_POST['seo_basics_enabled']) && $_POST['seo_basics_enabled'] === '1';
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
+				$settings['um_quick_search_priority_post_types'] = [];
+				if (isset($_POST['um_quick_search_priority_post_types']) && is_array($_POST['um_quick_search_priority_post_types'])) {
+					$allowed_post_types = get_post_types(['show_ui' => true], 'names');
+					$allowed_post_types = is_array($allowed_post_types) ? array_map('sanitize_key', $allowed_post_types) : [];
+					$selected_priority_post_types = array_map(
+						'sanitize_key',
+						array_map('wp_unslash', $_POST['um_quick_search_priority_post_types'])
+					);
+					$settings['um_quick_search_priority_post_types'] = array_values(array_unique(array_intersect($selected_priority_post_types, $allowed_post_types)));
+				}
 				$settings['security_hardening_enabled'] = isset($_POST['security_hardening_enabled']) && $_POST['security_hardening_enabled'] === '1';
 				$settings['security_hardening_block_rest_user_enumeration'] = isset($_POST['security_hardening_block_rest_user_enumeration']) && $_POST['security_hardening_block_rest_user_enumeration'] === '1';
 				$settings['security_hardening_disallow_file_edit'] = isset($_POST['security_hardening_disallow_file_edit']) && $_POST['security_hardening_disallow_file_edit'] === '1';
