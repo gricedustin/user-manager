@@ -2384,7 +2384,13 @@ JS;
 				});
 			}
 			root.addEventListener('click', function(event) {
-				var link = event.target.closest('a[data-um-lightbox="1"]');
+				var clickTarget = event.target;
+				if (!clickTarget) { return; }
+				if (clickTarget.nodeType !== 1) {
+					clickTarget = clickTarget.parentElement;
+				}
+				if (!clickTarget || !clickTarget.closest) { return; }
+				var link = clickTarget.closest('a[data-um-lightbox="1"]');
 				if (!link) { return; }
 				event.preventDefault();
 				var initialIndex = parseLightboxIndex(link);

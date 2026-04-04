@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.52 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed front-end "Link To: lightbox" click handling so gallery images reliably open the lightbox again after recent admin lightbox tooling updates.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Hardened delegated click target resolution to safely handle non-element event targets while preserving existing lightbox open behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.51 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Front-end gallery lightbox now includes a new admin-only "Duplicate" link that quickly adds a "duplicate" Library Tag to the active image.', 'user-manager'); ?></li>
