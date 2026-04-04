@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.52
+ * Version: 2.5.53
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.53 - March 16, 2026
+ * - Media Library Tag filtering now matches related compound tags when filtering by a base tag slug (example: selecting "cruise" now also includes tags like "honeymoon-cruise" and "Honeymoon, Cruise").
+ * - Applied the same expanded matching behavior to both front-end gallery output and WP Media Library list/grid filtering for consistent results.
+ * - Added explicit nopaging handling for gallery queries when Page Limit is 0 to better preserve unlimited output behavior.
+ *
  * 2.5.52 - March 16, 2026
  * - Fixed front-end gallery "Link To: lightbox" click handling regression by hardening delegated click-target resolution before calling .closest().
  * - Restored reliable lightbox opening from gallery image links while keeping the new admin quick-tag tools active.

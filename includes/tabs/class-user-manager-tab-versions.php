@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.53 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library tag filtering now includes compound/synonym tag slugs when matching a selected base tag (for example: selecting "cruise" now also matches combined tags like "honeymoon-cruise" and tag names containing "Cruise").', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied the same expanded tag matching logic to front-end gallery output and Media Library list/grid filters so counts/results stay consistent across admin and front-end.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Gallery query handling now explicitly sets nopaging when Page Limit is 0 (unlimited), preventing environment-level paging fallbacks from truncating results.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.52 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed front-end "Link To: lightbox" click handling so gallery images reliably open the lightbox again after recent admin lightbox tooling updates.', 'user-manager'); ?></li>

@@ -258,10 +258,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				];
 			}
 		} else {
+			$filter_slugs = self::get_media_library_filter_slugs_for_requested_slug($requested_filter);
+			if (empty($filter_slugs)) {
+				$filter_slugs = [$requested_filter];
+			}
 			$tax_query[] = [
 				'taxonomy' => self::media_library_tags_taxonomy(),
 				'field' => 'slug',
-				'terms' => [$requested_filter],
+				'terms' => $filter_slugs,
 			];
 		}
 		if (count($tax_query) >= 1) {
@@ -311,10 +315,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				];
 			}
 		} else {
+			$filter_slugs = self::get_media_library_filter_slugs_for_requested_slug($requested_filter);
+			if (empty($filter_slugs)) {
+				$filter_slugs = [$requested_filter];
+			}
 			$tax_query[] = [
 				'taxonomy' => self::media_library_tags_taxonomy(),
 				'field' => 'slug',
-				'terms' => [$requested_filter],
+				'terms' => $filter_slugs,
 			];
 		}
 		if (count($tax_query) >= 1) {
@@ -1648,6 +1656,7 @@ JS;
 			'post_status' => 'inherit',
 			'post_mime_type' => 'image',
 			'posts_per_page' => $page_limit > 0 ? $page_limit : -1,
+			'nopaging' => $page_limit <= 0,
 			'offset' => $offset,
 			'no_found_rows' => $page_limit <= 0,
 		];
@@ -1664,10 +1673,14 @@ JS;
 				}
 			}
 		} elseif ($tag_slug !== '' && term_exists($tag_slug, self::media_library_tags_taxonomy())) {
+			$filter_slugs = self::get_media_library_filter_slugs_for_requested_slug($tag_slug);
+			if (empty($filter_slugs)) {
+				$filter_slugs = [$tag_slug];
+			}
 			$tax_query[] = [
 				'taxonomy' => self::media_library_tags_taxonomy(),
 				'field' => 'slug',
-				'terms' => [$tag_slug],
+				'terms' => $filter_slugs,
 			];
 		}
 		if (!empty($hidden_frontend_tag_slugs)) {
@@ -3450,6 +3463,73 @@ JS;
 			return [];
 		}
 		return array_values(array_filter(array_map('absint', $ids)));
+	}
+
+	/**
+	 * Resolve matching tag slugs for a selected filter slug.
+	 *
+	 * Supports selecting a base term (e.g. "cruise") while still including
+	 * compound terms whose slug/name token contains that term
+	 * (e.g. "honeymoon-cruise" / "Honeymoon, Cruise").
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_media_library_filter_slugs_for_requested_slug(string $requested_slug): array {
+		$requested_slug = sanitize_title($requested_slug);
+		if ($requested_slug === '') {
+			return [];
+		}
+
+		static $cache = [];
+		if (isset($cache[$requested_slug]) && is_array($cache[$requested_slug])) {
+			return $cache[$requested_slug];
+		}
+
+		$matched = [$requested_slug];
+		$taxonomy = self::media_library_tags_taxonomy();
+		$terms = get_terms([
+			'taxonomy' => $taxonomy,
+			'hide_empty' => false,
+		]);
+		if (is_wp_error($terms) || !is_array($terms)) {
+			$cache[$requested_slug] = array_values(array_unique(array_filter($matched)));
+			return $cache[$requested_slug];
+		}
+
+		$slug_pattern = '/(^|-)' . preg_quote($requested_slug, '/') . '($|-)/';
+		foreach ($terms as $term) {
+			if (!($term instanceof WP_Term)) {
+				continue;
+			}
+			$candidate_slug = sanitize_title((string) $term->slug);
+			if ($candidate_slug === '') {
+				continue;
+			}
+			if ($candidate_slug === $requested_slug) {
+				$matched[] = $candidate_slug;
+				continue;
+			}
+
+			$is_match = preg_match($slug_pattern, $candidate_slug) === 1;
+			if (!$is_match) {
+				$name_tokens = preg_split('/[\s,;\/\|\+&]+/', (string) $term->name);
+				if (is_array($name_tokens)) {
+					foreach ($name_tokens as $token) {
+						if (sanitize_title((string) $token) === $requested_slug) {
+							$is_match = true;
+							break;
+						}
+					}
+				}
+			}
+
+			if ($is_match) {
+				$matched[] = $candidate_slug;
+			}
+		}
+
+		$cache[$requested_slug] = array_values(array_unique(array_filter($matched)));
+		return $cache[$requested_slug];
 	}
 
 	/**
