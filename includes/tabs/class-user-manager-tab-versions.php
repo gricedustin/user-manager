@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.80 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tags modal window opening regression by forcing gallery image click behavior to always render lightbox/modal links, including legacy blocks that still carried old Link To values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Block defaults and server-side rendering now normalize old link settings to modal window mode so images reliably open the modal on click.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.79 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags block/editor UI now removes the old "Link To" setting and presents the new Modal Window behavior as the standard image interaction mode.', 'user-manager'); ?></li>

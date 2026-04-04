@@ -1488,7 +1488,7 @@ JS;
 				'useDefaultPageLimit' => ['type' => 'boolean', 'default' => true],
 				'pageLimit' => ['type' => 'integer', 'default' => 0],
 				'useDefaultLinkTo' => ['type' => 'boolean', 'default' => true],
-				'linkTo' => ['type' => 'string', 'default' => 'none'],
+				'linkTo' => ['type' => 'string', 'default' => 'lightbox'],
 				'useDefaultAlbumDescriptionPosition' => ['type' => 'boolean', 'default' => true],
 				'albumDescriptionPosition' => ['type' => 'string', 'default' => 'none'],
 				'useDefaultDescriptionDisplay' => ['type' => 'boolean', 'default' => true],
@@ -2130,7 +2130,6 @@ JS;
 		$use_default_file_size = !empty($attrs['useDefaultFileSize']);
 		$use_default_style = !empty($attrs['useDefaultStyle']);
 		$use_default_page_limit = !empty($attrs['useDefaultPageLimit']);
-		$use_default_link_to = !empty($attrs['useDefaultLinkTo']);
 		$use_default_album_description_position = !empty($attrs['useDefaultAlbumDescriptionPosition']);
 		$use_default_description_display = !empty($attrs['useDefaultDescriptionDisplay']);
 		$use_default_description_value = !empty($attrs['useDefaultDescriptionValue']);
@@ -2171,9 +2170,8 @@ JS;
 		$page_limit = $use_default_page_limit
 			? max(0, absint($defaults['pageLimit']))
 			: max(0, absint($attrs['pageLimit'] ?? $defaults['pageLimit']));
-		$link_to = $use_default_link_to
-			? sanitize_key((string) $defaults['linkTo'])
-			: (isset($attrs['linkTo']) ? sanitize_key((string) $attrs['linkTo']) : (string) $defaults['linkTo']);
+		// Link behavior is now always modal window/lightbox.
+		$link_to = 'lightbox';
 		$album_description_position = $use_default_album_description_position
 			? sanitize_key((string) ($defaults['albumDescriptionPosition'] ?? 'none'))
 			: (isset($attrs['albumDescriptionPosition']) ? sanitize_key((string) $attrs['albumDescriptionPosition']) : sanitize_key((string) ($defaults['albumDescriptionPosition'] ?? 'none')));
@@ -2214,7 +2212,6 @@ JS;
 			$allowed_file_sizes = ['thumbnail', 'medium', 'large', 'full'];
 		}
 		$allowed_styles = array_keys(self::get_media_library_gallery_style_options());
-		$allowed_links = ['none', 'lightbox', 'media_permalink'];
 		$allowed_album_description_positions = array_keys(self::get_media_library_gallery_album_description_position_options());
 		$allowed_description_display = array_keys(self::get_media_library_gallery_description_display_options());
 		$allowed_description_values = array_keys(self::get_media_library_gallery_description_value_options());
@@ -2227,9 +2224,6 @@ JS;
 		}
 		if (!in_array($style, $allowed_styles, true)) {
 			$style = 'uniform_grid';
-		}
-		if (!in_array($link_to, $allowed_links, true)) {
-			$link_to = 'none';
 		}
 		if (!in_array($album_description_position, $allowed_album_description_positions, true)) {
 			$album_description_position = 'none';
@@ -2267,10 +2261,7 @@ JS;
 			return '';
 		}
 
-		$effective_link_to = $link_to;
-		if ($style === 'fullscreen_lightbox_grid') {
-			$effective_link_to = 'lightbox';
-		}
+		$effective_link_to = 'lightbox';
 		if ($style === 'infinite_scroll') {
 			$page_limit = 0;
 		}
@@ -3556,7 +3547,7 @@ JS;
 			'fileSize' => 'thumbnail',
 			'style' => 'uniform_grid',
 			'pageLimit' => 0,
-			'linkTo' => 'none',
+			'linkTo' => 'lightbox',
 			'albumDescriptionPosition' => 'none',
 			'descriptionDisplay' => 'none',
 			'descriptionValue' => 'caption',
@@ -3616,9 +3607,8 @@ JS;
 		if (isset($settings['media_library_tag_gallery_page_limit'])) {
 			$defaults['pageLimit'] = max(0, absint($settings['media_library_tag_gallery_page_limit']));
 		}
-		if (!empty($settings['media_library_tag_gallery_link_to'])) {
-			$defaults['linkTo'] = sanitize_key((string) $settings['media_library_tag_gallery_link_to']);
-		}
+		// Link behavior is always modal window/lightbox.
+		$defaults['linkTo'] = 'lightbox';
 		if (!empty($settings['media_library_tag_gallery_album_description_position'])) {
 			$defaults['albumDescriptionPosition'] = sanitize_key((string) $settings['media_library_tag_gallery_album_description_position']);
 		}
