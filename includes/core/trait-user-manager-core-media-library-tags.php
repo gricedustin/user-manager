@@ -1514,6 +1514,140 @@ JS;
 	 * @param array<string,mixed> $attrs Block attributes.
 	 */
 	public static function render_media_library_tags_gallery_block(array $attrs = []): string {
+		static $frontend_lightbox_fallback_enqueued = false;
+		if (!$frontend_lightbox_fallback_enqueued) {
+			$frontend_lightbox_fallback_enqueued = true;
+			wp_register_script('um-media-library-tag-gallery-frontend-fallback', false, [], self::VERSION, true);
+			wp_enqueue_script('um-media-library-tag-gallery-frontend-fallback');
+			$fallback_script = <<<'JS'
+(function() {
+	if (window.umMltgLightboxFallbackInit) {
+		return;
+	}
+	window.umMltgLightboxFallbackInit = true;
+
+	function findLightboxLink(target) {
+		if (!target) { return null; }
+		var node = target.nodeType === 1 ? target : target.parentElement;
+		if (!node || !node.closest) { return null; }
+		return node.closest('a[data-um-lightbox="1"]');
+	}
+
+	function getOverlayForLink(link) {
+		if (!link || !link.closest) { return null; }
+		var gallery = link.closest('.um-media-library-tag-gallery');
+		if (!gallery || !gallery.id) { return null; }
+		return document.getElementById(String(gallery.id) + '-lightbox');
+	}
+
+	function closeOverlay(overlay) {
+		if (!overlay) { return; }
+		overlay.style.display = 'none';
+		overlay.setAttribute('aria-hidden', 'true');
+		var image = overlay.querySelector('img');
+		if (image) {
+			image.setAttribute('src', '');
+		}
+		var caption = overlay.querySelector('.um-mltg-lightbox-caption');
+		if (caption) {
+			caption.textContent = '';
+			caption.style.display = 'none';
+		}
+		var editLink = overlay.querySelector('.um-mltg-lightbox-edit-link');
+		if (editLink) {
+			editLink.setAttribute('href', '#');
+			editLink.style.display = 'none';
+		}
+		if (document && document.body) {
+			var previousOverflow = overlay.getAttribute('data-um-prev-overflow') || '';
+			document.body.style.overflow = previousOverflow;
+		}
+	}
+
+	function bindOverlayCloseHandlers(overlay) {
+		if (!overlay || overlay.getAttribute('data-um-fallback-close-bound') === '1') {
+			return;
+		}
+		overlay.setAttribute('data-um-fallback-close-bound', '1');
+		var closeBtn = overlay.querySelector('.um-mltg-lightbox-close');
+		if (closeBtn) {
+			closeBtn.addEventListener('click', function() {
+				closeOverlay(overlay);
+			});
+		}
+		overlay.addEventListener('click', function(event) {
+			if (event.target === overlay) {
+				closeOverlay(overlay);
+			}
+		});
+		document.addEventListener('keydown', function(event) {
+			if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+				closeOverlay(overlay);
+			}
+		});
+	}
+
+	function openOverlayFromLink(link, overlay) {
+		if (!link || !overlay) { return; }
+		var image = overlay.querySelector('img');
+		var caption = overlay.querySelector('.um-mltg-lightbox-caption');
+		var editLink = overlay.querySelector('.um-mltg-lightbox-edit-link');
+		var src = link.getAttribute('data-um-lightbox-src') || link.getAttribute('href') || '';
+		var altText = link.getAttribute('data-um-lightbox-alt') || '';
+		var captionText = link.getAttribute('data-um-lightbox-caption') || '';
+		var editUrl = link.getAttribute('data-um-lightbox-edit-url') || '';
+		if (!src) {
+			return;
+		}
+		if (document && document.body) {
+			overlay.setAttribute('data-um-prev-overflow', document.body.style.overflow || '');
+			document.body.style.overflow = 'hidden';
+		}
+		if (image) {
+			image.setAttribute('src', src);
+			image.setAttribute('alt', altText);
+		}
+		if (caption) {
+			caption.textContent = captionText;
+			caption.style.display = captionText ? 'block' : 'none';
+		}
+		if (editLink) {
+			if (editUrl) {
+				editLink.setAttribute('href', editUrl);
+				editLink.style.display = 'inline-block';
+			} else {
+				editLink.setAttribute('href', '#');
+				editLink.style.display = 'none';
+			}
+		}
+		bindOverlayCloseHandlers(overlay);
+		overlay.style.display = 'flex';
+		overlay.setAttribute('aria-hidden', 'false');
+	}
+
+	document.addEventListener('click', function(event) {
+		var link = findLightboxLink(event.target);
+		if (!link) {
+			return;
+		}
+		var overlay = getOverlayForLink(link);
+		if (!overlay) {
+			return;
+		}
+		// If the primary gallery runtime already initialized this overlay,
+		// let that handler own interaction to avoid duplicate logic.
+		if (overlay.getAttribute('data-um-lightbox-bound') === '1') {
+			return;
+		}
+		event.preventDefault();
+		event.stopPropagation();
+		openOverlayFromLink(link, overlay);
+	}, true);
+})();
+JS;
+			wp_add_inline_script('um-media-library-tag-gallery-frontend-fallback', $fallback_script);
+		}
+
 		$settings = User_Manager_Core::get_settings();
 		$defaults = self::get_media_library_tag_gallery_defaults($settings);
 
@@ -2089,6 +2223,7 @@ JS;
 			if (!root) { return; }
 			var overlay = document.getElementById('<?php echo esc_js($uid); ?>-lightbox');
 			if (!overlay) { return; }
+			overlay.setAttribute('data-um-lightbox-bound', '1');
 			var closeBtn = overlay.querySelector('.um-mltg-lightbox-close');
 			var image = overlay.querySelector('img');
 			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');

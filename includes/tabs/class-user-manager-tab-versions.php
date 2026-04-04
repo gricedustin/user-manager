@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.58 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Lightbox click handling was simplified and made fully self-contained so gallery image links reliably open the overlay instead of navigating to the raw image file URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed fragile event-default checks in the lightbox intercept path and now force-intercept direct image-link clicks in both capture and bubble phases.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.57 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Lightbox open behavior hardened with direct per-link listeners plus delegated capture/bubble fallbacks, restoring reliable overlay opening instead of direct file navigation.', 'user-manager'); ?></li>
