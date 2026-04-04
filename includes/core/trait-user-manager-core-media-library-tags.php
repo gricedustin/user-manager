@@ -40,6 +40,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_filter('document_title_parts', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title_parts'], 20);
 		add_filter('pre_get_document_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title'], 20);
 		add_action('admin_bar_menu', [__CLASS__, 'add_media_library_tag_admin_bar_shortcut'], 101);
+		add_action('admin_menu', [__CLASS__, 'register_media_library_tags_bulk_editor_submenu']);
+		add_action('admin_post_user_manager_media_library_tags_bulk_editor_save', [__CLASS__, 'handle_media_library_tags_bulk_editor_save']);
 	}
 
 	/**
@@ -120,6 +122,182 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				],
 			]
 		);
+	}
+
+	/**
+	 * Register "Bulk Editor" submenu under Library Tags taxonomy screen.
+	 */
+	public static function register_media_library_tags_bulk_editor_submenu(): void {
+		$taxonomy = self::media_library_tags_taxonomy();
+		if (!taxonomy_exists($taxonomy)) {
+			return;
+		}
+
+		add_submenu_page(
+			'edit-tags.php?taxonomy=' . $taxonomy . '&post_type=attachment',
+			__('Library Tags Bulk Editor', 'user-manager'),
+			__('Bulk Editor', 'user-manager'),
+			'upload_files',
+			'um-media-library-tags-bulk-editor',
+			[__CLASS__, 'render_media_library_tags_bulk_editor_page']
+		);
+	}
+
+	/**
+	 * Render Library Tags Bulk Editor screen.
+	 */
+	public static function render_media_library_tags_bulk_editor_page(): void {
+		if (!current_user_can('upload_files')) {
+			wp_die(esc_html__('You do not have permission to manage Library Tags.', 'user-manager'));
+		}
+
+		$taxonomy = self::media_library_tags_taxonomy();
+		$terms = get_terms([
+			'taxonomy' => $taxonomy,
+			'hide_empty' => false,
+			'orderby' => 'name',
+			'order' => 'ASC',
+		]);
+		if (is_wp_error($terms) || !is_array($terms)) {
+			$terms = [];
+		}
+
+		$updated_count = isset($_GET['um_bulk_updated']) ? absint(wp_unslash($_GET['um_bulk_updated'])) : 0;
+		if ($updated_count > 0) {
+			printf(
+				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+				esc_html(
+					sprintf(
+						/* translators: %d: number of updated tags */
+						__('Updated %d Library Tag(s).', 'user-manager'),
+						$updated_count
+					)
+				)
+			);
+		}
+		$user_id = get_current_user_id();
+		$errors = get_transient('um_media_library_tags_bulk_editor_errors_' . $user_id);
+		if (is_array($errors) && !empty($errors)) {
+			delete_transient('um_media_library_tags_bulk_editor_errors_' . $user_id);
+			echo '<div class="notice notice-error is-dismissible"><p><strong>' . esc_html__('Some tags could not be updated:', 'user-manager') . '</strong></p><ul style="margin-left: 18px; list-style: disc;">';
+			foreach ($errors as $error_message) {
+				echo '<li>' . esc_html((string) $error_message) . '</li>';
+			}
+			echo '</ul></div>';
+		}
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e('Library Tags Bulk Editor', 'user-manager'); ?></h1>
+			<p><?php esc_html_e('Edit all Library Tag titles, slugs, and descriptions in one screen, then save all changes at once.', 'user-manager'); ?></p>
+			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+				<input type="hidden" name="action" value="user_manager_media_library_tags_bulk_editor_save" />
+				<?php wp_nonce_field('user_manager_media_library_tags_bulk_editor_save', 'user_manager_media_library_tags_bulk_editor_nonce'); ?>
+				<table class="widefat fixed striped">
+					<thead>
+						<tr>
+							<th style="width: 24%;"><?php esc_html_e('Tag Title', 'user-manager'); ?></th>
+							<th style="width: 20%;"><?php esc_html_e('Slug', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Description', 'user-manager'); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php if (empty($terms)) : ?>
+							<tr><td colspan="3"><?php esc_html_e('No Library Tags found.', 'user-manager'); ?></td></tr>
+						<?php else : ?>
+							<?php foreach ($terms as $term) : ?>
+								<?php if (!($term instanceof WP_Term)) { continue; } ?>
+								<tr>
+									<td>
+										<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
+									</td>
+									<td>
+										<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
+									</td>
+									<td>
+										<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</tbody>
+				</table>
+				<?php submit_button(__('Save All', 'user-manager')); ?>
+			</form>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Save Library Tags bulk editor rows.
+	 */
+	public static function handle_media_library_tags_bulk_editor_save(): void {
+		if (!current_user_can('upload_files')) {
+			wp_die(esc_html__('You do not have permission to manage Library Tags.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_media_library_tags_bulk_editor_save', 'user_manager_media_library_tags_bulk_editor_nonce');
+
+		$taxonomy = self::media_library_tags_taxonomy();
+		$raw_terms = isset($_POST['um_bulk_terms']) && is_array($_POST['um_bulk_terms']) ? wp_unslash($_POST['um_bulk_terms']) : [];
+		$updated = 0;
+		$errors = [];
+
+		foreach ($raw_terms as $raw_term_id => $raw_term_data) {
+			$term_id = absint($raw_term_id);
+			if ($term_id <= 0 || !is_array($raw_term_data)) {
+				continue;
+			}
+
+			$current_term = get_term($term_id, $taxonomy);
+			if (!($current_term instanceof WP_Term)) {
+				continue;
+			}
+
+			$name = isset($raw_term_data['name']) ? trim(sanitize_text_field((string) $raw_term_data['name'])) : trim((string) $current_term->name);
+			$slug = isset($raw_term_data['slug']) ? sanitize_title((string) $raw_term_data['slug']) : sanitize_title((string) $current_term->slug);
+			$description = isset($raw_term_data['description']) ? sanitize_textarea_field((string) $raw_term_data['description']) : (string) $current_term->description;
+
+			if ($name === '') {
+				$name = trim((string) $current_term->name);
+			}
+			if ($slug === '') {
+				$slug = sanitize_title($name);
+			}
+			if ($slug === '') {
+				$slug = sanitize_title((string) $current_term->slug);
+			}
+
+			$result = wp_update_term($term_id, $taxonomy, [
+				'name' => $name,
+				'slug' => $slug,
+				'description' => $description,
+			]);
+			if (is_wp_error($result)) {
+				$errors[] = sprintf(
+					/* translators: 1: original term name, 2: error message */
+					__('"%1$s": %2$s', 'user-manager'),
+					(string) $current_term->name,
+					$result->get_error_message()
+				);
+				continue;
+			}
+			$updated++;
+		}
+
+		if (!empty($errors)) {
+			set_transient('um_media_library_tags_bulk_editor_errors_' . get_current_user_id(), $errors, 120);
+		}
+
+		$redirect_url = add_query_arg(
+			[
+				'post_type' => 'attachment',
+				'taxonomy' => $taxonomy,
+				'page' => 'um-media-library-tags-bulk-editor',
+				'um_bulk_updated' => (string) $updated,
+			],
+			admin_url('edit-tags.php')
+		);
+		wp_safe_redirect($redirect_url);
+		exit;
 	}
 
 	/**

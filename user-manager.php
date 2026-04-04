@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.59
+ * Version: 2.5.60
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.60 - March 16, 2026
+ * - Added new Library Tags submenu screen: "Bulk Editor" under Media > Library Tags.
+ * - Bulk Editor displays all tags in one table with editable title, slug, and description fields plus a Save All action.
+ * - Added secure bulk-save handler (capability + nonce) for updating all Library Tags in one submission with success/error notices.
+ *
  * 2.5.59 - March 16, 2026
  * - Fixed URL tag-expression parsing so single-token URLs (example: /album/?cruise) no longer expand to multiple matched tags for placeholder output.
  * - [tag-description] now correctly outputs a single description paragraph for single-token URL filters while multi-token expressions still output multiple descriptions.

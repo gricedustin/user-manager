@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.60 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Library Tags taxonomy screen now includes a new "Bulk Editor" submenu under Media > Library Tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Editor provides an all-tags table with editable title, slug, and description fields plus a single Save All action.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.59 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('When a single URL tag value is used (example: ?cruise), [tag-description] now resolves to that one URL-selected tag only instead of expanded query-match aliases.', 'user-manager'); ?></li>
