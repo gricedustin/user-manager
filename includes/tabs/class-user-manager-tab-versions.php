@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.67 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Lightbox debug activation now has a server-side fallback path so ?um_mltg_debug=1 reliably enables diagnostics even when front-end URL parsing is altered by caching/redirect layers.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a visible in-gallery debug badge and runtime debug data attributes so debug state can be verified at a glance without opening browser developer tools.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.66 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Hardened front-end lightbox opening by intercepting gallery link activation earlier in the interaction lifecycle (capture-phase down events) before third-party click handlers can force file navigation.', 'user-manager'); ?></li>

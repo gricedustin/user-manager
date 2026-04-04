@@ -1954,6 +1954,19 @@ JS;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
 		$lightbox_tag_nonce = $show_lightbox_admin_edit_link ? wp_create_nonce('um_media_library_tags_ajax') : '';
+		$lightbox_debug_enabled = false;
+		if (isset($_GET['um_mltg_debug'])) {
+			$raw_debug_flag = strtolower(trim((string) sanitize_text_field((string) wp_unslash($_GET['um_mltg_debug']))));
+			$lightbox_debug_enabled = in_array($raw_debug_flag, ['1', 'true', 'yes', 'on'], true);
+		}
+		$lightbox_debug_auto_open = false;
+		if (isset($_GET['um_mltg_debug_open'])) {
+			$raw_debug_open_flag = strtolower(trim((string) sanitize_text_field((string) wp_unslash($_GET['um_mltg_debug_open']))));
+			$lightbox_debug_auto_open = in_array($raw_debug_open_flag, ['1', 'true', 'yes', 'on'], true);
+		}
+		if ($lightbox_debug_auto_open) {
+			$lightbox_debug_enabled = true;
+		}
 		$timeline_date_format = get_option('date_format');
 		if (!is_string($timeline_date_format) || $timeline_date_format === '') {
 			$timeline_date_format = 'F j, Y';
@@ -1968,8 +1981,21 @@ JS;
 			<?php echo $lightbox_prev_next_keyboard ? ' data-um-lightbox-prev-next="1"' : ' data-um-lightbox-prev-next="0"'; ?>
 			<?php echo $lightbox_slideshow_button ? ' data-um-lightbox-slideshow="1"' : ' data-um-lightbox-slideshow="0"'; ?>
 			data-um-lightbox-seconds="<?php echo esc_attr((string) $lightbox_slideshow_seconds); ?>"
+			<?php echo $lightbox_debug_enabled ? ' data-um-lightbox-debug="1"' : ' data-um-lightbox-debug="0"'; ?>
+			<?php echo $lightbox_debug_auto_open ? ' data-um-lightbox-debug-open="1"' : ' data-um-lightbox-debug-open="0"'; ?>
 			data-um-fallback-allow-controls="0"
 		>
+			<?php if ($lightbox_debug_enabled) : ?>
+				<div class="um-mltg-debug-badge">
+					<?php
+					printf(
+						/* translators: %s: gallery runtime ID */
+						esc_html__('UM Lightbox Debug Active (%s)', 'user-manager'),
+						esc_html((string) $uid)
+					);
+					?>
+				</div>
+			<?php endif; ?>
 			<?php if (empty($attachments)) : ?>
 				<p class="um-media-library-tag-gallery-empty"><?php esc_html_e('No images found for this gallery.', 'user-manager'); ?></p>
 			<?php elseif ($style === 'carousel_slider') : ?>
@@ -2254,7 +2280,23 @@ JS;
 		.um-mltg-lightbox-overlay.um-mltg-transition-crossfade img.is-transitioning { opacity: 0; }
 		.um-mltg-lightbox-overlay.um-mltg-transition-slide-left img.is-transitioning { transform: translateX(-28px); opacity: 0.42; }
 		.um-mltg-lightbox-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: #fff; font-size: 36px; line-height: 1; cursor: pointer; }
+		.um-mltg-debug-badge {
+			position: sticky;
+			top: 0;
+			z-index: 20;
+			display: inline-block;
+			margin: 0 0 10px;
+			padding: 6px 10px;
+			border-radius: 4px;
+			background: #111;
+			color: #ffeb3b;
+			font: 600 12px/1.2 monospace;
+		}
 		</style>
+		<script>
+		window.__UM_MLTG_FORCE_DEBUG = <?php echo $lightbox_debug_enabled ? 'true' : 'false'; ?> || !!window.__UM_MLTG_FORCE_DEBUG;
+		window.__UM_MLTG_FORCE_DEBUG_OPEN = <?php echo $lightbox_debug_auto_open ? 'true' : 'false'; ?> || !!window.__UM_MLTG_FORCE_DEBUG_OPEN;
+		</script>
 		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true">
 			<button type="button" class="um-mltg-lightbox-close" aria-label="<?php esc_attr_e('Close image', 'user-manager'); ?>">&times;</button>
 			<img src="" alt="" />
@@ -2297,8 +2339,11 @@ JS;
 				if (!value) { return false; }
 				return /^(1|true|yes|on)$/i.test(String(value));
 			}
-			var lightboxDebugEnabled = readDebugQueryFlag('um_mltg_debug');
-			var lightboxDebugAutoOpen = readDebugQueryFlag('um_mltg_debug_open');
+			var lightboxDebugEnabled = root.getAttribute('data-um-lightbox-debug') === '1' || readDebugQueryFlag('um_mltg_debug') || !!window.__UM_MLTG_FORCE_DEBUG;
+			var lightboxDebugAutoOpen = root.getAttribute('data-um-lightbox-debug-open') === '1' || readDebugQueryFlag('um_mltg_debug_open') || !!window.__UM_MLTG_FORCE_DEBUG_OPEN;
+			if (lightboxDebugAutoOpen) {
+				lightboxDebugEnabled = true;
+			}
 			function serializeDebugDetails(details) {
 				if (typeof details === 'undefined' || details === null) {
 					return '';
