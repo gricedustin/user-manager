@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.50 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag placeholder replacement now resolves all URL override tags (single, AND, or OR expressions) in URL order for [tag-description].', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When [tag-description] is rendered in content, each matched tag description now outputs in its own paragraph with class "um-media-library-tag-description-paragraph".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Administrator edit links are now appended per tag description paragraph so each active tag description includes its own direct edit shortcut.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.49 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags gallery defaults now include a new Slideshow Transition setting with options: None, Crossfade, and Slide to Left.', 'user-manager'); ?></li>

@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.49
+ * Version: 2.5.50
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.50 - March 16, 2026
+ * - [tag-description] now renders all URL-selected Media Library tag descriptions (single, AND, OR) in the same order as the tag expression in the URL.
+ * - Each rendered tag description now outputs as its own paragraph with class "um-media-library-tag-description-paragraph".
+ * - When available for admins, each tag description paragraph now includes its own "Edit Tag Description" link for that specific tag.
+ *
  * 2.5.49 - March 16, 2026
  * - Added new Dynamic Photo Gallery lightbox setting: "Slideshow Transition (None, Crossfade, Slide to Left)" as an add-on default.
  * - Added matching per-block Slideshow Transition control with a "Use add-on default" toggle in the Media Library Tag Gallery block inspector.

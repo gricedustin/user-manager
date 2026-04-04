@@ -2988,12 +2988,43 @@ JS;
 		$placeholder_values = self::get_media_library_tag_placeholder_values();
 		$description = (string) ($placeholder_values['description'] ?? '');
 		$edit_description_url = (string) ($placeholder_values['editDescriptionUrl'] ?? '');
-		if ($allow_html && $edit_description_url !== '' && $description !== '') {
-			$description .= sprintf(
-				' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
-				esc_url($edit_description_url),
-				esc_html__('Edit Tag Description', 'user-manager')
-			);
+		if ($allow_html) {
+			$descriptions = isset($placeholder_values['descriptions']) && is_array($placeholder_values['descriptions'])
+				? $placeholder_values['descriptions']
+				: [];
+			$edit_description_urls = isset($placeholder_values['editDescriptionUrls']) && is_array($placeholder_values['editDescriptionUrls'])
+				? $placeholder_values['editDescriptionUrls']
+				: [];
+			$description_paragraphs = [];
+			foreach ($descriptions as $index => $tag_description) {
+				$tag_description = trim((string) $tag_description);
+				$tag_edit_url = isset($edit_description_urls[$index]) ? (string) $edit_description_urls[$index] : '';
+				if ($tag_description === '' && $tag_edit_url === '') {
+					continue;
+				}
+				$edit_link = '';
+				if ($tag_edit_url !== '') {
+					$edit_link = sprintf(
+						' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+						esc_url($tag_edit_url),
+						esc_html__('Edit Tag Description', 'user-manager')
+					);
+				}
+				$description_paragraphs[] = sprintf(
+					'<p class="um-media-library-tag-description-paragraph">%1$s%2$s</p>',
+					wp_kses_post($tag_description),
+					$edit_link
+				);
+			}
+			if (!empty($description_paragraphs)) {
+				$description = implode('', $description_paragraphs);
+			} elseif ($edit_description_url !== '' && $description !== '') {
+				$description .= sprintf(
+					' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+					esc_url($edit_description_url),
+					esc_html__('Edit Tag Description', 'user-manager')
+				);
+			}
 		}
 
 		return strtr($text, [
@@ -3013,41 +3044,91 @@ JS;
 	/**
 	 * Resolve active URL tag placeholder values.
 	 *
-	 * @return array{name:string,description:string,editDescriptionUrl:string}
+	 * @return array{
+	 *   name:string,
+	 *   description:string,
+	 *   editDescriptionUrl:string,
+	 *   names:array<int,string>,
+	 *   descriptions:array<int,string>,
+	 *   editDescriptionUrls:array<int,string>
+	 * }
 	 */
 	private static function get_media_library_tag_placeholder_values(): array {
 		$config = self::get_current_post_media_library_tag_placeholder_config();
 		if (empty($config['enabled'])) {
-			return ['name' => '', 'description' => '', 'editDescriptionUrl' => ''];
+			return [
+				'name' => '',
+				'description' => '',
+				'editDescriptionUrl' => '',
+				'names' => [],
+				'descriptions' => [],
+				'editDescriptionUrls' => [],
+			];
 		}
 
 		$allow_any = !empty($config['allowAny']);
 		$tag_override = self::resolve_media_library_gallery_url_tag_override($allow_any);
-		$slug = isset($tag_override['primarySlug']) ? (string) $tag_override['primarySlug'] : '';
-		if ($slug === '') {
-			return ['name' => '', 'description' => '', 'editDescriptionUrl' => ''];
+		$slugs = isset($tag_override['slugs']) && is_array($tag_override['slugs'])
+			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $tag_override['slugs']))))
+			: [];
+		$fallback_slug = isset($tag_override['primarySlug']) ? sanitize_title((string) $tag_override['primarySlug']) : '';
+		if (empty($slugs) && $fallback_slug !== '') {
+			$slugs = [$fallback_slug];
 		}
-		$term = get_term_by('slug', $slug, self::media_library_tags_taxonomy());
-		if (!$term instanceof WP_Term) {
-			return ['name' => '', 'description' => '', 'editDescriptionUrl' => ''];
+		if (empty($slugs)) {
+			return [
+				'name' => '',
+				'description' => '',
+				'editDescriptionUrl' => '',
+				'names' => [],
+				'descriptions' => [],
+				'editDescriptionUrls' => [],
+			];
 		}
 
-		$edit_description_url = '';
-		if (current_user_can('manage_options') && current_user_can('edit_term', (int) $term->term_id)) {
-			$edit_description_url = add_query_arg(
-				[
-					'taxonomy' => self::media_library_tags_taxonomy(),
-					'tag_ID' => (int) $term->term_id,
-					'post_type' => 'attachment',
-				],
-				admin_url('term.php')
-			);
+		$taxonomy = self::media_library_tags_taxonomy();
+		$names = [];
+		$descriptions = [];
+		$edit_urls = [];
+		foreach ($slugs as $slug) {
+			$term = get_term_by('slug', $slug, $taxonomy);
+			if (!$term instanceof WP_Term) {
+				continue;
+			}
+			$names[] = trim((string) $term->name);
+			$descriptions[] = trim((string) $term->description);
+			$edit_url = '';
+			if (current_user_can('manage_options') && current_user_can('edit_term', (int) $term->term_id)) {
+				$edit_url = add_query_arg(
+					[
+						'taxonomy' => $taxonomy,
+						'tag_ID' => (int) $term->term_id,
+						'post_type' => 'attachment',
+					],
+					admin_url('term.php')
+				);
+			}
+			$edit_urls[] = $edit_url;
+		}
+
+		if (empty($names)) {
+			return [
+				'name' => '',
+				'description' => '',
+				'editDescriptionUrl' => '',
+				'names' => [],
+				'descriptions' => [],
+				'editDescriptionUrls' => [],
+			];
 		}
 
 		return [
-			'name' => trim((string) $term->name),
-			'description' => trim((string) $term->description),
-			'editDescriptionUrl' => $edit_description_url,
+			'name' => (string) $names[0],
+			'description' => (string) ($descriptions[0] ?? ''),
+			'editDescriptionUrl' => (string) ($edit_urls[0] ?? ''),
+			'names' => $names,
+			'descriptions' => $descriptions,
+			'editDescriptionUrls' => $edit_urls,
 		];
 	}
 
