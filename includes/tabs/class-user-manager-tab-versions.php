@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.62 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Refactored front-end lightbox runtime to a single source of truth by removing the global fallback overlay runtime that could conflict with per-gallery control wiring.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox control buttons now strictly honor settings for visibility/hidden/disabled state, preventing slideshow button display when disabled and restoring reliable control interactions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.61 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed lightbox Previous/Next/Play controls so click handlers no longer no-op when feature toggles are off but controls are visible.', 'user-manager'); ?></li>
