@@ -2765,24 +2765,33 @@ JS;
 				if (!node || !node.closest) { return null; }
 				return node.closest('a[data-um-lightbox="1"]');
 			}
-			function handleLightboxLinkClick(event) {
+			var suppressClickOpenUntil = 0;
+			function interceptLightboxEvent(event, shouldOpen) {
 				var evt = event || window.event;
 				if (evt && evt.__umMltgHandled) {
-					lightboxDebugLog('Click ignored: already handled');
-					return false;
+					lightboxDebugLog('Event ignored: already handled', {
+						type: evt && evt.type ? String(evt.type) : ''
+					});
+					return true;
 				}
 				var link = findLightboxLinkFromTarget(evt && evt.target ? evt.target : null);
 				if (!link && this && this.matches && this.matches('a[data-um-lightbox="1"]')) {
 					link = this;
 				}
-				if (!link) { return; }
-				lightboxDebugLog('Lightbox link click detected', {
+				if (!link || !root.contains(link)) {
+					return false;
+				}
+				lightboxDebugLog('Lightbox event intercepted', {
+					type: evt && evt.type ? String(evt.type) : '',
 					href: link.getAttribute('href') || '',
 					defaultPreventedBefore: !!(evt && evt.defaultPrevented),
-					targetTag: evt && evt.target && evt.target.tagName ? String(evt.target.tagName) : ''
+					targetTag: evt && evt.target && evt.target.tagName ? String(evt.target.tagName) : '',
+					shouldOpen: !!shouldOpen
 				});
 				if (evt) {
-					evt.__umMltgHandled = true;
+					if (shouldOpen) {
+						evt.__umMltgHandled = true;
+					}
 					if (typeof evt.preventDefault === 'function') {
 						evt.preventDefault();
 					}
@@ -2792,20 +2801,80 @@ JS;
 						evt.stopPropagation();
 					}
 				}
-				openLightboxFromLink(link);
+				if (shouldOpen) {
+					openLightboxFromLink(link);
+				}
+				return true;
+			}
+			function shouldSkipDownEvent(event) {
+				if (!event) { return false; }
+				if (event.type === 'mousedown' && typeof event.button === 'number' && event.button !== 0) {
+					return true;
+				}
 				return false;
 			}
+			function handleLightboxPointerDown(event) {
+				var evt = event || window.event;
+				if (shouldSkipDownEvent(evt)) {
+					return;
+				}
+				var openedFromPointer = interceptLightboxEvent.call(this, evt, true);
+				if (openedFromPointer) {
+					suppressClickOpenUntil = Date.now() + 500;
+				}
+			}
+			function handleLightboxLinkClick(event) {
+				var evt = event || window.event;
+				if (Date.now() < suppressClickOpenUntil) {
+					var link = findLightboxLinkFromTarget(evt && evt.target ? evt.target : null);
+					if (!link && this && this.matches && this.matches('a[data-um-lightbox="1"]')) {
+						link = this;
+					}
+					if (link && root.contains(link)) {
+						lightboxDebugLog('Suppressing duplicate click after pointer-open', {
+							href: link.getAttribute('href') || ''
+						});
+						if (evt) {
+							evt.__umMltgHandled = true;
+							if (typeof evt.preventDefault === 'function') {
+								evt.preventDefault();
+							}
+							if (typeof evt.stopImmediatePropagation === 'function') {
+								evt.stopImmediatePropagation();
+							} else if (typeof evt.stopPropagation === 'function') {
+								evt.stopPropagation();
+							}
+						}
+						return false;
+					}
+				}
+				return interceptLightboxEvent.call(this, evt, true);
+			}
+			function bindDownCaptureListeners(target, handler) {
+				if (!target || !target.addEventListener) { return; }
+				var downEvents = [];
+				if (window && window.PointerEvent) {
+					downEvents = ['pointerdown'];
+				} else {
+					downEvents = ['touchstart', 'mousedown'];
+				}
+				downEvents.forEach(function(eventName) {
+					target.addEventListener(eventName, handler, true);
+				});
+			}
 			lightboxLinks.forEach(function(lightboxLink) {
+				bindDownCaptureListeners(lightboxLink, handleLightboxPointerDown);
 				lightboxLink.addEventListener('click', handleLightboxLinkClick, true);
 				lightboxLink.onclick = handleLightboxLinkClick;
 			});
+			bindDownCaptureListeners(root, handleLightboxPointerDown);
 			root.addEventListener('click', handleLightboxLinkClick, true);
-			document.addEventListener('click', function(event) {
-				var link = findLightboxLinkFromTarget(event && event.target ? event.target : null);
-				if (!link) { return; }
-				if (!root.contains(link)) { return; }
-				handleLightboxLinkClick(event);
-			}, true);
+			if (window && window.addEventListener) {
+				bindDownCaptureListeners(window, handleLightboxPointerDown);
+				window.addEventListener('click', handleLightboxLinkClick, true);
+			}
+			bindDownCaptureListeners(document, handleLightboxPointerDown);
+			document.addEventListener('click', handleLightboxLinkClick, true);
 			if (closeBtn) {
 				closeBtn.addEventListener('click', closeOverlay);
 			}

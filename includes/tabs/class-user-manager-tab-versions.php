@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.66 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened front-end lightbox opening by intercepting gallery link activation earlier in the interaction lifecycle (capture-phase down events) before third-party click handlers can force file navigation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added duplicate-open suppression for click-after-pointer flows so links cannot navigate away while still avoiding double-opening the overlay.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.65 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Media Library Tags Bulk Editor admin menu registration so the screen reliably appears under Media in wp-admin.', 'user-manager'); ?></li>

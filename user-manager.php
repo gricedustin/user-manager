@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.65
+ * Version: 2.5.66
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.66 - March 16, 2026
+ * - Hardened front-end lightbox opening by intercepting gallery link interactions at pointer-down capture phase, preventing third-party handlers from navigating to image URLs before lightbox opens.
+ * - Added duplicate-click suppression after pointer-triggered open to avoid double-open races while keeping link navigation fully blocked.
+ *
  * 2.5.65 - March 16, 2026
  * - Fixed Media Library Tags Bulk Editor admin menu registration so Bulk Editor reliably appears under Media in wp-admin.
  * - Added a taxonomy-registration fallback during submenu registration to avoid hook-order/timing issues preventing menu visibility.
