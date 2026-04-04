@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.78
+ * Version: 2.5.79
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.79 - March 16, 2026
+ * - Removed the "Link To" control from Media Library Tags gallery settings and block inspector, and replaced it with always-on modal window behavior for image clicks.
+ * - Gallery images now open in the modal window by default (except style-specific forced behavior such as fullscreen lightbox grid), keeping existing lightbox controls/settings as the primary interaction model.
+ *
  * 2.5.78 - March 16, 2026
  * - Restricted Access now logs shared-password access attempts and displays them in a new "Access History" card under addon_section=restricted-access.
  * - New Access History table columns: timestamp, IP, IP location, browser, URL accessed from, password if used, and failed password if failed.

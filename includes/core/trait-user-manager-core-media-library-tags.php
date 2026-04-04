@@ -1624,11 +1624,6 @@ JS;
 		{ label: 'Uniform Grid (Classic Gallery)', value: 'uniform_grid' },
 		{ label: 'Wide Rectangle CSS Crop', value: 'wide_rectangle_crop' }
 	];
-	var linkToOptions = [
-		{ label: 'Nothing', value: 'none' },
-		{ label: 'Lightbox', value: 'lightbox' },
-		{ label: 'Open Media Library Permalink', value: 'media_permalink' }
-	];
 	var albumDescriptionPositionOptions = [
 		{ label: 'none', value: 'none' },
 		{ label: 'above gallery', value: 'above' },
@@ -1664,7 +1659,7 @@ JS;
 		fileSize: defaults.fileSize || 'thumbnail',
 		style: defaults.style || 'uniform_grid',
 		pageLimit: parseInt(defaults.pageLimit, 10) || 0,
-		linkTo: defaults.linkTo || 'none',
+		linkTo: 'lightbox',
 		albumDescriptionPosition: defaults.albumDescriptionPosition || 'none',
 		descriptionDisplay: defaults.descriptionDisplay || 'none',
 		descriptionValue: defaults.descriptionValue || 'caption',
@@ -1722,7 +1717,7 @@ JS;
 			useDefaultPageLimit: { type: 'boolean', default: true },
 			pageLimit: { type: 'integer', default: parseInt(defaults.pageLimit, 10) || 0 },
 			useDefaultLinkTo: { type: 'boolean', default: true },
-			linkTo: { type: 'string', default: defaults.linkTo || 'none' },
+			linkTo: { type: 'string', default: 'lightbox' },
 			useDefaultAlbumDescriptionPosition: { type: 'boolean', default: true },
 			albumDescriptionPosition: { type: 'string', default: defaults.albumDescriptionPosition || 'none' },
 			useDefaultDescriptionDisplay: { type: 'boolean', default: true },
@@ -1795,7 +1790,7 @@ JS;
 			var effectiveFileSize = useDefaultFileSize ? fallbackDefaults.fileSize : (a.fileSize || fallbackDefaults.fileSize);
 			var effectiveStyle = useDefaultStyle ? fallbackDefaults.style : (a.style || fallbackDefaults.style);
 			var effectivePageLimit = useDefaultPageLimit ? fallbackDefaults.pageLimit : (typeof a.pageLimit === 'number' ? a.pageLimit : fallbackDefaults.pageLimit);
-			var effectiveLinkTo = useDefaultLinkTo ? fallbackDefaults.linkTo : (a.linkTo || fallbackDefaults.linkTo);
+			var effectiveLinkTo = 'lightbox';
 			var effectiveAlbumDescriptionPosition = useDefaultAlbumDescriptionPosition ? fallbackDefaults.albumDescriptionPosition : (a.albumDescriptionPosition || fallbackDefaults.albumDescriptionPosition);
 			var effectiveDescriptionDisplay = useDefaultDescriptionDisplay ? fallbackDefaults.descriptionDisplay : (a.descriptionDisplay || fallbackDefaults.descriptionDisplay);
 			var effectiveDescriptionValue = useDefaultDescriptionValue ? fallbackDefaults.descriptionValue : (a.descriptionValue || fallbackDefaults.descriptionValue);
@@ -1971,19 +1966,9 @@ JS;
 							checked: useDefaultPageLimit,
 							onChange: function(v){ set({ useDefaultPageLimit: !!v }); }
 						}),
-						element.createElement(SelectControl, {
-							label: 'Link To',
-							disabled: useDefaultLinkTo,
-							value: effectiveLinkTo,
-							help: useDefaultLinkTo ? ('Using add-on default: ' + String(fallbackDefaults.linkTo)) : '',
-							options: linkToOptions,
-							onChange: function(v){ set({ linkTo: String(v || 'none') }); }
-						}),
-						element.createElement(ToggleControl, {
-							label: 'Use add-on default for Link To',
-							checked: useDefaultLinkTo,
-							onChange: function(v){ set({ useDefaultLinkTo: !!v }); }
-						}),
+						element.createElement('p', {
+							style: { margin: '8px 0 14px', fontStyle: 'italic' }
+						}, 'Modal Window is always enabled for gallery image clicks.'),
 						element.createElement(SelectControl, {
 							label: 'Display Album Tag Description(s)',
 							disabled: useDefaultAlbumDescriptionPosition,

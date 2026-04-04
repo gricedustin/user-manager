@@ -42,9 +42,6 @@ class User_Manager_Addon_Media_Library_Tags {
 		$page_limit = isset($settings['media_library_tag_gallery_page_limit'])
 			? max(0, (int) $settings['media_library_tag_gallery_page_limit'])
 			: (int) $defaults['pageLimit'];
-		$link_to = isset($settings['media_library_tag_gallery_link_to']) && is_string($settings['media_library_tag_gallery_link_to']) && $settings['media_library_tag_gallery_link_to'] !== ''
-			? $settings['media_library_tag_gallery_link_to']
-			: (string) $defaults['linkTo'];
 		$description_display = isset($settings['media_library_tag_gallery_description_display']) && is_string($settings['media_library_tag_gallery_description_display']) && $settings['media_library_tag_gallery_description_display'] !== ''
 			? $settings['media_library_tag_gallery_description_display']
 			: (string) $defaults['descriptionDisplay'];
@@ -190,13 +187,10 @@ class User_Manager_Addon_Media_Library_Tags {
 								<input type="number" min="0" class="small-text" id="um-media-library-tags-gallery-page-limit" name="media_library_tag_gallery_page_limit" value="<?php echo esc_attr((string) $page_limit); ?>"<?php echo $form_attr; ?> />
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Set to 0 for unlimited. If greater than 0, pagination is added when results exceed this limit.', 'user-manager'); ?></p>
 							</div>
+							<input type="hidden" name="media_library_tag_gallery_link_to" value="lightbox"<?php echo $form_attr; ?> />
 							<div class="um-form-field">
-								<label for="um-media-library-tags-gallery-link-to"><?php esc_html_e('Link To', 'user-manager'); ?></label>
-								<select id="um-media-library-tags-gallery-link-to" name="media_library_tag_gallery_link_to"<?php echo $form_attr; ?>>
-									<option value="none" <?php selected($link_to, 'none'); ?>><?php esc_html_e('nothing', 'user-manager'); ?></option>
-									<option value="lightbox" <?php selected($link_to, 'lightbox'); ?>><?php esc_html_e('lightbox', 'user-manager'); ?></option>
-									<option value="media_permalink" <?php selected($link_to, 'media_permalink'); ?>><?php esc_html_e('open media library permalink', 'user-manager'); ?></option>
-								</select>
+								<label><strong><?php esc_html_e('Modal Window', 'user-manager'); ?></strong></label>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Images now open in the modal window by default. The old "Link To" selector has been replaced by the modal window controls below.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-description-display"><?php esc_html_e('Description Display', 'user-manager'); ?></label>

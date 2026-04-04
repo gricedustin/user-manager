@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.79 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags block/editor UI now removes the old "Link To" setting and presents the new Modal Window behavior as the standard image interaction mode.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Gallery rendering now defaults to modal window opening for images, while legacy saved link-to values are still safely normalized for backward compatibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.78 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Restricted Access add-on now includes a new "Access History" card that displays a log table with timestamp, IP, IP location, browser, URL accessed from, password used, and failed password values.', 'user-manager'); ?></li>
