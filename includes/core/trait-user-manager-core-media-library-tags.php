@@ -3092,9 +3092,10 @@ JS;
 	/**
 	 * Parse a URL tag expression into single/AND/OR mode with validated slugs.
 	 *
+	 * @param bool $for_queries When true, allow token-based expansion for query matching.
 	 * @return array{mode:'none'|'all'|'single'|'and'|'or',slugs:array<int,string>,primarySlug:string}
 	 */
-	private static function parse_media_library_gallery_tag_expression(string $raw_expression): array {
+	private static function parse_media_library_gallery_tag_expression(string $raw_expression, bool $for_queries = false): array {
 		$none = [
 			'mode' => 'none',
 			'slugs' => [],
@@ -3139,18 +3140,22 @@ JS;
 			if ($candidate_slug === 'all') {
 				continue;
 			}
-			$matched_slugs = self::get_media_library_filter_slugs_for_requested_slug($candidate_slug);
-			if (!empty($matched_slugs)) {
-				foreach ($matched_slugs as $matched_slug) {
-					$matched_slug = sanitize_title((string) $matched_slug);
-					if ($matched_slug !== '') {
-						$valid_slugs[] = $matched_slug;
-					}
-				}
-				continue;
-			}
 			if (term_exists($candidate_slug, self::media_library_tags_taxonomy())) {
 				$valid_slugs[] = $candidate_slug;
+				continue;
+			}
+			if (!$for_queries) {
+				continue;
+			}
+			$matched_slugs = self::get_media_library_filter_slugs_for_requested_slug($candidate_slug);
+			if (empty($matched_slugs)) {
+				continue;
+			}
+			foreach ($matched_slugs as $matched_slug) {
+				$matched_slug = sanitize_title((string) $matched_slug);
+				if ($matched_slug !== '') {
+					$valid_slugs[] = $matched_slug;
+				}
 			}
 		}
 		$valid_slugs = array_values(array_unique($valid_slugs));

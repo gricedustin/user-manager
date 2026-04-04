@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.59 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('When a single URL tag value is used (example: ?cruise), [tag-description] now resolves to that one URL-selected tag only instead of expanded query-match aliases.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag-query expansion for filtering remains active for gallery/media results, while placeholder description output now stays aligned to explicit URL tag input.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.58 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Lightbox click handling was simplified and made fully self-contained so gallery image links reliably open the overlay instead of navigating to the raw image file URL.', 'user-manager'); ?></li>
