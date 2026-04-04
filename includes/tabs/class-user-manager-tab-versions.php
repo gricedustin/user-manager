@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.75 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media > Library Tags > Bulk Editor slug column now flags terms that appear in active menu navigation URLs with a "Live in Menu Navigation" badge beneath the slug input.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Menu-match detection scans active nav menu item URLs and performs boundary-aware slug token matching so manually linked tag slugs are easier to identify before editing.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.74 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Stabilized Media Library Tag Gallery lightbox modal open behavior by replacing brittle pointer/capture interception with a simpler delegated click-to-open modal flow per gallery instance.', 'user-manager'); ?></li>

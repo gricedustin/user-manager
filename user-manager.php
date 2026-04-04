@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.74
+ * Version: 2.5.75
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.75 - March 16, 2026
+ * - Library Tags Bulk Editor now checks active theme menu item URLs for each tag slug and displays a "Live in Menu Navigation" badge under matching slug rows.
+ * - Helps identify which Library Tag slugs are already manually referenced in menu navigation links.
+ *
  * 2.5.74 - March 16, 2026
  * - Rebuilt Media Library Tag Gallery lightbox modal opening flow to use a simpler delegated click handler for more reliable, consistent opening behavior.
  * - Added Lightbox Modal Background Color and Lightbox Modal Text Color settings (with block-level "Use add-on default" overrides) and applied them to modal UI elements.

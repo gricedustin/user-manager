@@ -167,6 +167,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		if (is_wp_error($terms) || !is_array($terms)) {
 			$terms = [];
 		}
+		$menu_slug_matches = self::get_media_library_bulk_editor_menu_slug_matches($terms);
 
 		$updated_count = isset($_GET['um_bulk_updated']) ? absint(wp_unslash($_GET['um_bulk_updated'])) : 0;
 		if ($updated_count > 0) {
@@ -219,7 +220,13 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 										<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
 									</td>
 									<td>
+										<?php $term_slug = sanitize_title((string) $term->slug); ?>
 										<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
+										<?php if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) : ?>
+											<div style="margin-top:6px;">
+												<span class="um-menu-live-navigation-badge"><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></span>
+											</div>
+										<?php endif; ?>
 									</td>
 									<td>
 										<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
@@ -235,7 +242,89 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				<?php submit_button(__('Save All', 'user-manager')); ?>
 			</form>
 		</div>
+		<style>
+		.um-menu-live-navigation-badge {
+			display: inline-block;
+			font-size: 11px;
+			line-height: 1.2;
+			padding: 2px 7px;
+			border-radius: 999px;
+			background: #edf7ed;
+			color: #1f6f43;
+			border: 1px solid #c8e6ce;
+			font-weight: 600;
+		}
+		</style>
 		<?php
+	}
+
+	/**
+	 * Build slug=>menu-match map for Bulk Editor "Live in Menu Navigation" badges.
+	 *
+	 * @param array<int,mixed> $terms
+	 * @return array<string,bool>
+	 */
+	private static function get_media_library_bulk_editor_menu_slug_matches(array $terms): array {
+		$slug_map = [];
+		foreach ($terms as $term) {
+			if (!($term instanceof WP_Term)) {
+				continue;
+			}
+			$slug = sanitize_title((string) $term->slug);
+			if ($slug === '') {
+				continue;
+			}
+			$slug_map[$slug] = false;
+		}
+		if (empty($slug_map)) {
+			return [];
+		}
+
+		$menu_locations = get_nav_menu_locations();
+		if (!is_array($menu_locations) || empty($menu_locations)) {
+			return $slug_map;
+		}
+
+		$menu_ids = array_values(array_unique(array_filter(array_map('absint', $menu_locations))));
+		$menu_ids = array_values(array_unique(array_merge(
+			$menu_ids,
+			array_filter(array_map('absint', wp_get_nav_menus([], 'ids')))
+		)));
+		if (empty($menu_ids)) {
+			return $slug_map;
+		}
+
+		foreach ($menu_ids as $menu_id) {
+			$items = wp_get_nav_menu_items($menu_id, ['post_status' => 'publish']);
+			if (!is_array($items) || empty($items)) {
+				continue;
+			}
+			foreach ($items as $item) {
+				if (!($item instanceof WP_Post)) {
+					continue;
+				}
+				$url = isset($item->url) ? (string) $item->url : '';
+				if ($url === '') {
+					$url = (string) get_post_meta((int) $item->ID, '_menu_item_url', true);
+				}
+				if ($url === '') {
+					continue;
+				}
+				$decoded_url = rawurldecode((string) $url);
+				$lower_url = strtolower($decoded_url);
+				foreach ($slug_map as $slug => $matched) {
+					if ($matched) {
+						continue;
+					}
+					$slug_pattern = '/(^|[\/\?\&\=\-\_\.\,\+\s])' . preg_quote(strtolower($slug), '/') . '($|[\/\?\&\=\-\_\.\,\+\s])/';
+					if (preg_match($slug_pattern, $lower_url) === 1) {
+						$slug_map[$slug] = true;
+					}
+				}
+			}
+		}
+
+		return $slug_map;
 	}
 
 	/**
