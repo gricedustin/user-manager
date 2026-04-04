@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.56
+ * Version: 2.5.57
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.57 - March 16, 2026
+ * - Reworked front-end lightbox link interception with direct per-link handlers plus delegated capture/bubble fallback so gallery links consistently open in lightbox instead of opening files directly.
+ * - Updated Media Library tag filter validation/parsing paths to use the expanded token-aware filter slug resolver (including URL override parsing) so filters match when the searched token exists anywhere in tag strings.
+ *
  * 2.5.56 - March 16, 2026
  * - Media Library grid/list tag filter dropdown now shows only unique individual tag tokens (for example, combined names like "Travel, Italy, Venice" no longer appear as a single filter option).
  * - Kept bulk-apply tag dropdown behavior unchanged so full stored tag names/slugs are still available for assignment.

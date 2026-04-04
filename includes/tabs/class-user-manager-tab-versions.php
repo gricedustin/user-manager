@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.57 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Lightbox open behavior hardened with direct per-link listeners plus delegated capture/bubble fallbacks, restoring reliable overlay opening instead of direct file navigation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Expanded tag-filter validation/matching now resolves tokenized filter values in Media Library grid/list and URL override parsing, so filter queries consistently match if the selected tag token exists in a combined tag string.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.56 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library tag filter dropdown now displays only unique individual tags, excluding combined/comma-composed term labels from the filter list.', 'user-manager'); ?></li>

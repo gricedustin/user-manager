@@ -298,7 +298,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 		if (!self::is_media_library_no_tags_filter_value($requested_filter)) {
 			$requested_filter = sanitize_title($requested_filter);
-			if ($requested_filter === '' || !term_exists($requested_filter, self::media_library_tags_taxonomy())) {
+			if ($requested_filter === '' || !self::is_valid_media_library_tag_filter_slug($requested_filter)) {
 				return $query;
 			}
 		}
@@ -1678,7 +1678,7 @@ JS;
 					$tax_query[] = $tag_clause;
 				}
 			}
-		} elseif ($tag_slug !== '' && term_exists($tag_slug, self::media_library_tags_taxonomy())) {
+		} elseif ($tag_slug !== '' && self::is_valid_media_library_tag_filter_slug($tag_slug)) {
 			$filter_slugs = self::get_media_library_filter_slugs_for_requested_slug($tag_slug);
 			if (empty($filter_slugs)) {
 				$filter_slugs = [$tag_slug];
@@ -2402,16 +2402,8 @@ JS;
 					}
 				});
 			}
-			root.addEventListener('click', function(event) {
-				var clickTarget = event.target;
-				if (!clickTarget) { return; }
-				if (clickTarget.nodeType !== 1) {
-					clickTarget = clickTarget.parentElement;
-				}
-				if (!clickTarget || !clickTarget.closest) { return; }
-				var link = clickTarget.closest('a[data-um-lightbox="1"]');
+			function openLightboxFromLink(link) {
 				if (!link) { return; }
-				event.preventDefault();
 				var initialIndex = parseLightboxIndex(link);
 				if (initialIndex < 0) {
 					initialIndex = lightboxLinks.indexOf(link);
@@ -2423,7 +2415,27 @@ JS;
 				}
 				overlay.style.display = 'flex';
 				overlay.setAttribute('aria-hidden', 'false');
+			}
+			function findLightboxLinkFromTarget(target) {
+				if (!target) { return null; }
+				var node = target.nodeType === 1 ? target : target.parentElement;
+				if (!node || !node.closest) { return null; }
+				return node.closest('a[data-um-lightbox="1"]');
+			}
+			function handleLightboxLinkClick(event) {
+				if (!event || event.defaultPrevented) { return; }
+				var link = findLightboxLinkFromTarget(event && event.target ? event.target : null);
+				if (!link) { return; }
+				event.preventDefault();
+				event.stopPropagation();
+				openLightboxFromLink(link);
+			}
+			lightboxLinks.forEach(function(lightboxLink) {
+				lightboxLink.addEventListener('click', handleLightboxLinkClick, true);
+				lightboxLink.addEventListener('click', handleLightboxLinkClick, false);
 			});
+			root.addEventListener('click', handleLightboxLinkClick, true);
+			root.addEventListener('click', handleLightboxLinkClick, false);
 			if (closeBtn) {
 				closeBtn.addEventListener('click', closeOverlay);
 			}
@@ -2990,6 +3002,16 @@ JS;
 		$valid_slugs = [];
 		foreach ($normalized_parts as $candidate_slug) {
 			if ($candidate_slug === 'all') {
+				continue;
+			}
+			$matched_slugs = self::get_media_library_filter_slugs_for_requested_slug($candidate_slug);
+			if (!empty($matched_slugs)) {
+				foreach ($matched_slugs as $matched_slug) {
+					$matched_slug = sanitize_title((string) $matched_slug);
+					if ($matched_slug !== '') {
+						$valid_slugs[] = $matched_slug;
+					}
+				}
 				continue;
 			}
 			if (term_exists($candidate_slug, self::media_library_tags_taxonomy())) {
