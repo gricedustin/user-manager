@@ -130,11 +130,12 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	public static function register_media_library_tags_bulk_editor_submenu(): void {
 		$taxonomy = self::media_library_tags_taxonomy();
 		if (!taxonomy_exists($taxonomy)) {
-			return;
+			// Ensure taxonomy is available even if hook timing/order changes.
+			self::register_media_library_tags_taxonomy();
 		}
 
 		add_submenu_page(
-			'edit-tags.php?taxonomy=' . $taxonomy . '&post_type=attachment',
+			'upload.php',
 			__('Library Tags Bulk Editor', 'user-manager'),
 			__('Bulk Editor', 'user-manager'),
 			'upload_files',

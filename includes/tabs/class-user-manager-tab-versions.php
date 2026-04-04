@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.65 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tags Bulk Editor admin menu registration so the screen reliably appears under Media in wp-admin.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Editor submenu registration now safely ensures the Library Tags taxonomy is registered before adding the menu item to avoid hook-order/timing misses.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.64 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added URL-based front-end lightbox diagnostics for Media Library Tags gallery: use ?um_mltg_debug=1 to enable detailed click/open/control logs for each gallery instance.', 'user-manager'); ?></li>
