@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.80
+ * Version: 2.5.81
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.81 - March 16, 2026
+ * - Fixed mosaic-grid click handling so modal/lightbox opens reliably by making gallery links explicit block-level click targets above image layers.
+ * - Added front-end CSS hardening for gallery link wrappers (display:block, width/height:100%, pointer-events:auto) to prevent style-specific tile layouts from swallowing click events.
+ *
  * 2.5.80 - March 16, 2026
  * - Fixed Media Library Tags gallery modal-window opening regression by forcing front-end gallery image links to lightbox/modal output even when legacy block attributes or older saved link settings were set to "none".
  * - Updated block registration/default handling so Link To legacy values no longer prevent lightbox anchor markup from rendering on existing pages.

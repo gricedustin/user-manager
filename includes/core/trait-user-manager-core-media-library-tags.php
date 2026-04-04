@@ -2662,6 +2662,7 @@ JS;
 			}
 		}
 		.um-media-library-tag-gallery-item { margin: 0; position: relative; }
+		.um-media-library-tag-gallery-link { display: block; width: 100%; height: 100%; }
 		.um-media-library-tag-gallery-item img { width: 100%; height: auto; display: block; }
 		<?php if (!$disable_css_crop_for_small_galleries) : ?>
 		.um-media-gallery-style-uniform_grid .um-media-library-tag-gallery-item img,
@@ -3317,6 +3318,12 @@ JS;
 					return;
 				}
 				var link = node.closest('a[data-um-lightbox="1"]');
+				if ((!link || !root.contains(link))) {
+					var tile = node.closest('.um-media-library-tag-gallery-item');
+					if (tile && root.contains(tile)) {
+						link = tile.querySelector('a[data-um-lightbox="1"]');
+					}
+				}
 				if (!link || !root.contains(link)) {
 					return;
 				}
