@@ -146,6 +146,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 		$selected_filter = self::get_requested_media_library_tag_filter_value();
 		$no_tags_filter_value = self::get_media_library_no_tags_filter_value();
+		$filter_terms = self::get_media_library_unique_filter_terms();
 		$terms = get_terms([
 			'taxonomy' => $taxonomy,
 			'hide_empty' => false,
@@ -162,10 +163,10 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			<option value="<?php echo esc_attr($no_tags_filter_value); ?>" <?php selected($selected_filter, $no_tags_filter_value); ?>>
 				<?php esc_html_e('No tags', 'user-manager'); ?>
 			</option>
-			<?php foreach ($terms as $term) : ?>
-				<?php if (!$term instanceof WP_Term) { continue; } ?>
-				<option value="<?php echo esc_attr($term->slug); ?>" <?php selected($selected_filter, (string) $term->slug); ?>>
-					<?php echo esc_html($term->name); ?>
+			<?php foreach ($filter_terms as $filter_term) : ?>
+				<?php if (!is_array($filter_term) || empty($filter_term['slug'])) { continue; } ?>
+				<option value="<?php echo esc_attr((string) $filter_term['slug']); ?>" <?php selected($selected_filter, (string) $filter_term['slug']); ?>>
+					<?php echo esc_html((string) ($filter_term['name'] ?? $filter_term['slug'])); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
@@ -572,6 +573,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				'name' => (string) $term->name,
 			];
 		}
+		$filter_term_options = self::get_media_library_unique_filter_terms();
 
 		$settings = User_Manager_Core::get_settings();
 		$show_thumbnail_tags = !empty($settings['media_library_tags_show_tags_on_thumbnails_bulk_select']);
@@ -580,6 +582,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'selectedTag' => self::get_requested_media_library_tag_filter_value(),
 			'noTagsValue' => self::get_media_library_no_tags_filter_value(),
 			'terms' => $term_options,
+			'bulkTerms' => $term_options,
+			'filterTerms' => $filter_term_options,
 			'ajaxUrl' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce('um_media_library_tags_ajax'),
 			'showTagsOnThumbnailsWhenBulkSelecting' => $show_thumbnail_tags,
@@ -602,11 +606,13 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		$script = <<<'JS'
 (function($) {
 	var cfg = window.umMediaLibraryTagsConfig || {};
-	if (!cfg || !Array.isArray(cfg.terms)) {
+	if (!cfg) {
 		return;
 	}
+	var filterTerms = Array.isArray(cfg.filterTerms) && cfg.filterTerms.length ? cfg.filterTerms : (Array.isArray(cfg.terms) ? cfg.terms : []);
+	var bulkTerms = Array.isArray(cfg.bulkTerms) && cfg.bulkTerms.length ? cfg.bulkTerms : (Array.isArray(cfg.terms) ? cfg.terms : []);
 
-	function buildOptions(defaultLabel, selected, includeNoTags) {
+	function buildOptions(defaultLabel, selected, includeNoTags, termsList) {
 		var html = '<option value="">' + String(defaultLabel || '') + '</option>';
 		if (includeNoTags) {
 			var noTagsValue = String((cfg && cfg.noTagsValue) || '__um_no_tags__');
@@ -615,7 +621,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				+ String((cfg.labels && cfg.labels.filterNoTags) || 'No tags').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 				+ '</option>';
 		}
-		cfg.terms.forEach(function(term) {
+		(termsList || []).forEach(function(term) {
 			if (!term || !term.slug) {
 				return;
 			}
@@ -667,8 +673,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 
 		var selectedTag = String(cfg.selectedTag || '');
-		var filterHtml = buildOptions(cfg.labels && cfg.labels.filterAll, selectedTag, true);
-		var bulkHtml = buildOptions(cfg.labels && cfg.labels.bulkChoose, '', false);
+		var filterHtml = buildOptions(cfg.labels && cfg.labels.filterAll, selectedTag, true, filterTerms);
+		var bulkHtml = buildOptions(cfg.labels && cfg.labels.bulkChoose, '', false, bulkTerms);
 		var $filterLabel = $('<label class="screen-reader-text" for="um-media-library-tag-filter-grid">Library Tag filter</label>');
 		var $filter = $('<select id="um-media-library-tag-filter-grid" class="um-media-library-tag-control"></select>').html(filterHtml);
 		var $bulkLabel = $('<label class="screen-reader-text" for="um-media-library-tag-bulk-grid">Bulk apply Library Tag</label>');
@@ -2853,7 +2859,7 @@ JS;
 		}
 
 		$slug = sanitize_title($value);
-		return ($slug !== '' && term_exists($slug, self::media_library_tags_taxonomy())) ? $slug : '';
+		return ($slug !== '' && self::is_valid_media_library_tag_filter_slug($slug)) ? $slug : '';
 	}
 
 	/**
@@ -3546,6 +3552,94 @@ JS;
 
 		$cache[$requested_slug] = array_values(array_unique(array_filter($matched)));
 		return $cache[$requested_slug];
+	}
+
+	/**
+	 * Build unique individual filter options from Library Tags terms.
+	 *
+	 * - A plain term name remains as one option.
+	 * - A comma-separated term name contributes one option per token.
+	 *
+	 * @return array<int,array{slug:string,name:string}>
+	 */
+	private static function get_media_library_unique_filter_terms(): array {
+		static $cache = null;
+		if (is_array($cache)) {
+			return $cache;
+		}
+
+		$terms = get_terms([
+			'taxonomy' => self::media_library_tags_taxonomy(),
+			'hide_empty' => false,
+			'orderby' => 'name',
+			'order' => 'ASC',
+		]);
+		if (is_wp_error($terms) || !is_array($terms)) {
+			$cache = [];
+			return $cache;
+		}
+
+		$options_by_slug = [];
+		foreach ($terms as $term) {
+			if (!($term instanceof WP_Term)) {
+				continue;
+			}
+			$term_name = trim((string) $term->name);
+			if ($term_name === '') {
+				continue;
+			}
+			$segments = strpos($term_name, ',') !== false
+				? preg_split('/\s*,\s*/', $term_name)
+				: [$term_name];
+			if (!is_array($segments) || empty($segments)) {
+				$segments = [$term_name];
+			}
+			foreach ($segments as $segment) {
+				$segment = trim((string) $segment);
+				if ($segment === '') {
+					continue;
+				}
+				$segment_slug = sanitize_title($segment);
+				if ($segment_slug === '' || isset($options_by_slug[$segment_slug])) {
+					continue;
+				}
+				$options_by_slug[$segment_slug] = [
+					'slug' => $segment_slug,
+					'name' => $segment,
+				];
+			}
+		}
+
+		$options = array_values($options_by_slug);
+		usort($options, static function (array $left, array $right): int {
+			return strnatcasecmp((string) ($left['name'] ?? ''), (string) ($right['name'] ?? ''));
+		});
+
+		$cache = $options;
+		return $cache;
+	}
+
+	/**
+	 * Validate filter slug against real terms or generated individual filter tokens.
+	 */
+	private static function is_valid_media_library_tag_filter_slug(string $slug): bool {
+		$slug = sanitize_title($slug);
+		if ($slug === '') {
+			return false;
+		}
+		if (term_exists($slug, self::media_library_tags_taxonomy())) {
+			return true;
+		}
+		$filter_terms = self::get_media_library_unique_filter_terms();
+		foreach ($filter_terms as $filter_term) {
+			if (!is_array($filter_term) || empty($filter_term['slug'])) {
+				continue;
+			}
+			if ((string) $filter_term['slug'] === $slug) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

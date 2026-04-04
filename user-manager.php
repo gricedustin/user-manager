@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.55
+ * Version: 2.5.56
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.56 - March 16, 2026
+ * - Media Library grid/list tag filter dropdown now shows only unique individual tag tokens (for example, combined names like "Travel, Italy, Venice" no longer appear as a single filter option).
+ * - Kept bulk-apply tag dropdown behavior unchanged so full stored tag names/slugs are still available for assignment.
+ *
  * 2.5.55 - March 16, 2026
  * - Fixed compound/comma-separated Library Tag matching so token order no longer matters (example: both "Cruise, Honeymoon" and "Honeymoon, Cruise" now match cruise/honeymoon filtering consistently).
  * - Expanded token matching logic now checks each normalized token with boundary-aware matching instead of exact-token equality.
