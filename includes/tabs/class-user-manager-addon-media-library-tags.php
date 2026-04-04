@@ -60,6 +60,13 @@ class User_Manager_Addon_Media_Library_Tags {
 		$lightbox_slideshow_seconds = isset($settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])
 			? max(1, min(60, (int) $settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo']))
 			: max(1, min(60, (int) ($defaults['lightboxSlideshowSeconds'] ?? 3)));
+		$lightbox_slideshow_transition_options = User_Manager_Core::get_media_library_gallery_lightbox_transition_options();
+		$lightbox_slideshow_transition = isset($settings['media_library_tag_gallery_lightbox_slideshow_transition'])
+			? sanitize_key((string) $settings['media_library_tag_gallery_lightbox_slideshow_transition'])
+			: sanitize_key((string) ($defaults['lightboxSlideshowTransition'] ?? 'none'));
+		if (!isset($lightbox_slideshow_transition_options[$lightbox_slideshow_transition])) {
+			$lightbox_slideshow_transition = 'none';
+		}
 		$disable_css_crop_threshold = isset($settings['media_library_tag_gallery_disable_css_crop_under_total'])
 			? max(0, (int) $settings['media_library_tag_gallery_disable_css_crop_under_total'])
 			: (int) ($defaults['disableCssCropUnderTotal'] ?? 0);
@@ -204,6 +211,14 @@ class User_Manager_Addon_Media_Library_Tags {
 								<label for="um-media-library-tags-gallery-lightbox-slideshow-seconds"><?php esc_html_e('Slideshow Seconds Per Photo', 'user-manager'); ?></label>
 								<input type="number" min="1" max="60" class="small-text" id="um-media-library-tags-gallery-lightbox-slideshow-seconds" name="media_library_tag_gallery_lightbox_slideshow_seconds_per_photo" value="<?php echo esc_attr((string) $lightbox_slideshow_seconds); ?>"<?php echo $form_attr; ?> />
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('How many seconds each photo stays visible during slideshow playback.', 'user-manager'); ?></p>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-lightbox-slideshow-transition"><?php esc_html_e('Slideshow Transition (None, Crossfade, Slide to Left)', 'user-manager'); ?></label>
+								<select id="um-media-library-tags-gallery-lightbox-slideshow-transition" name="media_library_tag_gallery_lightbox_slideshow_transition"<?php echo $form_attr; ?>>
+									<?php foreach ($lightbox_slideshow_transition_options as $transition_key => $transition_label) : ?>
+										<option value="<?php echo esc_attr((string) $transition_key); ?>" <?php selected($lightbox_slideshow_transition, (string) $transition_key); ?>><?php echo esc_html((string) $transition_label); ?></option>
+									<?php endforeach; ?>
+								</select>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-disable-css-crop-below-total"><?php esc_html_e('Do Not CSS Crop Any Images if Gallery Photos Total is Less Than...', 'user-manager'); ?></label>

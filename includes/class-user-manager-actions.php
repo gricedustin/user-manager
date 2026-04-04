@@ -2363,6 +2363,13 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'] = isset($_POST['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])
 					? max(1, min(60, absint($_POST['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])))
 					: 3;
+				$lightbox_transition = isset($_POST['media_library_tag_gallery_lightbox_slideshow_transition'])
+					? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_lightbox_slideshow_transition']))
+					: 'none';
+				$allowed_lightbox_transitions = ['none', 'crossfade', 'slide_left'];
+				$settings['media_library_tag_gallery_lightbox_slideshow_transition'] = in_array($lightbox_transition, $allowed_lightbox_transitions, true)
+					? $lightbox_transition
+					: 'none';
 				$settings['media_library_tags_show_tags_on_thumbnails_bulk_select'] = isset($_POST['media_library_tags_show_tags_on_thumbnails_bulk_select']) && $_POST['media_library_tags_show_tags_on_thumbnails_bulk_select'] === '1';
 				$settings['media_library_tags_sticky_bulk_toolbar_mobile'] = isset($_POST['media_library_tags_sticky_bulk_toolbar_mobile']) && $_POST['media_library_tags_sticky_bulk_toolbar_mobile'] === '1';
 				$settings['media_library_tag_gallery_hidden_frontend_tags'] = isset($_POST['media_library_tag_gallery_hidden_frontend_tags'])

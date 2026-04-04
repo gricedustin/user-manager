@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.48
+ * Version: 2.5.49
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.49 - March 16, 2026
+ * - Added new Dynamic Photo Gallery lightbox setting: "Slideshow Transition (None, Crossfade, Slide to Left)" as an add-on default.
+ * - Added matching per-block Slideshow Transition control with a "Use add-on default" toggle in the Media Library Tag Gallery block inspector.
+ * - Front-end lightbox slideshow now supports transition modes: none, crossfade, and slide-left.
+ *
  * 2.5.48 - March 16, 2026
  * - Dynamic Photo Gallery with Media Library Tags: added new default lightbox settings for Previous/Next navigation + keyboard arrows, Play Slideshow button, and Slideshow Seconds Per Photo.
  * - Added matching per-block controls in Media Library Tag Gallery block settings, including "Use add-on default" toggles for all three new lightbox options.

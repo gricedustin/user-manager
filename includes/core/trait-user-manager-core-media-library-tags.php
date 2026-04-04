@@ -957,6 +957,8 @@ JS;
 				'lightboxSlideshowButton' => ['type' => 'boolean', 'default' => false],
 				'useDefaultLightboxSlideshowSeconds' => ['type' => 'boolean'],
 				'lightboxSlideshowSeconds' => ['type' => 'number', 'default' => 3],
+				'useDefaultLightboxSlideshowTransition' => ['type' => 'boolean'],
+				'lightboxSlideshowTransition' => ['type' => 'string', 'default' => 'none'],
 			],
 			'editor_script' => 'um-media-library-tag-gallery-editor',
 		]);
@@ -1094,6 +1096,11 @@ JS;
 		{ label: 'Slug', value: 'slug' },
 		{ label: 'Date', value: 'date' }
 	];
+	var slideshowTransitionOptions = [
+		{ label: 'None', value: 'none' },
+		{ label: 'Crossfade', value: 'crossfade' },
+		{ label: 'Slide to Left', value: 'slide_left' }
+	];
 	var fallbackDefaults = {
 		columnsDesktop: parseInt(defaults.columnsDesktop, 10) || 4,
 		columnsDesktopLt50: parseInt(defaults.columnsDesktopLt50, 10) || 4,
@@ -1115,6 +1122,13 @@ JS;
 				seconds = 3;
 			}
 			return Math.max(1, Math.min(60, seconds));
+		})(),
+		lightboxSlideshowTransition: (function() {
+			var raw = String(defaults.lightboxSlideshowTransition || 'none').toLowerCase();
+			if (['none', 'crossfade', 'slide_left'].indexOf(raw) === -1) {
+				raw = 'none';
+			}
+			return raw;
 		})()
 	};
 
@@ -1162,6 +1176,14 @@ JS;
 					seconds = 3;
 				}
 				return Math.max(1, Math.min(60, seconds));
+			})() },
+			useDefaultLightboxSlideshowTransition: { type: 'boolean', default: false },
+			lightboxSlideshowTransition: { type: 'string', default: (function() {
+				var raw = String(defaults.lightboxSlideshowTransition || 'none').toLowerCase();
+				if (['none', 'crossfade', 'slide_left'].indexOf(raw) === -1) {
+					raw = 'none';
+				}
+				return raw;
 			})() }
 		},
 		edit: function(props) {
@@ -1182,6 +1204,7 @@ JS;
 			var useDefaultLightboxPrevNextKeyboard = !!a.useDefaultLightboxPrevNextKeyboard;
 			var useDefaultLightboxSlideshowButton = !!a.useDefaultLightboxSlideshowButton;
 			var useDefaultLightboxSlideshowSeconds = !!a.useDefaultLightboxSlideshowSeconds;
+			var useDefaultLightboxSlideshowTransition = !!a.useDefaultLightboxSlideshowTransition;
 			var effectiveColumnsDesktop = useDefaultColumnsDesktop ? fallbackDefaults.columnsDesktop : (a.columnsDesktop || fallbackDefaults.columnsDesktop);
 			var effectiveColumnsDesktopLt50 = useDefaultColumnsDesktopLt50 ? fallbackDefaults.columnsDesktopLt50 : (a.columnsDesktopLt50 || fallbackDefaults.columnsDesktopLt50);
 			var effectiveColumnsDesktopLt25 = useDefaultColumnsDesktopLt25 ? fallbackDefaults.columnsDesktopLt25 : (a.columnsDesktopLt25 || fallbackDefaults.columnsDesktopLt25);
@@ -1198,6 +1221,7 @@ JS;
 			var effectiveLightboxSlideshowButton = useDefaultLightboxSlideshowButton ? !!fallbackDefaults.lightboxSlideshowButton : !!a.lightboxSlideshowButton;
 			var effectiveLightboxSlideshowSecondsRaw = useDefaultLightboxSlideshowSeconds ? fallbackDefaults.lightboxSlideshowSeconds : parseFloat(a.lightboxSlideshowSeconds);
 			var effectiveLightboxSlideshowSeconds = isFinite(effectiveLightboxSlideshowSecondsRaw) ? Math.max(1, Math.min(60, effectiveLightboxSlideshowSecondsRaw)) : fallbackDefaults.lightboxSlideshowSeconds;
+			var effectiveLightboxSlideshowTransition = useDefaultLightboxSlideshowTransition ? String(fallbackDefaults.lightboxSlideshowTransition || 'none') : String(a.lightboxSlideshowTransition || 'none');
 			return element.createElement(
 				Fragment,
 				{},
@@ -1443,6 +1467,19 @@ JS;
 							label: 'Use add-on default for Slideshow Seconds Per Photo',
 							checked: useDefaultLightboxSlideshowSeconds,
 							onChange: function(v){ set({ useDefaultLightboxSlideshowSeconds: !!v }); }
+						}),
+						element.createElement(SelectControl, {
+							label: 'Slideshow Transition',
+							disabled: useDefaultLightboxSlideshowTransition,
+							value: effectiveLightboxSlideshowTransition,
+							help: useDefaultLightboxSlideshowTransition ? ('Using add-on default: ' + String(fallbackDefaults.lightboxSlideshowTransition)) : '',
+							options: slideshowTransitionOptions,
+							onChange: function(v){ set({ lightboxSlideshowTransition: String(v || 'none') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Slideshow Transition',
+							checked: useDefaultLightboxSlideshowTransition,
+							onChange: function(v){ set({ useDefaultLightboxSlideshowTransition: !!v }); }
 						})
 					)
 				),
@@ -1485,6 +1522,7 @@ JS;
 		$use_default_lightbox_prev_next_keyboard = !empty($attrs['useDefaultLightboxPrevNextKeyboard']);
 		$use_default_lightbox_slideshow_button = !empty($attrs['useDefaultLightboxSlideshowButton']);
 		$use_default_lightbox_slideshow_seconds = !empty($attrs['useDefaultLightboxSlideshowSeconds']);
+		$use_default_lightbox_slideshow_transition = !empty($attrs['useDefaultLightboxSlideshowTransition']);
 		$columns_desktop = $use_default_columns_desktop
 			? max(1, min(8, absint($defaults['columnsDesktop'])))
 			: max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
@@ -1535,6 +1573,9 @@ JS;
 			? (isset($defaults['lightboxSlideshowSeconds']) ? (float) $defaults['lightboxSlideshowSeconds'] : 3.0)
 			: (isset($attrs['lightboxSlideshowSeconds']) ? (float) $attrs['lightboxSlideshowSeconds'] : (isset($defaults['lightboxSlideshowSeconds']) ? (float) $defaults['lightboxSlideshowSeconds'] : 3.0));
 		$lightbox_slideshow_seconds = max(1.0, min(60.0, $lightbox_slideshow_seconds_raw));
+		$lightbox_slideshow_transition = $use_default_lightbox_slideshow_transition
+			? sanitize_key((string) ($defaults['lightboxSlideshowTransition'] ?? 'none'))
+			: (isset($attrs['lightboxSlideshowTransition']) ? sanitize_key((string) $attrs['lightboxSlideshowTransition']) : sanitize_key((string) ($defaults['lightboxSlideshowTransition'] ?? 'none')));
 
 		$allowed_sort_orders = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc', 'random'];
 		$allowed_file_sizes = array_keys(self::get_available_image_sizes_for_media_gallery());
@@ -1545,6 +1586,7 @@ JS;
 		$allowed_links = ['none', 'lightbox', 'media_permalink'];
 		$allowed_description_display = array_keys(self::get_media_library_gallery_description_display_options());
 		$allowed_description_values = array_keys(self::get_media_library_gallery_description_value_options());
+		$allowed_lightbox_slideshow_transitions = ['none', 'crossfade', 'slide_left'];
 		if (!in_array($sort_order, $allowed_sort_orders, true)) {
 			$sort_order = 'date_desc';
 		}
@@ -1562,6 +1604,9 @@ JS;
 		}
 		if (!in_array($description_value, $allowed_description_values, true)) {
 			$description_value = 'caption';
+		}
+		if (!in_array($lightbox_slideshow_transition, $allowed_lightbox_slideshow_transitions, true)) {
+			$lightbox_slideshow_transition = 'none';
 		}
 		$url_tag_override = [
 			'mode' => 'none',
@@ -1947,7 +1992,7 @@ JS;
 		.um-media-library-tag-gallery-pagination a,
 		.um-media-library-tag-gallery-pagination strong { margin-right: 8px; }
 		.um-mltg-lightbox-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.86); z-index: 999999; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 30px; }
-		.um-mltg-lightbox-overlay img { max-width: min(95vw, 1600px); max-height: 88vh; width: auto; height: auto; display: block; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+		.um-mltg-lightbox-overlay img { max-width: min(95vw, 1600px); max-height: 88vh; width: auto; height: auto; display: block; box-shadow: 0 4px 24px rgba(0,0,0,0.4); opacity: 1; transform: translateX(0); transition: opacity .28s ease, transform .32s ease; will-change: opacity, transform; }
 		.um-mltg-lightbox-caption { margin-top: 10px; color: #fff; font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }
 		.um-mltg-lightbox-edit-link { margin-top: 8px; color: #fff; text-decoration: underline; display: none; font-size: 13px; }
 		.um-mltg-lightbox-edit-link:hover { color: #cfe7ff; }
@@ -1968,6 +2013,8 @@ JS;
 		.um-mltg-lightbox-slideshow-toggle:hover {
 			background: rgba(255,255,255,0.12);
 		}
+		.um-mltg-lightbox-overlay.um-mltg-transition-crossfade img.is-transitioning { opacity: 0; }
+		.um-mltg-lightbox-overlay.um-mltg-transition-slide-left img.is-transitioning { transform: translateX(-28px); opacity: 0.42; }
 		.um-mltg-lightbox-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: #fff; font-size: 36px; line-height: 1; cursor: pointer; }
 		</style>
 		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true">
@@ -1997,11 +2044,29 @@ JS;
 			var enablePrevNextKeyboard = <?php echo $lightbox_prev_next_keyboard ? 'true' : 'false'; ?>;
 			var enableSlideshowButton = <?php echo $lightbox_slideshow_button ? 'true' : 'false'; ?>;
 			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
+			var slideshowTransition = <?php echo wp_json_encode((string) $lightbox_slideshow_transition); ?> || 'none';
 			var lightboxLinks = Array.prototype.slice.call(root.querySelectorAll('a[data-um-lightbox="1"]'));
 			var activeLightboxIndex = -1;
 			var slideshowTimer = null;
 			var slideshowPlaying = false;
 			var bodyPrevOverflow = '';
+			var transitionTimer = null;
+			function normalizeTransition(value) {
+				var normalized = String(value || 'none');
+				if (normalized === 'crossfade' || normalized === 'slide_left') {
+					return normalized;
+				}
+				return 'none';
+			}
+			slideshowTransition = normalizeTransition(slideshowTransition);
+			if (overlay) {
+				overlay.classList.remove('um-mltg-transition-crossfade', 'um-mltg-transition-slide-left');
+				if (slideshowTransition === 'crossfade') {
+					overlay.classList.add('um-mltg-transition-crossfade');
+				} else if (slideshowTransition === 'slide_left') {
+					overlay.classList.add('um-mltg-transition-slide-left');
+				}
+			}
 			function parseLightboxIndex(link) {
 				if (!link) { return -1; }
 				var raw = link.getAttribute('data-um-lightbox-index');
@@ -2021,27 +2086,48 @@ JS;
 					slideshowBtn.textContent = '<?php echo esc_js(__('Play Slideshow', 'user-manager')); ?>';
 				}
 			}
-			function renderLightboxFromLink(link) {
+			function renderLightboxFromLink(link, animate) {
 				if (!link || !image) { return false; }
 				var src = link.getAttribute('href') || '';
 				if (!src) { return false; }
 				var caption = link.getAttribute('data-um-lightbox-caption') || '';
 				var altText = link.getAttribute('data-um-lightbox-alt') || '';
 				var editUrl = link.getAttribute('data-um-lightbox-edit-url') || '';
-				image.setAttribute('src', src);
-				image.setAttribute('alt', altText);
-				if (captionEl) {
-					captionEl.textContent = caption;
-					captionEl.style.display = caption ? 'block' : 'none';
-				}
-				if (editLinkEl) {
-					if (editUrl) {
-						editLinkEl.setAttribute('href', editUrl);
-						editLinkEl.style.display = 'inline-block';
-					} else {
-						editLinkEl.setAttribute('href', '#');
-						editLinkEl.style.display = 'none';
+				var shouldAnimate = !!animate && slideshowTransition !== 'none';
+				var applyPayload = function() {
+					image.setAttribute('src', src);
+					image.setAttribute('alt', altText);
+					if (captionEl) {
+						captionEl.textContent = caption;
+						captionEl.style.display = caption ? 'block' : 'none';
 					}
+					if (editLinkEl) {
+						if (editUrl) {
+							editLinkEl.setAttribute('href', editUrl);
+							editLinkEl.style.display = 'inline-block';
+						} else {
+							editLinkEl.setAttribute('href', '#');
+							editLinkEl.style.display = 'none';
+						}
+					}
+				};
+				if (transitionTimer) {
+					window.clearTimeout(transitionTimer);
+					transitionTimer = null;
+				}
+				if (shouldAnimate) {
+					image.classList.add('is-transitioning');
+					transitionTimer = window.setTimeout(function() {
+						applyPayload();
+						image.classList.remove('is-transitioning');
+						transitionTimer = null;
+					}, 160);
+					return true;
+				}
+				image.classList.remove('is-transitioning');
+				applyPayload();
+				if (captionEl) {
+					captionEl.style.display = caption ? 'block' : 'none';
 				}
 				return true;
 			}
@@ -2055,7 +2141,8 @@ JS;
 					normalizedIndex = 0;
 				}
 				var link = lightboxLinks[normalizedIndex];
-				if (!renderLightboxFromLink(link)) {
+				var shouldAnimate = overlay.getAttribute('aria-hidden') === 'false' && activeLightboxIndex >= 0;
+				if (!renderLightboxFromLink(link, shouldAnimate)) {
 					return;
 				}
 				activeLightboxIndex = normalizedIndex;
@@ -2064,8 +2151,13 @@ JS;
 				stopSlideshow();
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
+				if (transitionTimer) {
+					window.clearTimeout(transitionTimer);
+					transitionTimer = null;
+				}
 				if (image) {
 					image.setAttribute('src', '');
+					image.classList.remove('is-transitioning');
 				}
 				if (captionEl) {
 					captionEl.textContent = '';
@@ -2299,6 +2391,7 @@ JS;
 			'lightboxPrevNextKeyboard' => true,
 			'lightboxSlideshowButton' => false,
 			'lightboxSlideshowSeconds' => 3.0,
+			'lightboxSlideshowTransition' => 'none',
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -2367,6 +2460,13 @@ JS;
 		if (isset($settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])) {
 			$defaults['lightboxSlideshowSeconds'] = max(1.0, min(60.0, (float) $settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo']));
 		}
+		if (isset($settings['media_library_tag_gallery_lightbox_slideshow_transition'])) {
+			$defaults['lightboxSlideshowTransition'] = sanitize_key((string) $settings['media_library_tag_gallery_lightbox_slideshow_transition']);
+		}
+		$valid_lightbox_slideshow_transitions = ['none', 'crossfade', 'slide_left'];
+		if (!in_array((string) $defaults['lightboxSlideshowTransition'], $valid_lightbox_slideshow_transitions, true)) {
+			$defaults['lightboxSlideshowTransition'] = 'none';
+		}
 		$valid_styles = array_keys(self::get_media_library_gallery_style_options());
 		if (!in_array((string) $defaults['style'], $valid_styles, true)) {
 			$defaults['style'] = 'uniform_grid';
@@ -2434,6 +2534,17 @@ JS;
 			'filename' => __('Filename', 'user-manager'),
 			'slug' => __('Slug', 'user-manager'),
 			'date' => __('Date', 'user-manager'),
+		];
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_media_library_gallery_lightbox_transition_options(): array {
+		return [
+			'none' => __('None', 'user-manager'),
+			'crossfade' => __('Crossfade', 'user-manager'),
+			'slide_left' => __('Slide to Left', 'user-manager'),
 		];
 	}
 
