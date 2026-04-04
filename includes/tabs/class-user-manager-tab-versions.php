@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.72 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added plugin version display directly under the main "User Experience Manager" admin page title.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Version line now mirrors the page-header style pattern and automatically reflects the current plugin version constant.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.71 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Library Tags term edit/add screens now include a new "YouTube Video Links" textarea (one URL per line) with sanitized storage in term meta.', 'user-manager'); ?></li>

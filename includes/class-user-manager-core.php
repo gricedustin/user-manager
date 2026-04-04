@@ -51,7 +51,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.71';
+	const VERSION = '2.5.72';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8145,6 +8145,7 @@ html body .woocommerce-layout__header {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__('User Experience Manager', 'user-manager'); ?></h1>
+			<p style="margin-top: -10px; color: #646970; font-size: 14px;"><?php echo esc_html(sprintf(__('Version %s', 'user-manager'), self::VERSION)); ?></p>
 			<h2 class="nav-tab-wrapper">
 				<a class="nav-tab <?php echo $active_tab === self::TAB_LOGIN_TOOLS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_LOGIN_TOOLS)); ?>">
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
