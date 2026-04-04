@@ -290,12 +290,10 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 		$redirect_url = add_query_arg(
 			[
-				'post_type' => 'attachment',
-				'taxonomy' => $taxonomy,
 				'page' => 'um-media-library-tags-bulk-editor',
 				'um_bulk_updated' => (string) $updated,
 			],
-			admin_url('edit-tags.php')
+			admin_url('upload.php')
 		);
 		wp_safe_redirect($redirect_url);
 		exit;

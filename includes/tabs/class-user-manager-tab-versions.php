@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.69 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Library Tags Bulk Editor post-save redirect URL to load through upload.php, preventing the "Cannot load um-media-library-tags-bulk-editor" error after Save All.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Editor now returns to the correct admin page route with the success count notice after saving.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.68 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a protective admin-bar color reset stylesheet so plugin/user WP-Admin CSS rules no longer override default WordPress top-bar link colors.', 'user-manager'); ?></li>
