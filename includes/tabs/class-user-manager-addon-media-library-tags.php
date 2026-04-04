@@ -48,6 +48,13 @@ class User_Manager_Addon_Media_Library_Tags {
 		$description_display = isset($settings['media_library_tag_gallery_description_display']) && is_string($settings['media_library_tag_gallery_description_display']) && $settings['media_library_tag_gallery_description_display'] !== ''
 			? $settings['media_library_tag_gallery_description_display']
 			: (string) $defaults['descriptionDisplay'];
+		$album_description_position = isset($settings['media_library_tag_gallery_album_description_position']) && is_string($settings['media_library_tag_gallery_album_description_position']) && $settings['media_library_tag_gallery_album_description_position'] !== ''
+			? sanitize_key((string) $settings['media_library_tag_gallery_album_description_position'])
+			: (string) ($defaults['albumDescriptionPosition'] ?? 'none');
+		$album_description_position_options = User_Manager_Core::get_media_library_gallery_album_description_position_options();
+		if (!isset($album_description_position_options[$album_description_position])) {
+			$album_description_position = 'none';
+		}
 		$description_value = isset($settings['media_library_tag_gallery_description_value']) && is_string($settings['media_library_tag_gallery_description_value']) && $settings['media_library_tag_gallery_description_value'] !== ''
 			? $settings['media_library_tag_gallery_description_value']
 			: (string) $defaults['descriptionValue'];
@@ -186,6 +193,15 @@ class User_Manager_Addon_Media_Library_Tags {
 										<option value="<?php echo esc_attr($display_key); ?>" <?php selected($description_display, $display_key); ?>><?php echo esc_html($display_label); ?></option>
 									<?php endforeach; ?>
 								</select>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-album-description-position"><?php esc_html_e('Display Album Tag Description(s)', 'user-manager'); ?></label>
+								<select id="um-media-library-tags-gallery-album-description-position" name="media_library_tag_gallery_album_description_position"<?php echo $form_attr; ?>>
+									<?php foreach ($album_description_position_options as $position_key => $position_label) : ?>
+										<option value="<?php echo esc_attr($position_key); ?>" <?php selected($album_description_position, $position_key); ?>><?php echo esc_html($position_label); ?></option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Shows URL-selected Library Tag description paragraph(s) above or below the gallery, including per-tag Edit Tag Description links for admins. Multiple URL tags render multiple description paragraphs in URL order.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-description-value"><?php esc_html_e('Description Value', 'user-manager'); ?></label>

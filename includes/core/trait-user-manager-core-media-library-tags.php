@@ -1138,6 +1138,8 @@ JS;
 				'pageLimit' => ['type' => 'integer', 'default' => 0],
 				'useDefaultLinkTo' => ['type' => 'boolean', 'default' => true],
 				'linkTo' => ['type' => 'string', 'default' => 'none'],
+				'useDefaultAlbumDescriptionPosition' => ['type' => 'boolean', 'default' => true],
+				'albumDescriptionPosition' => ['type' => 'string', 'default' => 'none'],
 				'useDefaultDescriptionDisplay' => ['type' => 'boolean', 'default' => true],
 				'descriptionDisplay' => ['type' => 'string', 'default' => 'none'],
 				'useDefaultDescriptionValue' => ['type' => 'boolean', 'default' => true],
@@ -1272,6 +1274,11 @@ JS;
 		{ label: 'Lightbox', value: 'lightbox' },
 		{ label: 'Open Media Library Permalink', value: 'media_permalink' }
 	];
+	var albumDescriptionPositionOptions = [
+		{ label: 'none', value: 'none' },
+		{ label: 'above gallery', value: 'above' },
+		{ label: 'below gallery', value: 'below' }
+	];
 	var descriptionDisplayOptions = [
 		{ label: 'none', value: 'none' },
 		{ label: 'centered under photo', value: 'grid' },
@@ -1303,6 +1310,7 @@ JS;
 		style: defaults.style || 'uniform_grid',
 		pageLimit: parseInt(defaults.pageLimit, 10) || 0,
 		linkTo: defaults.linkTo || 'none',
+		albumDescriptionPosition: defaults.albumDescriptionPosition || 'none',
 		descriptionDisplay: defaults.descriptionDisplay || 'none',
 		descriptionValue: defaults.descriptionValue || 'caption',
 		lightboxPrevNextKeyboard: defaults.lightboxPrevNextKeyboard !== false,
@@ -1352,6 +1360,8 @@ JS;
 			pageLimit: { type: 'integer', default: parseInt(defaults.pageLimit, 10) || 0 },
 			useDefaultLinkTo: { type: 'boolean', default: true },
 			linkTo: { type: 'string', default: defaults.linkTo || 'none' },
+			useDefaultAlbumDescriptionPosition: { type: 'boolean', default: true },
+			albumDescriptionPosition: { type: 'string', default: defaults.albumDescriptionPosition || 'none' },
 			useDefaultDescriptionDisplay: { type: 'boolean', default: true },
 			descriptionDisplay: { type: 'string', default: defaults.descriptionDisplay || 'none' },
 			useDefaultDescriptionValue: { type: 'boolean', default: true },
@@ -1390,6 +1400,7 @@ JS;
 			var useDefaultStyle = !!a.useDefaultStyle;
 			var useDefaultPageLimit = !!a.useDefaultPageLimit;
 			var useDefaultLinkTo = !!a.useDefaultLinkTo;
+			var useDefaultAlbumDescriptionPosition = !!a.useDefaultAlbumDescriptionPosition;
 			var useDefaultDescriptionDisplay = !!a.useDefaultDescriptionDisplay;
 			var useDefaultDescriptionValue = !!a.useDefaultDescriptionValue;
 			var useDefaultLightboxPrevNextKeyboard = !!a.useDefaultLightboxPrevNextKeyboard;
@@ -1406,6 +1417,7 @@ JS;
 			var effectiveStyle = useDefaultStyle ? fallbackDefaults.style : (a.style || fallbackDefaults.style);
 			var effectivePageLimit = useDefaultPageLimit ? fallbackDefaults.pageLimit : (typeof a.pageLimit === 'number' ? a.pageLimit : fallbackDefaults.pageLimit);
 			var effectiveLinkTo = useDefaultLinkTo ? fallbackDefaults.linkTo : (a.linkTo || fallbackDefaults.linkTo);
+			var effectiveAlbumDescriptionPosition = useDefaultAlbumDescriptionPosition ? fallbackDefaults.albumDescriptionPosition : (a.albumDescriptionPosition || fallbackDefaults.albumDescriptionPosition);
 			var effectiveDescriptionDisplay = useDefaultDescriptionDisplay ? fallbackDefaults.descriptionDisplay : (a.descriptionDisplay || fallbackDefaults.descriptionDisplay);
 			var effectiveDescriptionValue = useDefaultDescriptionValue ? fallbackDefaults.descriptionValue : (a.descriptionValue || fallbackDefaults.descriptionValue);
 			var effectiveLightboxPrevNextKeyboard = useDefaultLightboxPrevNextKeyboard ? !!fallbackDefaults.lightboxPrevNextKeyboard : !!a.lightboxPrevNextKeyboard;
@@ -1588,6 +1600,19 @@ JS;
 							onChange: function(v){ set({ useDefaultLinkTo: !!v }); }
 						}),
 						element.createElement(SelectControl, {
+							label: 'Display Album Tag Description(s)',
+							disabled: useDefaultAlbumDescriptionPosition,
+							value: effectiveAlbumDescriptionPosition,
+							help: useDefaultAlbumDescriptionPosition ? ('Using add-on default: ' + String(fallbackDefaults.albumDescriptionPosition)) : '',
+							options: albumDescriptionPositionOptions,
+							onChange: function(v){ set({ albumDescriptionPosition: String(v || 'none') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Album Tag Description(s) Position',
+							checked: useDefaultAlbumDescriptionPosition,
+							onChange: function(v){ set({ useDefaultAlbumDescriptionPosition: !!v }); }
+						}),
+						element.createElement(SelectControl, {
 							label: 'Description Display',
 							disabled: useDefaultDescriptionDisplay,
 							value: effectiveDescriptionDisplay,
@@ -1712,6 +1737,7 @@ JS;
 		$use_default_style = !empty($attrs['useDefaultStyle']);
 		$use_default_page_limit = !empty($attrs['useDefaultPageLimit']);
 		$use_default_link_to = !empty($attrs['useDefaultLinkTo']);
+		$use_default_album_description_position = !empty($attrs['useDefaultAlbumDescriptionPosition']);
 		$use_default_description_display = !empty($attrs['useDefaultDescriptionDisplay']);
 		$use_default_description_value = !empty($attrs['useDefaultDescriptionValue']);
 		$use_default_lightbox_prev_next_keyboard = !empty($attrs['useDefaultLightboxPrevNextKeyboard']);
@@ -1752,6 +1778,9 @@ JS;
 		$link_to = $use_default_link_to
 			? sanitize_key((string) $defaults['linkTo'])
 			: (isset($attrs['linkTo']) ? sanitize_key((string) $attrs['linkTo']) : (string) $defaults['linkTo']);
+		$album_description_position = $use_default_album_description_position
+			? sanitize_key((string) ($defaults['albumDescriptionPosition'] ?? 'none'))
+			: (isset($attrs['albumDescriptionPosition']) ? sanitize_key((string) $attrs['albumDescriptionPosition']) : sanitize_key((string) ($defaults['albumDescriptionPosition'] ?? 'none')));
 		$description_display = $use_default_description_display
 			? sanitize_key((string) $defaults['descriptionDisplay'])
 			: (isset($attrs['descriptionDisplay']) ? sanitize_key((string) $attrs['descriptionDisplay']) : (string) $defaults['descriptionDisplay']);
@@ -1779,6 +1808,7 @@ JS;
 		}
 		$allowed_styles = array_keys(self::get_media_library_gallery_style_options());
 		$allowed_links = ['none', 'lightbox', 'media_permalink'];
+		$allowed_album_description_positions = array_keys(self::get_media_library_gallery_album_description_position_options());
 		$allowed_description_display = array_keys(self::get_media_library_gallery_description_display_options());
 		$allowed_description_values = array_keys(self::get_media_library_gallery_description_value_options());
 		$allowed_lightbox_slideshow_transitions = ['none', 'crossfade', 'slide_left'];
@@ -1793,6 +1823,9 @@ JS;
 		}
 		if (!in_array($link_to, $allowed_links, true)) {
 			$link_to = 'none';
+		}
+		if (!in_array($album_description_position, $allowed_album_description_positions, true)) {
+			$album_description_position = 'none';
 		}
 		if (!in_array($description_display, $allowed_description_display, true)) {
 			$description_display = 'none';
@@ -1814,6 +1847,12 @@ JS;
 			} elseif (!empty($url_tag_override['slugs'])) {
 				$tag_slug = (string) $url_tag_override['slugs'][0];
 			}
+		}
+		$album_tag_description_html = '';
+		if ($album_description_position !== 'none') {
+			$album_tag_description_html = self::render_media_library_tag_description_paragraphs_html(
+				self::get_media_library_tag_description_data_for_tag_expression($url_tag_override)
+			);
 		}
 		$has_effective_tag_value = ($tag_slug !== '' || !empty($url_tag_override['slugs']));
 		if ($require_tag_value && !$has_effective_tag_value) {
@@ -1983,6 +2022,11 @@ JS;
 			<?php echo $lightbox_debug_auto_open ? ' data-um-lightbox-debug-open="1"' : ' data-um-lightbox-debug-open="0"'; ?>
 			data-um-fallback-allow-controls="0"
 		>
+			<?php if ($album_description_position === 'above' && $album_tag_description_html !== '') : ?>
+				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-above">
+					<?php echo wp_kses_post($album_tag_description_html); ?>
+				</div>
+			<?php endif; ?>
 			<?php if ($lightbox_debug_enabled) : ?>
 				<div class="um-mltg-debug-badge">
 					<?php
@@ -2145,8 +2189,29 @@ JS;
 					<?php endfor; ?>
 				</div>
 			<?php endif; ?>
+			<?php if ($album_description_position === 'below' && $album_tag_description_html !== '') : ?>
+				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-below">
+					<?php echo wp_kses_post($album_tag_description_html); ?>
+				</div>
+			<?php endif; ?>
 		</div>
 		<style>
+.um-media-library-tag-description-wrap {
+	margin: 0 0 12px;
+}
+.um-media-library-tag-description-wrap.um-media-library-tag-description-wrap-below {
+	margin-top: 12px;
+	margin-bottom: 0;
+}
+.um-media-library-tag-description-wrap .um-media-library-tag-description-paragraph {
+	margin: 0 0 8px;
+}
+.um-media-library-tag-description-wrap .um-media-library-tag-description-paragraph:last-child {
+	margin-bottom: 0;
+}
+.um-media-library-tag-description-wrap .um-media-library-tag-edit-description-link {
+	margin-left: 4px;
+}
 		.um-media-library-tag-gallery-grid {
 			display: grid;
 			grid-template-columns: repeat(var(--um-mltg-cols-desktop), minmax(0, 1fr));
@@ -2224,6 +2289,10 @@ JS;
 		.um-media-gallery-style-timeline_story .um-media-library-tag-gallery-item img { max-height:340px; object-fit:cover; border-radius:6px; }
 		.um-mltg-timeline-meta { margin:6px 0 4px; font-size:12px; color:#2271b1; font-weight:600; }
 		.um-media-library-tag-gallery-caption { margin-top: 6px; font-size: 12px; color: #50575e; }
+		.um-media-library-tag-description-wrap { margin: 0 0 14px; }
+		.um-media-library-tag-description-wrap-below { margin: 14px 0 0; }
+		.um-media-library-tag-description-paragraph { margin: 0 0 8px; font-size: 14px; line-height: 1.5; color: #1d2327; }
+		.um-media-library-tag-edit-description-link { margin-left: 6px; font-size: 12px; }
 		.um-media-library-tag-gallery-pagination { margin-top: 14px; }
 		.um-media-library-tag-gallery-pagination a,
 		.um-media-library-tag-gallery-pagination strong { margin-right: 8px; }
@@ -3136,6 +3205,7 @@ JS;
 			'style' => 'uniform_grid',
 			'pageLimit' => 0,
 			'linkTo' => 'none',
+			'albumDescriptionPosition' => 'none',
 			'descriptionDisplay' => 'none',
 			'descriptionValue' => 'caption',
 			'lightboxPrevNextKeyboard' => true,
@@ -3195,6 +3265,9 @@ JS;
 		if (!empty($settings['media_library_tag_gallery_link_to'])) {
 			$defaults['linkTo'] = sanitize_key((string) $settings['media_library_tag_gallery_link_to']);
 		}
+		if (!empty($settings['media_library_tag_gallery_album_description_position'])) {
+			$defaults['albumDescriptionPosition'] = sanitize_key((string) $settings['media_library_tag_gallery_album_description_position']);
+		}
 		if (!empty($settings['media_library_tag_gallery_description_display'])) {
 			$defaults['descriptionDisplay'] = sanitize_key((string) $settings['media_library_tag_gallery_description_display']);
 		}
@@ -3220,6 +3293,10 @@ JS;
 		$valid_styles = array_keys(self::get_media_library_gallery_style_options());
 		if (!in_array((string) $defaults['style'], $valid_styles, true)) {
 			$defaults['style'] = 'uniform_grid';
+		}
+		$valid_album_description_positions = array_keys(self::get_media_library_gallery_album_description_position_options());
+		if (!in_array((string) $defaults['albumDescriptionPosition'], $valid_album_description_positions, true)) {
+			$defaults['albumDescriptionPosition'] = 'none';
 		}
 		$valid_description_display = array_keys(self::get_media_library_gallery_description_display_options());
 		if (!in_array((string) $defaults['descriptionDisplay'], $valid_description_display, true)) {
@@ -3269,6 +3346,17 @@ JS;
 			'grid' => __('centered under photo', 'user-manager'),
 			'lightbox' => __('lightbox under photo', 'user-manager'),
 			'both' => __('both', 'user-manager'),
+		];
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_media_library_gallery_album_description_position_options(): array {
+		return [
+			'none' => __('none', 'user-manager'),
+			'above' => __('above gallery', 'user-manager'),
+			'below' => __('below gallery', 'user-manager'),
 		];
 	}
 
@@ -3752,44 +3840,8 @@ JS;
 
 		$placeholder_values = self::get_media_library_tag_placeholder_values();
 		$description = (string) ($placeholder_values['description'] ?? '');
-		$edit_description_url = (string) ($placeholder_values['editDescriptionUrl'] ?? '');
 		if ($allow_html) {
-			$descriptions = isset($placeholder_values['descriptions']) && is_array($placeholder_values['descriptions'])
-				? $placeholder_values['descriptions']
-				: [];
-			$edit_description_urls = isset($placeholder_values['editDescriptionUrls']) && is_array($placeholder_values['editDescriptionUrls'])
-				? $placeholder_values['editDescriptionUrls']
-				: [];
-			$description_paragraphs = [];
-			foreach ($descriptions as $index => $tag_description) {
-				$tag_description = trim((string) $tag_description);
-				$tag_edit_url = isset($edit_description_urls[$index]) ? (string) $edit_description_urls[$index] : '';
-				if ($tag_description === '' && $tag_edit_url === '') {
-					continue;
-				}
-				$edit_link = '';
-				if ($tag_edit_url !== '') {
-					$edit_link = sprintf(
-						' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
-						esc_url($tag_edit_url),
-						esc_html__('Edit Tag Description', 'user-manager')
-					);
-				}
-				$description_paragraphs[] = sprintf(
-					'<p class="um-media-library-tag-description-paragraph">%1$s%2$s</p>',
-					wp_kses_post($tag_description),
-					$edit_link
-				);
-			}
-			if (!empty($description_paragraphs)) {
-				$description = implode('', $description_paragraphs);
-			} elseif ($edit_description_url !== '' && $description !== '') {
-				$description .= sprintf(
-					' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
-					esc_url($edit_description_url),
-					esc_html__('Edit Tag Description', 'user-manager')
-				);
-			}
+			$description = self::render_media_library_tag_description_paragraphs_html($placeholder_values);
 		}
 
 		return strtr($text, [
@@ -3833,6 +3885,31 @@ JS;
 
 		$allow_any = !empty($config['allowAny']);
 		$tag_override = self::resolve_media_library_gallery_url_tag_override($allow_any);
+		return self::get_media_library_tag_description_data_for_tag_expression($tag_override);
+	}
+
+	/**
+	 * Build tag description/name/edit-link data for a parsed URL tag expression.
+	 *
+	 * @param array{mode?:string,slugs?:array<int,string>,primarySlug?:string} $tag_override
+	 * @return array{
+	 *   name:string,
+	 *   description:string,
+	 *   editDescriptionUrl:string,
+	 *   names:array<int,string>,
+	 *   descriptions:array<int,string>,
+	 *   editDescriptionUrls:array<int,string>
+	 * }
+	 */
+	private static function get_media_library_tag_description_data_for_tag_expression(array $tag_override): array {
+		$empty = [
+			'name' => '',
+			'description' => '',
+			'editDescriptionUrl' => '',
+			'names' => [],
+			'descriptions' => [],
+			'editDescriptionUrls' => [],
+		];
 		$slugs = isset($tag_override['slugs']) && is_array($tag_override['slugs'])
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $tag_override['slugs']))))
 			: [];
@@ -3841,14 +3918,7 @@ JS;
 			$slugs = [$fallback_slug];
 		}
 		if (empty($slugs)) {
-			return [
-				'name' => '',
-				'description' => '',
-				'editDescriptionUrl' => '',
-				'names' => [],
-				'descriptions' => [],
-				'editDescriptionUrls' => [],
-			];
+			return $empty;
 		}
 
 		$taxonomy = self::media_library_tags_taxonomy();
@@ -3875,16 +3945,8 @@ JS;
 			}
 			$edit_urls[] = $edit_url;
 		}
-
 		if (empty($names)) {
-			return [
-				'name' => '',
-				'description' => '',
-				'editDescriptionUrl' => '',
-				'names' => [],
-				'descriptions' => [],
-				'editDescriptionUrls' => [],
-			];
+			return $empty;
 		}
 
 		return [
@@ -3895,6 +3957,59 @@ JS;
 			'descriptions' => $descriptions,
 			'editDescriptionUrls' => $edit_urls,
 		];
+	}
+
+	/**
+	 * Render description paragraphs (with optional edit links) for one or many tags.
+	 *
+	 * @param array{
+	 *   description?:string,
+	 *   editDescriptionUrl?:string,
+	 *   descriptions?:array<int,string>,
+	 *   editDescriptionUrls?:array<int,string>
+	 * } $tag_description_data
+	 */
+	private static function render_media_library_tag_description_paragraphs_html(array $tag_description_data): string {
+		$description = trim((string) ($tag_description_data['description'] ?? ''));
+		$edit_description_url = (string) ($tag_description_data['editDescriptionUrl'] ?? '');
+		$descriptions = isset($tag_description_data['descriptions']) && is_array($tag_description_data['descriptions'])
+			? $tag_description_data['descriptions']
+			: [];
+		$edit_description_urls = isset($tag_description_data['editDescriptionUrls']) && is_array($tag_description_data['editDescriptionUrls'])
+			? $tag_description_data['editDescriptionUrls']
+			: [];
+		$description_paragraphs = [];
+		foreach ($descriptions as $index => $tag_description) {
+			$tag_description = trim((string) $tag_description);
+			$tag_edit_url = isset($edit_description_urls[$index]) ? (string) $edit_description_urls[$index] : '';
+			if ($tag_description === '' && $tag_edit_url === '') {
+				continue;
+			}
+			$edit_link = '';
+			if ($tag_edit_url !== '') {
+				$edit_link = sprintf(
+					' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+					esc_url($tag_edit_url),
+					esc_html__('Edit Tag Description', 'user-manager')
+				);
+			}
+			$description_paragraphs[] = sprintf(
+				'<p class="um-media-library-tag-description-paragraph">%1$s%2$s</p>',
+				wp_kses_post($tag_description),
+				$edit_link
+			);
+		}
+		if (!empty($description_paragraphs)) {
+			return implode('', $description_paragraphs);
+		}
+		if ($edit_description_url !== '' && $description !== '') {
+			return $description . sprintf(
+				' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+				esc_url($edit_description_url),
+				esc_html__('Edit Tag Description', 'user-manager')
+			);
+		}
+		return $description;
 	}
 
 	/**

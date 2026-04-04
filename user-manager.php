@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.69
+ * Version: 2.5.70
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.70 - March 16, 2026
+ * - Added new Media Library Tag Gallery setting: "Display Album Tag Description(s)" with options none / above gallery / below gallery.
+ * - Added matching per-block override controls (including "Use add-on default") and reused [tag-description]-style multi-tag paragraph + edit-link rendering for above/below gallery output.
+ *
  * 2.5.69 - March 16, 2026
  * - Fixed Library Tags Bulk Editor save redirect target to use upload.php?page=um-media-library-tags-bulk-editor, preventing the "Cannot load um-media-library-tags-bulk-editor." error after save.
  * - Bulk Editor now returns to the correct Media submenu page with success/error notices intact.
