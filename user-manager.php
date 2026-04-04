@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.47
+ * Version: 2.5.48
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.48 - March 16, 2026
+ * - Dynamic Photo Gallery with Media Library Tags: added new default lightbox settings for Previous/Next navigation + keyboard arrows, Play Slideshow button, and Slideshow Seconds Per Photo.
+ * - Added matching per-block controls in Media Library Tag Gallery block settings, including "Use add-on default" toggles for all three new lightbox options.
+ * - Front-end lightbox now supports optional Previous/Next controls, ArrowLeft/ArrowRight navigation, and a configurable slideshow play/pause timer using the configured seconds-per-photo interval.
+ *
  * 2.5.47 - March 16, 2026
  * - Fixed Add-ons settings save redirect context so saving a non-Email Log add-on no longer jumps to addon_section=emali-log.
  * - Email Log nested forms now avoid emitting conflicting addon_section fields that could override the main Add-ons form section on save.

@@ -51,6 +51,15 @@ class User_Manager_Addon_Media_Library_Tags {
 		$description_value = isset($settings['media_library_tag_gallery_description_value']) && is_string($settings['media_library_tag_gallery_description_value']) && $settings['media_library_tag_gallery_description_value'] !== ''
 			? $settings['media_library_tag_gallery_description_value']
 			: (string) $defaults['descriptionValue'];
+		$lightbox_prev_next_keyboard = isset($settings['media_library_tag_gallery_lightbox_prev_next_keyboard'])
+			? !empty($settings['media_library_tag_gallery_lightbox_prev_next_keyboard'])
+			: !empty($defaults['lightboxPrevNextKeyboard']);
+		$lightbox_slideshow_button = isset($settings['media_library_tag_gallery_lightbox_slideshow_button'])
+			? !empty($settings['media_library_tag_gallery_lightbox_slideshow_button'])
+			: !empty($defaults['lightboxSlideshowButton']);
+		$lightbox_slideshow_seconds = isset($settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])
+			? max(1, min(60, (int) $settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo']))
+			: max(1, min(60, (int) ($defaults['lightboxSlideshowSeconds'] ?? 3)));
 		$disable_css_crop_threshold = isset($settings['media_library_tag_gallery_disable_css_crop_under_total'])
 			? max(0, (int) $settings['media_library_tag_gallery_disable_css_crop_under_total'])
 			: (int) ($defaults['disableCssCropUnderTotal'] ?? 0);
@@ -178,6 +187,23 @@ class User_Manager_Addon_Media_Library_Tags {
 										<option value="<?php echo esc_attr($value_key); ?>" <?php selected($description_value, $value_key); ?>><?php echo esc_html($value_label); ?></option>
 									<?php endforeach; ?>
 								</select>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tag_gallery_lightbox_prev_next_keyboard" value="1" <?php checked($lightbox_prev_next_keyboard); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Add Previous & Next Links in Lightbox Window and Allow Keyboard Arrows Shortcut', 'user-manager'); ?>
+								</label>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tag_gallery_lightbox_slideshow_button" value="1" <?php checked($lightbox_slideshow_button); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Add a Play Slideshow Button in Lightbox Window', 'user-manager'); ?>
+								</label>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-lightbox-slideshow-seconds"><?php esc_html_e('Slideshow Seconds Per Photo', 'user-manager'); ?></label>
+								<input type="number" min="1" max="60" class="small-text" id="um-media-library-tags-gallery-lightbox-slideshow-seconds" name="media_library_tag_gallery_lightbox_slideshow_seconds_per_photo" value="<?php echo esc_attr((string) $lightbox_slideshow_seconds); ?>"<?php echo $form_attr; ?> />
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('How many seconds each photo stays visible during slideshow playback.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-disable-css-crop-below-total"><?php esc_html_e('Do Not CSS Crop Any Images if Gallery Photos Total is Less Than...', 'user-manager'); ?></label>

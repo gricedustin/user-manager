@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.48 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags gallery defaults now include new Lightbox controls: Previous/Next links with keyboard arrow navigation, optional Play Slideshow button, and Slideshow Seconds Per Photo timing.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery block now exposes matching per-block overrides with "Use add-on default" toggles for all new Lightbox controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end lightbox now supports previous/next navigation, keyboard arrow shortcuts, slideshow play/pause, and per-block slideshow interval timing.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.47 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Add-ons section save redirect sticking to the wrong add-on after save in nested-form contexts.', 'user-manager'); ?></li>

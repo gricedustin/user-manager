@@ -951,6 +951,12 @@ JS;
 				'descriptionDisplay' => ['type' => 'string', 'default' => 'none'],
 				'useDefaultDescriptionValue' => ['type' => 'boolean'],
 				'descriptionValue' => ['type' => 'string', 'default' => 'caption'],
+				'useDefaultLightboxPrevNextKeyboard' => ['type' => 'boolean'],
+				'lightboxPrevNextKeyboard' => ['type' => 'boolean', 'default' => true],
+				'useDefaultLightboxSlideshowButton' => ['type' => 'boolean'],
+				'lightboxSlideshowButton' => ['type' => 'boolean', 'default' => false],
+				'useDefaultLightboxSlideshowSeconds' => ['type' => 'boolean'],
+				'lightboxSlideshowSeconds' => ['type' => 'number', 'default' => 3],
 			],
 			'editor_script' => 'um-media-library-tag-gallery-editor',
 		]);
@@ -1100,7 +1106,16 @@ JS;
 		pageLimit: parseInt(defaults.pageLimit, 10) || 0,
 		linkTo: defaults.linkTo || 'none',
 		descriptionDisplay: defaults.descriptionDisplay || 'none',
-		descriptionValue: defaults.descriptionValue || 'caption'
+		descriptionValue: defaults.descriptionValue || 'caption',
+		lightboxPrevNextKeyboard: defaults.lightboxPrevNextKeyboard !== false,
+		lightboxSlideshowButton: !!defaults.lightboxSlideshowButton,
+		lightboxSlideshowSeconds: (function() {
+			var seconds = parseFloat(defaults.lightboxSlideshowSeconds);
+			if (!isFinite(seconds)) {
+				seconds = 3;
+			}
+			return Math.max(1, Math.min(60, seconds));
+		})()
 	};
 
 	registerBlockType('custom/media-library-tag-gallery', {
@@ -1135,7 +1150,19 @@ JS;
 			useDefaultDescriptionDisplay: { type: 'boolean', default: false },
 			descriptionDisplay: { type: 'string', default: defaults.descriptionDisplay || 'none' },
 			useDefaultDescriptionValue: { type: 'boolean', default: false },
-			descriptionValue: { type: 'string', default: defaults.descriptionValue || 'caption' }
+			descriptionValue: { type: 'string', default: defaults.descriptionValue || 'caption' },
+			useDefaultLightboxPrevNextKeyboard: { type: 'boolean', default: false },
+			lightboxPrevNextKeyboard: { type: 'boolean', default: defaults.lightboxPrevNextKeyboard !== false },
+			useDefaultLightboxSlideshowButton: { type: 'boolean', default: false },
+			lightboxSlideshowButton: { type: 'boolean', default: !!defaults.lightboxSlideshowButton },
+			useDefaultLightboxSlideshowSeconds: { type: 'boolean', default: false },
+			lightboxSlideshowSeconds: { type: 'number', default: (function() {
+				var seconds = parseFloat(defaults.lightboxSlideshowSeconds);
+				if (!isFinite(seconds)) {
+					seconds = 3;
+				}
+				return Math.max(1, Math.min(60, seconds));
+			})() }
 		},
 		edit: function(props) {
 			var a = props.attributes;
@@ -1152,6 +1179,9 @@ JS;
 			var useDefaultLinkTo = !!a.useDefaultLinkTo;
 			var useDefaultDescriptionDisplay = !!a.useDefaultDescriptionDisplay;
 			var useDefaultDescriptionValue = !!a.useDefaultDescriptionValue;
+			var useDefaultLightboxPrevNextKeyboard = !!a.useDefaultLightboxPrevNextKeyboard;
+			var useDefaultLightboxSlideshowButton = !!a.useDefaultLightboxSlideshowButton;
+			var useDefaultLightboxSlideshowSeconds = !!a.useDefaultLightboxSlideshowSeconds;
 			var effectiveColumnsDesktop = useDefaultColumnsDesktop ? fallbackDefaults.columnsDesktop : (a.columnsDesktop || fallbackDefaults.columnsDesktop);
 			var effectiveColumnsDesktopLt50 = useDefaultColumnsDesktopLt50 ? fallbackDefaults.columnsDesktopLt50 : (a.columnsDesktopLt50 || fallbackDefaults.columnsDesktopLt50);
 			var effectiveColumnsDesktopLt25 = useDefaultColumnsDesktopLt25 ? fallbackDefaults.columnsDesktopLt25 : (a.columnsDesktopLt25 || fallbackDefaults.columnsDesktopLt25);
@@ -1164,6 +1194,10 @@ JS;
 			var effectiveLinkTo = useDefaultLinkTo ? fallbackDefaults.linkTo : (a.linkTo || fallbackDefaults.linkTo);
 			var effectiveDescriptionDisplay = useDefaultDescriptionDisplay ? fallbackDefaults.descriptionDisplay : (a.descriptionDisplay || fallbackDefaults.descriptionDisplay);
 			var effectiveDescriptionValue = useDefaultDescriptionValue ? fallbackDefaults.descriptionValue : (a.descriptionValue || fallbackDefaults.descriptionValue);
+			var effectiveLightboxPrevNextKeyboard = useDefaultLightboxPrevNextKeyboard ? !!fallbackDefaults.lightboxPrevNextKeyboard : !!a.lightboxPrevNextKeyboard;
+			var effectiveLightboxSlideshowButton = useDefaultLightboxSlideshowButton ? !!fallbackDefaults.lightboxSlideshowButton : !!a.lightboxSlideshowButton;
+			var effectiveLightboxSlideshowSecondsRaw = useDefaultLightboxSlideshowSeconds ? fallbackDefaults.lightboxSlideshowSeconds : parseFloat(a.lightboxSlideshowSeconds);
+			var effectiveLightboxSlideshowSeconds = isFinite(effectiveLightboxSlideshowSecondsRaw) ? Math.max(1, Math.min(60, effectiveLightboxSlideshowSecondsRaw)) : fallbackDefaults.lightboxSlideshowSeconds;
 			return element.createElement(
 				Fragment,
 				{},
@@ -1363,6 +1397,52 @@ JS;
 							label: 'Use add-on default for Description Value',
 							checked: useDefaultDescriptionValue,
 							onChange: function(v){ set({ useDefaultDescriptionValue: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Add Previous & Next Links in Lightbox Window and Allow Keyboard Arrows Shortcut',
+							checked: effectiveLightboxPrevNextKeyboard,
+							disabled: useDefaultLightboxPrevNextKeyboard,
+							help: useDefaultLightboxPrevNextKeyboard ? ('Using add-on default: ' + (fallbackDefaults.lightboxPrevNextKeyboard ? 'enabled' : 'disabled')) : '',
+							onChange: function(v){ set({ lightboxPrevNextKeyboard: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Lightbox Previous/Next + Keyboard Arrows',
+							checked: useDefaultLightboxPrevNextKeyboard,
+							onChange: function(v){ set({ useDefaultLightboxPrevNextKeyboard: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Add a Play Slideshow Button in Lightbox Window',
+							checked: effectiveLightboxSlideshowButton,
+							disabled: useDefaultLightboxSlideshowButton,
+							help: useDefaultLightboxSlideshowButton ? ('Using add-on default: ' + (fallbackDefaults.lightboxSlideshowButton ? 'enabled' : 'disabled')) : '',
+							onChange: function(v){ set({ lightboxSlideshowButton: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Lightbox Play Slideshow Button',
+							checked: useDefaultLightboxSlideshowButton,
+							onChange: function(v){ set({ useDefaultLightboxSlideshowButton: !!v }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Slideshow Seconds Per Photo',
+							type: 'number',
+							min: 1,
+							max: 60,
+							step: 0.1,
+							disabled: useDefaultLightboxSlideshowSeconds,
+							value: String(effectiveLightboxSlideshowSeconds),
+							help: useDefaultLightboxSlideshowSeconds ? ('Using add-on default: ' + String(fallbackDefaults.lightboxSlideshowSeconds)) : '',
+							onChange: function(v){
+								var parsed = parseFloat(v);
+								if (!isFinite(parsed)) {
+									parsed = fallbackDefaults.lightboxSlideshowSeconds;
+								}
+								set({ lightboxSlideshowSeconds: Math.max(1, Math.min(60, parsed)) });
+							}
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Slideshow Seconds Per Photo',
+							checked: useDefaultLightboxSlideshowSeconds,
+							onChange: function(v){ set({ useDefaultLightboxSlideshowSeconds: !!v }); }
 						})
 					)
 				),
@@ -1402,6 +1482,9 @@ JS;
 		$use_default_link_to = !empty($attrs['useDefaultLinkTo']);
 		$use_default_description_display = !empty($attrs['useDefaultDescriptionDisplay']);
 		$use_default_description_value = !empty($attrs['useDefaultDescriptionValue']);
+		$use_default_lightbox_prev_next_keyboard = !empty($attrs['useDefaultLightboxPrevNextKeyboard']);
+		$use_default_lightbox_slideshow_button = !empty($attrs['useDefaultLightboxSlideshowButton']);
+		$use_default_lightbox_slideshow_seconds = !empty($attrs['useDefaultLightboxSlideshowSeconds']);
 		$columns_desktop = $use_default_columns_desktop
 			? max(1, min(8, absint($defaults['columnsDesktop'])))
 			: max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
@@ -1442,6 +1525,16 @@ JS;
 		$description_value = $use_default_description_value
 			? sanitize_key((string) $defaults['descriptionValue'])
 			: (isset($attrs['descriptionValue']) ? sanitize_key((string) $attrs['descriptionValue']) : (string) $defaults['descriptionValue']);
+		$lightbox_prev_next_keyboard = $use_default_lightbox_prev_next_keyboard
+			? !empty($defaults['lightboxPrevNextKeyboard'])
+			: !empty($attrs['lightboxPrevNextKeyboard']);
+		$lightbox_slideshow_button = $use_default_lightbox_slideshow_button
+			? !empty($defaults['lightboxSlideshowButton'])
+			: !empty($attrs['lightboxSlideshowButton']);
+		$lightbox_slideshow_seconds_raw = $use_default_lightbox_slideshow_seconds
+			? (isset($defaults['lightboxSlideshowSeconds']) ? (float) $defaults['lightboxSlideshowSeconds'] : 3.0)
+			: (isset($attrs['lightboxSlideshowSeconds']) ? (float) $attrs['lightboxSlideshowSeconds'] : (isset($defaults['lightboxSlideshowSeconds']) ? (float) $defaults['lightboxSlideshowSeconds'] : 3.0));
+		$lightbox_slideshow_seconds = max(1.0, min(60.0, $lightbox_slideshow_seconds_raw));
 
 		$allowed_sort_orders = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc', 'random'];
 		$allowed_file_sizes = array_keys(self::get_available_image_sizes_for_media_gallery());
@@ -1647,7 +1740,7 @@ JS;
 									<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 										<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>><?php echo $image_html; ?></a>
+										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>><?php echo $image_html; ?></a>
 									<?php else : ?>
 										<?php echo $image_html; ?>
 									<?php endif; ?>
@@ -1745,7 +1838,7 @@ JS;
 							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 								<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>><?php echo $image_html; ?></a>
+										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>><?php echo $image_html; ?></a>
 							<?php else : ?>
 								<?php echo $image_html; ?>
 							<?php endif; ?>
@@ -1858,6 +1951,23 @@ JS;
 		.um-mltg-lightbox-caption { margin-top: 10px; color: #fff; font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }
 		.um-mltg-lightbox-edit-link { margin-top: 8px; color: #fff; text-decoration: underline; display: none; font-size: 13px; }
 		.um-mltg-lightbox-edit-link:hover { color: #cfe7ff; }
+		.um-mltg-lightbox-controls { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+		.um-mltg-lightbox-prev,
+		.um-mltg-lightbox-next,
+		.um-mltg-lightbox-slideshow-toggle {
+			border: 1px solid rgba(255,255,255,0.6);
+			background: rgba(0,0,0,0.28);
+			color: #fff;
+			padding: 6px 10px;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 13px;
+		}
+		.um-mltg-lightbox-prev:hover,
+		.um-mltg-lightbox-next:hover,
+		.um-mltg-lightbox-slideshow-toggle:hover {
+			background: rgba(255,255,255,0.12);
+		}
 		.um-mltg-lightbox-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: #fff; font-size: 36px; line-height: 1; cursor: pointer; }
 		</style>
 		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true">
@@ -1865,6 +1975,11 @@ JS;
 			<img src="" alt="" />
 			<p class="um-mltg-lightbox-caption"></p>
 			<a href="#" class="um-mltg-lightbox-edit-link" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Edit image', 'user-manager'); ?></a>
+			<div class="um-mltg-lightbox-controls">
+				<button type="button" class="um-mltg-lightbox-prev"><?php esc_html_e('Previous', 'user-manager'); ?></button>
+				<button type="button" class="um-mltg-lightbox-next"><?php esc_html_e('Next', 'user-manager'); ?></button>
+				<button type="button" class="um-mltg-lightbox-slideshow-toggle"><?php esc_html_e('Play Slideshow', 'user-manager'); ?></button>
+			</div>
 		</div>
 		<script>
 		(function() {
@@ -1876,31 +1991,40 @@ JS;
 			var image = overlay.querySelector('img');
 			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
 			var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
+			var prevBtn = overlay.querySelector('.um-mltg-lightbox-prev');
+			var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
+			var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
+			var enablePrevNextKeyboard = <?php echo $lightbox_prev_next_keyboard ? 'true' : 'false'; ?>;
+			var enableSlideshowButton = <?php echo $lightbox_slideshow_button ? 'true' : 'false'; ?>;
+			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
+			var lightboxLinks = Array.prototype.slice.call(root.querySelectorAll('a[data-um-lightbox="1"]'));
+			var activeLightboxIndex = -1;
+			var slideshowTimer = null;
+			var slideshowPlaying = false;
 			var bodyPrevOverflow = '';
-			function closeOverlay() {
-				overlay.style.display = 'none';
-				overlay.setAttribute('aria-hidden', 'true');
-				if (image) {
-					image.setAttribute('src', '');
+			function parseLightboxIndex(link) {
+				if (!link) { return -1; }
+				var raw = link.getAttribute('data-um-lightbox-index');
+				var parsed = parseInt(raw || '', 10);
+				if (!isNaN(parsed) && parsed >= 0) {
+					return parsed;
 				}
-				if (captionEl) {
-					captionEl.textContent = '';
-					captionEl.style.display = 'none';
+				return lightboxLinks.indexOf(link);
+			}
+			function stopSlideshow() {
+				if (slideshowTimer) {
+					window.clearInterval(slideshowTimer);
+					slideshowTimer = null;
 				}
-				if (editLinkEl) {
-					editLinkEl.setAttribute('href', '#');
-					editLinkEl.style.display = 'none';
-				}
-				if (document && document.body) {
-					document.body.style.overflow = bodyPrevOverflow;
+				slideshowPlaying = false;
+				if (slideshowBtn) {
+					slideshowBtn.textContent = '<?php echo esc_js(__('Play Slideshow', 'user-manager')); ?>';
 				}
 			}
-			root.addEventListener('click', function(event) {
-				var link = event.target.closest('a[data-um-lightbox="1"]');
-				if (!link) { return; }
-				event.preventDefault();
+			function renderLightboxFromLink(link) {
+				if (!link || !image) { return false; }
 				var src = link.getAttribute('href') || '';
-				if (!src || !image) { return; }
+				if (!src) { return false; }
 				var caption = link.getAttribute('data-um-lightbox-caption') || '';
 				var altText = link.getAttribute('data-um-lightbox-alt') || '';
 				var editUrl = link.getAttribute('data-um-lightbox-edit-url') || '';
@@ -1919,6 +2043,60 @@ JS;
 						editLinkEl.style.display = 'none';
 					}
 				}
+				return true;
+			}
+			function showLightboxByIndex(nextIndex) {
+				if (!lightboxLinks.length) { return; }
+				var total = lightboxLinks.length;
+				var normalizedIndex = nextIndex;
+				if (normalizedIndex < 0) {
+					normalizedIndex = total - 1;
+				} else if (normalizedIndex >= total) {
+					normalizedIndex = 0;
+				}
+				var link = lightboxLinks[normalizedIndex];
+				if (!renderLightboxFromLink(link)) {
+					return;
+				}
+				activeLightboxIndex = normalizedIndex;
+			}
+			function closeOverlay() {
+				stopSlideshow();
+				overlay.style.display = 'none';
+				overlay.setAttribute('aria-hidden', 'true');
+				if (image) {
+					image.setAttribute('src', '');
+				}
+				if (captionEl) {
+					captionEl.textContent = '';
+					captionEl.style.display = 'none';
+				}
+				if (editLinkEl) {
+					editLinkEl.setAttribute('href', '#');
+					editLinkEl.style.display = 'none';
+				}
+				if (document && document.body) {
+					document.body.style.overflow = bodyPrevOverflow;
+				}
+			}
+			if (prevBtn) {
+				prevBtn.style.display = enablePrevNextKeyboard ? 'inline-block' : 'none';
+			}
+			if (nextBtn) {
+				nextBtn.style.display = enablePrevNextKeyboard ? 'inline-block' : 'none';
+			}
+			if (slideshowBtn) {
+				slideshowBtn.style.display = enableSlideshowButton ? 'inline-block' : 'none';
+			}
+			root.addEventListener('click', function(event) {
+				var link = event.target.closest('a[data-um-lightbox="1"]');
+				if (!link) { return; }
+				event.preventDefault();
+				var initialIndex = parseLightboxIndex(link);
+				if (initialIndex < 0) {
+					initialIndex = lightboxLinks.indexOf(link);
+				}
+				showLightboxByIndex(initialIndex);
 				if (document && document.body) {
 					bodyPrevOverflow = document.body.style.overflow || '';
 					document.body.style.overflow = 'hidden';
@@ -1929,6 +2107,37 @@ JS;
 			if (closeBtn) {
 				closeBtn.addEventListener('click', closeOverlay);
 			}
+			if (prevBtn) {
+				prevBtn.addEventListener('click', function() {
+					if (!enablePrevNextKeyboard || activeLightboxIndex < 0) { return; }
+					showLightboxByIndex(activeLightboxIndex - 1);
+				});
+			}
+			if (nextBtn) {
+				nextBtn.addEventListener('click', function() {
+					if (!enablePrevNextKeyboard || activeLightboxIndex < 0) { return; }
+					showLightboxByIndex(activeLightboxIndex + 1);
+				});
+			}
+			if (slideshowBtn) {
+				slideshowBtn.addEventListener('click', function() {
+					if (!enableSlideshowButton || !lightboxLinks.length || activeLightboxIndex < 0) { return; }
+					if (slideshowPlaying) {
+						stopSlideshow();
+						return;
+					}
+					var intervalMs = Math.max(1000, Math.round(parseFloat(String(slideshowSecondsPerPhoto || 3)) * 1000));
+					slideshowPlaying = true;
+					slideshowBtn.textContent = '<?php echo esc_js(__('Pause Slideshow', 'user-manager')); ?>';
+					slideshowTimer = window.setInterval(function() {
+						if (overlay.getAttribute('aria-hidden') !== 'false') {
+							stopSlideshow();
+							return;
+						}
+						showLightboxByIndex(activeLightboxIndex + 1);
+					}, intervalMs);
+				});
+			}
 			overlay.addEventListener('click', function(event) {
 				if (event.target === overlay) {
 					closeOverlay();
@@ -1937,6 +2146,17 @@ JS;
 			document.addEventListener('keydown', function(event) {
 				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
 					closeOverlay();
+					return;
+				}
+				if (!enablePrevNextKeyboard || overlay.getAttribute('aria-hidden') !== 'false' || activeLightboxIndex < 0) {
+					return;
+				}
+				if (event.key === 'ArrowLeft') {
+					event.preventDefault();
+					showLightboxByIndex(activeLightboxIndex - 1);
+				} else if (event.key === 'ArrowRight') {
+					event.preventDefault();
+					showLightboxByIndex(activeLightboxIndex + 1);
 				}
 			});
 
@@ -2076,6 +2296,9 @@ JS;
 			'linkTo' => 'none',
 			'descriptionDisplay' => 'none',
 			'descriptionValue' => 'caption',
+			'lightboxPrevNextKeyboard' => true,
+			'lightboxSlideshowButton' => false,
+			'lightboxSlideshowSeconds' => 3.0,
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -2134,6 +2357,15 @@ JS;
 		}
 		if (!empty($settings['media_library_tag_gallery_description_value'])) {
 			$defaults['descriptionValue'] = sanitize_key((string) $settings['media_library_tag_gallery_description_value']);
+		}
+		$defaults['lightboxPrevNextKeyboard'] = isset($settings['media_library_tag_gallery_lightbox_prev_next_keyboard'])
+			? $settings['media_library_tag_gallery_lightbox_prev_next_keyboard'] === true || $settings['media_library_tag_gallery_lightbox_prev_next_keyboard'] === '1'
+			: (bool) $defaults['lightboxPrevNextKeyboard'];
+		$defaults['lightboxSlideshowButton'] = isset($settings['media_library_tag_gallery_lightbox_slideshow_button'])
+			? $settings['media_library_tag_gallery_lightbox_slideshow_button'] === true || $settings['media_library_tag_gallery_lightbox_slideshow_button'] === '1'
+			: (bool) $defaults['lightboxSlideshowButton'];
+		if (isset($settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])) {
+			$defaults['lightboxSlideshowSeconds'] = max(1.0, min(60.0, (float) $settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo']));
 		}
 		$valid_styles = array_keys(self::get_media_library_gallery_style_options());
 		if (!in_array((string) $defaults['style'], $valid_styles, true)) {
