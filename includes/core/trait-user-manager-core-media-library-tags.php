@@ -3486,6 +3486,9 @@ JS;
 		}
 
 		$matched = [$requested_slug];
+		$requested_tokens = array_values(array_filter(explode('-', $requested_slug)));
+		sort($requested_tokens);
+		$requested_token_signature = implode('|', $requested_tokens);
 		$taxonomy = self::media_library_tags_taxonomy();
 		$terms = get_terms([
 			'taxonomy' => $taxonomy,
@@ -3511,11 +3514,24 @@ JS;
 			}
 
 			$is_match = preg_match($slug_pattern, $candidate_slug) === 1;
+			if (
+				!$is_match
+				&& count($requested_tokens) > 1
+			) {
+				$candidate_tokens = array_values(array_filter(explode('-', $candidate_slug)));
+				sort($candidate_tokens);
+				$is_match = !empty($candidate_tokens) && implode('|', $candidate_tokens) === $requested_token_signature;
+			}
 			if (!$is_match) {
 				$name_tokens = preg_split('/[\s,;\/\|\+&]+/', (string) $term->name);
 				if (is_array($name_tokens)) {
+					$token_pattern = '/(^|-)' . preg_quote($requested_slug, '/') . '($|-)/';
 					foreach ($name_tokens as $token) {
-						if (sanitize_title((string) $token) === $requested_slug) {
+						$token_slug = sanitize_title((string) $token);
+						if ($token_slug === '') {
+							continue;
+						}
+						if (preg_match($token_pattern, $token_slug) === 1) {
 							$is_match = true;
 							break;
 						}

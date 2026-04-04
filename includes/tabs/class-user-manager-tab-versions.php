@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.55 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Library Tag filter matching for comma-separated tag names so matches are token-order independent (for example, both "Cruise, Honeymoon" and "Honeymoon, Cruise" now match either base filter token).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated compound tag matching to check each normalized token with boundary-aware matching instead of strict token equality, improving consistency between admin media filters and front-end gallery output.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.54 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Newly inserted Media Library Tag Gallery blocks now default all per-setting "Use add-on default" toggles to ON, so new blocks inherit add-on defaults unless manually untoggled.', 'user-manager'); ?></li>
