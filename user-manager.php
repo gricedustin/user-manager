@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.70
+ * Version: 2.5.71
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.71 - March 16, 2026
+ * - Added new "YouTube Video Links" textarea to Library Tag add/edit screens (one URL per line) with sanitized per-term storage.
+ * - Extended Library Tags Bulk Editor to include a "YouTube Video Links" column so links can be managed for all tags from one table.
+ * - Front-end Media Library Tag Gallery now embeds saved YouTube videos above the gallery (below album descriptions): 1 video = full width, multiple videos = 2-column layout.
+ *
  * 2.5.70 - March 16, 2026
  * - Added new Media Library Tag Gallery setting: "Display Album Tag Description(s)" with options none / above gallery / below gallery.
  * - Added matching per-block override controls (including "Use add-on default") and reused [tag-description]-style multi-tag paragraph + edit-link rendering for above/below gallery output.

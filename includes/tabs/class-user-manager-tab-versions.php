@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.71 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Library Tags term edit/add screens now include a new "YouTube Video Links" textarea (one URL per line) with sanitized storage in term meta.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media > Library Tags > Bulk Editor now includes a matching "YouTube Video Links" column so links can be edited and saved for all tags from one screen.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery front-end now embeds tag-level YouTube videos above the gallery and below album descriptions, using one full-width video for a single link or a two-column layout for multiple links.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.70 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Dynamic Photo Gallery with Media Library Tags now includes a new "Display Album Tag Description(s)" default setting (none / above gallery / below gallery).', 'user-manager'); ?></li>
