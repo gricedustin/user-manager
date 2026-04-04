@@ -2585,7 +2585,6 @@ JS;
 		.um-media-library-tag-gallery-caption { margin-top: 6px; font-size: 12px; color: #50575e; }
 		.um-media-library-tag-description-wrap { margin: 0 0 14px; }
 		.um-media-library-tag-description-wrap-below { margin: 14px 0 0; }
-		.um-media-library-tag-description-paragraph { margin: 0 0 8px; font-size: 14px; line-height: 1.5; color: #1d2327; }
 		.um-media-library-tag-edit-description-link { margin-left: 6px; font-size: 12px; }
 		.um-media-library-tag-gallery-pagination { margin-top: 14px; }
 		.um-media-library-tag-gallery-pagination a,

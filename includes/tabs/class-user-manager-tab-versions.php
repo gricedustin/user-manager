@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.73 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the extra front-end CSS typography/color rule on .um-media-library-tag-description-paragraph so description paragraphs inherit theme/plugin defaults.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.72 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added plugin version display directly under the main "User Experience Manager" admin page title.', 'user-manager'); ?></li>

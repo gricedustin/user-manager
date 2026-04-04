@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.72
+ * Version: 2.5.73
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.73 - March 16, 2026
+ * - Removed the custom .um-media-library-tag-description-paragraph typography/color style override from the gallery output CSS so default/theme styling applies.
+ *
  * 2.5.72 - March 16, 2026
  * - Added plugin version text directly under the main User Experience Manager admin page title so the active version is always visible at the top of the screen.
  *
