@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.50
+ * Version: 2.5.51
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.51 - March 16, 2026
+ * - Front-end gallery lightbox now includes a new admin-only "Duplicate" quick action that adds the "duplicate" Library Tag to the active image.
+ * - Added admin-only inline tag tools in the lightbox to quickly add one or more Library Tags (comma-separated) directly to the active image without leaving the screen.
+ * - Lightbox admin tag actions use secure AJAX nonce checks and attachment-targeted updates through existing Library Tag apply handlers.
+ *
  * 2.5.50 - March 16, 2026
  * - [tag-description] now renders all URL-selected Media Library tag descriptions (single, AND, OR) in the same order as the tag expression in the URL.
  * - Each rendered tag description now outputs as its own paragraph with class "um-media-library-tag-description-paragraph".

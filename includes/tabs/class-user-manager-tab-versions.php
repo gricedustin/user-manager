@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.51 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Front-end gallery lightbox now includes a new admin-only "Duplicate" link that quickly adds a "duplicate" Library Tag to the active image.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added admin-only inline tag tools in the lightbox so tags can be added directly from the image overlay without opening the Media Library edit screen.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox tag actions use secure AJAX requests with the existing Media Library Tags nonce/capability checks and support comma-separated quick tag entry.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.50 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag placeholder replacement now resolves all URL override tags (single, AND, or OR expressions) in URL order for [tag-description].', 'user-manager'); ?></li>

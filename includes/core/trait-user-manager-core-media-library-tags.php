@@ -1750,6 +1750,8 @@ JS;
 		}
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
+		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
+		$lightbox_tag_nonce = $show_lightbox_admin_edit_link ? wp_create_nonce('um_media_library_tags_ajax') : '';
 		$timeline_date_format = get_option('date_format');
 		if (!is_string($timeline_date_format) || $timeline_date_format === '') {
 			$timeline_date_format = 'F j, Y';
@@ -1785,7 +1787,7 @@ JS;
 									<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 										<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>><?php echo $image_html; ?></a>
+										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>><?php echo $image_html; ?></a>
 									<?php else : ?>
 										<?php echo $image_html; ?>
 									<?php endif; ?>
@@ -1883,7 +1885,7 @@ JS;
 							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 								<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>><?php echo $image_html; ?></a>
+										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>><?php echo $image_html; ?></a>
 							<?php else : ?>
 								<?php echo $image_html; ?>
 							<?php endif; ?>
@@ -1996,6 +1998,32 @@ JS;
 		.um-mltg-lightbox-caption { margin-top: 10px; color: #fff; font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }
 		.um-mltg-lightbox-edit-link { margin-top: 8px; color: #fff; text-decoration: underline; display: none; font-size: 13px; }
 		.um-mltg-lightbox-edit-link:hover { color: #cfe7ff; }
+		.um-mltg-lightbox-duplicate-link { margin-top: 6px; color: #fff; text-decoration: underline; display: none; font-size: 13px; cursor: pointer; }
+		.um-mltg-lightbox-duplicate-link:hover { color: #cfe7ff; }
+		.um-mltg-lightbox-tag-tools { margin-top: 8px; display: none; width: min(95vw, 560px); }
+		.um-mltg-lightbox-tag-tools-row { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+		.um-mltg-lightbox-tag-input {
+			width: min(95vw, 360px);
+			padding: 7px 10px;
+			border-radius: 4px;
+			border: 1px solid rgba(255,255,255,0.65);
+			background: rgba(255,255,255,0.12);
+			color: #fff;
+			font-size: 13px;
+		}
+		.um-mltg-lightbox-tag-input::placeholder { color: rgba(255,255,255,0.8); }
+		.um-mltg-lightbox-tag-add-button {
+			border: 1px solid rgba(255,255,255,0.6);
+			background: rgba(0,0,0,0.28);
+			color: #fff;
+			padding: 6px 10px;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 13px;
+		}
+		.um-mltg-lightbox-tag-add-button:hover { background: rgba(255,255,255,0.12); }
+		.um-mltg-lightbox-tag-add-button[disabled] { opacity: 0.6; cursor: wait; }
+		.um-mltg-lightbox-tag-feedback { margin-top: 6px; color: #fff; font-size: 12px; line-height: 1.35; text-align: center; min-height: 1.35em; }
 		.um-mltg-lightbox-controls { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
 		.um-mltg-lightbox-prev,
 		.um-mltg-lightbox-next,
@@ -2022,6 +2050,14 @@ JS;
 			<img src="" alt="" />
 			<p class="um-mltg-lightbox-caption"></p>
 			<a href="#" class="um-mltg-lightbox-edit-link" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Edit image', 'user-manager'); ?></a>
+			<a href="#" class="um-mltg-lightbox-duplicate-link"><?php esc_html_e('Duplicate', 'user-manager'); ?></a>
+			<div class="um-mltg-lightbox-tag-tools">
+				<div class="um-mltg-lightbox-tag-tools-row">
+					<input type="text" class="um-mltg-lightbox-tag-input" placeholder="<?php echo esc_attr__('Add tag(s), comma separated', 'user-manager'); ?>" />
+					<button type="button" class="um-mltg-lightbox-tag-add-button"><?php esc_html_e('Add Tag(s)', 'user-manager'); ?></button>
+				</div>
+				<p class="um-mltg-lightbox-tag-feedback" aria-live="polite"></p>
+			</div>
 			<div class="um-mltg-lightbox-controls">
 				<button type="button" class="um-mltg-lightbox-prev"><?php esc_html_e('Previous', 'user-manager'); ?></button>
 				<button type="button" class="um-mltg-lightbox-next"><?php esc_html_e('Next', 'user-manager'); ?></button>
@@ -2038,15 +2074,24 @@ JS;
 			var image = overlay.querySelector('img');
 			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
 			var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
+			var duplicateLinkEl = overlay.querySelector('.um-mltg-lightbox-duplicate-link');
+			var tagToolsEl = overlay.querySelector('.um-mltg-lightbox-tag-tools');
+			var tagInputEl = overlay.querySelector('.um-mltg-lightbox-tag-input');
+			var tagAddBtnEl = overlay.querySelector('.um-mltg-lightbox-tag-add-button');
+			var tagFeedbackEl = overlay.querySelector('.um-mltg-lightbox-tag-feedback');
 			var prevBtn = overlay.querySelector('.um-mltg-lightbox-prev');
 			var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
 			var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
+			var canManageLightboxTags = <?php echo $show_lightbox_admin_edit_link ? 'true' : 'false'; ?>;
+			var lightboxTagAjaxUrl = <?php echo wp_json_encode((string) $lightbox_tag_ajax_url); ?> || '';
+			var lightboxTagNonce = <?php echo wp_json_encode((string) $lightbox_tag_nonce); ?> || '';
 			var enablePrevNextKeyboard = <?php echo $lightbox_prev_next_keyboard ? 'true' : 'false'; ?>;
 			var enableSlideshowButton = <?php echo $lightbox_slideshow_button ? 'true' : 'false'; ?>;
 			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
 			var slideshowTransition = <?php echo wp_json_encode((string) $lightbox_slideshow_transition); ?> || 'none';
 			var lightboxLinks = Array.prototype.slice.call(root.querySelectorAll('a[data-um-lightbox="1"]'));
 			var activeLightboxIndex = -1;
+			var activeAttachmentId = 0;
 			var slideshowTimer = null;
 			var slideshowPlaying = false;
 			var bodyPrevOverflow = '';
@@ -2086,6 +2131,112 @@ JS;
 					slideshowBtn.textContent = '<?php echo esc_js(__('Play Slideshow', 'user-manager')); ?>';
 				}
 			}
+			function setTagFeedback(message, isError) {
+				if (!tagFeedbackEl) { return; }
+				tagFeedbackEl.textContent = String(message || '');
+				tagFeedbackEl.style.color = isError ? '#ffb3b3' : '#fff';
+			}
+			function setTagControlsBusy(isBusy) {
+				var busy = !!isBusy;
+				if (tagAddBtnEl) {
+					tagAddBtnEl.disabled = busy;
+				}
+				if (tagInputEl) {
+					tagInputEl.disabled = busy;
+				}
+				if (duplicateLinkEl) {
+					duplicateLinkEl.style.pointerEvents = busy ? 'none' : 'auto';
+					duplicateLinkEl.style.opacity = busy ? '0.65' : '1';
+				}
+			}
+			function requestAddTagToAttachment(attachmentId, tagValue, callback) {
+				var id = parseInt(String(attachmentId || '0'), 10);
+				var tagText = String(tagValue || '').trim();
+				if (!canManageLightboxTags || !lightboxTagAjaxUrl || !lightboxTagNonce || !id || !tagText) {
+					if (callback) {
+						callback(false, '<?php echo esc_js(__('Unable to add tag right now.', 'user-manager')); ?>');
+					}
+					return;
+				}
+				var payload = 'action=user_manager_bulk_apply_media_library_tag'
+					+ '&nonce=' + encodeURIComponent(lightboxTagNonce)
+					+ '&tag_new=' + encodeURIComponent(tagText)
+					+ '&ids[]=' + encodeURIComponent(String(id));
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', lightboxTagAjaxUrl, true);
+				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState !== 4) { return; }
+					var response = null;
+					try {
+						response = JSON.parse(xhr.responseText || '{}');
+					} catch (err) {
+						response = null;
+					}
+					if (xhr.status >= 200 && xhr.status < 300 && response && response.success) {
+						if (callback) {
+							callback(true, (response.data && response.data.message) ? String(response.data.message) : '');
+						}
+						return;
+					}
+					var message = '<?php echo esc_js(__('Could not add Library Tag.', 'user-manager')); ?>';
+					if (response && response.data && response.data.message) {
+						message = String(response.data.message);
+					}
+					if (callback) {
+						callback(false, message);
+					}
+				};
+				xhr.send(payload);
+			}
+			function addTagListToActiveAttachment(tags) {
+				var queue = Array.isArray(tags) ? tags.slice() : [];
+				queue = queue.map(function(tag) {
+					return String(tag || '').trim();
+				}).filter(function(tag) {
+					return !!tag;
+				});
+				queue = queue.filter(function(tag, idx, list) {
+					return list.indexOf(tag) === idx;
+				});
+				if (!queue.length) {
+					setTagFeedback('<?php echo esc_js(__('Enter at least one tag name.', 'user-manager')); ?>', true);
+					return;
+				}
+				if (!activeAttachmentId) {
+					setTagFeedback('<?php echo esc_js(__('No active image selected.', 'user-manager')); ?>', true);
+					return;
+				}
+				var completed = 0;
+				setTagControlsBusy(true);
+				setTagFeedback('<?php echo esc_js(__('Saving tags...', 'user-manager')); ?>', false);
+				var processNext = function() {
+					if (!queue.length) {
+						setTagControlsBusy(false);
+						setTagFeedback(
+							completed > 1
+								? '<?php echo esc_js(__('Tags added successfully.', 'user-manager')); ?>'
+								: '<?php echo esc_js(__('Tag added successfully.', 'user-manager')); ?>',
+							false
+						);
+						if (tagInputEl) {
+							tagInputEl.value = '';
+						}
+						return;
+					}
+					var nextTag = queue.shift();
+					requestAddTagToAttachment(activeAttachmentId, nextTag, function(success, message) {
+						if (!success) {
+							setTagControlsBusy(false);
+							setTagFeedback(message || '<?php echo esc_js(__('Could not add Library Tag.', 'user-manager')); ?>', true);
+							return;
+						}
+						completed += 1;
+						processNext();
+					});
+				};
+				processNext();
+			}
 			function renderLightboxFromLink(link, animate) {
 				if (!link || !image) { return false; }
 				var src = link.getAttribute('href') || '';
@@ -2093,10 +2244,16 @@ JS;
 				var caption = link.getAttribute('data-um-lightbox-caption') || '';
 				var altText = link.getAttribute('data-um-lightbox-alt') || '';
 				var editUrl = link.getAttribute('data-um-lightbox-edit-url') || '';
+				var attachmentIdRaw = link.getAttribute('data-um-lightbox-attachment-id') || '';
+				var attachmentId = parseInt(String(attachmentIdRaw || '0'), 10);
+				if (isNaN(attachmentId) || attachmentId < 1) {
+					attachmentId = 0;
+				}
 				var shouldAnimate = !!animate && slideshowTransition !== 'none';
 				var applyPayload = function() {
 					image.setAttribute('src', src);
 					image.setAttribute('alt', altText);
+					activeAttachmentId = attachmentId;
 					if (captionEl) {
 						captionEl.textContent = caption;
 						captionEl.style.display = caption ? 'block' : 'none';
@@ -2110,6 +2267,14 @@ JS;
 							editLinkEl.style.display = 'none';
 						}
 					}
+					if (duplicateLinkEl) {
+						duplicateLinkEl.style.display = (canManageLightboxTags && attachmentId > 0) ? 'inline-block' : 'none';
+					}
+					if (tagToolsEl) {
+						tagToolsEl.style.display = (canManageLightboxTags && attachmentId > 0) ? 'block' : 'none';
+					}
+					setTagFeedback('', false);
+					setTagControlsBusy(false);
 				};
 				if (transitionTimer) {
 					window.clearTimeout(transitionTimer);
@@ -2167,6 +2332,18 @@ JS;
 					editLinkEl.setAttribute('href', '#');
 					editLinkEl.style.display = 'none';
 				}
+				if (duplicateLinkEl) {
+					duplicateLinkEl.style.display = 'none';
+				}
+				if (tagToolsEl) {
+					tagToolsEl.style.display = 'none';
+				}
+				if (tagInputEl) {
+					tagInputEl.value = '';
+				}
+				setTagFeedback('', false);
+				setTagControlsBusy(false);
+				activeAttachmentId = 0;
 				if (document && document.body) {
 					document.body.style.overflow = bodyPrevOverflow;
 				}
@@ -2179,6 +2356,32 @@ JS;
 			}
 			if (slideshowBtn) {
 				slideshowBtn.style.display = enableSlideshowButton ? 'inline-block' : 'none';
+			}
+			if (duplicateLinkEl) {
+				duplicateLinkEl.addEventListener('click', function(event) {
+					event.preventDefault();
+					addTagListToActiveAttachment(['duplicate']);
+				});
+			}
+			if (tagAddBtnEl) {
+				tagAddBtnEl.addEventListener('click', function() {
+					var raw = tagInputEl ? String(tagInputEl.value || '') : '';
+					var tagParts = raw.split(/[\n,;]+/).map(function(part) {
+						return String(part || '').trim();
+					}).filter(function(part) {
+						return !!part;
+					});
+					addTagListToActiveAttachment(tagParts);
+				});
+			}
+			if (tagInputEl) {
+				tagInputEl.addEventListener('keydown', function(event) {
+					if (event.key !== 'Enter') { return; }
+					event.preventDefault();
+					if (tagAddBtnEl) {
+						tagAddBtnEl.click();
+					}
+				});
 			}
 			root.addEventListener('click', function(event) {
 				var link = event.target.closest('a[data-um-lightbox="1"]');
