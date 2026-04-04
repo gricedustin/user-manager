@@ -2561,7 +2561,7 @@ JS;
 					</div>
 				</div>
 			<?php else : ?>
-				<div class="um-media-library-tag-gallery-grid" data-um-cols-desktop="<?php echo esc_attr((string) $effective_columns_desktop); ?>" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $effective_columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
+				<div class="um-media-library-tag-gallery-grid" data-um-cols-desktop="<?php echo esc_attr((string) $effective_columns_desktop); ?>" data-um-cols-mobile="<?php echo esc_attr((string) $columns_mobile); ?>" style="--um-mltg-cols-desktop:<?php echo esc_attr((string) $effective_columns_desktop); ?>;--um-mltg-cols-mobile:<?php echo esc_attr((string) $columns_mobile); ?>;">
 					<?php foreach ($attachments as $index => $attachment) : ?>
 						<?php
 						if (!($attachment instanceof WP_Post)) {
@@ -2704,7 +2704,8 @@ JS;
 		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item.um-mltg-mosaic-wide { grid-column: span 2; }
 		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="2"] .um-media-library-tag-gallery-item.um-mltg-mosaic-tall { grid-row: auto; }
 		@media (max-width: 782px) {
-			.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item { grid-column: auto !important; grid-row: auto !important; }
+			.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-mobile="1"] .um-media-library-tag-gallery-item,
+			.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-mobile="2"] .um-media-library-tag-gallery-item { grid-column: auto !important; grid-row: auto !important; }
 		}
 		<?php endif; ?>
 		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-grid { display: block; column-count: var(--um-mltg-cols-desktop); column-gap: 14px; }
