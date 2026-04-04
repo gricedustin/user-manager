@@ -2754,19 +2754,19 @@ JS;
 			}
 			if (prevBtn) {
 				prevBtn.addEventListener('click', function() {
-					if (!enablePrevNextKeyboard || activeLightboxIndex < 0) { return; }
+					if (activeLightboxIndex < 0) { return; }
 					showLightboxByIndex(activeLightboxIndex - 1);
 				});
 			}
 			if (nextBtn) {
 				nextBtn.addEventListener('click', function() {
-					if (!enablePrevNextKeyboard || activeLightboxIndex < 0) { return; }
+					if (activeLightboxIndex < 0) { return; }
 					showLightboxByIndex(activeLightboxIndex + 1);
 				});
 			}
 			if (slideshowBtn) {
 				slideshowBtn.addEventListener('click', function() {
-					if (!enableSlideshowButton || !lightboxLinks.length || activeLightboxIndex < 0) { return; }
+					if (!lightboxLinks.length || activeLightboxIndex < 0) { return; }
 					if (slideshowPlaying) {
 						stopSlideshow();
 						return;

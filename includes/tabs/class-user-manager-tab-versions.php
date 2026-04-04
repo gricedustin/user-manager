@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.61 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed lightbox Previous/Next/Play controls so click handlers no longer no-op when feature toggles are off but controls are visible.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox navigation now consistently advances/reverses images and slideshow playback whenever a lightbox image is active.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.60 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Library Tags taxonomy screen now includes a new "Bulk Editor" submenu under Media > Library Tags.', 'user-manager'); ?></li>

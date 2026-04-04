@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.60
+ * Version: 2.5.61
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.61 - March 16, 2026
+ * - Fixed lightbox control actions so Previous/Next/Play Slideshow buttons always function when visible, regardless of keyboard/slideshow toggle defaults.
+ * - Kept button visibility behavior intact while removing overly strict click-handler guards that blocked control interactions.
+ *
  * 2.5.60 - March 16, 2026
  * - Added new Library Tags submenu screen: "Bulk Editor" under Media > Library Tags.
  * - Bulk Editor displays all tags in one table with editable title, slug, and description fields plus a Save All action.
