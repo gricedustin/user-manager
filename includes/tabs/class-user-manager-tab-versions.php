@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.54 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Newly inserted Media Library Tag Gallery blocks now default all per-setting "Use add-on default" toggles to ON, so new blocks inherit add-on defaults unless manually untoggled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied this default-on behavior in both block attribute registration and editor attribute defaults for consistent behavior on fresh block insertion.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.53 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library tag filtering now includes compound/synonym tag slugs when matching a selected base tag (for example: selecting "cruise" now also matches combined tags like "honeymoon-cruise" and tag names containing "Cruise").', 'user-manager'); ?></li>
