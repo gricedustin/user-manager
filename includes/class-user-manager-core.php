@@ -51,7 +51,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.67';
+	const VERSION = '2.5.68';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -1932,6 +1932,9 @@ final class User_Manager_Core {
 		$combined = implode("\n", $to_output);
 		$combined = str_replace(['</style>', '<script'], '', $combined);
 		echo '<style id="um-wp-admin-css">' . "\n" . $combined . "\n" . '</style>' . "\n";
+		if (is_admin_bar_showing()) {
+			echo '<style id="um-wp-admin-bar-color-safeguard">' . "\n" . self::get_wp_admin_bar_color_safeguard_css() . "\n" . '</style>' . "\n";
+		}
 		if ($hide_admin_chrome_applied) {
 			self::render_wp_admin_css_hide_admin_chrome_script();
 		}
@@ -2034,6 +2037,32 @@ html body #wpbody-content {
 
 html body .woocommerce-layout__header {
 	width: 100% !important;
+}
+';
+	}
+
+	/**
+	 * Keep admin bar link colors aligned with WordPress defaults.
+	 *
+	 * This prevents broad custom CSS rules (for example, global a{color:...})
+	 * from unintentionally changing wp-admin bar link colors.
+	 */
+	private static function get_wp_admin_bar_color_safeguard_css(): string {
+		return '
+#wpadminbar a.ab-item,
+#wpadminbar .ab-label,
+#wpadminbar .ab-sub-wrapper a,
+#wpadminbar .ab-sub-wrapper a .ab-label {
+	color: #f0f0f1 !important;
+}
+
+#wpadminbar a.ab-item:hover,
+#wpadminbar a.ab-item:focus,
+#wpadminbar .ab-sub-wrapper a:hover,
+#wpadminbar .ab-sub-wrapper a:focus,
+#wpadminbar .quicklinks .menupop ul li:hover > a,
+#wpadminbar .quicklinks .menupop ul li.hover > a {
+	color: #72aee6 !important;
 }
 ';
 	}
@@ -2401,9 +2430,6 @@ html body .woocommerce-layout__header {
 		<style>
 			#wpadminbar #wp-admin-bar-um-admin-search {
 				cursor: pointer;
-			}
-			#wpadminbar #wp-admin-bar-um-admin-search:hover .ab-icon {
-				color: #2271b1;
 			}
 			#wp-admin-bar-um-admin-search .ab-icon {
 				display: inline-block;

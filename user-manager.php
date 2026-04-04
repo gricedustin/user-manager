@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.67
+ * Version: 2.5.68
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.68 - March 16, 2026
+ * - Added a wp-admin bar color safeguard so broad custom CSS rules from WP-Admin CSS settings no longer force admin-bar links to blue.
+ * - Admin bar link/label colors now stay aligned with default WordPress top-bar colors.
+ *
  * 2.5.67 - March 16, 2026
  * - Added server-side lightbox debug activation detection and front-end data attributes so debug mode can be confirmed from rendered HTML even when query parsing is altered by caching or redirects.
  * - Added an always-visible in-gallery debug badge plus global JS fallback flags to make debug mode presence obvious and resilient.
