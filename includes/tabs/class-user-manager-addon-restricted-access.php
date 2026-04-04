@@ -27,6 +27,7 @@ class User_Manager_Addon_Restricted_Access {
 		$overlay_text_color = isset($settings['restricted_access_overlay_text_color']) ? (string) $settings['restricted_access_overlay_text_color'] : '#ffffff';
 		$overlay_image = isset($settings['restricted_access_overlay_image_url']) ? (string) $settings['restricted_access_overlay_image_url'] : '';
 		$overlay_image_max_width = isset($settings['restricted_access_overlay_image_max_width']) ? (string) $settings['restricted_access_overlay_image_max_width'] : '';
+		$access_logs = User_Manager_Core::get_restricted_access_history_entries(300);
 		$roles = User_Manager_Core::get_user_roles();
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-restricted-access" data-um-active-selectors="#um-restricted-access-enabled">
@@ -113,6 +114,50 @@ class User_Manager_Addon_Restricted_Access {
 						<input type="text" id="um-restricted-access-overlay-image-max-width" name="restricted_access_overlay_image_max_width" class="regular-text" value="<?php echo esc_attr($overlay_image_max_width); ?>" placeholder="<?php esc_attr_e('e.g. 1200px', 'user-manager'); ?>"<?php echo $form_attr; ?> />
 						<p class="description"><?php esc_html_e('Optional. Example values: 1200px, 90vw, 60rem, none.', 'user-manager'); ?></p>
 					</div>
+				</div>
+			</div>
+		</div>
+		<div class="um-admin-card" id="um-addon-card-restricted-access-history">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-shield"></span>
+				<h2><?php esc_html_e('Access History', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<div style="overflow:auto;">
+					<table class="widefat striped">
+						<thead>
+							<tr>
+								<th><?php esc_html_e('Timestamp', 'user-manager'); ?></th>
+								<th><?php esc_html_e('IP', 'user-manager'); ?></th>
+								<th><?php esc_html_e('IP Location', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Browser', 'user-manager'); ?></th>
+								<th><?php esc_html_e('URL Accessed From', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Password if Used', 'user-manager'); ?></th>
+								<th><?php esc_html_e('Failed Password if Failed', 'user-manager'); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php if (!empty($access_logs)) : ?>
+								<?php foreach ($access_logs as $log) : ?>
+									<tr>
+										<td><?php echo esc_html((string) ($log['created_at'] ?? '')); ?></td>
+										<td><?php echo esc_html((string) ($log['ip_address'] ?? '')); ?></td>
+										<td><?php echo esc_html((string) ($log['ip_location'] ?? '')); ?></td>
+										<td><?php echo esc_html((string) ($log['browser'] ?? '')); ?></td>
+										<td style="max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<?php echo esc_attr((string) ($log['url_accessed_from'] ?? '')); ?>">
+											<?php echo esc_html((string) ($log['url_accessed_from'] ?? '')); ?>
+										</td>
+										<td><?php echo esc_html((string) ($log['password_used'] ?? '')); ?></td>
+										<td><?php echo esc_html((string) ($log['failed_password'] ?? '')); ?></td>
+									</tr>
+								<?php endforeach; ?>
+							<?php else : ?>
+								<tr>
+									<td colspan="7"><?php esc_html_e('No access logs yet.', 'user-manager'); ?></td>
+								</tr>
+							<?php endif; ?>
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div>

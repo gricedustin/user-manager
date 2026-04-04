@@ -15,6 +15,13 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	private static string $restricted_access_password_error = '';
 
 	/**
+	 * Cached geolocation labels by IP to avoid repeated lookups per request.
+	 *
+	 * @var array<string,string>
+	 */
+	private static array $restricted_access_geo_cache = [];
+
+	/**
 	 * Boot restricted access controls when enabled.
 	 *
 	 * @param array<string,mixed> $settings Plugin settings.
@@ -25,6 +32,31 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		}
 
 		add_action('template_redirect', [__CLASS__, 'maybe_enforce_restricted_access'], 1);
+	}
+
+	/**
+	 * Create restricted access history table when missing.
+	 */
+	public static function maybe_create_restricted_access_history_table(): void {
+		global $wpdb;
+		$table = $wpdb->prefix . 'um_restricted_access_history';
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$charset_collate = $wpdb->get_charset_collate();
+		$sql = "CREATE TABLE {$table} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			ip_address varchar(100) NOT NULL DEFAULT '',
+			ip_location varchar(255) NOT NULL DEFAULT '',
+			browser varchar(255) NOT NULL DEFAULT '',
+			url_accessed_from text,
+			password_used text,
+			failed_password text,
+			is_success tinyint(1) NOT NULL DEFAULT 0,
+			created_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			KEY created_at (created_at),
+			KEY is_success (is_success)
+		) {$charset_collate};";
+		dbDelta($sql);
 	}
 
 	/**
@@ -53,6 +85,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 
 		// A matching appended URL string grants timed access.
 		if (self::restricted_access_request_matches_access_string($settings)) {
+			self::restricted_access_log_access_attempt('', true, '');
 			self::restricted_access_set_access_cookie($settings);
 			return;
 		}
@@ -135,18 +168,195 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$nonce = isset($_POST['um_restricted_access_nonce']) ? sanitize_text_field(wp_unslash($_POST['um_restricted_access_nonce'])) : '';
 		if ($nonce === '' || !wp_verify_nonce($nonce, 'um_restricted_access_submit')) {
 			self::$restricted_access_password_error = (string) __('Unable to validate request. Please try again.', 'user-manager');
+			self::restricted_access_log_access_attempt('', false, 'invalid_nonce');
 			return;
 		}
 
 		$submitted_password = isset($_POST['um_restricted_access_password']) ? sanitize_text_field(wp_unslash($_POST['um_restricted_access_password'])) : '';
 		$saved_password     = self::restricted_access_get_shared_password($settings);
 		if ($saved_password !== '' && hash_equals($saved_password, $submitted_password)) {
+			self::restricted_access_log_access_attempt($submitted_password, true, '');
 			self::restricted_access_set_access_cookie($settings);
 			wp_safe_redirect(self::restricted_access_get_current_url());
 			exit;
 		}
 
+		self::restricted_access_log_access_attempt('', false, $submitted_password);
 		self::$restricted_access_password_error = (string) __('Incorrect password. Please try again.', 'user-manager');
+	}
+
+	/**
+	 * Insert one restricted-access attempt row.
+	 */
+	private static function restricted_access_log_access_attempt(string $password_used, bool $is_success, string $failed_password): void {
+		global $wpdb;
+		$table = $wpdb->prefix . 'um_restricted_access_history';
+		$table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+		if ($table_exists !== $table) {
+			return;
+		}
+		$ip = self::restricted_access_get_request_ip_address();
+		$location = self::restricted_access_resolve_ip_location_label($ip);
+		$browser = self::restricted_access_resolve_browser_label();
+		$url = self::restricted_access_get_current_url();
+
+		$wpdb->insert(
+			$table,
+			[
+				'ip_address' => $ip,
+				'ip_location' => $location,
+				'browser' => $browser,
+				'url_accessed_from' => $url,
+				'password_used' => $password_used,
+				'failed_password' => $failed_password,
+				'created_at' => current_time('mysql'),
+				'is_success' => $is_success ? 1 : 0,
+			],
+			['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d']
+		);
+	}
+
+	/**
+	 * Resolve client IP from common proxy headers.
+	 */
+	private static function restricted_access_get_request_ip_address(): string {
+		$candidates = [
+			'HTTP_CF_CONNECTING_IP',
+			'HTTP_X_REAL_IP',
+			'HTTP_X_FORWARDED_FOR',
+			'REMOTE_ADDR',
+		];
+		foreach ($candidates as $header) {
+			if (!isset($_SERVER[$header])) {
+				continue;
+			}
+			$raw = trim((string) wp_unslash($_SERVER[$header]));
+			if ($raw === '') {
+				continue;
+			}
+			$parts = array_map('trim', explode(',', $raw));
+			foreach ($parts as $candidate) {
+				$validated = filter_var($candidate, FILTER_VALIDATE_IP);
+				if (is_string($validated) && $validated !== '') {
+					return $validated;
+				}
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Build a short browser label from user agent.
+	 */
+	private static function restricted_access_resolve_browser_label(): string {
+		$ua = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+		if ($ua === '') {
+			return '';
+		}
+		$ua_lc = strtolower($ua);
+		$browser = 'Unknown';
+		if (strpos($ua_lc, 'edg/') !== false) {
+			$browser = 'Edge';
+		} elseif (strpos($ua_lc, 'opr/') !== false || strpos($ua_lc, 'opera') !== false) {
+			$browser = 'Opera';
+		} elseif (strpos($ua_lc, 'firefox/') !== false) {
+			$browser = 'Firefox';
+		} elseif (strpos($ua_lc, 'chrome/') !== false && strpos($ua_lc, 'edg/') === false && strpos($ua_lc, 'opr/') === false) {
+			$browser = 'Chrome';
+		} elseif (strpos($ua_lc, 'safari/') !== false && strpos($ua_lc, 'chrome/') === false) {
+			$browser = 'Safari';
+		}
+		if (strpos($ua_lc, 'mobile') !== false || strpos($ua_lc, 'android') !== false || strpos($ua_lc, 'iphone') !== false) {
+			$browser .= ' (Mobile)';
+		}
+		return $browser;
+	}
+
+	/**
+	 * Resolve a best-effort IP location label.
+	 */
+	private static function restricted_access_resolve_ip_location_label(string $ip): string {
+		if ($ip === '') {
+			return '';
+		}
+		if (isset(self::$restricted_access_geo_cache[$ip])) {
+			return self::$restricted_access_geo_cache[$ip];
+		}
+		$transient_key = 'um_ra_geo_' . md5($ip);
+		$cached = get_transient($transient_key);
+		if (is_string($cached)) {
+			self::$restricted_access_geo_cache[$ip] = $cached;
+			return $cached;
+		}
+
+		$location = '';
+		$response = wp_remote_get(
+			'https://ipapi.co/' . rawurlencode($ip) . '/json/',
+			[
+				'timeout' => 2,
+				'redirection' => 2,
+				'headers' => [
+					'Accept' => 'application/json',
+				],
+			]
+		);
+		if (!is_wp_error($response) && (int) wp_remote_retrieve_response_code($response) === 200) {
+			$body = wp_remote_retrieve_body($response);
+			$data = json_decode((string) $body, true);
+			if (is_array($data)) {
+				$city = isset($data['city']) ? sanitize_text_field((string) $data['city']) : '';
+				$region = isset($data['region']) ? sanitize_text_field((string) $data['region']) : '';
+				$country = isset($data['country_name']) ? sanitize_text_field((string) $data['country_name']) : '';
+				$parts = array_values(array_filter([$city, $region, $country], static function ($value): bool {
+					return (string) $value !== '';
+				}));
+				$location = implode(', ', $parts);
+			}
+		}
+		if ($location === '') {
+			$location = __('Unknown', 'user-manager');
+		}
+		self::$restricted_access_geo_cache[$ip] = $location;
+		set_transient($transient_key, $location, DAY_IN_SECONDS * 7);
+		return $location;
+	}
+
+	/**
+	 * Fetch latest restricted access history rows for admin table.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function get_restricted_access_history_entries(int $limit = 500): array {
+		global $wpdb;
+		$table = $wpdb->prefix . 'um_restricted_access_history';
+		$table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+		if ($table_exists !== $table) {
+			return [];
+		}
+		$limit = max(1, min(2000, $limit));
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, ip_address, ip_location, browser, url_accessed_from, password_used, failed_password, is_success, created_at FROM {$table} ORDER BY created_at DESC, id DESC LIMIT %d",
+				$limit
+			),
+			ARRAY_A
+		);
+		if (!is_array($rows)) {
+			return [];
+		}
+		return array_map(static function (array $row): array {
+			return [
+				'id' => isset($row['id']) ? (int) $row['id'] : 0,
+				'ip_address' => isset($row['ip_address']) ? (string) $row['ip_address'] : '',
+				'ip_location' => isset($row['ip_location']) ? (string) $row['ip_location'] : '',
+				'browser' => isset($row['browser']) ? (string) $row['browser'] : '',
+				'url_accessed_from' => isset($row['url_accessed_from']) ? (string) $row['url_accessed_from'] : '',
+				'password_used' => isset($row['password_used']) ? (string) $row['password_used'] : '',
+				'failed_password' => isset($row['failed_password']) ? (string) $row['failed_password'] : '',
+				'is_success' => !empty($row['is_success']),
+				'created_at' => isset($row['created_at']) ? (string) $row['created_at'] : '',
+			];
+		}, $rows);
 	}
 
 	/**

@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.78 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on now includes a new "Access History" card that displays a log table with timestamp, IP, IP location, browser, URL accessed from, password used, and failed password values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added persistent restricted access history storage and automatic logging for shared-password submissions, including both successful and failed attempts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.77 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Restricted Access add-on now includes a new "Full Screen Overlay Image Max Width" setting directly under the overlay image URL field.', 'user-manager'); ?></li>

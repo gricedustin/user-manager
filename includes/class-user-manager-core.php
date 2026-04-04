@@ -51,7 +51,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.77';
+	const VERSION = '2.5.78';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -141,6 +141,7 @@ final class User_Manager_Core {
 		add_action('init', [__CLASS__, 'maybe_create_login_history_table']);
 		add_action('init', [__CLASS__, 'maybe_create_user_activity_table']);
 		add_action('init', [__CLASS__, 'maybe_create_admin_activity_table']);
+		add_action('init', [__CLASS__, 'maybe_create_restricted_access_history_table']);
 		// On multisite, the MU logger handles login writes to ensure reliability on central login hosts.
 		if (!is_multisite()) {
 			add_action('wp_login', [__CLASS__, 'handle_wp_login'], 10, 2);
