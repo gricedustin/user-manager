@@ -74,6 +74,18 @@ class User_Manager_Addon_Media_Library_Tags {
 		if (!isset($lightbox_slideshow_transition_options[$lightbox_slideshow_transition])) {
 			$lightbox_slideshow_transition = 'none';
 		}
+		$lightbox_modal_background_color = isset($settings['media_library_tag_gallery_lightbox_modal_background_color']) && is_string($settings['media_library_tag_gallery_lightbox_modal_background_color']) && $settings['media_library_tag_gallery_lightbox_modal_background_color'] !== ''
+			? sanitize_hex_color((string) $settings['media_library_tag_gallery_lightbox_modal_background_color'])
+			: sanitize_hex_color((string) ($defaults['lightboxModalBackgroundColor'] ?? '#000000'));
+		if (!is_string($lightbox_modal_background_color) || $lightbox_modal_background_color === '') {
+			$lightbox_modal_background_color = '#000000';
+		}
+		$lightbox_modal_text_color = isset($settings['media_library_tag_gallery_lightbox_modal_text_color']) && is_string($settings['media_library_tag_gallery_lightbox_modal_text_color']) && $settings['media_library_tag_gallery_lightbox_modal_text_color'] !== ''
+			? sanitize_hex_color((string) $settings['media_library_tag_gallery_lightbox_modal_text_color'])
+			: sanitize_hex_color((string) ($defaults['lightboxModalTextColor'] ?? '#ffffff'));
+		if (!is_string($lightbox_modal_text_color) || $lightbox_modal_text_color === '') {
+			$lightbox_modal_text_color = '#ffffff';
+		}
 		$disable_css_crop_threshold = isset($settings['media_library_tag_gallery_disable_css_crop_under_total'])
 			? max(0, (int) $settings['media_library_tag_gallery_disable_css_crop_under_total'])
 			: (int) ($defaults['disableCssCropUnderTotal'] ?? 0);
@@ -235,6 +247,14 @@ class User_Manager_Addon_Media_Library_Tags {
 										<option value="<?php echo esc_attr((string) $transition_key); ?>" <?php selected($lightbox_slideshow_transition, (string) $transition_key); ?>><?php echo esc_html((string) $transition_label); ?></option>
 									<?php endforeach; ?>
 								</select>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-lightbox-modal-bg-color"><?php esc_html_e('Lightbox Modal Background Color', 'user-manager'); ?></label>
+								<input type="color" id="um-media-library-tags-gallery-lightbox-modal-bg-color" name="media_library_tag_gallery_lightbox_modal_background_color" value="<?php echo esc_attr((string) $lightbox_modal_background_color); ?>"<?php echo $form_attr; ?> />
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-lightbox-modal-text-color"><?php esc_html_e('Lightbox Modal Text Color', 'user-manager'); ?></label>
+								<input type="color" id="um-media-library-tags-gallery-lightbox-modal-text-color" name="media_library_tag_gallery_lightbox_modal_text_color" value="<?php echo esc_attr((string) $lightbox_modal_text_color); ?>"<?php echo $form_attr; ?> />
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-disable-css-crop-below-total"><?php esc_html_e('Do Not CSS Crop Any Images if Gallery Photos Total is Less Than...', 'user-manager'); ?></label>

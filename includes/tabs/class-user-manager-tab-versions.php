@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.74 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Stabilized Media Library Tag Gallery lightbox modal open behavior by replacing brittle pointer/capture interception with a simpler delegated click-to-open modal flow per gallery instance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added lightbox modal color controls (background + text) to add-on defaults, settings save handling, and block-level override controls with "Use add-on default" toggles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox modal captions, Previous/Next controls, keyboard navigation, and slideshow controls are now rendered on top of the new modal color variables for consistent behavior and appearance.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.73 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Removed the extra front-end CSS typography/color rule on .um-media-library-tag-description-paragraph so description paragraphs inherit theme/plugin defaults.', 'user-manager'); ?></li>

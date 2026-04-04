@@ -1414,6 +1414,10 @@ JS;
 				'lightboxSlideshowSeconds' => ['type' => 'number', 'default' => 3],
 				'useDefaultLightboxSlideshowTransition' => ['type' => 'boolean', 'default' => true],
 				'lightboxSlideshowTransition' => ['type' => 'string', 'default' => 'none'],
+				'useDefaultLightboxModalBackgroundColor' => ['type' => 'boolean', 'default' => true],
+				'lightboxModalBackgroundColor' => ['type' => 'string', 'default' => '#000000'],
+				'useDefaultLightboxModalTextColor' => ['type' => 'boolean', 'default' => true],
+				'lightboxModalTextColor' => ['type' => 'string', 'default' => '#ffffff'],
 			],
 			'editor_script' => 'um-media-library-tag-gallery-editor',
 		]);
@@ -1590,6 +1594,14 @@ JS;
 				raw = 'none';
 			}
 			return raw;
+		})(),
+		lightboxModalBackgroundColor: (function() {
+			var raw = String(defaults.lightboxModalBackgroundColor || '#000000').trim();
+			return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : '#000000';
+		})(),
+		lightboxModalTextColor: (function() {
+			var raw = String(defaults.lightboxModalTextColor || '#ffffff').trim();
+			return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : '#ffffff';
 		})()
 	};
 
@@ -1647,11 +1659,25 @@ JS;
 					raw = 'none';
 				}
 				return raw;
+			})() },
+			useDefaultLightboxModalBackgroundColor: { type: 'boolean', default: true },
+			lightboxModalBackgroundColor: { type: 'string', default: (function() {
+				var raw = String(defaults.lightboxModalBackgroundColor || '#000000').trim();
+				return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : '#000000';
+			})() },
+			useDefaultLightboxModalTextColor: { type: 'boolean', default: true },
+			lightboxModalTextColor: { type: 'string', default: (function() {
+				var raw = String(defaults.lightboxModalTextColor || '#ffffff').trim();
+				return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : '#ffffff';
 			})() }
 		},
 		edit: function(props) {
 			var a = props.attributes;
 			var set = props.setAttributes;
+			function sanitizeHex(value, fallback) {
+				var raw = String(value || '').trim();
+				return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : fallback;
+			}
 			var useDefaultColumnsDesktop = !!a.useDefaultColumnsDesktop;
 			var useDefaultColumnsDesktopLt50 = !!a.useDefaultColumnsDesktopLt50;
 			var useDefaultColumnsDesktopLt25 = !!a.useDefaultColumnsDesktopLt25;
@@ -1669,6 +1695,8 @@ JS;
 			var useDefaultLightboxSlideshowButton = !!a.useDefaultLightboxSlideshowButton;
 			var useDefaultLightboxSlideshowSeconds = !!a.useDefaultLightboxSlideshowSeconds;
 			var useDefaultLightboxSlideshowTransition = !!a.useDefaultLightboxSlideshowTransition;
+			var useDefaultLightboxModalBackgroundColor = !!a.useDefaultLightboxModalBackgroundColor;
+			var useDefaultLightboxModalTextColor = !!a.useDefaultLightboxModalTextColor;
 			var effectiveColumnsDesktop = useDefaultColumnsDesktop ? fallbackDefaults.columnsDesktop : (a.columnsDesktop || fallbackDefaults.columnsDesktop);
 			var effectiveColumnsDesktopLt50 = useDefaultColumnsDesktopLt50 ? fallbackDefaults.columnsDesktopLt50 : (a.columnsDesktopLt50 || fallbackDefaults.columnsDesktopLt50);
 			var effectiveColumnsDesktopLt25 = useDefaultColumnsDesktopLt25 ? fallbackDefaults.columnsDesktopLt25 : (a.columnsDesktopLt25 || fallbackDefaults.columnsDesktopLt25);
@@ -1687,6 +1715,12 @@ JS;
 			var effectiveLightboxSlideshowSecondsRaw = useDefaultLightboxSlideshowSeconds ? fallbackDefaults.lightboxSlideshowSeconds : parseFloat(a.lightboxSlideshowSeconds);
 			var effectiveLightboxSlideshowSeconds = isFinite(effectiveLightboxSlideshowSecondsRaw) ? Math.max(1, Math.min(60, effectiveLightboxSlideshowSecondsRaw)) : fallbackDefaults.lightboxSlideshowSeconds;
 			var effectiveLightboxSlideshowTransition = useDefaultLightboxSlideshowTransition ? String(fallbackDefaults.lightboxSlideshowTransition || 'none') : String(a.lightboxSlideshowTransition || 'none');
+			var effectiveLightboxModalBackgroundColor = useDefaultLightboxModalBackgroundColor
+				? fallbackDefaults.lightboxModalBackgroundColor
+				: sanitizeHex(a.lightboxModalBackgroundColor, fallbackDefaults.lightboxModalBackgroundColor);
+			var effectiveLightboxModalTextColor = useDefaultLightboxModalTextColor
+				? fallbackDefaults.lightboxModalTextColor
+				: sanitizeHex(a.lightboxModalTextColor, fallbackDefaults.lightboxModalTextColor);
 			return element.createElement(
 				Fragment,
 				{},
@@ -1958,6 +1992,30 @@ JS;
 							label: 'Use add-on default for Slideshow Transition',
 							checked: useDefaultLightboxSlideshowTransition,
 							onChange: function(v){ set({ useDefaultLightboxSlideshowTransition: !!v }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Lightbox Modal Background Color (hex)',
+							disabled: useDefaultLightboxModalBackgroundColor,
+							value: String(effectiveLightboxModalBackgroundColor || '#000000'),
+							help: useDefaultLightboxModalBackgroundColor ? ('Using add-on default: ' + String(fallbackDefaults.lightboxModalBackgroundColor)) : 'Example: #000000',
+							onChange: function(v){ set({ lightboxModalBackgroundColor: sanitizeHex(v, '#000000') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Lightbox Modal Background Color',
+							checked: useDefaultLightboxModalBackgroundColor,
+							onChange: function(v){ set({ useDefaultLightboxModalBackgroundColor: !!v }); }
+						}),
+						element.createElement(TextControl, {
+							label: 'Lightbox Modal Text Color (hex)',
+							disabled: useDefaultLightboxModalTextColor,
+							value: String(effectiveLightboxModalTextColor || '#ffffff'),
+							help: useDefaultLightboxModalTextColor ? ('Using add-on default: ' + String(fallbackDefaults.lightboxModalTextColor)) : 'Example: #ffffff',
+							onChange: function(v){ set({ lightboxModalTextColor: sanitizeHex(v, '#ffffff') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Lightbox Modal Text Color',
+							checked: useDefaultLightboxModalTextColor,
+							onChange: function(v){ set({ useDefaultLightboxModalTextColor: !!v }); }
 						})
 					)
 				),
@@ -2006,6 +2064,8 @@ JS;
 		$use_default_lightbox_slideshow_button = !empty($attrs['useDefaultLightboxSlideshowButton']);
 		$use_default_lightbox_slideshow_seconds = !empty($attrs['useDefaultLightboxSlideshowSeconds']);
 		$use_default_lightbox_slideshow_transition = !empty($attrs['useDefaultLightboxSlideshowTransition']);
+		$use_default_lightbox_modal_background_color = !empty($attrs['useDefaultLightboxModalBackgroundColor']);
+		$use_default_lightbox_modal_text_color = !empty($attrs['useDefaultLightboxModalTextColor']);
 		$columns_desktop = $use_default_columns_desktop
 			? max(1, min(8, absint($defaults['columnsDesktop'])))
 			: max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
@@ -2062,7 +2122,18 @@ JS;
 		$lightbox_slideshow_transition = $use_default_lightbox_slideshow_transition
 			? sanitize_key((string) ($defaults['lightboxSlideshowTransition'] ?? 'none'))
 			: (isset($attrs['lightboxSlideshowTransition']) ? sanitize_key((string) $attrs['lightboxSlideshowTransition']) : sanitize_key((string) ($defaults['lightboxSlideshowTransition'] ?? 'none')));
-
+		$lightbox_modal_background_color = $use_default_lightbox_modal_background_color
+			? sanitize_hex_color((string) ($defaults['lightboxModalBackgroundColor'] ?? '#000000'))
+			: sanitize_hex_color((string) ($attrs['lightboxModalBackgroundColor'] ?? ($defaults['lightboxModalBackgroundColor'] ?? '#000000')));
+		$lightbox_modal_text_color = $use_default_lightbox_modal_text_color
+			? sanitize_hex_color((string) ($defaults['lightboxModalTextColor'] ?? '#ffffff'))
+			: sanitize_hex_color((string) ($attrs['lightboxModalTextColor'] ?? ($defaults['lightboxModalTextColor'] ?? '#ffffff')));
+		if (!is_string($lightbox_modal_background_color) || $lightbox_modal_background_color === '') {
+			$lightbox_modal_background_color = '#000000';
+		}
+		if (!is_string($lightbox_modal_text_color) || $lightbox_modal_text_color === '') {
+			$lightbox_modal_text_color = '#ffffff';
+		}
 		$allowed_sort_orders = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc', 'random'];
 		$allowed_file_sizes = array_keys(self::get_available_image_sizes_for_media_gallery());
 		if (empty($allowed_file_sizes)) {
@@ -2250,6 +2321,14 @@ JS;
 			$style = 'standard';
 			$style_class = 'um-media-gallery-style-standard';
 		}
+		$lightbox_modal_background_color_css = sanitize_hex_color((string) $lightbox_modal_background_color);
+		if (!is_string($lightbox_modal_background_color_css) || $lightbox_modal_background_color_css === '') {
+			$lightbox_modal_background_color_css = '#000000';
+		}
+		$lightbox_modal_text_color_css = sanitize_hex_color((string) $lightbox_modal_text_color);
+		if (!is_string($lightbox_modal_text_color_css) || $lightbox_modal_text_color_css === '') {
+			$lightbox_modal_text_color_css = '#ffffff';
+		}
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
@@ -2277,10 +2356,11 @@ JS;
 		<div
 			id="<?php echo esc_attr($uid); ?>"
 			class="um-media-library-tag-gallery <?php echo esc_attr($style_class); ?>"
-			style="--um-mltg-accent-color:<?php echo esc_attr($accent_color); ?>;"
+			style="--um-mltg-accent-color:<?php echo esc_attr($accent_color); ?>;--um-mltg-lightbox-modal-bg:<?php echo esc_attr($lightbox_modal_background_color_css); ?>;--um-mltg-lightbox-modal-text:<?php echo esc_attr($lightbox_modal_text_color_css); ?>;"
 			<?php echo $lightbox_prev_next_keyboard ? ' data-um-lightbox-prev-next="1"' : ' data-um-lightbox-prev-next="0"'; ?>
 			<?php echo $lightbox_slideshow_button ? ' data-um-lightbox-slideshow="1"' : ' data-um-lightbox-slideshow="0"'; ?>
 			data-um-lightbox-seconds="<?php echo esc_attr((string) $lightbox_slideshow_seconds); ?>"
+			data-um-lightbox-transition="<?php echo esc_attr((string) $lightbox_slideshow_transition); ?>"
 			<?php echo $lightbox_debug_enabled ? ' data-um-lightbox-debug="1"' : ' data-um-lightbox-debug="0"'; ?>
 			<?php echo $lightbox_debug_auto_open ? ' data-um-lightbox-debug-open="1"' : ' data-um-lightbox-debug-open="0"'; ?>
 			data-um-fallback-allow-controls="0"
@@ -2589,13 +2669,13 @@ JS;
 		.um-media-library-tag-gallery-pagination { margin-top: 14px; }
 		.um-media-library-tag-gallery-pagination a,
 		.um-media-library-tag-gallery-pagination strong { margin-right: 8px; }
-		.um-mltg-lightbox-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.86); z-index: 999999; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 30px; }
+		.um-mltg-lightbox-overlay { position: fixed; inset: 0; background: var(--um-mltg-lightbox-modal-bg, rgba(0, 0, 0, 0.86)); z-index: 999999; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 30px; }
 		.um-mltg-lightbox-overlay img { max-width: min(95vw, 1600px); max-height: 88vh; width: auto; height: auto; display: block; box-shadow: 0 4px 24px rgba(0,0,0,0.4); opacity: 1; transform: translateX(0); transition: opacity .28s ease, transform .32s ease; will-change: opacity, transform; }
-		.um-mltg-lightbox-caption { margin-top: 10px; color: #fff; font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }
-		.um-mltg-lightbox-edit-link { margin-top: 8px; color: #fff; text-decoration: underline; display: none; font-size: 13px; }
-		.um-mltg-lightbox-edit-link:hover { color: #cfe7ff; }
-		.um-mltg-lightbox-duplicate-link { margin-top: 6px; color: #fff; text-decoration: underline; display: none; font-size: 13px; cursor: pointer; }
-		.um-mltg-lightbox-duplicate-link:hover { color: #cfe7ff; }
+		.um-mltg-lightbox-caption { margin-top: 10px; color: var(--um-mltg-lightbox-modal-text, #fff); font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }
+		.um-mltg-lightbox-edit-link { margin-top: 8px; color: var(--um-mltg-lightbox-modal-text, #fff); text-decoration: underline; display: none; font-size: 13px; }
+		.um-mltg-lightbox-edit-link:hover { opacity: 0.8; }
+		.um-mltg-lightbox-duplicate-link { margin-top: 6px; color: var(--um-mltg-lightbox-modal-text, #fff); text-decoration: underline; display: none; font-size: 13px; cursor: pointer; }
+		.um-mltg-lightbox-duplicate-link:hover { opacity: 0.8; }
 		.um-mltg-lightbox-tag-tools { margin-top: 8px; display: none; width: min(95vw, 560px); }
 		.um-mltg-lightbox-tag-tools-row { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
 		.um-mltg-lightbox-tag-input {
@@ -2604,14 +2684,14 @@ JS;
 			border-radius: 4px;
 			border: 1px solid rgba(255,255,255,0.65);
 			background: rgba(255,255,255,0.12);
-			color: #fff;
+			color: var(--um-mltg-lightbox-modal-text, #fff);
 			font-size: 13px;
 		}
 		.um-mltg-lightbox-tag-input::placeholder { color: rgba(255,255,255,0.8); }
 		.um-mltg-lightbox-tag-add-button {
 			border: 1px solid rgba(255,255,255,0.6);
 			background: rgba(0,0,0,0.28);
-			color: #fff;
+			color: var(--um-mltg-lightbox-modal-text, #fff);
 			padding: 6px 10px;
 			border-radius: 4px;
 			cursor: pointer;
@@ -2619,14 +2699,14 @@ JS;
 		}
 		.um-mltg-lightbox-tag-add-button:hover { background: rgba(255,255,255,0.12); }
 		.um-mltg-lightbox-tag-add-button[disabled] { opacity: 0.6; cursor: wait; }
-		.um-mltg-lightbox-tag-feedback { margin-top: 6px; color: #fff; font-size: 12px; line-height: 1.35; text-align: center; min-height: 1.35em; }
+		.um-mltg-lightbox-tag-feedback { margin-top: 6px; color: var(--um-mltg-lightbox-modal-text, #fff); font-size: 12px; line-height: 1.35; text-align: center; min-height: 1.35em; }
 		.um-mltg-lightbox-controls { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
 		.um-mltg-lightbox-prev,
 		.um-mltg-lightbox-next,
 		.um-mltg-lightbox-slideshow-toggle {
 			border: 1px solid rgba(255,255,255,0.6);
 			background: rgba(0,0,0,0.28);
-			color: #fff;
+			color: var(--um-mltg-lightbox-modal-text, #fff);
 			padding: 6px 10px;
 			border-radius: 4px;
 			cursor: pointer;
@@ -2639,7 +2719,7 @@ JS;
 		}
 		.um-mltg-lightbox-overlay.um-mltg-transition-crossfade img.is-transitioning { opacity: 0; }
 		.um-mltg-lightbox-overlay.um-mltg-transition-slide-left img.is-transitioning { transform: translateX(-28px); opacity: 0.42; }
-		.um-mltg-lightbox-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: #fff; font-size: 36px; line-height: 1; cursor: pointer; }
+		.um-mltg-lightbox-close { position: absolute; top: 14px; right: 16px; border: 0; background: transparent; color: var(--um-mltg-lightbox-modal-text, #fff); font-size: 36px; line-height: 1; cursor: pointer; }
 		.um-mltg-debug-badge {
 			position: sticky;
 			top: 0;
@@ -3164,122 +3244,26 @@ JS;
 					ariaHidden: overlay.getAttribute('aria-hidden')
 				});
 			}
-			function findLightboxLinkFromTarget(target) {
-				if (!target) { return null; }
-				var node = target.nodeType === 1 ? target : target.parentElement;
-				if (!node || !node.closest) { return null; }
-				return node.closest('a[data-um-lightbox="1"]');
-			}
-			var suppressClickOpenUntil = 0;
-			function interceptLightboxEvent(event, shouldOpen) {
+			root.addEventListener('click', function(event) {
 				var evt = event || window.event;
-				if (evt && evt.__umMltgHandled) {
-					lightboxDebugLog('Event ignored: already handled', {
-						type: evt && evt.type ? String(evt.type) : ''
-					});
-					return true;
+				var node = evt && evt.target ? evt.target : null;
+				if (!node || !node.closest) {
+					return;
 				}
-				var link = findLightboxLinkFromTarget(evt && evt.target ? evt.target : null);
-				if (!link && this && this.matches && this.matches('a[data-um-lightbox="1"]')) {
-					link = this;
-				}
+				var link = node.closest('a[data-um-lightbox="1"]');
 				if (!link || !root.contains(link)) {
-					return false;
+					return;
 				}
-				lightboxDebugLog('Lightbox event intercepted', {
-					type: evt && evt.type ? String(evt.type) : '',
-					href: link.getAttribute('href') || '',
-					defaultPreventedBefore: !!(evt && evt.defaultPrevented),
-					targetTag: evt && evt.target && evt.target.tagName ? String(evt.target.tagName) : '',
-					shouldOpen: !!shouldOpen
-				});
 				if (evt) {
-					if (shouldOpen) {
-						evt.__umMltgHandled = true;
-					}
-					if (typeof evt.preventDefault === 'function') {
-						evt.preventDefault();
-					}
+					evt.preventDefault();
 					if (typeof evt.stopImmediatePropagation === 'function') {
 						evt.stopImmediatePropagation();
-					} else if (typeof evt.stopPropagation === 'function') {
+					} else {
 						evt.stopPropagation();
 					}
 				}
-				if (shouldOpen) {
-					openLightboxFromLink(link);
-				}
-				return true;
-			}
-			function shouldSkipDownEvent(event) {
-				if (!event) { return false; }
-				if (event.type === 'mousedown' && typeof event.button === 'number' && event.button !== 0) {
-					return true;
-				}
-				return false;
-			}
-			function handleLightboxPointerDown(event) {
-				var evt = event || window.event;
-				if (shouldSkipDownEvent(evt)) {
-					return;
-				}
-				var openedFromPointer = interceptLightboxEvent.call(this, evt, true);
-				if (openedFromPointer) {
-					suppressClickOpenUntil = Date.now() + 500;
-				}
-			}
-			function handleLightboxLinkClick(event) {
-				var evt = event || window.event;
-				if (Date.now() < suppressClickOpenUntil) {
-					var link = findLightboxLinkFromTarget(evt && evt.target ? evt.target : null);
-					if (!link && this && this.matches && this.matches('a[data-um-lightbox="1"]')) {
-						link = this;
-					}
-					if (link && root.contains(link)) {
-						lightboxDebugLog('Suppressing duplicate click after pointer-open', {
-							href: link.getAttribute('href') || ''
-						});
-						if (evt) {
-							evt.__umMltgHandled = true;
-							if (typeof evt.preventDefault === 'function') {
-								evt.preventDefault();
-							}
-							if (typeof evt.stopImmediatePropagation === 'function') {
-								evt.stopImmediatePropagation();
-							} else if (typeof evt.stopPropagation === 'function') {
-								evt.stopPropagation();
-							}
-						}
-						return false;
-					}
-				}
-				return interceptLightboxEvent.call(this, evt, true);
-			}
-			function bindDownCaptureListeners(target, handler) {
-				if (!target || !target.addEventListener) { return; }
-				var downEvents = [];
-				if (window && window.PointerEvent) {
-					downEvents = ['pointerdown'];
-				} else {
-					downEvents = ['touchstart', 'mousedown'];
-				}
-				downEvents.forEach(function(eventName) {
-					target.addEventListener(eventName, handler, true);
-				});
-			}
-			lightboxLinks.forEach(function(lightboxLink) {
-				bindDownCaptureListeners(lightboxLink, handleLightboxPointerDown);
-				lightboxLink.addEventListener('click', handleLightboxLinkClick, true);
-				lightboxLink.onclick = handleLightboxLinkClick;
-			});
-			bindDownCaptureListeners(root, handleLightboxPointerDown);
-			root.addEventListener('click', handleLightboxLinkClick, true);
-			if (window && window.addEventListener) {
-				bindDownCaptureListeners(window, handleLightboxPointerDown);
-				window.addEventListener('click', handleLightboxLinkClick, true);
-			}
-			bindDownCaptureListeners(document, handleLightboxPointerDown);
-			document.addEventListener('click', handleLightboxLinkClick, true);
+				openLightboxFromLink(link);
+			}, true);
 			if (closeBtn) {
 				closeBtn.addEventListener('click', closeOverlay);
 			}
@@ -3505,6 +3489,8 @@ JS;
 			'lightboxSlideshowButton' => false,
 			'lightboxSlideshowSeconds' => 3.0,
 			'lightboxSlideshowTransition' => 'none',
+			'lightboxModalBackgroundColor' => '#000000',
+			'lightboxModalTextColor' => '#ffffff',
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -3579,6 +3565,20 @@ JS;
 		if (isset($settings['media_library_tag_gallery_lightbox_slideshow_transition'])) {
 			$defaults['lightboxSlideshowTransition'] = sanitize_key((string) $settings['media_library_tag_gallery_lightbox_slideshow_transition']);
 		}
+		if (!empty($settings['media_library_tag_gallery_lightbox_modal_background_color']) && is_string($settings['media_library_tag_gallery_lightbox_modal_background_color'])) {
+			$modal_background_color = sanitize_hex_color($settings['media_library_tag_gallery_lightbox_modal_background_color']);
+			if (is_string($modal_background_color) && $modal_background_color !== '') {
+				$defaults['lightboxModalBackgroundColor'] = $modal_background_color;
+			}
+		}
+		if (!empty($settings['media_library_tag_gallery_lightbox_modal_text_color']) && is_string($settings['media_library_tag_gallery_lightbox_modal_text_color'])) {
+			$modal_text_color = sanitize_hex_color($settings['media_library_tag_gallery_lightbox_modal_text_color']);
+			if (is_string($modal_text_color) && $modal_text_color !== '') {
+				$defaults['lightboxModalTextColor'] = $modal_text_color;
+			}
+		}
+		$defaults['lightboxModalBackgroundColor'] = sanitize_hex_color((string) ($defaults['lightboxModalBackgroundColor'] ?? '#000000')) ?: '#000000';
+		$defaults['lightboxModalTextColor'] = sanitize_hex_color((string) ($defaults['lightboxModalTextColor'] ?? '#ffffff')) ?: '#ffffff';
 		$valid_lightbox_slideshow_transitions = ['none', 'crossfade', 'slide_left'];
 		if (!in_array((string) $defaults['lightboxSlideshowTransition'], $valid_lightbox_slideshow_transitions, true)) {
 			$defaults['lightboxSlideshowTransition'] = 'none';

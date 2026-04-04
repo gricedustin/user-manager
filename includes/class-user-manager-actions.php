@@ -2376,6 +2376,12 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_lightbox_slideshow_transition'] = in_array($lightbox_transition, $allowed_lightbox_transitions, true)
 					? $lightbox_transition
 					: 'none';
+				$settings['media_library_tag_gallery_lightbox_modal_background_color'] = isset($_POST['media_library_tag_gallery_lightbox_modal_background_color'])
+					? sanitize_hex_color(wp_unslash($_POST['media_library_tag_gallery_lightbox_modal_background_color']))
+					: '';
+				$settings['media_library_tag_gallery_lightbox_modal_text_color'] = isset($_POST['media_library_tag_gallery_lightbox_modal_text_color'])
+					? sanitize_hex_color(wp_unslash($_POST['media_library_tag_gallery_lightbox_modal_text_color']))
+					: '';
 				$settings['media_library_tags_show_tags_on_thumbnails_bulk_select'] = isset($_POST['media_library_tags_show_tags_on_thumbnails_bulk_select']) && $_POST['media_library_tags_show_tags_on_thumbnails_bulk_select'] === '1';
 				$settings['media_library_tags_sticky_bulk_toolbar_mobile'] = isset($_POST['media_library_tags_sticky_bulk_toolbar_mobile']) && $_POST['media_library_tags_sticky_bulk_toolbar_mobile'] === '1';
 				$settings['media_library_tag_gallery_hidden_frontend_tags'] = isset($_POST['media_library_tag_gallery_hidden_frontend_tags'])
