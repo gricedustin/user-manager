@@ -162,6 +162,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$bg_color    = self::restricted_access_get_overlay_background_color($settings);
 		$text_color  = self::restricted_access_get_overlay_text_color($settings);
 		$overlay_img = self::restricted_access_get_overlay_image_url($settings);
+		$overlay_img_max_width = self::restricted_access_get_overlay_image_max_width($settings);
 		$has_image   = $overlay_img !== '';
 		?>
 		<!doctype html>
@@ -186,14 +187,31 @@ trait User_Manager_Core_Restricted_Access_Trait {
 					background-color: <?php echo esc_attr($bg_color); ?>;
 					color: <?php echo esc_attr($text_color); ?>;
 					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-					<?php if ($has_image) : ?>
-					background-image: url('<?php echo esc_url($overlay_img); ?>');
-					background-size: cover;
-					background-position: center center;
-					background-repeat: no-repeat;
+				}
+				.um-restricted-access-overlay-image-wrap {
+					position: fixed;
+					inset: 0;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					padding: 20px;
+					box-sizing: border-box;
+					pointer-events: none;
+					z-index: 0;
+				}
+				.um-restricted-access-overlay-image {
+					display: block;
+					width: 100%;
+					height: auto;
+					<?php if ($overlay_img_max_width !== '') : ?>
+					max-width: <?php echo esc_html($overlay_img_max_width); ?>;
+					<?php else : ?>
+					max-width: none;
 					<?php endif; ?>
 				}
 				.um-restricted-access-card {
+					position: relative;
+					z-index: 1;
 					width: 100%;
 					max-width: 560px;
 					padding: 30px 24px;
@@ -237,6 +255,11 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			</style>
 		</head>
 		<body class="um-restricted-access-overlay">
+			<?php if ($has_image) : ?>
+				<div class="um-restricted-access-overlay-image-wrap" aria-hidden="true">
+					<img class="um-restricted-access-overlay-image" src="<?php echo esc_url($overlay_img); ?>" alt="" />
+				</div>
+			<?php endif; ?>
 			<div class="um-restricted-access-card">
 				<h1><?php echo esc_html($message); ?></h1>
 				<?php if ($show_password_form) : ?>
@@ -464,6 +487,22 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			return esc_url_raw((string) $settings['restricted_access_overlay_image']);
 		}
 		return '';
+	}
+
+	/**
+	 * Resolve optional overlay image max-width CSS value.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function restricted_access_get_overlay_image_max_width(array $settings): string {
+		$value = isset($settings['restricted_access_overlay_image_max_width'])
+			? trim((string) $settings['restricted_access_overlay_image_max_width'])
+			: '';
+		if ($value === '') {
+			return '';
+		}
+		$sanitized = sanitize_text_field($value);
+		return preg_match('/^[0-9.]+(px|%|vw|vh|rem|em)$/i', $sanitized) ? $sanitized : '';
 	}
 }
 

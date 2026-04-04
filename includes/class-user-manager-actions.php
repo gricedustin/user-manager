@@ -2756,6 +2756,7 @@ class User_Manager_Actions {
 				$restricted_overlay_text = isset($_POST['restricted_access_overlay_text_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_text_color'])) : '#ffffff';
 				$settings['restricted_access_overlay_text_color'] = $restricted_overlay_text ? $restricted_overlay_text : '#ffffff';
 				$settings['restricted_access_overlay_image_url'] = isset($_POST['restricted_access_overlay_image_url']) ? esc_url_raw(wp_unslash($_POST['restricted_access_overlay_image_url'])) : '';
+				$settings['restricted_access_overlay_image_max_width'] = isset($_POST['restricted_access_overlay_image_max_width']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_overlay_image_max_width'])) : '';
 				// Keep Send Email permanently enabled because Login Tools depend on
 				// shared email templates from this add-on context.
 				$settings['send_email_users_enabled'] = true;

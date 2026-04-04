@@ -26,6 +26,7 @@ class User_Manager_Addon_Restricted_Access {
 		$overlay_bg = isset($settings['restricted_access_overlay_background_color']) ? (string) $settings['restricted_access_overlay_background_color'] : '#000000';
 		$overlay_text_color = isset($settings['restricted_access_overlay_text_color']) ? (string) $settings['restricted_access_overlay_text_color'] : '#ffffff';
 		$overlay_image = isset($settings['restricted_access_overlay_image_url']) ? (string) $settings['restricted_access_overlay_image_url'] : '';
+		$overlay_image_max_width = isset($settings['restricted_access_overlay_image_max_width']) ? (string) $settings['restricted_access_overlay_image_max_width'] : '';
 		$roles = User_Manager_Core::get_user_roles();
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-restricted-access" data-um-active-selectors="#um-restricted-access-enabled">
@@ -105,6 +106,12 @@ class User_Manager_Addon_Restricted_Access {
 						<p>
 							<button type="button" class="button" id="um-restricted-access-overlay-image-upload"><?php esc_html_e('Select Image', 'user-manager'); ?></button>
 						</p>
+					</div>
+
+					<div class="um-form-field">
+						<label for="um-restricted-access-overlay-image-max-width"><strong><?php esc_html_e('Full Screen Overlay Image Max Width', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-restricted-access-overlay-image-max-width" name="restricted_access_overlay_image_max_width" class="regular-text" value="<?php echo esc_attr($overlay_image_max_width); ?>" placeholder="<?php esc_attr_e('e.g. 1200px', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<p class="description"><?php esc_html_e('Optional. Example values: 1200px, 90vw, 60rem, none.', 'user-manager'); ?></p>
 					</div>
 				</div>
 			</div>

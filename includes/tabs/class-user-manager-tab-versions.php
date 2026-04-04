@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.77 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on now includes a new "Full Screen Overlay Image Max Width" setting directly under the overlay image URL field.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When an overlay image is used, it now renders at width: 100% and applies the optional max-width value when provided.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.76 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Mosaic Grid mobile behavior now preserves mosaic tile sizing when Number of Columns (Mobile) is 3 or more, instead of forcing all tiles to uniform size on mobile.', 'user-manager'); ?></li>

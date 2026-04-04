@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.76
+ * Version: 2.5.77
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.77 - March 16, 2026
+ * - Restricted Access add-on now includes a new "Full Screen Overlay Image Max Width" field directly under "Full Screen Overlay Image".
+ * - Full Screen Overlay image now renders as width: 100% with an optional max-width constraint when provided, improving responsive control.
+ *
  * 2.5.76 - March 16, 2026
  * - Mosaic Grid mobile behavior now preserves irregular mosaic tile spans when Number of Columns (Mobile) is set to 3 or higher, instead of forcing all tiles back to equal-size blocks.
  * - When mobile columns are 1-2, the layout still flattens to uniform tiles for readability; 3+ columns now keeps the mosaic styling active on mobile.
