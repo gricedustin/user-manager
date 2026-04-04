@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.64 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added URL-based front-end lightbox diagnostics for Media Library Tags gallery: use ?um_mltg_debug=1 to enable detailed click/open/control logs for each gallery instance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Debug mode now includes an on-page floating panel and optional ?um_mltg_debug_open=1 auto-open behavior to quickly isolate whether failures are in click interception or overlay rendering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.62 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Refactored front-end lightbox runtime to a single source of truth by removing the global fallback overlay runtime that could conflict with per-gallery control wiring.', 'user-manager'); ?></li>

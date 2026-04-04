@@ -2280,6 +2280,94 @@ JS;
 			var overlay = document.getElementById('<?php echo esc_js($uid); ?>-lightbox');
 			if (!overlay) { return; }
 			overlay.setAttribute('data-um-lightbox-bound', '1');
+			var debugInstanceLabel = <?php echo wp_json_encode((string) $uid); ?> || 'um-mltg';
+			function readDebugQueryFlag(paramName) {
+				var value = '';
+				try {
+					var urlObj = new URL(window.location.href);
+					value = String(urlObj.searchParams.get(paramName) || '');
+				} catch (err) {
+					var regex = new RegExp('(?:\\?|&)' + String(paramName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:=([^&]*))?(?:&|$)', 'i');
+					var matches = String(window.location.search || '').match(regex);
+					if (matches && typeof matches[1] !== 'undefined') {
+						value = decodeURIComponent(String(matches[1] || '').replace(/\+/g, ' '));
+					}
+				}
+				if (!value) { return false; }
+				return /^(1|true|yes|on)$/i.test(String(value));
+			}
+			var lightboxDebugEnabled = readDebugQueryFlag('um_mltg_debug');
+			var lightboxDebugAutoOpen = readDebugQueryFlag('um_mltg_debug_open');
+			function serializeDebugDetails(details) {
+				if (typeof details === 'undefined' || details === null) {
+					return '';
+				}
+				if (typeof details === 'string') {
+					return details;
+				}
+				try {
+					return JSON.stringify(details);
+				} catch (err) {
+					return String(details);
+				}
+			}
+			function ensureLightboxDebugPanel() {
+				if (!lightboxDebugEnabled || !document || !document.body) {
+					return null;
+				}
+				if (!window.__umMltgDebugPanelState) {
+					var panel = document.createElement('div');
+					panel.id = 'um-mltg-debug-panel';
+					panel.style.position = 'fixed';
+					panel.style.right = '12px';
+					panel.style.bottom = '12px';
+					panel.style.width = '380px';
+					panel.style.maxWidth = 'calc(100vw - 24px)';
+					panel.style.maxHeight = '40vh';
+					panel.style.overflow = 'hidden';
+					panel.style.zIndex = '1000001';
+					panel.style.background = 'rgba(0,0,0,0.92)';
+					panel.style.border = '1px solid rgba(255,255,255,0.28)';
+					panel.style.borderRadius = '6px';
+					panel.style.color = '#fff';
+					panel.style.font = '12px/1.35 monospace';
+					var title = document.createElement('div');
+					title.textContent = 'UM Lightbox Debug Enabled (?um_mltg_debug=1)';
+					title.style.padding = '8px 10px';
+					title.style.borderBottom = '1px solid rgba(255,255,255,0.2)';
+					title.style.fontWeight = '700';
+					var logWrap = document.createElement('div');
+					logWrap.style.padding = '8px 10px';
+					logWrap.style.maxHeight = 'calc(40vh - 42px)';
+					logWrap.style.overflow = 'auto';
+					panel.appendChild(title);
+					panel.appendChild(logWrap);
+					document.body.appendChild(panel);
+					window.__umMltgDebugPanelState = {
+						logWrap: logWrap
+					};
+				}
+				return window.__umMltgDebugPanelState;
+			}
+			function lightboxDebugLog(message, details) {
+				if (!lightboxDebugEnabled) { return; }
+				var suffix = serializeDebugDetails(details);
+				var text = '[UM MLTG][' + String(debugInstanceLabel) + '] ' + String(message) + (suffix ? (' ' + suffix) : '');
+				if (window.console && typeof window.console.log === 'function') {
+					window.console.log(text);
+				}
+				var panelState = ensureLightboxDebugPanel();
+				if (!panelState || !panelState.logWrap) {
+					return;
+				}
+				var line = document.createElement('div');
+				line.textContent = new Date().toISOString().slice(11, 19) + ' ' + text;
+				line.style.paddingBottom = '4px';
+				panelState.logWrap.insertBefore(line, panelState.logWrap.firstChild);
+				while (panelState.logWrap.children.length > 45) {
+					panelState.logWrap.removeChild(panelState.logWrap.lastChild);
+				}
+			}
 			var closeBtn = overlay.querySelector('.um-mltg-lightbox-close');
 			var image = overlay.querySelector('img');
 			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
@@ -2306,6 +2394,13 @@ JS;
 			var slideshowPlaying = false;
 			var bodyPrevOverflow = '';
 			var transitionTimer = null;
+			lightboxDebugLog('Runtime initialized', {
+				lightboxLinks: lightboxLinks.length,
+				enablePrevNextKeyboard: enablePrevNextKeyboard,
+				enableSlideshowButton: enableSlideshowButton,
+				slideshowSecondsPerPhoto: slideshowSecondsPerPhoto,
+				slideshowTransition: slideshowTransition
+			});
 			function normalizeTransition(value) {
 				var normalized = String(value || 'none');
 				if (normalized === 'crossfade' || normalized === 'slide_left') {
@@ -2329,6 +2424,10 @@ JS;
 				if (!isNaN(parsed) && parsed >= 0) {
 					return parsed;
 				}
+				lightboxDebugLog('Missing/invalid data-um-lightbox-index; using link array index fallback', {
+					rawIndex: raw || '',
+					href: link.getAttribute('href') || ''
+				});
 				return lightboxLinks.indexOf(link);
 			}
 			function stopSlideshow() {
@@ -2450,7 +2549,12 @@ JS;
 			function renderLightboxFromLink(link, animate) {
 				if (!link || !image) { return false; }
 				var src = link.getAttribute('href') || '';
-				if (!src) { return false; }
+				if (!src) {
+					lightboxDebugLog('Render aborted: link has no href/src', {
+						index: parseLightboxIndex(link)
+					});
+					return false;
+				}
 				var caption = link.getAttribute('data-um-lightbox-caption') || '';
 				var altText = link.getAttribute('data-um-lightbox-alt') || '';
 				var editUrl = link.getAttribute('data-um-lightbox-edit-url') || '';
@@ -2486,6 +2590,11 @@ JS;
 					setTagFeedback('', false);
 					setTagControlsBusy(false);
 				};
+				lightboxDebugLog('Rendering lightbox payload', {
+					index: parseLightboxIndex(link),
+					src: src,
+					animate: shouldAnimate
+				});
 				if (transitionTimer) {
 					window.clearTimeout(transitionTimer);
 					transitionTimer = null;
@@ -2518,14 +2627,22 @@ JS;
 				var link = lightboxLinks[normalizedIndex];
 				var shouldAnimate = overlay.getAttribute('aria-hidden') === 'false' && activeLightboxIndex >= 0;
 				if (!renderLightboxFromLink(link, shouldAnimate)) {
+					lightboxDebugLog('showLightboxByIndex aborted: render returned false', {
+						requestedIndex: nextIndex,
+						normalizedIndex: normalizedIndex
+					});
 					return;
 				}
 				activeLightboxIndex = normalizedIndex;
+				lightboxDebugLog('Active lightbox index set', {
+					activeLightboxIndex: activeLightboxIndex
+				});
 			}
 			function closeOverlay() {
 				stopSlideshow();
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
+				lightboxDebugLog('Overlay closed');
 				if (transitionTimer) {
 					window.clearTimeout(transitionTimer);
 					transitionTimer = null;
@@ -2588,6 +2705,10 @@ JS;
 					slideshowBtn.setAttribute('hidden', 'hidden');
 				}
 			}
+			if (overlay && overlay.style.display !== 'none') {
+				overlay.style.display = 'none';
+				overlay.setAttribute('aria-hidden', 'true');
+			}
 			if (duplicateLinkEl) {
 				duplicateLinkEl.addEventListener('click', function(event) {
 					event.preventDefault();
@@ -2620,6 +2741,11 @@ JS;
 				if (initialIndex < 0) {
 					initialIndex = lightboxLinks.indexOf(link);
 				}
+				lightboxDebugLog('Opening lightbox from link', {
+					initialIndex: initialIndex,
+					href: link.getAttribute('href') || '',
+					defaultPrevented: false
+				});
 				showLightboxByIndex(initialIndex);
 				if (document && document.body) {
 					bodyPrevOverflow = document.body.style.overflow || '';
@@ -2627,6 +2753,10 @@ JS;
 				}
 				overlay.style.display = 'flex';
 				overlay.setAttribute('aria-hidden', 'false');
+				lightboxDebugLog('Overlay opened', {
+					display: overlay.style.display,
+					ariaHidden: overlay.getAttribute('aria-hidden')
+				});
 			}
 			function findLightboxLinkFromTarget(target) {
 				if (!target) { return null; }
@@ -2635,19 +2765,46 @@ JS;
 				return node.closest('a[data-um-lightbox="1"]');
 			}
 			function handleLightboxLinkClick(event) {
-				if (!event || event.defaultPrevented) { return; }
-				var link = findLightboxLinkFromTarget(event && event.target ? event.target : null);
+				var evt = event || window.event;
+				if (evt && evt.__umMltgHandled) {
+					lightboxDebugLog('Click ignored: already handled');
+					return false;
+				}
+				var link = findLightboxLinkFromTarget(evt && evt.target ? evt.target : null);
+				if (!link && this && this.matches && this.matches('a[data-um-lightbox="1"]')) {
+					link = this;
+				}
 				if (!link) { return; }
-				event.preventDefault();
-				event.stopPropagation();
+				lightboxDebugLog('Lightbox link click detected', {
+					href: link.getAttribute('href') || '',
+					defaultPreventedBefore: !!(evt && evt.defaultPrevented),
+					targetTag: evt && evt.target && evt.target.tagName ? String(evt.target.tagName) : ''
+				});
+				if (evt) {
+					evt.__umMltgHandled = true;
+					if (typeof evt.preventDefault === 'function') {
+						evt.preventDefault();
+					}
+					if (typeof evt.stopImmediatePropagation === 'function') {
+						evt.stopImmediatePropagation();
+					} else if (typeof evt.stopPropagation === 'function') {
+						evt.stopPropagation();
+					}
+				}
 				openLightboxFromLink(link);
+				return false;
 			}
 			lightboxLinks.forEach(function(lightboxLink) {
 				lightboxLink.addEventListener('click', handleLightboxLinkClick, true);
-				lightboxLink.addEventListener('click', handleLightboxLinkClick, false);
+				lightboxLink.onclick = handleLightboxLinkClick;
 			});
 			root.addEventListener('click', handleLightboxLinkClick, true);
-			root.addEventListener('click', handleLightboxLinkClick, false);
+			document.addEventListener('click', function(event) {
+				var link = findLightboxLinkFromTarget(event && event.target ? event.target : null);
+				if (!link) { return; }
+				if (!root.contains(link)) { return; }
+				handleLightboxLinkClick(event);
+			}, true);
 			if (closeBtn) {
 				closeBtn.addEventListener('click', closeOverlay);
 			}
@@ -2655,6 +2812,10 @@ JS;
 				prevBtn.addEventListener('click', function(event) {
 					event.preventDefault();
 					event.stopPropagation();
+					lightboxDebugLog('Previous button click', {
+						enablePrevNextKeyboard: enablePrevNextKeyboard,
+						activeLightboxIndex: activeLightboxIndex
+					});
 					if (!enablePrevNextKeyboard || activeLightboxIndex < 0) { return; }
 					showLightboxByIndex(activeLightboxIndex - 1);
 				});
@@ -2663,6 +2824,10 @@ JS;
 				nextBtn.addEventListener('click', function(event) {
 					event.preventDefault();
 					event.stopPropagation();
+					lightboxDebugLog('Next button click', {
+						enablePrevNextKeyboard: enablePrevNextKeyboard,
+						activeLightboxIndex: activeLightboxIndex
+					});
 					if (!enablePrevNextKeyboard || activeLightboxIndex < 0) { return; }
 					showLightboxByIndex(activeLightboxIndex + 1);
 				});
@@ -2671,6 +2836,11 @@ JS;
 				slideshowBtn.addEventListener('click', function(event) {
 					event.preventDefault();
 					event.stopPropagation();
+					lightboxDebugLog('Slideshow button click', {
+						enableSlideshowButton: enableSlideshowButton,
+						activeLightboxIndex: activeLightboxIndex,
+						slideshowPlaying: slideshowPlaying
+					});
 					if (!enableSlideshowButton || !lightboxLinks.length || activeLightboxIndex < 0) { return; }
 					if (slideshowPlaying) {
 						stopSlideshow();
@@ -2690,6 +2860,7 @@ JS;
 			}
 			overlay.addEventListener('click', function(event) {
 				if (event.target === overlay) {
+					lightboxDebugLog('Overlay backdrop click -> close');
 					closeOverlay();
 				}
 			});
@@ -2703,12 +2874,20 @@ JS;
 				}
 				if (event.key === 'ArrowLeft') {
 					event.preventDefault();
+					lightboxDebugLog('Keyboard ArrowLeft navigation');
 					showLightboxByIndex(activeLightboxIndex - 1);
 				} else if (event.key === 'ArrowRight') {
 					event.preventDefault();
+					lightboxDebugLog('Keyboard ArrowRight navigation');
 					showLightboxByIndex(activeLightboxIndex + 1);
 				}
 			});
+			if (lightboxDebugAutoOpen && lightboxLinks.length) {
+				lightboxDebugLog('Auto-open enabled for first lightbox item');
+				window.setTimeout(function() {
+					openLightboxFromLink(lightboxLinks[0]);
+				}, 80);
+			}
 
 			var carouselRoot = root.querySelector('.um-mltg-carousel');
 			if (carouselRoot) {

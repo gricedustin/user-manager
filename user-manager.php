@@ -2,12 +2,20 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.62
+ * Version: 2.5.64
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.64 - March 16, 2026
+ * - Added front-end lightbox debug mode URL flag (?um_mltg_debug=1) with detailed console tracing and a small on-page debug log panel to diagnose click interception/runtime flow.
+ * - Added optional debug auto-open URL flag (?um_mltg_debug_open=1) to force-open the first lightbox image and isolate rendering/control issues from click handler issues.
+ *
+ * 2.5.63 - March 16, 2026
+ * - Fixed gallery click interception so lightbox opening cannot be bypassed by other front-end handlers; added a stricter capture-phase document fallback and immediate propagation stop for lightbox links.
+ * - Restored reliable image-click-to-lightbox behavior after the prior runtime consolidation.
+ *
  * 2.5.62 - March 16, 2026
  * - Removed the separate global front-end lightbox fallback runtime so only the per-gallery lightbox runtime handles interactions, preventing control-state conflicts.
  * - Tightened lightbox control visibility state (display/hidden/disabled/aria) so "Add a Play Slideshow Button" and navigation controls strictly follow settings.
