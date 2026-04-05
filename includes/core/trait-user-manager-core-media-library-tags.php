@@ -4240,10 +4240,10 @@ JS;
 	}
 
 	/**
-	 * Replace [tag-name]/[tag-description] with active URL tag values when enabled by block settings.
+	 * Replace [tag-name]/[tag-description]/[site-title] placeholders when enabled by block settings.
 	 */
 	private static function replace_media_library_tag_placeholders_in_text(string $text, bool $allow_html = false): string {
-		if (strpos($text, '[tag-name]') === false && strpos($text, '[tag-description]') === false) {
+		if (strpos($text, '[tag-name]') === false && strpos($text, '[tag-description]') === false && strpos($text, '[site-title]') === false) {
 			return $text;
 		}
 		if (!self::is_media_library_tag_name_placeholder_enabled_on_current_post()) {
@@ -4256,9 +4256,11 @@ JS;
 			$description = self::render_media_library_tag_description_paragraphs_html($placeholder_values);
 		}
 
+		$site_title = sanitize_text_field((string) get_bloginfo('name'));
 		return strtr($text, [
 			'[tag-name]' => (string) ($placeholder_values['name'] ?? ''),
 			'[tag-description]' => $description,
+			'[site-title]' => $site_title,
 		]);
 	}
 
