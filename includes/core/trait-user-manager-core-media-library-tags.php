@@ -3642,6 +3642,9 @@ JS;
 			<?php endif; ?>
 		</div>
 		<style>
+.um-media-library-tag-gallery {
+	margin-bottom: 25px;
+}
 .um-media-library-tag-description-wrap {
 	margin: 0 0 12px;
 }

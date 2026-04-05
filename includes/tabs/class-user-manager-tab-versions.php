@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.120 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added 25px bottom spacing to Media Library Tag Gallery wrapper output so gallery blocks have consistent space below the gallery container.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.119 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Media Library admin sort labels to use neutral "Views" wording instead of "Lightbox Views" in list/grid sort dropdowns.', 'user-manager'); ?></li>
