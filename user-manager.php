@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.92
+ * Version: 2.5.93
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.93 - March 16, 2026
+ * - Added a new Media Library Tags add-on setting: "Allow Simple Lightbox when clicking on a thumbnail".
+ * - Added block-level support (with "Use add-on default") for the same simple thumbnail lightbox behavior in Media Library Tag Gallery blocks.
+ * - When enabled, clicking thumbnails opens a simplified image-only lightbox (close + image only) while hiding advanced controls and admin tag tools.
+ *
  * 2.5.92 - March 16, 2026
  * - Library Tags Bulk Editor now splits rows into two sections: tags that are live in menu navigation first, then all remaining tags below.
  * - Added section header rows in the Bulk Editor table to clearly separate "Live in Menu Navigation" tags from other tags.

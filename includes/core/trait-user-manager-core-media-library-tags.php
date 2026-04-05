@@ -1604,6 +1604,8 @@ JS;
 				'lightboxModalBackgroundColor' => ['type' => 'string', 'default' => '#000000'],
 				'useDefaultLightboxModalTextColor' => ['type' => 'boolean', 'default' => true],
 				'lightboxModalTextColor' => ['type' => 'string', 'default' => '#ffffff'],
+				'useDefaultSimpleLightboxThumbnailClick' => ['type' => 'boolean', 'default' => true],
+				'simpleLightboxThumbnailClick' => ['type' => 'boolean', 'default' => true],
 			],
 			'editor_script' => 'um-media-library-tag-gallery-editor',
 		]);
@@ -1783,7 +1785,8 @@ JS;
 		lightboxModalTextColor: (function() {
 			var raw = String(defaults.lightboxModalTextColor || '#ffffff').trim();
 			return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : '#ffffff';
-		})()
+		})(),
+		simpleLightboxThumbnailClick: defaults.simpleLightboxThumbnailClick !== false
 	};
 
 	registerBlockType('custom/media-library-tag-gallery', {
@@ -1850,7 +1853,9 @@ JS;
 			lightboxModalTextColor: { type: 'string', default: (function() {
 				var raw = String(defaults.lightboxModalTextColor || '#ffffff').trim();
 				return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : '#ffffff';
-			})() }
+			})() },
+			useDefaultSimpleLightboxThumbnailClick: { type: 'boolean', default: true },
+			simpleLightboxThumbnailClick: { type: 'boolean', default: defaults.simpleLightboxThumbnailClick !== false }
 		},
 		edit: function(props) {
 			var a = props.attributes;
@@ -1878,6 +1883,7 @@ JS;
 			var useDefaultLightboxSlideshowTransition = !!a.useDefaultLightboxSlideshowTransition;
 			var useDefaultLightboxModalBackgroundColor = !!a.useDefaultLightboxModalBackgroundColor;
 			var useDefaultLightboxModalTextColor = !!a.useDefaultLightboxModalTextColor;
+			var useDefaultSimpleLightboxThumbnailClick = !!a.useDefaultSimpleLightboxThumbnailClick;
 			var effectiveColumnsDesktop = useDefaultColumnsDesktop ? fallbackDefaults.columnsDesktop : (a.columnsDesktop || fallbackDefaults.columnsDesktop);
 			var effectiveColumnsDesktopLt50 = useDefaultColumnsDesktopLt50 ? fallbackDefaults.columnsDesktopLt50 : (a.columnsDesktopLt50 || fallbackDefaults.columnsDesktopLt50);
 			var effectiveColumnsDesktopLt25 = useDefaultColumnsDesktopLt25 ? fallbackDefaults.columnsDesktopLt25 : (a.columnsDesktopLt25 || fallbackDefaults.columnsDesktopLt25);
@@ -1902,6 +1908,9 @@ JS;
 			var effectiveLightboxModalTextColor = useDefaultLightboxModalTextColor
 				? fallbackDefaults.lightboxModalTextColor
 				: sanitizeHex(a.lightboxModalTextColor, fallbackDefaults.lightboxModalTextColor);
+			var effectiveSimpleLightboxThumbnailClick = useDefaultSimpleLightboxThumbnailClick
+				? !!fallbackDefaults.simpleLightboxThumbnailClick
+				: !!a.simpleLightboxThumbnailClick;
 			return element.createElement(
 				Fragment,
 				{},
@@ -2187,6 +2196,18 @@ JS;
 							label: 'Use add-on default for Lightbox Modal Text Color',
 							checked: useDefaultLightboxModalTextColor,
 							onChange: function(v){ set({ useDefaultLightboxModalTextColor: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Allow Simple Lightbox when clicking on a thumbnail',
+							checked: effectiveSimpleLightboxThumbnailClick,
+							disabled: useDefaultSimpleLightboxThumbnailClick,
+							help: useDefaultSimpleLightboxThumbnailClick ? ('Using add-on default: ' + (fallbackDefaults.simpleLightboxThumbnailClick ? 'enabled' : 'disabled')) : 'Shows a simplified image-only lightbox (close + image only).',
+							onChange: function(v){ set({ simpleLightboxThumbnailClick: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Simple Lightbox thumbnail click',
+							checked: useDefaultSimpleLightboxThumbnailClick,
+							onChange: function(v){ set({ useDefaultSimpleLightboxThumbnailClick: !!v }); }
 						})
 					)
 				),
@@ -2236,6 +2257,7 @@ JS;
 		$use_default_lightbox_slideshow_transition = !empty($attrs['useDefaultLightboxSlideshowTransition']);
 		$use_default_lightbox_modal_background_color = !empty($attrs['useDefaultLightboxModalBackgroundColor']);
 		$use_default_lightbox_modal_text_color = !empty($attrs['useDefaultLightboxModalTextColor']);
+		$use_default_simple_lightbox_thumbnail_click = !empty($attrs['useDefaultSimpleLightboxThumbnailClick']);
 		$columns_desktop = $use_default_columns_desktop
 			? max(1, min(8, absint($defaults['columnsDesktop'])))
 			: max(1, min(8, absint($attrs['columnsDesktop'] ?? $defaults['columnsDesktop'])));
@@ -2297,6 +2319,9 @@ JS;
 		$lightbox_modal_text_color = $use_default_lightbox_modal_text_color
 			? sanitize_hex_color((string) ($defaults['lightboxModalTextColor'] ?? '#ffffff'))
 			: sanitize_hex_color((string) ($attrs['lightboxModalTextColor'] ?? ($defaults['lightboxModalTextColor'] ?? '#ffffff')));
+		$simple_lightbox_thumbnail_click = $use_default_simple_lightbox_thumbnail_click
+			? !empty($defaults['simpleLightboxThumbnailClick'])
+			: !empty($attrs['simpleLightboxThumbnailClick']);
 		if (!is_string($lightbox_modal_background_color) || $lightbox_modal_background_color === '') {
 			$lightbox_modal_background_color = '#000000';
 		}
@@ -2525,6 +2550,7 @@ JS;
 			<?php echo $lightbox_debug_enabled ? ' data-um-lightbox-debug="1"' : ' data-um-lightbox-debug="0"'; ?>
 			<?php echo $lightbox_debug_auto_open ? ' data-um-lightbox-debug-open="1"' : ' data-um-lightbox-debug-open="0"'; ?>
 			data-um-fallback-allow-controls="0"
+			<?php echo $simple_lightbox_thumbnail_click ? ' data-um-lightbox-simple-thumbnail-click="1"' : ' data-um-lightbox-simple-thumbnail-click="0"'; ?>
 		>
 			<?php if ($album_description_position === 'above' && $album_tag_description_html !== '') : ?>
 				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-above">
@@ -3038,11 +3064,18 @@ JS;
 			var prevBtn = overlay.querySelector('.um-mltg-lightbox-prev');
 			var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
 			var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
+			var controlsWrap = overlay.querySelector('.um-mltg-lightbox-controls');
 			var canManageLightboxTags = <?php echo $show_lightbox_admin_edit_link ? 'true' : 'false'; ?>;
 			var lightboxTagAjaxUrl = <?php echo wp_json_encode((string) $lightbox_tag_ajax_url); ?> || '';
 			var lightboxTagNonce = <?php echo wp_json_encode((string) $lightbox_tag_nonce); ?> || '';
 			var enablePrevNextKeyboard = <?php echo $lightbox_prev_next_keyboard ? 'true' : 'false'; ?>;
 			var enableSlideshowButton = <?php echo $lightbox_slideshow_button ? 'true' : 'false'; ?>;
+			var enableSimpleLightboxThumbnailClick = root.getAttribute('data-um-lightbox-simple-thumbnail-click') === '1';
+			if (enableSimpleLightboxThumbnailClick) {
+				enablePrevNextKeyboard = false;
+				enableSlideshowButton = false;
+				canManageLightboxTags = false;
+			}
 			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
 			var slideshowTransition = <?php echo wp_json_encode((string) $lightbox_slideshow_transition); ?> || 'none';
 			var lightboxLinks = Array.prototype.slice.call(root.querySelectorAll('[data-um-lightbox="1"]'));
@@ -3056,6 +3089,7 @@ JS;
 				lightboxLinks: lightboxLinks.length,
 				enablePrevNextKeyboard: enablePrevNextKeyboard,
 				enableSlideshowButton: enableSlideshowButton,
+				enableSimpleLightboxThumbnailClick: enableSimpleLightboxThumbnailClick,
 				slideshowSecondsPerPhoto: slideshowSecondsPerPhoto,
 				slideshowTransition: slideshowTransition
 			});
@@ -3226,6 +3260,26 @@ JS;
 					image.setAttribute('src', src);
 					image.setAttribute('alt', altText);
 					activeAttachmentId = attachmentId;
+					if (enableSimpleLightboxThumbnailClick) {
+						activeAttachmentId = 0;
+						if (captionEl) {
+							captionEl.textContent = '';
+							captionEl.style.display = 'none';
+						}
+						if (editLinkEl) {
+							editLinkEl.setAttribute('href', '#');
+							editLinkEl.style.display = 'none';
+						}
+						if (duplicateLinkEl) {
+							duplicateLinkEl.style.display = 'none';
+						}
+						if (tagToolsEl) {
+							tagToolsEl.style.display = 'none';
+						}
+						setTagFeedback('', false);
+						setTagControlsBusy(false);
+						return;
+					}
 					if (captionEl) {
 						captionEl.textContent = caption;
 						captionEl.style.display = caption ? 'block' : 'none';
@@ -3268,7 +3322,7 @@ JS;
 				}
 				image.classList.remove('is-transitioning');
 				applyPayload();
-				if (captionEl) {
+				if (!enableSimpleLightboxThumbnailClick && captionEl) {
 					captionEl.style.display = caption ? 'block' : 'none';
 				}
 				return true;
@@ -3362,6 +3416,9 @@ JS;
 				} else {
 					slideshowBtn.setAttribute('hidden', 'hidden');
 				}
+			}
+			if (controlsWrap) {
+				controlsWrap.style.display = (enableSimpleLightboxThumbnailClick || (!enablePrevNextKeyboard && !enableSlideshowButton)) ? 'none' : 'flex';
 			}
 			if (overlay && overlay.style.display !== 'none') {
 				overlay.style.display = 'none';
@@ -3669,6 +3726,7 @@ JS;
 			'lightboxSlideshowTransition' => 'none',
 			'lightboxModalBackgroundColor' => '#000000',
 			'lightboxModalTextColor' => '#ffffff',
+			'simpleLightboxThumbnailClick' => true,
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -3754,6 +3812,9 @@ JS;
 				$defaults['lightboxModalTextColor'] = $modal_text_color;
 			}
 		}
+		$defaults['simpleLightboxThumbnailClick'] = isset($settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'])
+			? $settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'] === true || $settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'] === '1'
+			: (bool) $defaults['simpleLightboxThumbnailClick'];
 		$defaults['lightboxModalBackgroundColor'] = sanitize_hex_color((string) ($defaults['lightboxModalBackgroundColor'] ?? '#000000')) ?: '#000000';
 		$defaults['lightboxModalTextColor'] = sanitize_hex_color((string) ($defaults['lightboxModalTextColor'] ?? '#ffffff')) ?: '#ffffff';
 		$valid_lightbox_slideshow_transitions = ['none', 'crossfade', 'slide_left'];
