@@ -2511,8 +2511,55 @@ JS;
 				return;
 			}
 			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
+			var deepLinkParam = 'um_lightbox_image_id';
 			var api = {};
 			var tracker = window.umMediaLibraryLightboxViewTracker || null;
+			function parseAttachmentIdValue(rawValue) {
+				var parsed = parseInt(String(rawValue || '0'), 10);
+				if (isNaN(parsed) || parsed < 1) {
+					return 0;
+				}
+				return parsed;
+			}
+			function getAttachmentIdFromTrigger(trigger) {
+				if (!trigger || !trigger.getAttribute) {
+					return 0;
+				}
+				return parseAttachmentIdValue(
+					trigger.getAttribute('data-um-modal-attachment-id')
+					|| trigger.getAttribute('data-um-lightbox-attachment-id')
+					|| ''
+				);
+			}
+			function readAttachmentIdFromUrl() {
+				var raw = '';
+				try {
+					var urlObj = new URL(window.location.href);
+					raw = String(urlObj.searchParams.get(deepLinkParam) || '');
+				} catch (err) {
+					var regex = new RegExp('(?:\\?|&)' + String(deepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+					var matches = String(window.location.search || '').match(regex);
+					if (matches && typeof matches[1] !== 'undefined') {
+						raw = decodeURIComponent(String(matches[1] || '').replace(/\+/g, ' '));
+					}
+				}
+				return parseAttachmentIdValue(raw);
+			}
+			function updateAttachmentIdInUrl(attachmentId) {
+				if (!window.history || typeof window.history.replaceState !== 'function') {
+					return;
+				}
+				try {
+					var urlObj = new URL(window.location.href);
+					if (attachmentId > 0) {
+						urlObj.searchParams.set(deepLinkParam, String(attachmentId));
+					} else {
+						urlObj.searchParams.delete(deepLinkParam);
+					}
+					window.history.replaceState(window.history.state, '', urlObj.toString());
+				} catch (err) {
+				}
+			}
 			function trackLightboxView(trigger) {
 				if (!tracker || typeof tracker.track !== 'function' || !trigger) {
 					return;
@@ -2607,6 +2654,7 @@ JS;
 				var caption = trigger.getAttribute('data-um-modal-caption') || trigger.getAttribute('data-um-lightbox-caption') || '';
 				var altText = trigger.getAttribute('data-um-modal-alt') || trigger.getAttribute('data-um-lightbox-alt') || '';
 				var editUrl = trigger.getAttribute('data-um-modal-edit-url') || trigger.getAttribute('data-um-lightbox-edit-url') || '';
+				var attachmentId = getAttachmentIdFromTrigger(trigger);
 				var image = overlay.querySelector('img');
 				var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
 				var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
@@ -2660,9 +2708,11 @@ JS;
 				overlay.setAttribute('data-um-inline-prevnext', allowPrevNext ? '1' : '0');
 				overlay.setAttribute('data-um-inline-swipe', allowSwipe ? '1' : '0');
 				overlay.setAttribute('data-um-inline-index', String(Math.max(0, index)));
+				overlay.setAttribute('data-um-inline-attachment-id', String(attachmentId));
 				overlay.setAttribute('data-um-inline-slideshow', allowSlideshow ? '1' : '0');
 				overlay.setAttribute('data-um-inline-slideshow-seconds', String(slideshowSeconds));
 				overlay.setAttribute('data-um-inline-transition', normalizedTransition);
+				updateAttachmentIdInUrl(attachmentId);
 				trackLightboxView(trigger);
 				bindSwipeHandlers(overlay);
 				overlay.style.display = 'flex';
@@ -2775,6 +2825,8 @@ JS;
 				if (document && document.body) {
 					document.body.style.overflow = '';
 				}
+				overlay.setAttribute('data-um-inline-attachment-id', '0');
+				updateAttachmentIdInUrl(0);
 				return false;
 			};
 			api.closeFromButton = function(button, event) {
@@ -3277,7 +3329,7 @@ JS;
 		$inline_lightbox_overlay_id = $uid . '-lightbox';
 		$lightbox_view_track_url = admin_url('admin-ajax.php');
 		$lightbox_view_track_nonce = wp_create_nonce('um_media_library_lightbox_view');
-		$inline_lightbox_open_onclick = "if(window.umMltgInline&&window.umMltgInline.open){return !!window.umMltgInline.open(this," . wp_json_encode((string) $inline_lightbox_overlay_id) . ",event);}event.preventDefault();event.stopPropagation();var o=document.getElementById(" . wp_json_encode((string) $inline_lightbox_overlay_id) . ");if(!o){return false;}var s=this.getAttribute('data-um-modal-src')||this.getAttribute('data-um-lightbox-src')||this.getAttribute('href')||'';if(!s){return false;}if(window.umMediaLibraryLightboxViewTracker&&window.umMediaLibraryLightboxViewTracker.track){window.umMediaLibraryLightboxViewTracker.track(this);}var i=o.querySelector('img');if(i){i.setAttribute('src',s);}o.style.display='flex';o.setAttribute('aria-hidden','false');if(document&&document.body){document.body.style.overflow='hidden';}return false;";
+		$inline_lightbox_open_onclick = "if(window.umMltgInline&&window.umMltgInline.open){return !!window.umMltgInline.open(this," . wp_json_encode((string) $inline_lightbox_overlay_id) . ",event);}event.preventDefault();event.stopPropagation();var o=document.getElementById(" . wp_json_encode((string) $inline_lightbox_overlay_id) . ");if(!o){return false;}var s=this.getAttribute('data-um-modal-src')||this.getAttribute('data-um-lightbox-src')||this.getAttribute('href')||'';if(!s){return false;}if(window.umMediaLibraryLightboxViewTracker&&window.umMediaLibraryLightboxViewTracker.track){window.umMediaLibraryLightboxViewTracker.track(this);}var aidRaw=this.getAttribute('data-um-modal-attachment-id')||this.getAttribute('data-um-lightbox-attachment-id')||'';var aid=parseInt(String(aidRaw||'0'),10);if(!isNaN(aid)&&aid>0&&window.history&&typeof window.history.replaceState==='function'){try{var u=new URL(window.location.href);u.searchParams.set('um_lightbox_image_id',String(aid));window.history.replaceState(window.history.state,'',u.toString());}catch(err){}}var i=o.querySelector('img');if(i){i.setAttribute('src',s);}o.style.display='flex';o.setAttribute('aria-hidden','false');if(document&&document.body){document.body.style.overflow='hidden';}return false;";
 		$inline_lightbox_close_onclick = "if(window.umMltgInline&&window.umMltgInline.closeFromButton){return !!window.umMltgInline.closeFromButton(this,event);}return false;";
 		$inline_lightbox_overlay_onclick = "if(window.umMltgInline&&window.umMltgInline.backdrop){return !!window.umMltgInline.backdrop(this,event);}return true;";
 		$inline_lightbox_overlay_onkeydown = "if(window.umMltgInline&&window.umMltgInline.keydown){return !!window.umMltgInline.keydown(this,event);}return true;";
@@ -3899,6 +3951,7 @@ JS;
 			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
 			var slideshowTransition = <?php echo wp_json_encode((string) $lightbox_slideshow_transition); ?> || 'none';
 			var lightboxTriggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
+			var lightboxDeepLinkParam = 'um_lightbox_image_id';
 			var lightboxLinks = [];
 			var activeLightboxIndex = -1;
 			var activeAttachmentId = 0;
@@ -3953,6 +4006,63 @@ JS;
 					href: link.getAttribute('href') || ''
 				});
 				return lightboxLinks.indexOf(link);
+			}
+			function parseAttachmentIdValue(rawValue) {
+				var parsed = parseInt(String(rawValue || '0'), 10);
+				if (isNaN(parsed) || parsed < 1) {
+					return 0;
+				}
+				return parsed;
+			}
+			function getAttachmentIdFromLink(link) {
+				if (!link || !link.getAttribute) {
+					return 0;
+				}
+				return parseAttachmentIdValue(
+					link.getAttribute('data-um-modal-attachment-id')
+					|| link.getAttribute('data-um-lightbox-attachment-id')
+					|| ''
+				);
+			}
+			function readLightboxAttachmentIdFromUrl() {
+				var raw = '';
+				try {
+					var urlObj = new URL(window.location.href);
+					raw = String(urlObj.searchParams.get(lightboxDeepLinkParam) || '');
+				} catch (err) {
+					var regex = new RegExp('(?:\\?|&)' + String(lightboxDeepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+					var matches = String(window.location.search || '').match(regex);
+					if (matches && typeof matches[1] !== 'undefined') {
+						raw = decodeURIComponent(String(matches[1] || '').replace(/\+/g, ' '));
+					}
+				}
+				return parseAttachmentIdValue(raw);
+			}
+			function updateLightboxAttachmentIdInUrl(attachmentId) {
+				if (!window.history || typeof window.history.replaceState !== 'function') {
+					return;
+				}
+				try {
+					var urlObj = new URL(window.location.href);
+					if (attachmentId > 0) {
+						urlObj.searchParams.set(lightboxDeepLinkParam, String(attachmentId));
+					} else {
+						urlObj.searchParams.delete(lightboxDeepLinkParam);
+					}
+					window.history.replaceState(window.history.state, '', urlObj.toString());
+				} catch (err) {
+				}
+			}
+			function findLightboxIndexByAttachmentId(attachmentId) {
+				if (!attachmentId) {
+					return -1;
+				}
+				for (var i = 0; i < lightboxLinks.length; i += 1) {
+					if (getAttachmentIdFromLink(lightboxLinks[i]) === attachmentId) {
+						return i;
+					}
+				}
+				return -1;
 			}
 			function trackLightboxView(link) {
 				if (!lightboxViewTracker || typeof lightboxViewTracker.track !== 'function' || !link) {
@@ -4182,6 +4292,7 @@ JS;
 					return;
 				}
 				activeLightboxIndex = normalizedIndex;
+				updateLightboxAttachmentIdInUrl(getAttachmentIdFromLink(link));
 				lightboxDebugLog('Active lightbox index set', {
 					activeLightboxIndex: activeLightboxIndex
 				});
@@ -4236,6 +4347,7 @@ JS;
 				setTagFeedback('', false);
 				setTagControlsBusy(false);
 				activeAttachmentId = 0;
+				updateLightboxAttachmentIdInUrl(0);
 				if (document && document.body) {
 					document.body.style.overflow = bodyPrevOverflow;
 				}
@@ -4372,6 +4484,33 @@ JS;
 				openLightboxFromLink(link, sourceLabel || 'event');
 				return true;
 			}
+			function autoOpenLightboxFromUrlAttachmentId() {
+				var attachmentIdFromUrl = readLightboxAttachmentIdFromUrl();
+				if (!attachmentIdFromUrl) {
+					return false;
+				}
+				if (window.__umMltgDeepLinkConsumed === attachmentIdFromUrl) {
+					return false;
+				}
+				refreshLightboxLinks();
+				var matchedIndex = findLightboxIndexByAttachmentId(attachmentIdFromUrl);
+				if (matchedIndex < 0) {
+					return false;
+				}
+				lightboxDebugLog('Auto-open from URL attachment id', {
+					attachmentId: attachmentIdFromUrl,
+					index: matchedIndex
+				});
+				showLightboxByIndex(matchedIndex);
+				if (document && document.body) {
+					bodyPrevOverflow = document.body.style.overflow || '';
+					document.body.style.overflow = 'hidden';
+				}
+				overlay.style.display = 'flex';
+				overlay.setAttribute('aria-hidden', 'false');
+				window.__umMltgDeepLinkConsumed = attachmentIdFromUrl;
+				return true;
+			}
 			root.addEventListener('click', function(event) {
 				openLightboxFromEvent(event, 'root-capture');
 			}, true);
@@ -4490,7 +4629,8 @@ JS;
 			if (lightboxDebugAutoOpen) {
 				refreshLightboxLinks();
 			}
-			if (lightboxDebugAutoOpen && lightboxLinks.length) {
+			var openedByUrlDeepLink = autoOpenLightboxFromUrlAttachmentId();
+			if (!openedByUrlDeepLink && lightboxDebugAutoOpen && lightboxLinks.length) {
 				lightboxDebugLog('Auto-open enabled for first lightbox item');
 				window.setTimeout(function() {
 					openLightboxFromLink(lightboxLinks[0], 'debug-auto-open');
@@ -4629,10 +4769,68 @@ JS;
 			var lightboxItems = [];
 			var activeIndex = -1;
 			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
+			var lightboxDeepLinkParam = 'um_lightbox_image_id';
 			var swipeStartX = 0;
 			var swipeStartY = 0;
 			var swipeTracking = false;
 			var swipeThresholdPx = 44;
+			function parseAttachmentIdValue(rawValue) {
+				var parsed = parseInt(String(rawValue || '0'), 10);
+				if (isNaN(parsed) || parsed < 1) {
+					return 0;
+				}
+				return parsed;
+			}
+			function getAttachmentIdFromTrigger(trigger) {
+				if (!trigger || !trigger.getAttribute) {
+					return 0;
+				}
+				return parseAttachmentIdValue(
+					trigger.getAttribute('data-um-modal-attachment-id')
+					|| trigger.getAttribute('data-um-lightbox-attachment-id')
+					|| ''
+				);
+			}
+			function readLightboxAttachmentIdFromUrl() {
+				var raw = '';
+				try {
+					var urlObj = new URL(window.location.href);
+					raw = String(urlObj.searchParams.get(lightboxDeepLinkParam) || '');
+				} catch (err) {
+					var regex = new RegExp('(?:\\?|&)' + String(lightboxDeepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+					var matches = String(window.location.search || '').match(regex);
+					if (matches && typeof matches[1] !== 'undefined') {
+						raw = decodeURIComponent(String(matches[1] || '').replace(/\+/g, ' '));
+					}
+				}
+				return parseAttachmentIdValue(raw);
+			}
+			function updateLightboxAttachmentIdInUrl(attachmentId) {
+				if (!window.history || typeof window.history.replaceState !== 'function') {
+					return;
+				}
+				try {
+					var urlObj = new URL(window.location.href);
+					if (attachmentId > 0) {
+						urlObj.searchParams.set(lightboxDeepLinkParam, String(attachmentId));
+					} else {
+						urlObj.searchParams.delete(lightboxDeepLinkParam);
+					}
+					window.history.replaceState(window.history.state, '', urlObj.toString());
+				} catch (err) {
+				}
+			}
+			function findTriggerByAttachmentId(attachmentId) {
+				if (!attachmentId) {
+					return null;
+				}
+				for (var i = 0; i < lightboxItems.length; i += 1) {
+					if (getAttachmentIdFromTrigger(lightboxItems[i]) === attachmentId) {
+						return lightboxItems[i];
+					}
+				}
+				return null;
+			}
 
 			function refreshItems() {
 				lightboxItems = Array.prototype.slice.call(root.querySelectorAll(triggerSelector));
@@ -4691,6 +4889,7 @@ JS;
 				if (activeIndex < 0 && lightboxItems.length) {
 					activeIndex = 0;
 				}
+				updateLightboxAttachmentIdInUrl(getAttachmentIdFromTrigger(trigger));
 
 				image.setAttribute('src', src);
 				image.setAttribute('alt', altText);
@@ -4764,6 +4963,7 @@ JS;
 				if (document && document.body) {
 					document.body.style.overflow = bodyPrevOverflow;
 				}
+				updateLightboxAttachmentIdInUrl(0);
 				activeIndex = -1;
 			}
 
@@ -4850,6 +5050,14 @@ JS;
 					openByIndex(activeIndex + 1);
 				}
 			});
+			var attachmentIdFromUrl = readLightboxAttachmentIdFromUrl();
+			if (attachmentIdFromUrl > 0 && window.__umMltgDeepLinkConsumed !== attachmentIdFromUrl) {
+				var deepLinkTrigger = findTriggerByAttachmentId(attachmentIdFromUrl);
+				if (deepLinkTrigger) {
+					openFromTrigger(deepLinkTrigger);
+					window.__umMltgDeepLinkConsumed = attachmentIdFromUrl;
+				}
+			}
 		})();
 		</script>
 		<?php

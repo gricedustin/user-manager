@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.118 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added lightbox deep-link URLs for Media Library Tag Gallery images using the um_lightbox_image_id query parameter so opening an image writes its attachment ID to the URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Pages loaded with a matching um_lightbox_image_id now auto-open the corresponding image in lightbox (including resilient fallback runtime), enabling shareable links to specific photos.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.117 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Extended Media Library Tag Gallery lightbox tracking to include current-period counters for Year, Month, Week, and Day alongside total Lightbox Views.', 'user-manager'); ?></li>

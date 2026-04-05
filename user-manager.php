@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.117
+ * Version: 2.5.118
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.118 - March 16, 2026
+ * - Added lightbox deep-link support with URL parameter um_lightbox_image_id=<attachment_id> when opening Media Library Tag Gallery images.
+ * - Shared links with um_lightbox_image_id now auto-open the matching image in lightbox on page load (primary and resilient fallback runtimes).
+ * - Lightbox URL deep-link parameter is cleared automatically when closing the modal.
+ *
  * 2.5.117 - March 16, 2026
  * - Added rolling Lightbox Views counters for current Year, Month, Week, and Day on each media item.
  * - Lightbox open tracking now increments total + current period counters in attachment metadata.
