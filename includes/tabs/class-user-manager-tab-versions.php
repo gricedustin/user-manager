@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.105 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tag Gallery inline fallback bootstrap registration by hooking the helper script to wp_head early, ensuring window.umMltgInline is available before gallery click handlers run.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Kept a tiny direct click-open fallback inside trigger onclick handlers so lightbox can still open if global helper registration is blocked by severe third-party script failures.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.104 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved the inline fallback lightbox helper into a dedicated PHP method and ensured it prints in the front-end head before gallery output, preventing parser breakage in block editor script payloads.', 'user-manager'); ?></li>

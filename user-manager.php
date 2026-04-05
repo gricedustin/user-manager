@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.104
+ * Version: 2.5.105
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.105 - March 16, 2026
+ * - Hooked the resilient Media Library lightbox helper into wp_head so it initializes before gallery markup and remains available even when later in-body scripts fail.
+ * - Added a tiny direct open fallback path inside gallery trigger onclick handlers to force modal open when the helper object is unavailable due to unrelated JavaScript errors.
+ *
  * 2.5.104 - March 16, 2026
  * - Fixed a regression where front-end Media Library Tag Gallery helper code was accidentally injected into block-editor JavaScript, which could break script parsing and prevent lightbox opening.
  * - Added a dedicated front-end inline lightbox helper method and hook-based bootstrap so fallback lightbox behavior initializes from a safe standalone path.
