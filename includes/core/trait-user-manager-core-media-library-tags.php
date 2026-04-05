@@ -2616,8 +2616,12 @@ JS;
 			$lightbox_modal_text_color_css = '#ffffff';
 		}
 		$inline_lightbox_overlay_id = $uid . '-lightbox';
-		$inline_lightbox_open_onclick = "event.preventDefault();event.stopPropagation();var o=document.getElementById(" . wp_json_encode((string) $inline_lightbox_overlay_id) . ");if(!o){return false;}var src=this.getAttribute('data-um-modal-src')||this.getAttribute('data-um-lightbox-src')||this.getAttribute('href')||'';if(!src){return false;}var i=o.querySelector('img');if(i){i.setAttribute('src',src);i.setAttribute('alt',this.getAttribute('data-um-modal-alt')||this.getAttribute('data-um-lightbox-alt')||'');}var c=o.querySelector('.um-mltg-lightbox-caption');if(c){var t=this.getAttribute('data-um-modal-caption')||this.getAttribute('data-um-lightbox-caption')||'';c.textContent=t;c.style.display=t?'block':'none';}var e=o.querySelector('.um-mltg-lightbox-edit-link');if(e){var u=this.getAttribute('data-um-modal-edit-url')||this.getAttribute('data-um-lightbox-edit-url')||'';if(u){e.setAttribute('href',u);e.style.display='inline-block';}else{e.setAttribute('href','#');e.style.display='none';}}var id=this.getAttribute('data-um-modal-attachment-id')||this.getAttribute('data-um-lightbox-attachment-id')||'';var d=o.querySelector('.um-mltg-lightbox-duplicate-link');if(d){d.style.display=id?'inline-block':'none';}var tt=o.querySelector('.um-mltg-lightbox-tag-tools');if(tt){tt.style.display='none';}var cw=o.querySelector('.um-mltg-lightbox-controls');if(cw){cw.style.display='none';}o.style.display='flex';o.setAttribute('aria-hidden','false');if(document&&document.body){document.body.style.overflow='hidden';}return false;";
-		$inline_lightbox_close_onclick = "var o=this.closest('.um-mltg-lightbox-overlay');if(o){o.style.display='none';o.setAttribute('aria-hidden','true');var i=o.querySelector('img');if(i){i.setAttribute('src','');}}if(document&&document.body){document.body.style.overflow='';}return false;";
+		$inline_lightbox_open_onclick = "return !!(window.umMltgInline && window.umMltgInline.open(this, " . wp_json_encode((string) $inline_lightbox_overlay_id) . ", event));";
+		$inline_lightbox_close_onclick = "return !!(window.umMltgInline && window.umMltgInline.closeFromButton(this, event));";
+		$inline_lightbox_overlay_onclick = "return !!(window.umMltgInline && window.umMltgInline.backdrop(this, event));";
+		$inline_lightbox_overlay_onkeydown = "return !!(window.umMltgInline && window.umMltgInline.keydown(this, event));";
+		$inline_lightbox_prev_onclick = "return !!(window.umMltgInline && window.umMltgInline.step(this, -1, event));";
+		$inline_lightbox_next_onclick = "return !!(window.umMltgInline && window.umMltgInline.step(this, 1, event));";
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
@@ -3007,8 +3011,6 @@ JS;
 		.um-mltg-lightbox-caption { margin-top: 10px; color: var(--um-mltg-lightbox-modal-text, #fff); font-size: 14px; line-height: 1.45; text-align: center; max-width: min(95vw, 1600px); display: none; }
 		.um-mltg-lightbox-edit-link { margin-top: 8px; color: var(--um-mltg-lightbox-modal-text, #fff); text-decoration: underline; display: none; font-size: 13px; }
 		.um-mltg-lightbox-edit-link:hover { opacity: 0.8; }
-		.um-mltg-lightbox-duplicate-link { margin-top: 6px; color: var(--um-mltg-lightbox-modal-text, #fff); text-decoration: underline; display: none; font-size: 13px; cursor: pointer; }
-		.um-mltg-lightbox-duplicate-link:hover { opacity: 0.8; }
 		.um-mltg-lightbox-tag-tools { margin-top: 8px; display: none; width: min(95vw, 560px); }
 		.um-mltg-lightbox-tag-tools-row { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
 		.um-mltg-lightbox-tag-input {
@@ -3070,12 +3072,217 @@ JS;
 		window.__UM_MLTG_FORCE_DEBUG = <?php echo $lightbox_debug_enabled ? 'true' : 'false'; ?> || !!window.__UM_MLTG_FORCE_DEBUG;
 		window.__UM_MLTG_FORCE_DEBUG_OPEN = <?php echo $lightbox_debug_auto_open ? 'true' : 'false'; ?> || !!window.__UM_MLTG_FORCE_DEBUG_OPEN;
 		</script>
-		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true">
+		<script>
+		(function() {
+			if (window.umMltgInline) {
+				return;
+			}
+			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
+			var api = {};
+			function getItems(root, trigger) {
+				if (root && root.querySelectorAll) {
+					var fromRoot = Array.prototype.slice.call(root.querySelectorAll(triggerSelector));
+					if (fromRoot.length) {
+						return fromRoot;
+					}
+				}
+				return trigger ? [trigger] : [];
+			}
+			function updateControls(overlay, allowPrevNext) {
+				var controlsWrap = overlay.querySelector('.um-mltg-lightbox-controls');
+				var prevBtn = overlay.querySelector('.um-mltg-lightbox-prev');
+				var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
+				var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
+				if (controlsWrap) {
+					controlsWrap.style.display = allowPrevNext ? 'flex' : 'none';
+				}
+				if (prevBtn) {
+					prevBtn.style.display = allowPrevNext ? 'inline-block' : 'none';
+				}
+				if (nextBtn) {
+					nextBtn.style.display = allowPrevNext ? 'inline-block' : 'none';
+				}
+				if (slideshowBtn) {
+					slideshowBtn.style.display = 'none';
+				}
+			}
+			function renderOverlay(overlay, trigger, root, items, index) {
+				var src = trigger.getAttribute('data-um-modal-src') || trigger.getAttribute('data-um-lightbox-src') || trigger.getAttribute('href') || '';
+				if (!src) {
+					return false;
+				}
+				var caption = trigger.getAttribute('data-um-modal-caption') || trigger.getAttribute('data-um-lightbox-caption') || '';
+				var altText = trigger.getAttribute('data-um-modal-alt') || trigger.getAttribute('data-um-lightbox-alt') || '';
+				var editUrl = trigger.getAttribute('data-um-modal-edit-url') || trigger.getAttribute('data-um-lightbox-edit-url') || '';
+				var image = overlay.querySelector('img');
+				var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
+				var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
+				var tagToolsEl = overlay.querySelector('.um-mltg-lightbox-tag-tools');
+				if (image) {
+					image.setAttribute('src', src);
+					image.setAttribute('alt', altText);
+				}
+				if (captionEl) {
+					captionEl.textContent = caption;
+					captionEl.style.display = caption ? 'block' : 'none';
+				}
+				if (editLinkEl) {
+					if (editUrl) {
+						editLinkEl.setAttribute('href', editUrl);
+						editLinkEl.style.display = 'inline-block';
+					} else {
+						editLinkEl.setAttribute('href', '#');
+						editLinkEl.style.display = 'none';
+					}
+				}
+				if (tagToolsEl) {
+					tagToolsEl.style.display = 'none';
+				}
+				var allowPrevNext = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-prev-next') === '1');
+				updateControls(overlay, allowPrevNext);
+				if (root && root.id) {
+					overlay.setAttribute('data-um-inline-root-id', root.id);
+				} else {
+					overlay.setAttribute('data-um-inline-root-id', '');
+				}
+				overlay.setAttribute('data-um-inline-prevnext', allowPrevNext ? '1' : '0');
+				overlay.setAttribute('data-um-inline-index', String(Math.max(0, index)));
+				overlay.style.display = 'flex';
+				overlay.setAttribute('aria-hidden', 'false');
+				overlay.setAttribute('tabindex', '-1');
+				if (overlay.focus) {
+					overlay.focus();
+				}
+				if (document && document.body) {
+					document.body.style.overflow = 'hidden';
+				}
+				return true;
+			}
+			api.open = function(trigger, overlayId, event) {
+				if (event) {
+					event.preventDefault();
+					if (typeof event.stopImmediatePropagation === 'function') {
+						event.stopImmediatePropagation();
+					} else if (typeof event.stopPropagation === 'function') {
+						event.stopPropagation();
+					}
+				}
+				var overlay = document.getElementById(String(overlayId || ''));
+				if (!overlay || !trigger) {
+					return false;
+				}
+				var root = trigger.closest ? trigger.closest('.um-media-library-tag-gallery') : null;
+				var items = getItems(root, trigger);
+				var rawIndex = trigger.getAttribute('data-um-modal-index') || trigger.getAttribute('data-um-lightbox-index') || '';
+				var index = parseInt(String(rawIndex || ''), 10);
+				if (isNaN(index) || index < 0 || index >= items.length) {
+					index = items.indexOf(trigger);
+				}
+				if (index < 0) {
+					index = 0;
+				}
+				return renderOverlay(overlay, trigger, root, items, index);
+			};
+			api.closeFromOverlay = function(overlay, event) {
+				if (event) {
+					event.preventDefault();
+					if (typeof event.stopImmediatePropagation === 'function') {
+						event.stopImmediatePropagation();
+					} else if (typeof event.stopPropagation === 'function') {
+						event.stopPropagation();
+					}
+				}
+				if (!overlay) {
+					return false;
+				}
+				overlay.style.display = 'none';
+				overlay.setAttribute('aria-hidden', 'true');
+				var image = overlay.querySelector('img');
+				if (image) {
+					image.setAttribute('src', '');
+				}
+				if (document && document.body) {
+					document.body.style.overflow = '';
+				}
+				return false;
+			};
+			api.closeFromButton = function(button, event) {
+				var overlay = button && button.closest ? button.closest('.um-mltg-lightbox-overlay') : null;
+				return api.closeFromOverlay(overlay, event);
+			};
+			api.backdrop = function(overlay, event) {
+				if (!overlay || !event) {
+					return false;
+				}
+				if (event.target === overlay) {
+					return api.closeFromOverlay(overlay, event);
+				}
+				return true;
+			};
+			api.step = function(button, direction, event) {
+				if (event) {
+					event.preventDefault();
+					if (typeof event.stopImmediatePropagation === 'function') {
+						event.stopImmediatePropagation();
+					} else if (typeof event.stopPropagation === 'function') {
+						event.stopPropagation();
+					}
+				}
+				var overlay = button && button.closest ? button.closest('.um-mltg-lightbox-overlay') : null;
+				if (!overlay || overlay.getAttribute('data-um-inline-prevnext') !== '1') {
+					return false;
+				}
+				var rootId = overlay.getAttribute('data-um-inline-root-id') || '';
+				var root = rootId ? document.getElementById(rootId) : null;
+				if (!root) {
+					return false;
+				}
+				var items = getItems(root, null);
+				if (!items.length) {
+					return false;
+				}
+				var currentIndex = parseInt(String(overlay.getAttribute('data-um-inline-index') || '0'), 10);
+				if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= items.length) {
+					currentIndex = 0;
+				}
+				var nextIndex = direction < 0 ? (currentIndex - 1 + items.length) % items.length : (currentIndex + 1) % items.length;
+				var trigger = items[nextIndex];
+				if (!trigger) {
+					return false;
+				}
+				return renderOverlay(overlay, trigger, root, items, nextIndex);
+			};
+			api.keydown = function(overlay, event) {
+				if (!overlay || !event) {
+					return true;
+				}
+				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+					return api.closeFromOverlay(overlay, event);
+				}
+				if (overlay.getAttribute('aria-hidden') !== 'false' || overlay.getAttribute('data-um-inline-prevnext') !== '1') {
+					return true;
+				}
+				if (event.key === 'ArrowLeft') {
+					var prevBtn = overlay.querySelector('.um-mltg-lightbox-prev');
+					if (prevBtn) {
+						return api.step(prevBtn, -1, event);
+					}
+				} else if (event.key === 'ArrowRight') {
+					var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
+					if (nextBtn) {
+						return api.step(nextBtn, 1, event);
+					}
+				}
+				return true;
+			};
+			window.umMltgInline = api;
+		})();
+		</script>
+		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true" onclick="<?php echo esc_attr($inline_lightbox_overlay_onclick); ?>" onkeydown="<?php echo esc_attr($inline_lightbox_overlay_onkeydown); ?>">
 			<button type="button" class="um-mltg-lightbox-close" onclick="<?php echo esc_attr($inline_lightbox_close_onclick); ?>" aria-label="<?php esc_attr_e('Close image', 'user-manager'); ?>">&times;</button>
 			<img src="" alt="" />
 			<p class="um-mltg-lightbox-caption"></p>
 			<a href="#" class="um-mltg-lightbox-edit-link" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Edit image', 'user-manager'); ?></a>
-			<a href="#" class="um-mltg-lightbox-duplicate-link"><?php esc_html_e('Duplicate', 'user-manager'); ?></a>
 			<div class="um-mltg-lightbox-tag-tools">
 				<div class="um-mltg-lightbox-tag-tools-row">
 					<input type="text" class="um-mltg-lightbox-tag-input" placeholder="<?php echo esc_attr__('Add tag(s), comma separated', 'user-manager'); ?>" />
@@ -3084,8 +3291,8 @@ JS;
 				<p class="um-mltg-lightbox-tag-feedback" aria-live="polite"></p>
 			</div>
 			<div class="um-mltg-lightbox-controls">
-				<button type="button" class="um-mltg-lightbox-prev"><?php esc_html_e('Previous', 'user-manager'); ?></button>
-				<button type="button" class="um-mltg-lightbox-next"><?php esc_html_e('Next', 'user-manager'); ?></button>
+				<button type="button" class="um-mltg-lightbox-prev" onclick="<?php echo esc_attr($inline_lightbox_prev_onclick); ?>"><?php esc_html_e('Previous', 'user-manager'); ?></button>
+				<button type="button" class="um-mltg-lightbox-next" onclick="<?php echo esc_attr($inline_lightbox_next_onclick); ?>"><?php esc_html_e('Next', 'user-manager'); ?></button>
 				<button type="button" class="um-mltg-lightbox-slideshow-toggle"><?php esc_html_e('Play Slideshow', 'user-manager'); ?></button>
 			</div>
 		</div>
@@ -3191,7 +3398,6 @@ JS;
 			var image = overlay.querySelector('img');
 			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
 			var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
-			var duplicateLinkEl = overlay.querySelector('.um-mltg-lightbox-duplicate-link');
 			var tagToolsEl = overlay.querySelector('.um-mltg-lightbox-tag-tools');
 			var tagInputEl = overlay.querySelector('.um-mltg-lightbox-tag-input');
 			var tagAddBtnEl = overlay.querySelector('.um-mltg-lightbox-tag-add-button');
@@ -3435,9 +3641,6 @@ JS;
 							editLinkEl.style.display = 'none';
 						}
 					}
-					if (duplicateLinkEl) {
-						duplicateLinkEl.style.display = (canManageLightboxTags && attachmentId > 0) ? 'inline-block' : 'none';
-					}
 					if (tagToolsEl) {
 						tagToolsEl.style.display = (canManageLightboxTags && attachmentId > 0) ? 'block' : 'none';
 					}
@@ -3513,9 +3716,6 @@ JS;
 					editLinkEl.setAttribute('href', '#');
 					editLinkEl.style.display = 'none';
 				}
-				if (duplicateLinkEl) {
-					duplicateLinkEl.style.display = 'none';
-				}
 				if (tagToolsEl) {
 					tagToolsEl.style.display = 'none';
 				}
@@ -3565,12 +3765,6 @@ JS;
 			if (overlay && overlay.style.display !== 'none') {
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
-			}
-			if (duplicateLinkEl) {
-				duplicateLinkEl.addEventListener('click', function(event) {
-					event.preventDefault();
-					addTagListToActiveAttachment(['duplicate']);
-				});
 			}
 			if (tagAddBtnEl) {
 				tagAddBtnEl.addEventListener('click', function() {
@@ -3887,7 +4081,6 @@ JS;
 			var image = overlay.querySelector('img');
 			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
 			var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
-			var duplicateLinkEl = overlay.querySelector('.um-mltg-lightbox-duplicate-link');
 			var tagToolsEl = overlay.querySelector('.um-mltg-lightbox-tag-tools');
 			var controlsWrap = overlay.querySelector('.um-mltg-lightbox-controls');
 			var bodyPrevOverflow = '';
@@ -3911,9 +4104,6 @@ JS;
 			if (prevBtn) { prevBtn.style.display = enablePrevNextKeyboard ? 'inline-block' : 'none'; }
 			if (nextBtn) { nextBtn.style.display = enablePrevNextKeyboard ? 'inline-block' : 'none'; }
 			if (slideshowBtn) { slideshowBtn.style.display = 'none'; }
-			if (duplicateLinkEl) {
-				duplicateLinkEl.style.display = 'none';
-			}
 			if (tagToolsEl) {
 				tagToolsEl.style.display = 'none';
 			}

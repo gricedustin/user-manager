@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.103 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the Lightbox "Duplicate" quick link from Media Library Tag Gallery modal output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox now closes when clicking outside the image (overlay backdrop), including in the inline fail-safe fallback path.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Restored Previous/Next controls and ArrowLeft/ArrowRight keyboard navigation in both primary and inline-fallback lightbox paths when the "Add Previous & Next Links..." setting is enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.102 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added inline lightbox-open fallback directly on Media Library Tag Gallery image trigger elements so clicks can still open images even when external scripts throw page-level JS errors.', 'user-manager'); ?></li>
