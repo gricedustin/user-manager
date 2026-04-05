@@ -2498,31 +2498,33 @@ JS;
 								$description_attr = $image_alt !== '' ? $image_alt : $description_text;
 								?>
 								<figure class="um-media-library-tag-gallery-item um-mltg-carousel-slide" data-slide-index="<?php echo esc_attr((string) $index); ?>">
-									<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
-										<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
-								<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-									<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
-									<?php else : ?>
-										<?php echo $image_html; ?>
-									<?php endif; ?>
-								<?php if ($show_description_under_photo && $description_text !== '') : ?>
+									<div class="um-media-library-tag-gallery-media-wrap">
+										<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
+											<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
+										<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
+										<?php else : ?>
+											<?php echo $image_html; ?>
+										<?php endif; ?>
+										<?php if ($show_admin_inline_tag_controls) : ?>
+											<?php $inline_tags = isset($attachment_tags_map[$attachment_id]) && is_array($attachment_tags_map[$attachment_id]) ? $attachment_tags_map[$attachment_id] : []; ?>
+											<div
+												class="um-mltg-inline-admin-tags"
+												data-um-inline-admin-tags="1"
+												data-um-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
+												data-um-inline-tag-nonce="<?php echo esc_attr((string) $admin_inline_tag_nonce); ?>"
+											>
+												<span class="um-mltg-inline-admin-tags-list"><?php echo esc_html(!empty($inline_tags) ? implode(', ', $inline_tags) : __('No tags', 'user-manager')); ?></span>
+												<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="hide"><?php esc_html_e('Hide', 'user-manager'); ?></a>
+												<span class="um-mltg-inline-admin-tags-sep">|</span>
+												<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="duplicate"><?php esc_html_e('Duplicate', 'user-manager'); ?></a>
+												<span class="um-mltg-inline-admin-tags-status" aria-live="polite"></span>
+											</div>
+										<?php endif; ?>
+									</div>
+									<?php if ($show_description_under_photo && $description_text !== '') : ?>
 										<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($description_text); ?></figcaption>
 									<?php endif; ?>
-								<?php if ($show_admin_inline_tag_controls) : ?>
-									<?php $inline_tags = isset($attachment_tags_map[$attachment_id]) && is_array($attachment_tags_map[$attachment_id]) ? $attachment_tags_map[$attachment_id] : []; ?>
-									<div
-										class="um-mltg-inline-admin-tags"
-										data-um-inline-admin-tags="1"
-										data-um-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
-										data-um-inline-tag-nonce="<?php echo esc_attr((string) $admin_inline_tag_nonce); ?>"
-									>
-										<span class="um-mltg-inline-admin-tags-list"><?php echo esc_html(!empty($inline_tags) ? implode(', ', $inline_tags) : __('No tags', 'user-manager')); ?></span>
-										<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="hide"><?php esc_html_e('Hide', 'user-manager'); ?></a>
-										<span class="um-mltg-inline-admin-tags-sep">|</span>
-										<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="duplicate"><?php esc_html_e('Duplicate', 'user-manager'); ?></a>
-										<span class="um-mltg-inline-admin-tags-status" aria-live="polite"></span>
-									</div>
-								<?php endif; ?>
 								</figure>
 							<?php endforeach; ?>
 						</div>
@@ -2611,33 +2613,35 @@ JS;
 						}
 						?>
 						<figure class="<?php echo esc_attr(implode(' ', $item_classes)); ?>"<?php echo $is_infinite_hidden ? ' data-um-infinite-hidden="1"' : ''; ?>>
-							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
-								<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
-							<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-									<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
-							<?php else : ?>
-								<?php echo $image_html; ?>
-							<?php endif; ?>
+							<div class="um-media-library-tag-gallery-media-wrap">
+								<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
+									<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+								<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
+										<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
+								<?php else : ?>
+									<?php echo $image_html; ?>
+								<?php endif; ?>
+								<?php if ($show_admin_inline_tag_controls) : ?>
+									<?php $inline_tags = isset($attachment_tags_map[$attachment_id]) && is_array($attachment_tags_map[$attachment_id]) ? $attachment_tags_map[$attachment_id] : []; ?>
+									<div
+										class="um-mltg-inline-admin-tags"
+										data-um-inline-admin-tags="1"
+										data-um-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
+										data-um-inline-tag-nonce="<?php echo esc_attr((string) $admin_inline_tag_nonce); ?>"
+									>
+										<span class="um-mltg-inline-admin-tags-list"><?php echo esc_html(!empty($inline_tags) ? implode(', ', $inline_tags) : __('No tags', 'user-manager')); ?></span>
+										<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="hide"><?php esc_html_e('Hide', 'user-manager'); ?></a>
+										<span class="um-mltg-inline-admin-tags-sep">|</span>
+										<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="duplicate"><?php esc_html_e('Duplicate', 'user-manager'); ?></a>
+										<span class="um-mltg-inline-admin-tags-status" aria-live="polite"></span>
+									</div>
+								<?php endif; ?>
+							</div>
 							<?php if ($style === 'timeline_story') : ?>
 								<div class="um-mltg-timeline-meta"><?php echo esc_html((string) $date_label); ?></div>
 							<?php endif; ?>
 							<?php if ($show_description_under_photo && $description_text !== '') : ?>
 								<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($description_text); ?></figcaption>
-							<?php endif; ?>
-							<?php if ($show_admin_inline_tag_controls) : ?>
-								<?php $inline_tags = isset($attachment_tags_map[$attachment_id]) && is_array($attachment_tags_map[$attachment_id]) ? $attachment_tags_map[$attachment_id] : []; ?>
-								<div
-									class="um-mltg-inline-admin-tags"
-									data-um-inline-admin-tags="1"
-									data-um-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
-									data-um-inline-tag-nonce="<?php echo esc_attr((string) $admin_inline_tag_nonce); ?>"
-								>
-									<span class="um-mltg-inline-admin-tags-list"><?php echo esc_html(!empty($inline_tags) ? implode(', ', $inline_tags) : __('No tags', 'user-manager')); ?></span>
-									<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="hide"><?php esc_html_e('Hide', 'user-manager'); ?></a>
-									<span class="um-mltg-inline-admin-tags-sep">|</span>
-									<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="duplicate"><?php esc_html_e('Duplicate', 'user-manager'); ?></a>
-									<span class="um-mltg-inline-admin-tags-status" aria-live="polite"></span>
-								</div>
 							<?php endif; ?>
 						</figure>
 					<?php endforeach; ?>
@@ -2717,6 +2721,7 @@ JS;
 			}
 		}
 		.um-media-library-tag-gallery-item { margin: 0; position: relative; }
+		.um-media-library-tag-gallery-media-wrap { position: relative; }
 		.um-media-library-tag-gallery-link { display: block; width: 100%; height: 100%; }
 		.um-media-library-tag-gallery-lightbox-trigger {
 			border: 0;
@@ -2795,29 +2800,40 @@ JS;
 		.um-mltg-timeline-meta { margin:6px 0 4px; font-size:12px; color:#2271b1; font-weight:600; }
 		.um-media-library-tag-gallery-caption { margin-top: 6px; font-size: 12px; color: #50575e; }
 		.um-mltg-inline-admin-tags {
-			margin-top: 6px;
+			position: absolute;
+			left: 6px;
+			right: 6px;
+			bottom: 6px;
+			z-index: 6;
 			font-size: 11px;
 			line-height: 1.4;
-			color: #50575e;
+			color: #fff;
 			display: flex;
 			flex-wrap: wrap;
 			gap: 6px;
 			align-items: center;
+			padding: 5px 7px;
+			border-radius: 4px;
+			background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.38));
 		}
 		.um-mltg-inline-admin-tags-list {
 			font-weight: 500;
 			word-break: break-word;
 		}
 		.um-mltg-inline-admin-tag-action {
+			color: #fff;
 			text-decoration: underline;
 			cursor: pointer;
 		}
+		.um-mltg-inline-admin-tag-action:hover {
+			opacity: 0.85;
+		}
 		.um-mltg-inline-admin-tags-sep {
-			color: #8c8f94;
+			color: rgba(255, 255, 255, 0.72);
 		}
 		.um-mltg-inline-admin-tags-status {
 			font-size: 11px;
-			color: #2271b1;
+			color: #fff;
 		}
 		.um-mltg-inline-admin-tags.is-busy .um-mltg-inline-admin-tag-action {
 			pointer-events: none;

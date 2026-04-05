@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.84 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Administrator-only per-photo tag actions (tag list + Hide/Duplicate) are now rendered as an overlay pinned to the bottom of each gallery image instead of below the photo flow.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Overlay styling includes a subtle dark backdrop and per-style spacing adjustments so controls remain readable while staying visually attached to each photo tile.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.83 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags front-end gallery now shows administrator-only per-photo tag tools under every image (all gallery styles), including the current tag list and quick-action links for Hide and Duplicate.', 'user-manager'); ?></li>

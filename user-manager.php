@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.83
+ * Version: 2.5.84
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.84 - March 16, 2026
+ * - Moved admin-only per-image tag controls (tag list + Hide + Duplicate actions) into an overlay positioned at the bottom of each gallery photo.
+ * - Overlay controls now sit on top of image thumbnails with a semi-transparent backdrop while preserving AJAX no-refresh tag actions.
+ *
  * 2.5.83 - March 16, 2026
  * - Media Library Tags front-end gallery now shows admin-only per-image tag controls below every photo across all styles, including a list of current tags plus "Hide" and "Duplicate" quick actions.
  * - New per-image "Hide" and "Duplicate" controls add Library Tags asynchronously (AJAX) without page reload, and refresh the displayed tag list inline after successful updates.
