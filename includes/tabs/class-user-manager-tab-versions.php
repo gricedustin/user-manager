@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.115 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Restricted Access shared-password session persistence by validating across all duplicate um_restricted_access cookie values present in the raw Cookie header, not only the single parsed $_COOKIE value.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Restricted Access now writes signed access cookies across all relevant path/domain variants (including host-only and common www/non-www host variants) to prevent homepage prompts caused by cookie scope collisions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.114 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added per-image Media Library Tag Gallery lightbox view tracking. Each time a lightbox image opens, the attachment now increments a stored "Lightbox Views" meta count.', 'user-manager'); ?></li>

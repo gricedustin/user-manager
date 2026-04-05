@@ -748,8 +748,8 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$expires = time() + ($minutes * MINUTE_IN_SECONDS);
 		$sig     = hash_hmac('sha256', (string) $expires, wp_salt('auth'));
 		$value   = $expires . '.' . $sig;
-		$domain  = self::restricted_access_get_cookie_domain();
 		$paths   = self::restricted_access_get_cookie_paths();
+		$domains = self::restricted_access_get_cookie_domains();
 
 		$options_base = [
 			'expires'  => $expires,
@@ -757,13 +757,15 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			'httponly' => true,
 			'samesite' => 'Lax',
 		];
-		if ($domain !== '') {
-			$options_base['domain'] = $domain;
-		}
 		foreach ($paths as $path) {
-			$options = $options_base;
-			$options['path'] = $path;
-			setcookie('um_restricted_access', $value, $options);
+			foreach ($domains as $domain) {
+				$options = $options_base;
+				$options['path'] = $path;
+				if ($domain !== '') {
+					$options['domain'] = $domain;
+				}
+				setcookie('um_restricted_access', $value, $options);
+			}
 		}
 		$_COOKIE['um_restricted_access'] = $value;
 	}
@@ -799,28 +801,105 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	}
 
 	/**
-	 * Resolve cookie domain; empty string means host-only cookie.
+	 * Resolve cookie domains to support host-only, current host and
+	 * common www/non-www variants for consistent cross-page reads.
+	 *
+	 * @return array<int,string>
 	 */
-	private static function restricted_access_get_cookie_domain(): string {
+	private static function restricted_access_get_cookie_domains(): array {
+		$domains = [''];
 		if (defined('COOKIE_DOMAIN') && is_string(COOKIE_DOMAIN) && COOKIE_DOMAIN !== '') {
-			return COOKIE_DOMAIN;
+			$domains[] = strtolower(trim(COOKIE_DOMAIN));
+			return array_values(array_unique(array_filter($domains, static function ($value): bool {
+				return is_string($value);
+			})));
 		}
+
+		$hosts = [];
 		$home_host = wp_parse_url(home_url('/'), PHP_URL_HOST);
-		if (!is_string($home_host) || $home_host === '') {
-			return '';
+		if (is_string($home_host) && $home_host !== '') {
+			$hosts[] = $home_host;
 		}
-		$home_host = strtolower(trim($home_host));
-		if ($home_host === 'localhost' || filter_var($home_host, FILTER_VALIDATE_IP)) {
-			return '';
+		$request_host = isset($_SERVER['HTTP_HOST']) ? (string) wp_unslash($_SERVER['HTTP_HOST']) : '';
+		if ($request_host !== '') {
+			$request_host_no_port = preg_replace('/:\d+$/', '', $request_host);
+			if (is_string($request_host_no_port) && $request_host_no_port !== '') {
+				$hosts[] = $request_host_no_port;
+			}
 		}
-		return $home_host;
+
+		foreach ($hosts as $host) {
+			$host = strtolower(trim((string) $host));
+			if ($host === '' || $host === 'localhost' || filter_var($host, FILTER_VALIDATE_IP)) {
+				continue;
+			}
+			$domains[] = $host;
+			if (strpos($host, 'www.') === 0) {
+				$root_host = substr($host, 4);
+				if ($root_host !== '') {
+					$domains[] = $root_host;
+				}
+			}
+		}
+
+		return array_values(array_unique($domains));
 	}
 
 	/**
 	 * Validate restricted-access cookie signature and expiration.
 	 */
 	private static function restricted_access_has_valid_access_cookie(): bool {
-		$raw = isset($_COOKIE['um_restricted_access']) ? (string) $_COOKIE['um_restricted_access'] : '';
+		$cookie_values = self::restricted_access_get_all_access_cookie_values();
+		foreach ($cookie_values as $raw) {
+			if (!self::restricted_access_is_valid_access_cookie_value($raw)) {
+				continue;
+			}
+			$_COOKIE['um_restricted_access'] = $raw;
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Collect all seen restricted-access cookie values, including duplicate
+	 * values with the same cookie name from the raw Cookie header.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function restricted_access_get_all_access_cookie_values(): array {
+		$values = [];
+		if (isset($_COOKIE['um_restricted_access']) && is_string($_COOKIE['um_restricted_access'])) {
+			$value = (string) $_COOKIE['um_restricted_access'];
+			if ($value !== '') {
+				$values[] = $value;
+			}
+		}
+		$raw_cookie_header = isset($_SERVER['HTTP_COOKIE']) ? (string) wp_unslash($_SERVER['HTTP_COOKIE']) : '';
+		if ($raw_cookie_header !== '') {
+			$pairs = explode(';', $raw_cookie_header);
+			foreach ($pairs as $pair) {
+				$pair = trim((string) $pair);
+				if ($pair === '' || strpos($pair, '=') === false) {
+					continue;
+				}
+				[$name, $raw_value] = array_pad(explode('=', $pair, 2), 2, '');
+				$name = trim((string) $name);
+				if ($name !== 'um_restricted_access') {
+					continue;
+				}
+				$value = rawurldecode(trim((string) $raw_value));
+				if ($value !== '') {
+					$values[] = $value;
+				}
+			}
+		}
+		return array_values(array_unique($values));
+	}
+
+	/**
+	 * Validate one signed restricted-access cookie value.
+	 */
+	private static function restricted_access_is_valid_access_cookie_value(string $raw): bool {
 		if ($raw === '' || strpos($raw, '.') === false) {
 			return false;
 		}
