@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.82
+ * Version: 2.5.83
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.83 - March 16, 2026
+ * - Media Library Tags front-end gallery now shows admin-only per-image tag controls below every photo across all styles, including a list of current tags plus "Hide" and "Duplicate" quick actions.
+ * - New per-image "Hide" and "Duplicate" controls add Library Tags asynchronously (AJAX) without page reload, and refresh the displayed tag list inline after successful updates.
+ *
  * 2.5.82 - March 16, 2026
  * - Removed lightbox click anchors to full-size image files for Media Library Tags gallery modal behavior and replaced them with modal trigger buttons using data attributes.
  * - Mosaic Grid and other gallery styles now open the modal window directly on click without browser navigation to image URLs.

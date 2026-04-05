@@ -2415,6 +2415,31 @@ JS;
 		if (!is_string($timeline_date_format) || $timeline_date_format === '') {
 			$timeline_date_format = 'F j, Y';
 		}
+		$show_admin_inline_tag_controls = current_user_can('manage_options');
+		$admin_inline_tag_nonce = $show_admin_inline_tag_controls ? wp_create_nonce('um_media_library_tags_ajax') : '';
+
+		$attachment_tags_map = [];
+		if ($show_admin_inline_tag_controls && !empty($attachments)) {
+			foreach ($attachments as $attachment) {
+				if (!($attachment instanceof WP_Post)) {
+					continue;
+				}
+				$attachment_id = (int) $attachment->ID;
+				if ($attachment_id <= 0) {
+					continue;
+				}
+				$terms_for_attachment = wp_get_object_terms($attachment_id, self::media_library_tags_taxonomy(), ['fields' => 'names']);
+				if (!is_array($terms_for_attachment)) {
+					$terms_for_attachment = [];
+				}
+				$clean_terms = array_values(array_filter(array_map(static function ($term_name): string {
+					return trim(sanitize_text_field((string) $term_name));
+				}, $terms_for_attachment), static function (string $term_name): bool {
+					return $term_name !== '';
+				}));
+				$attachment_tags_map[$attachment_id] = $clean_terms;
+			}
+		}
 
 		ob_start();
 		?>
@@ -2480,9 +2505,24 @@ JS;
 									<?php else : ?>
 										<?php echo $image_html; ?>
 									<?php endif; ?>
-									<?php if ($show_description_under_photo && $description_text !== '') : ?>
+								<?php if ($show_description_under_photo && $description_text !== '') : ?>
 										<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($description_text); ?></figcaption>
 									<?php endif; ?>
+								<?php if ($show_admin_inline_tag_controls) : ?>
+									<?php $inline_tags = isset($attachment_tags_map[$attachment_id]) && is_array($attachment_tags_map[$attachment_id]) ? $attachment_tags_map[$attachment_id] : []; ?>
+									<div
+										class="um-mltg-inline-admin-tags"
+										data-um-inline-admin-tags="1"
+										data-um-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
+										data-um-inline-tag-nonce="<?php echo esc_attr((string) $admin_inline_tag_nonce); ?>"
+									>
+										<span class="um-mltg-inline-admin-tags-list"><?php echo esc_html(!empty($inline_tags) ? implode(', ', $inline_tags) : __('No tags', 'user-manager')); ?></span>
+										<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="hide"><?php esc_html_e('Hide', 'user-manager'); ?></a>
+										<span class="um-mltg-inline-admin-tags-sep">|</span>
+										<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="duplicate"><?php esc_html_e('Duplicate', 'user-manager'); ?></a>
+										<span class="um-mltg-inline-admin-tags-status" aria-live="polite"></span>
+									</div>
+								<?php endif; ?>
 								</figure>
 							<?php endforeach; ?>
 						</div>
@@ -2583,6 +2623,21 @@ JS;
 							<?php endif; ?>
 							<?php if ($show_description_under_photo && $description_text !== '') : ?>
 								<figcaption class="um-media-library-tag-gallery-caption"><?php echo esc_html($description_text); ?></figcaption>
+							<?php endif; ?>
+							<?php if ($show_admin_inline_tag_controls) : ?>
+								<?php $inline_tags = isset($attachment_tags_map[$attachment_id]) && is_array($attachment_tags_map[$attachment_id]) ? $attachment_tags_map[$attachment_id] : []; ?>
+								<div
+									class="um-mltg-inline-admin-tags"
+									data-um-inline-admin-tags="1"
+									data-um-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
+									data-um-inline-tag-nonce="<?php echo esc_attr((string) $admin_inline_tag_nonce); ?>"
+								>
+									<span class="um-mltg-inline-admin-tags-list"><?php echo esc_html(!empty($inline_tags) ? implode(', ', $inline_tags) : __('No tags', 'user-manager')); ?></span>
+									<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="hide"><?php esc_html_e('Hide', 'user-manager'); ?></a>
+									<span class="um-mltg-inline-admin-tags-sep">|</span>
+									<a href="#" class="um-mltg-inline-admin-tag-action" data-um-add-tag="duplicate"><?php esc_html_e('Duplicate', 'user-manager'); ?></a>
+									<span class="um-mltg-inline-admin-tags-status" aria-live="polite"></span>
+								</div>
 							<?php endif; ?>
 						</figure>
 					<?php endforeach; ?>
@@ -2739,6 +2794,35 @@ JS;
 		.um-media-gallery-style-timeline_story .um-media-library-tag-gallery-item img { max-height:340px; object-fit:cover; border-radius:6px; }
 		.um-mltg-timeline-meta { margin:6px 0 4px; font-size:12px; color:#2271b1; font-weight:600; }
 		.um-media-library-tag-gallery-caption { margin-top: 6px; font-size: 12px; color: #50575e; }
+		.um-mltg-inline-admin-tags {
+			margin-top: 6px;
+			font-size: 11px;
+			line-height: 1.4;
+			color: #50575e;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			align-items: center;
+		}
+		.um-mltg-inline-admin-tags-list {
+			font-weight: 500;
+			word-break: break-word;
+		}
+		.um-mltg-inline-admin-tag-action {
+			text-decoration: underline;
+			cursor: pointer;
+		}
+		.um-mltg-inline-admin-tags-sep {
+			color: #8c8f94;
+		}
+		.um-mltg-inline-admin-tags-status {
+			font-size: 11px;
+			color: #2271b1;
+		}
+		.um-mltg-inline-admin-tags.is-busy .um-mltg-inline-admin-tag-action {
+			pointer-events: none;
+			opacity: 0.5;
+		}
 		.um-media-library-tag-description-wrap { margin: 0 0 14px; }
 		.um-media-library-tag-description-wrap-below { margin: 14px 0 0; }
 		.um-media-library-tag-edit-description-link { margin-left: 6px; font-size: 12px; }
@@ -2956,6 +3040,7 @@ JS;
 			var slideshowPlaying = false;
 			var bodyPrevOverflow = '';
 			var transitionTimer = null;
+			var inlineTagAjaxUrl = <?php echo wp_json_encode((string) admin_url('admin-ajax.php')); ?> || '';
 			lightboxDebugLog('Runtime initialized', {
 				lightboxLinks: lightboxLinks.length,
 				enablePrevNextKeyboard: enablePrevNextKeyboard,
@@ -3056,6 +3141,69 @@ JS;
 					}
 					if (callback) {
 						callback(false, message);
+					}
+				};
+				xhr.send(payload);
+			}
+			function addInlineAdminTag(container, tagValue) {
+				if (!container || !inlineTagAjaxUrl) { return; }
+				var attachmentId = parseInt(String(container.getAttribute('data-um-attachment-id') || '0'), 10);
+				var nonce = String(container.getAttribute('data-um-inline-tag-nonce') || '');
+				var tag = String(tagValue || '').trim();
+				if (!attachmentId || !nonce || !tag) {
+					return;
+				}
+				var statusEl = container.querySelector('.um-mltg-inline-admin-tags-status');
+				var listEl = container.querySelector('.um-mltg-inline-admin-tags-list');
+				var currentTags = [];
+				if (listEl) {
+					currentTags = String(listEl.textContent || '')
+						.split(',')
+						.map(function(part) { return String(part || '').trim(); })
+						.filter(function(part) { return !!part && part.toLowerCase() !== 'no tags'; });
+				}
+				container.classList.add('is-busy');
+				if (statusEl) {
+					statusEl.textContent = '<?php echo esc_js(__('Saving...', 'user-manager')); ?>';
+				}
+				var payload = 'action=user_manager_bulk_apply_media_library_tag'
+					+ '&nonce=' + encodeURIComponent(nonce)
+					+ '&tag_new=' + encodeURIComponent(tag)
+					+ '&ids[]=' + encodeURIComponent(String(attachmentId));
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', inlineTagAjaxUrl, true);
+				xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState !== 4) { return; }
+					container.classList.remove('is-busy');
+					var response = null;
+					try {
+						response = JSON.parse(xhr.responseText || '{}');
+					} catch (err) {
+						response = null;
+					}
+					if (!(xhr.status >= 200 && xhr.status < 300 && response && response.success)) {
+						if (statusEl) {
+							statusEl.textContent = '<?php echo esc_js(__('Error adding tag.', 'user-manager')); ?>';
+						}
+						return;
+					}
+					var exists = currentTags.some(function(existing) {
+						return String(existing).toLowerCase() === tag.toLowerCase();
+					});
+					if (!exists) {
+						currentTags.push(tag);
+					}
+					if (listEl) {
+						listEl.textContent = currentTags.length ? currentTags.join(', ') : '<?php echo esc_js(__('No tags', 'user-manager')); ?>';
+					}
+					if (statusEl) {
+						statusEl.textContent = '<?php echo esc_js(__('Saved', 'user-manager')); ?>';
+						window.setTimeout(function() {
+							if (statusEl.textContent === '<?php echo esc_js(__('Saved', 'user-manager')); ?>') {
+								statusEl.textContent = '';
+							}
+						}, 1200);
 					}
 				};
 				xhr.send(payload);
@@ -3324,6 +3472,21 @@ JS;
 				var evt = event || window.event;
 				var node = evt && evt.target ? evt.target : null;
 				if (!node || !node.closest) {
+					return;
+				}
+				var inlineAction = node.closest('.um-mltg-inline-admin-tag-action');
+				if (inlineAction && root.contains(inlineAction)) {
+					if (evt) {
+						evt.preventDefault();
+						if (typeof evt.stopImmediatePropagation === 'function') {
+							evt.stopImmediatePropagation();
+						} else {
+							evt.stopPropagation();
+						}
+					}
+					var container = inlineAction.closest('.um-mltg-inline-admin-tags');
+					var tagToAdd = inlineAction.getAttribute('data-um-add-tag') || '';
+					addInlineAdminTag(container, tagToAdd);
 					return;
 				}
 				var link = node.closest('[data-um-lightbox="1"]');
