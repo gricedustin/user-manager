@@ -2958,6 +2958,7 @@ JS;
 		$inline_lightbox_overlay_onkeydown = "if(window.umMltgInline&&window.umMltgInline.keydown){return !!window.umMltgInline.keydown(this,event);}return true;";
 		$inline_lightbox_prev_onclick = "if(window.umMltgInline&&window.umMltgInline.step){return !!window.umMltgInline.step(this,-1,event);}return false;";
 		$inline_lightbox_next_onclick = "if(window.umMltgInline&&window.umMltgInline.step){return !!window.umMltgInline.step(this,1,event);}return false;";
+		$inline_lightbox_slideshow_onclick = "if(window.umMltgInline&&window.umMltgInline.toggleSlideshow){return !!window.umMltgInline.toggleSlideshow(this,event);}return false;";
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
