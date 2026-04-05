@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.122 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag description paragraphs now preserve author-entered line breaks by converting newline characters to <br> in front-end output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag description output now explicitly allows basic inline formatting tags such as <b>, <strong>, <i>, and <em> while retaining safe sanitization.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.121 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting: "Allow Tap or Click on Left or Right side of image to go to Previous or Next Photo" directly under the existing swipe setting.', 'user-manager'); ?></li>

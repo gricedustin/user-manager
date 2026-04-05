@@ -455,7 +455,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 			$name = isset($raw_term_data['name']) ? trim(sanitize_text_field((string) $raw_term_data['name'])) : trim((string) $current_term->name);
 			$slug = isset($raw_term_data['slug']) ? sanitize_title((string) $raw_term_data['slug']) : sanitize_title((string) $current_term->slug);
-			$description = isset($raw_term_data['description']) ? sanitize_textarea_field((string) $raw_term_data['description']) : (string) $current_term->description;
+			$description = isset($raw_term_data['description'])
+				? self::sanitize_media_library_tag_description_input((string) $raw_term_data['description'])
+				: (string) $current_term->description;
 			$youtube_links = isset($raw_term_data['youtube_links'])
 				? self::sanitize_media_library_tag_youtube_links_input((string) $raw_term_data['youtube_links'])
 				: (string) get_term_meta($term_id, self::media_library_tag_youtube_links_meta_key(), true);
@@ -505,6 +507,46 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		);
 		wp_safe_redirect($redirect_url);
 		exit;
+	}
+
+	/**
+	 * Keep Media Library Tag description formatting while allowing only safe HTML.
+	 */
+	private static function sanitize_media_library_tag_description_input(string $raw_description): string {
+		$normalized = str_replace(["\r\n", "\r"], "\n", $raw_description);
+
+		return (string) wp_kses($normalized, self::get_media_library_tag_description_allowed_html());
+	}
+
+	/**
+	 * Allowed HTML tags for front-end tag descriptions.
+	 *
+	 * @return array<string,array<string,bool>>
+	 */
+	private static function get_media_library_tag_description_allowed_html(): array {
+		$allowed_tags = wp_kses_allowed_html('post');
+
+		if (!isset($allowed_tags['b']) || !is_array($allowed_tags['b'])) {
+			$allowed_tags['b'] = [];
+		}
+		if (!isset($allowed_tags['i']) || !is_array($allowed_tags['i'])) {
+			$allowed_tags['i'] = [];
+		}
+		if (!isset($allowed_tags['br']) || !is_array($allowed_tags['br'])) {
+			$allowed_tags['br'] = [];
+		}
+
+		return is_array($allowed_tags) ? $allowed_tags : [];
+	}
+
+	/**
+	 * Format tag description HTML for output.
+	 */
+	private static function format_media_library_tag_description_html(string $description): string {
+		$sanitized_description = (string) wp_kses($description, self::get_media_library_tag_description_allowed_html());
+		$normalized_description = str_replace(["\r\n", "\r"], "\n", $sanitized_description);
+
+		return nl2br($normalized_description);
 	}
 
 	/**
@@ -6382,6 +6424,7 @@ JS;
 			if ($tag_description === '' && $tag_edit_url === '') {
 				continue;
 			}
+			$tag_description_html = self::format_media_library_tag_description_html($tag_description);
 			$edit_link = '';
 			if ($tag_edit_url !== '') {
 				$edit_link = sprintf(
@@ -6392,7 +6435,7 @@ JS;
 			}
 			$description_paragraphs[] = sprintf(
 				'<p class="um-media-library-tag-description-paragraph">%1$s%2$s</p>',
-				wp_kses_post($tag_description),
+				$tag_description_html,
 				$edit_link
 			);
 		}
@@ -6400,13 +6443,13 @@ JS;
 			return implode('', $description_paragraphs);
 		}
 		if ($edit_description_url !== '' && $description !== '') {
-			return $description . sprintf(
+			return self::format_media_library_tag_description_html($description) . sprintf(
 				' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
 				esc_url($edit_description_url),
 				esc_html__('Edit Tag Description', 'user-manager')
 			);
 		}
-		return $description;
+		return self::format_media_library_tag_description_html($description);
 	}
 
 	/**
