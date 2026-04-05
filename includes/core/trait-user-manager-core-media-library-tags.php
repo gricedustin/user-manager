@@ -2475,8 +2475,8 @@ JS;
 								<figure class="um-media-library-tag-gallery-item um-mltg-carousel-slide" data-slide-index="<?php echo esc_attr((string) $index); ?>">
 									<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 										<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
-									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>><?php echo $image_html; ?></a>
+								<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
+									<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
 									<?php else : ?>
 										<?php echo $image_html; ?>
 									<?php endif; ?>
@@ -2573,8 +2573,8 @@ JS;
 						<figure class="<?php echo esc_attr(implode(' ', $item_classes)); ?>"<?php echo $is_infinite_hidden ? ' data-um-infinite-hidden="1"' : ''; ?>>
 							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
 								<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
-									<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-										<a href="<?php echo esc_url($image_src); ?>" class="um-media-library-tag-gallery-link" data-um-lightbox="1" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>><?php echo $image_html; ?></a>
+							<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
+									<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
 							<?php else : ?>
 								<?php echo $image_html; ?>
 							<?php endif; ?>
@@ -2663,6 +2663,15 @@ JS;
 		}
 		.um-media-library-tag-gallery-item { margin: 0; position: relative; }
 		.um-media-library-tag-gallery-link { display: block; width: 100%; height: 100%; }
+		.um-media-library-tag-gallery-lightbox-trigger {
+			border: 0;
+			background: transparent;
+			padding: 0;
+			cursor: pointer;
+			text-align: inherit;
+			font: inherit;
+			color: inherit;
+		}
 		.um-media-library-tag-gallery-item img { width: 100%; height: auto; display: block; }
 		<?php if (!$disable_css_crop_for_small_galleries) : ?>
 		.um-media-gallery-style-uniform_grid .um-media-library-tag-gallery-item img,
@@ -2940,7 +2949,7 @@ JS;
 			var enableSlideshowButton = <?php echo $lightbox_slideshow_button ? 'true' : 'false'; ?>;
 			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
 			var slideshowTransition = <?php echo wp_json_encode((string) $lightbox_slideshow_transition); ?> || 'none';
-			var lightboxLinks = Array.prototype.slice.call(root.querySelectorAll('a[data-um-lightbox="1"]'));
+			var lightboxLinks = Array.prototype.slice.call(root.querySelectorAll('[data-um-lightbox="1"]'));
 			var activeLightboxIndex = -1;
 			var activeAttachmentId = 0;
 			var slideshowTimer = null;
@@ -3101,7 +3110,7 @@ JS;
 			}
 			function renderLightboxFromLink(link, animate) {
 				if (!link || !image) { return false; }
-				var src = link.getAttribute('href') || '';
+				var src = link.getAttribute('data-um-lightbox-src') || link.getAttribute('href') || '';
 				if (!src) {
 					lightboxDebugLog('Render aborted: link has no href/src', {
 						index: parseLightboxIndex(link)
@@ -3317,11 +3326,11 @@ JS;
 				if (!node || !node.closest) {
 					return;
 				}
-				var link = node.closest('a[data-um-lightbox="1"]');
+				var link = node.closest('[data-um-lightbox="1"]');
 				if ((!link || !root.contains(link))) {
 					var tile = node.closest('.um-media-library-tag-gallery-item');
 					if (tile && root.contains(tile)) {
-						link = tile.querySelector('a[data-um-lightbox="1"]');
+						link = tile.querySelector('[data-um-lightbox="1"]');
 					}
 				}
 				if (!link || !root.contains(link)) {

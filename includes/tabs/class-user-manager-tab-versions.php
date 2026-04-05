@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.82 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed full-size image href usage from Media Library Tags modal-window triggers and switched lightbox click targets to non-link modal trigger elements so browser navigation to image files cannot occur.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox runtime now resolves image sources from dedicated modal trigger data attributes, ensuring Mosaic Grid and other gallery styles open the modal window directly instead of following file URLs.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.81 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Mosaic Grid modal-window click behavior by hardening gallery link hit areas so image clicks consistently reach the lightbox trigger across irregular mosaic tiles.', 'user-manager'); ?></li>
