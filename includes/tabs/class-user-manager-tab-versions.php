@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.110 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tags setting: "Allow Swipe to Left or Right to go to Previous or Next Photo".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Swipe-to-navigate now works in the primary lightbox runtime and in resilient fallback runtimes when that setting is enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.109 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Applied slideshow transition classes in the resilient/fallback lightbox runtime during step changes so "Slideshow Transition" now visibly affects fallback slideshow playback.', 'user-manager'); ?></li>

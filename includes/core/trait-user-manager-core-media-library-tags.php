@@ -1595,6 +1595,8 @@ JS;
 				'descriptionValue' => ['type' => 'string', 'default' => 'caption'],
 				'useDefaultLightboxPrevNextKeyboard' => ['type' => 'boolean', 'default' => true],
 				'lightboxPrevNextKeyboard' => ['type' => 'boolean', 'default' => true],
+				'useDefaultLightboxSwipeNavigation' => ['type' => 'boolean', 'default' => true],
+				'lightboxSwipeNavigation' => ['type' => 'boolean', 'default' => false],
 				'useDefaultLightboxSlideshowButton' => ['type' => 'boolean', 'default' => true],
 				'lightboxSlideshowButton' => ['type' => 'boolean', 'default' => false],
 				'useDefaultLightboxSlideshowSeconds' => ['type' => 'boolean', 'default' => true],
@@ -1782,6 +1784,7 @@ JS;
 		descriptionDisplay: defaults.descriptionDisplay || 'none',
 		descriptionValue: defaults.descriptionValue || 'caption',
 		lightboxPrevNextKeyboard: defaults.lightboxPrevNextKeyboard !== false,
+		lightboxSwipeNavigation: !!defaults.lightboxSwipeNavigation,
 		lightboxSlideshowButton: !!defaults.lightboxSlideshowButton,
 		lightboxSlideshowSeconds: (function() {
 			var seconds = parseFloat(defaults.lightboxSlideshowSeconds);
@@ -1845,6 +1848,8 @@ JS;
 			descriptionValue: { type: 'string', default: defaults.descriptionValue || 'caption' },
 			useDefaultLightboxPrevNextKeyboard: { type: 'boolean', default: true },
 			lightboxPrevNextKeyboard: { type: 'boolean', default: defaults.lightboxPrevNextKeyboard !== false },
+			useDefaultLightboxSwipeNavigation: { type: 'boolean', default: true },
+			lightboxSwipeNavigation: { type: 'boolean', default: !!defaults.lightboxSwipeNavigation },
 			useDefaultLightboxSlideshowButton: { type: 'boolean', default: true },
 			lightboxSlideshowButton: { type: 'boolean', default: !!defaults.lightboxSlideshowButton },
 			useDefaultLightboxSlideshowSeconds: { type: 'boolean', default: true },
@@ -1897,6 +1902,7 @@ JS;
 			var useDefaultDescriptionDisplay = !!a.useDefaultDescriptionDisplay;
 			var useDefaultDescriptionValue = !!a.useDefaultDescriptionValue;
 			var useDefaultLightboxPrevNextKeyboard = !!a.useDefaultLightboxPrevNextKeyboard;
+			var useDefaultLightboxSwipeNavigation = !!a.useDefaultLightboxSwipeNavigation;
 			var useDefaultLightboxSlideshowButton = !!a.useDefaultLightboxSlideshowButton;
 			var useDefaultLightboxSlideshowSeconds = !!a.useDefaultLightboxSlideshowSeconds;
 			var useDefaultLightboxSlideshowTransition = !!a.useDefaultLightboxSlideshowTransition;
@@ -1926,6 +1932,7 @@ JS;
 			var effectiveDescriptionDisplay = useDefaultDescriptionDisplay ? fallbackDefaults.descriptionDisplay : (a.descriptionDisplay || fallbackDefaults.descriptionDisplay);
 			var effectiveDescriptionValue = useDefaultDescriptionValue ? fallbackDefaults.descriptionValue : (a.descriptionValue || fallbackDefaults.descriptionValue);
 			var effectiveLightboxPrevNextKeyboard = useDefaultLightboxPrevNextKeyboard ? !!fallbackDefaults.lightboxPrevNextKeyboard : !!a.lightboxPrevNextKeyboard;
+			var effectiveLightboxSwipeNavigation = useDefaultLightboxSwipeNavigation ? !!fallbackDefaults.lightboxSwipeNavigation : !!a.lightboxSwipeNavigation;
 			var effectiveLightboxSlideshowButton = useDefaultLightboxSlideshowButton ? !!fallbackDefaults.lightboxSlideshowButton : !!a.lightboxSlideshowButton;
 			var effectiveLightboxSlideshowSecondsRaw = useDefaultLightboxSlideshowSeconds ? fallbackDefaults.lightboxSlideshowSeconds : parseFloat(a.lightboxSlideshowSeconds);
 			var effectiveLightboxSlideshowSeconds = isFinite(effectiveLightboxSlideshowSecondsRaw) ? Math.max(1, Math.min(60, effectiveLightboxSlideshowSecondsRaw)) : fallbackDefaults.lightboxSlideshowSeconds;
@@ -2165,6 +2172,18 @@ JS;
 							onChange: function(v){ set({ useDefaultLightboxPrevNextKeyboard: !!v }); }
 						}),
 						element.createElement(ToggleControl, {
+							label: 'Allow Swipe to Left or Right to go to Previous or Next Photo',
+							checked: effectiveLightboxSwipeNavigation,
+							disabled: useDefaultLightboxSwipeNavigation,
+							help: useDefaultLightboxSwipeNavigation ? ('Using add-on default: ' + (fallbackDefaults.lightboxSwipeNavigation ? 'enabled' : 'disabled')) : '',
+							onChange: function(v){ set({ lightboxSwipeNavigation: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Lightbox Swipe Navigation',
+							checked: useDefaultLightboxSwipeNavigation,
+							onChange: function(v){ set({ useDefaultLightboxSwipeNavigation: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
 							label: 'Add a Play Slideshow Button in Lightbox Window',
 							checked: effectiveLightboxSlideshowButton,
 							disabled: useDefaultLightboxSlideshowButton,
@@ -2309,6 +2328,58 @@ JS;
 					slideshowBtn.textContent = 'Play Slideshow';
 				}
 			}
+			function bindSwipeHandlers(overlay) {
+				if (!overlay || overlay.__umInlineSwipeBound) {
+					return;
+				}
+				overlay.__umInlineSwipeBound = true;
+				var swipeStartX = 0;
+				var swipeStartY = 0;
+				var swipeTracking = false;
+				var swipeThresholdPx = 44;
+				overlay.addEventListener('touchstart', function(event) {
+					var allowSwipe = overlay.getAttribute('data-um-inline-swipe') === '1';
+					if (!allowSwipe || overlay.getAttribute('aria-hidden') !== 'false') {
+						swipeTracking = false;
+						return;
+					}
+					var touch = event.touches && event.touches.length ? event.touches[0] : null;
+					if (!touch) {
+						swipeTracking = false;
+						return;
+					}
+					swipeStartX = touch.clientX;
+					swipeStartY = touch.clientY;
+					swipeTracking = true;
+				});
+				overlay.addEventListener('touchend', function(event) {
+					if (!swipeTracking) {
+						return;
+					}
+					swipeTracking = false;
+					var touch = event.changedTouches && event.changedTouches.length ? event.changedTouches[0] : null;
+					if (!touch) {
+						return;
+					}
+					var deltaX = touch.clientX - swipeStartX;
+					var deltaY = touch.clientY - swipeStartY;
+					var absX = Math.abs(deltaX);
+					var absY = Math.abs(deltaY);
+					if (absX < swipeThresholdPx || absX < (absY * 1.2)) {
+						return;
+					}
+					var direction = deltaX < 0 ? 1 : -1;
+					var navBtn = direction > 0
+						? overlay.querySelector('.um-mltg-lightbox-next')
+						: overlay.querySelector('.um-mltg-lightbox-prev');
+					if (navBtn) {
+						api.step(navBtn, direction, null);
+					}
+				});
+				overlay.addEventListener('touchcancel', function() {
+					swipeTracking = false;
+				});
+			}
 			function renderOverlay(overlay, trigger, root, items, index, animate) {
 				var src = trigger.getAttribute('data-um-modal-src') || trigger.getAttribute('data-um-lightbox-src') || trigger.getAttribute('href') || '';
 				if (!src) {
@@ -2342,6 +2413,7 @@ JS;
 					tagToolsEl.style.display = 'none';
 				}
 				var allowPrevNext = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-prev-next') === '1');
+				var allowSwipe = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-swipe') === '1');
 				var allowSlideshow = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-slideshow') === '1');
 				var slideshowSecondsRaw = root && root.getAttribute ? parseFloat(String(root.getAttribute('data-um-lightbox-seconds') || '3')) : 3;
 				var slideshowSeconds = isFinite(slideshowSecondsRaw) ? Math.max(1, Math.min(60, slideshowSecondsRaw)) : 3;
@@ -2367,10 +2439,12 @@ JS;
 					overlay.setAttribute('data-um-inline-root-id', '');
 				}
 				overlay.setAttribute('data-um-inline-prevnext', allowPrevNext ? '1' : '0');
+				overlay.setAttribute('data-um-inline-swipe', allowSwipe ? '1' : '0');
 				overlay.setAttribute('data-um-inline-index', String(Math.max(0, index)));
 				overlay.setAttribute('data-um-inline-slideshow', allowSlideshow ? '1' : '0');
 				overlay.setAttribute('data-um-inline-slideshow-seconds', String(slideshowSeconds));
 				overlay.setAttribute('data-um-inline-transition', normalizedTransition);
+				bindSwipeHandlers(overlay);
 				overlay.style.display = 'flex';
 				overlay.setAttribute('aria-hidden', 'false');
 				overlay.setAttribute('tabindex', '-1');
@@ -2500,7 +2574,12 @@ JS;
 					}
 				}
 				var overlay = button && button.closest ? button.closest('.um-mltg-lightbox-overlay') : null;
-				if (!overlay || overlay.getAttribute('data-um-inline-prevnext') !== '1') {
+				if (!overlay) {
+					return false;
+				}
+				var allowPrevNext = overlay.getAttribute('data-um-inline-prevnext') === '1';
+				var allowSwipe = overlay.getAttribute('data-um-inline-swipe') === '1';
+				if (!allowPrevNext && !allowSwipe) {
 					return false;
 				}
 				var rootId = overlay.getAttribute('data-um-inline-root-id') || '';
@@ -2643,6 +2722,7 @@ JS;
 		$use_default_description_display = !empty($attrs['useDefaultDescriptionDisplay']);
 		$use_default_description_value = !empty($attrs['useDefaultDescriptionValue']);
 		$use_default_lightbox_prev_next_keyboard = !empty($attrs['useDefaultLightboxPrevNextKeyboard']);
+		$use_default_lightbox_swipe_navigation = !empty($attrs['useDefaultLightboxSwipeNavigation']);
 		$use_default_lightbox_slideshow_button = !empty($attrs['useDefaultLightboxSlideshowButton']);
 		$use_default_lightbox_slideshow_seconds = !empty($attrs['useDefaultLightboxSlideshowSeconds']);
 		$use_default_lightbox_slideshow_transition = !empty($attrs['useDefaultLightboxSlideshowTransition']);
@@ -2701,6 +2781,9 @@ JS;
 		$lightbox_prev_next_keyboard = $use_default_lightbox_prev_next_keyboard
 			? !empty($defaults['lightboxPrevNextKeyboard'])
 			: !empty($attrs['lightboxPrevNextKeyboard']);
+		$lightbox_swipe_navigation = $use_default_lightbox_swipe_navigation
+			? !empty($defaults['lightboxSwipeNavigation'])
+			: !empty($attrs['lightboxSwipeNavigation']);
 		$lightbox_slideshow_button = $use_default_lightbox_slideshow_button
 			? !empty($defaults['lightboxSlideshowButton'])
 			: !empty($attrs['lightboxSlideshowButton']);
@@ -3002,6 +3085,7 @@ JS;
 			class="um-media-library-tag-gallery <?php echo esc_attr($style_class); ?>"
 			style="--um-mltg-accent-color:<?php echo esc_attr($accent_color); ?>;--um-mltg-lightbox-modal-bg:<?php echo esc_attr($lightbox_modal_background_color_css); ?>;--um-mltg-lightbox-modal-text:<?php echo esc_attr($lightbox_modal_text_color_css); ?>;"
 			<?php echo $lightbox_prev_next_keyboard ? ' data-um-lightbox-prev-next="1"' : ' data-um-lightbox-prev-next="0"'; ?>
+			<?php echo $lightbox_swipe_navigation ? ' data-um-lightbox-swipe="1"' : ' data-um-lightbox-swipe="0"'; ?>
 			<?php echo $lightbox_slideshow_button ? ' data-um-lightbox-slideshow="1"' : ' data-um-lightbox-slideshow="0"'; ?>
 			data-um-lightbox-seconds="<?php echo esc_attr((string) $lightbox_slideshow_seconds); ?>"
 			data-um-lightbox-transition="<?php echo esc_attr((string) $lightbox_slideshow_transition); ?>"
@@ -3555,10 +3639,12 @@ JS;
 			var lightboxTagAjaxUrl = <?php echo wp_json_encode((string) $lightbox_tag_ajax_url); ?> || '';
 			var lightboxTagNonce = <?php echo wp_json_encode((string) $lightbox_tag_nonce); ?> || '';
 			var enablePrevNextKeyboard = <?php echo $lightbox_prev_next_keyboard ? 'true' : 'false'; ?>;
+			var enableSwipeNavigation = root.getAttribute('data-um-lightbox-swipe') === '1';
 			var enableSlideshowButton = <?php echo $lightbox_slideshow_button ? 'true' : 'false'; ?>;
 			var enableSimpleLightboxThumbnailClick = root.getAttribute('data-um-lightbox-simple-thumbnail-click') === '1';
 			if (enableSimpleLightboxThumbnailClick) {
 				enablePrevNextKeyboard = false;
+				enableSwipeNavigation = false;
 				enableSlideshowButton = false;
 				canManageLightboxTags = false;
 			}
@@ -3573,6 +3659,10 @@ JS;
 			var bodyPrevOverflow = '';
 			var transitionTimer = null;
 			var suppressClickOpenUntil = 0;
+			var swipeStartX = 0;
+			var swipeStartY = 0;
+			var swipeTracking = false;
+			var swipeThresholdPx = 44;
 			function refreshLightboxLinks() {
 				lightboxLinks = Array.prototype.slice.call(root.querySelectorAll(lightboxTriggerSelector));
 				return lightboxLinks;
@@ -3581,6 +3671,7 @@ JS;
 			lightboxDebugLog('Runtime initialized', {
 				lightboxLinks: lightboxLinks.length,
 				enablePrevNextKeyboard: enablePrevNextKeyboard,
+				enableSwipeNavigation: enableSwipeNavigation,
 				enableSlideshowButton: enableSlideshowButton,
 				enableSimpleLightboxThumbnailClick: enableSimpleLightboxThumbnailClick,
 				slideshowSecondsPerPhoto: slideshowSecondsPerPhoto,
@@ -3840,6 +3931,23 @@ JS;
 					activeLightboxIndex: activeLightboxIndex
 				});
 			}
+			function handleSwipeNavigation(deltaX, deltaY) {
+				if (!enableSwipeNavigation || overlay.getAttribute('aria-hidden') !== 'false' || activeLightboxIndex < 0) {
+					return;
+				}
+				var absX = Math.abs(deltaX);
+				var absY = Math.abs(deltaY);
+				if (absX < swipeThresholdPx || absX < (absY * 1.2)) {
+					return;
+				}
+				if (deltaX < 0) {
+					lightboxDebugLog('Touch swipe left -> next');
+					showLightboxByIndex(activeLightboxIndex + 1);
+				} else {
+					lightboxDebugLog('Touch swipe right -> previous');
+					showLightboxByIndex(activeLightboxIndex - 1);
+				}
+			}
 			function closeOverlay() {
 				stopSlideshow();
 				overlay.style.display = 'none';
@@ -4075,6 +4183,34 @@ JS;
 					closeOverlay();
 				}
 			});
+			overlay.addEventListener('touchstart', function(event) {
+				if (!enableSwipeNavigation || overlay.getAttribute('aria-hidden') !== 'false') {
+					swipeTracking = false;
+					return;
+				}
+				var touch = event.touches && event.touches.length ? event.touches[0] : null;
+				if (!touch) {
+					swipeTracking = false;
+					return;
+				}
+				swipeStartX = touch.clientX;
+				swipeStartY = touch.clientY;
+				swipeTracking = true;
+			});
+			overlay.addEventListener('touchend', function(event) {
+				if (!swipeTracking) {
+					return;
+				}
+				swipeTracking = false;
+				var touch = event.changedTouches && event.changedTouches.length ? event.changedTouches[0] : null;
+				if (!touch) {
+					return;
+				}
+				handleSwipeNavigation(touch.clientX - swipeStartX, touch.clientY - swipeStartY);
+			});
+			overlay.addEventListener('touchcancel', function() {
+				swipeTracking = false;
+			});
 			document.addEventListener('keydown', function(event) {
 				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
 					closeOverlay();
@@ -4230,9 +4366,14 @@ JS;
 			var controlsWrap = overlay.querySelector('.um-mltg-lightbox-controls');
 			var bodyPrevOverflow = '';
 			var enablePrevNextKeyboard = root.getAttribute('data-um-lightbox-prev-next') === '1';
+			var enableSwipeNavigation = root.getAttribute('data-um-lightbox-swipe') === '1';
 			var lightboxItems = [];
 			var activeIndex = -1;
 			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
+			var swipeStartX = 0;
+			var swipeStartY = 0;
+			var swipeTracking = false;
+			var swipeThresholdPx = 44;
 
 			function refreshItems() {
 				lightboxItems = Array.prototype.slice.call(root.querySelectorAll(triggerSelector));
@@ -4313,7 +4454,7 @@ JS;
 			}
 
 			function openByIndex(nextIndex) {
-				if (!enablePrevNextKeyboard) { return; }
+				if (!enablePrevNextKeyboard && !enableSwipeNavigation) { return; }
 				if (!lightboxItems.length) { return; }
 				var idx = nextIndex;
 				if (idx < 0) {
@@ -4324,6 +4465,21 @@ JS;
 				var nextTrigger = lightboxItems[idx];
 				if (!nextTrigger) { return; }
 				openFromTrigger(nextTrigger);
+			}
+			function handleSwipeNavigation(deltaX, deltaY) {
+				if (!enableSwipeNavigation || overlay.getAttribute('aria-hidden') !== 'false' || activeIndex < 0) {
+					return;
+				}
+				var absX = Math.abs(deltaX);
+				var absY = Math.abs(deltaY);
+				if (absX < swipeThresholdPx || absX < (absY * 1.2)) {
+					return;
+				}
+				if (deltaX < 0) {
+					openByIndex(activeIndex + 1);
+				} else {
+					openByIndex(activeIndex - 1);
+				}
 			}
 
 			function closeOverlay() {
@@ -4385,6 +4541,34 @@ JS;
 					closeOverlay();
 				}
 			});
+			overlay.addEventListener('touchstart', function(event) {
+				if (!enableSwipeNavigation || overlay.getAttribute('aria-hidden') !== 'false') {
+					swipeTracking = false;
+					return;
+				}
+				var touch = event.touches && event.touches.length ? event.touches[0] : null;
+				if (!touch) {
+					swipeTracking = false;
+					return;
+				}
+				swipeStartX = touch.clientX;
+				swipeStartY = touch.clientY;
+				swipeTracking = true;
+			});
+			overlay.addEventListener('touchend', function(event) {
+				if (!swipeTracking) {
+					return;
+				}
+				swipeTracking = false;
+				var touch = event.changedTouches && event.changedTouches.length ? event.changedTouches[0] : null;
+				if (!touch) {
+					return;
+				}
+				handleSwipeNavigation(touch.clientX - swipeStartX, touch.clientY - swipeStartY);
+			});
+			overlay.addEventListener('touchcancel', function() {
+				swipeTracking = false;
+			});
 			document.addEventListener('keydown', function(event) {
 				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
 					closeOverlay();
@@ -4435,6 +4619,7 @@ JS;
 			'descriptionDisplay' => 'none',
 			'descriptionValue' => 'caption',
 			'lightboxPrevNextKeyboard' => true,
+			'lightboxSwipeNavigation' => false,
 			'lightboxSlideshowButton' => false,
 			'lightboxSlideshowSeconds' => 3.0,
 			'lightboxSlideshowTransition' => 'none',
@@ -4511,6 +4696,9 @@ JS;
 		$defaults['lightboxPrevNextKeyboard'] = isset($settings['media_library_tag_gallery_lightbox_prev_next_keyboard'])
 			? $settings['media_library_tag_gallery_lightbox_prev_next_keyboard'] === true || $settings['media_library_tag_gallery_lightbox_prev_next_keyboard'] === '1'
 			: (bool) $defaults['lightboxPrevNextKeyboard'];
+		$defaults['lightboxSwipeNavigation'] = isset($settings['media_library_tag_gallery_lightbox_swipe_navigation'])
+			? $settings['media_library_tag_gallery_lightbox_swipe_navigation'] === true || $settings['media_library_tag_gallery_lightbox_swipe_navigation'] === '1'
+			: (bool) $defaults['lightboxSwipeNavigation'];
 		$defaults['lightboxSlideshowButton'] = isset($settings['media_library_tag_gallery_lightbox_slideshow_button'])
 			? $settings['media_library_tag_gallery_lightbox_slideshow_button'] === true || $settings['media_library_tag_gallery_lightbox_slideshow_button'] === '1'
 			: (bool) $defaults['lightboxSlideshowButton'];

@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.109
+ * Version: 2.5.110
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.110 - March 16, 2026
+ * - Added a new Media Library Tag Gallery setting: "Allow Swipe to Left or Right to go to Previous or Next Photo."
+ * - Wired swipe navigation through add-on defaults, block-level override controls, and gallery runtime data attributes.
+ * - Swipe gestures now navigate previous/next images in both primary and resilient fallback lightbox runtimes when enabled.
+ *
  * 2.5.109 - March 16, 2026
  * - Applied CSS transition animation handling to the resilient inline slideshow fallback path so "Slideshow Transition" visibly affects fallback slide changes (none, crossfade, slide-left).
  * - Fallback slideshow now toggles image transition state classes during interval-driven next-slide rendering to match transition behavior expected in the main runtime.

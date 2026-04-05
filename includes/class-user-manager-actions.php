@@ -2365,6 +2365,7 @@ class User_Manager_Actions {
 				}
 				$settings['media_library_tag_gallery_description_value'] = $gallery_description_value;
 				$settings['media_library_tag_gallery_lightbox_prev_next_keyboard'] = isset($_POST['media_library_tag_gallery_lightbox_prev_next_keyboard']) && $_POST['media_library_tag_gallery_lightbox_prev_next_keyboard'] === '1';
+				$settings['media_library_tag_gallery_lightbox_swipe_navigation'] = isset($_POST['media_library_tag_gallery_lightbox_swipe_navigation']) && $_POST['media_library_tag_gallery_lightbox_swipe_navigation'] === '1';
 				$settings['media_library_tag_gallery_lightbox_slideshow_button'] = isset($_POST['media_library_tag_gallery_lightbox_slideshow_button']) && $_POST['media_library_tag_gallery_lightbox_slideshow_button'] === '1';
 				$settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'] = isset($_POST['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])
 					? max(1, min(60, absint($_POST['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])))
