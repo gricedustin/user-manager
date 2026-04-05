@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.117 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Extended Media Library Tag Gallery lightbox tracking to include current-period counters for Year, Month, Week, and Day alongside total Lightbox Views.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Attachment edit/tagging UI now shows Lightbox Views (Year/Month/Week/Day) under the existing Lightbox Views metric for each media item.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.116 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed WP_Term to int conversion warnings in Media Library menu-tag matching by extracting menu term IDs from wp_get_nav_menus() term objects before normalization.', 'user-manager'); ?></li>

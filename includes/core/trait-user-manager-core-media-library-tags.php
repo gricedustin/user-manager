@@ -1154,12 +1154,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		if ($attachment_id <= 0 || get_post_type($attachment_id) !== 'attachment') {
 			wp_send_json_error(['message' => __('Invalid media item.', 'user-manager')], 400);
 		}
-		$current = self::get_media_library_lightbox_view_count($attachment_id);
-		$next = $current + 1;
-		update_post_meta($attachment_id, self::media_library_lightbox_views_meta_key(), $next);
+		$counts = self::increment_media_library_lightbox_view_counts($attachment_id);
 		wp_send_json_success([
 			'attachment_id' => $attachment_id,
-			'lightbox_views' => $next,
+			'lightbox_views' => (int) ($counts['total'] ?? 0),
+			'lightbox_views_year' => (int) ($counts['year'] ?? 0),
+			'lightbox_views_month' => (int) ($counts['month'] ?? 0),
+			'lightbox_views_week' => (int) ($counts['week'] ?? 0),
+			'lightbox_views_day' => (int) ($counts['day'] ?? 0),
 		]);
 	}
 
@@ -1217,6 +1219,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		$terms = wp_get_object_terms($post->ID, self::media_library_tags_taxonomy(), ['fields' => 'names']);
 		$value = is_array($terms) ? implode(', ', array_map('strval', $terms)) : '';
 		$lightbox_views = self::get_media_library_lightbox_view_count((int) $post->ID);
+		$lightbox_period_views = self::get_media_library_lightbox_period_view_counts((int) $post->ID);
 		$all_terms = get_terms([
 			'taxonomy' => self::media_library_tags_taxonomy(),
 			'hide_empty' => false,
@@ -1244,7 +1247,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'label' => __('Library Tags', 'user-manager'),
 			'input' => 'html',
 			'html'  => '<input type="text" class="text" name="attachments[' . (int) $post->ID . '][um_media_library_tags]" value="' . esc_attr($value) . '" />',
-			'helps' => '<div style="margin-bottom:8px;"><strong>' . esc_html__('Lightbox Views:', 'user-manager') . '</strong> ' . esc_html(number_format_i18n($lightbox_views)) . '</div>' . $quick_links_html . __('Comma-separated tags. Add new tags or remove existing tags for this media item.', 'user-manager'),
+			'helps' => ''
+				. '<div style="margin-bottom:4px;"><strong>' . esc_html__('Lightbox Views:', 'user-manager') . '</strong> ' . esc_html(number_format_i18n($lightbox_views)) . '</div>'
+				. '<div style="margin-bottom:4px;"><strong>' . esc_html__('Lightbox Views (Year):', 'user-manager') . '</strong> ' . esc_html(number_format_i18n((int) ($lightbox_period_views['year'] ?? 0))) . '</div>'
+				. '<div style="margin-bottom:4px;"><strong>' . esc_html__('Lightbox Views (Month):', 'user-manager') . '</strong> ' . esc_html(number_format_i18n((int) ($lightbox_period_views['month'] ?? 0))) . '</div>'
+				. '<div style="margin-bottom:4px;"><strong>' . esc_html__('Lightbox Views (Week):', 'user-manager') . '</strong> ' . esc_html(number_format_i18n((int) ($lightbox_period_views['week'] ?? 0))) . '</div>'
+				. '<div style="margin-bottom:8px;"><strong>' . esc_html__('Lightbox Views (Day):', 'user-manager') . '</strong> ' . esc_html(number_format_i18n((int) ($lightbox_period_views['day'] ?? 0))) . '</div>'
+				. $quick_links_html
+				. __('Comma-separated tags. Add new tags or remove existing tags for this media item.', 'user-manager'),
 		];
 
 		return $form_fields;
@@ -5240,6 +5250,108 @@ JS;
 		}
 		$value = get_post_meta($attachment_id, self::media_library_lightbox_views_meta_key(), true);
 		return max(0, absint($value));
+	}
+
+	/**
+	 * Increment total + current year/month/week/day lightbox counters.
+	 *
+	 * @return array{total:int,year:int,month:int,week:int,day:int}
+	 */
+	private static function increment_media_library_lightbox_view_counts(int $attachment_id): array {
+		$total = self::get_media_library_lightbox_view_count($attachment_id) + 1;
+		update_post_meta($attachment_id, self::media_library_lightbox_views_meta_key(), $total);
+		$period_counts = self::increment_media_library_lightbox_view_period_counts($attachment_id);
+		return [
+			'total' => $total,
+			'year' => (int) ($period_counts['year'] ?? 0),
+			'month' => (int) ($period_counts['month'] ?? 0),
+			'week' => (int) ($period_counts['week'] ?? 0),
+			'day' => (int) ($period_counts['day'] ?? 0),
+		];
+	}
+
+	/**
+	 * Read current period counters for year/month/week/day.
+	 *
+	 * @return array{year:int,month:int,week:int,day:int}
+	 */
+	private static function get_media_library_lightbox_period_view_counts(int $attachment_id): array {
+		$counts = [];
+		foreach (['year', 'month', 'week', 'day'] as $period) {
+			$current_key = self::media_library_lightbox_period_current_key($period);
+			$meta_key = self::media_library_lightbox_views_period_meta_key($period);
+			if ($current_key === '' || $meta_key === '') {
+				continue;
+			}
+			$stored_key = (string) get_post_meta($attachment_id, $meta_key . '_key', true);
+			$stored_count = max(0, absint(get_post_meta($attachment_id, $meta_key . '_count', true)));
+			$counts[$period] = ($stored_key === $current_key) ? $stored_count : 0;
+		}
+		return [
+			'year' => (int) ($counts['year'] ?? 0),
+			'month' => (int) ($counts['month'] ?? 0),
+			'week' => (int) ($counts['week'] ?? 0),
+			'day' => (int) ($counts['day'] ?? 0),
+		];
+	}
+
+	/**
+	 * Increment period counters for current year/month/week/day.
+	 *
+	 * @return array{year:int,month:int,week:int,day:int}
+	 */
+	private static function increment_media_library_lightbox_view_period_counts(int $attachment_id): array {
+		$counts = [];
+		foreach (['year', 'month', 'week', 'day'] as $period) {
+			$current_key = self::media_library_lightbox_period_current_key($period);
+			$meta_key = self::media_library_lightbox_views_period_meta_key($period);
+			if ($current_key === '' || $meta_key === '') {
+				continue;
+			}
+			$stored_key = (string) get_post_meta($attachment_id, $meta_key . '_key', true);
+			$stored_count = max(0, absint(get_post_meta($attachment_id, $meta_key . '_count', true)));
+			$next_count = ($stored_key === $current_key) ? ($stored_count + 1) : 1;
+			update_post_meta($attachment_id, $meta_key . '_key', $current_key);
+			update_post_meta($attachment_id, $meta_key . '_count', $next_count);
+			$counts[$period] = $next_count;
+		}
+		return [
+			'year' => (int) ($counts['year'] ?? 0),
+			'month' => (int) ($counts['month'] ?? 0),
+			'week' => (int) ($counts['week'] ?? 0),
+			'day' => (int) ($counts['day'] ?? 0),
+		];
+	}
+
+	/**
+	 * Resolve storage key for the current period bucket.
+	 */
+	private static function media_library_lightbox_period_current_key(string $period): string {
+		switch ($period) {
+			case 'year':
+				return gmdate('Y');
+			case 'month':
+				return gmdate('Y-m');
+			case 'week':
+				$iso_year = (string) gmdate('o');
+				$iso_week = str_pad((string) gmdate('W'), 2, '0', STR_PAD_LEFT);
+				return $iso_year . '-W' . $iso_week;
+			case 'day':
+				return gmdate('Y-m-d');
+			default:
+				return '';
+		}
+	}
+
+	/**
+	 * Resolve base post-meta key for a period counter.
+	 */
+	private static function media_library_lightbox_views_period_meta_key(string $period): string {
+		$period = sanitize_key($period);
+		if (!in_array($period, ['year', 'month', 'week', 'day'], true)) {
+			return '';
+		}
+		return 'um_media_lightbox_views_' . $period;
 	}
 
 	/**
