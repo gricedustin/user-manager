@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.94 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Replaced the Media Library Tag Gallery "Modal Window" setting with a restored "Link To" selector in the add-on settings, with options: None, Open Image, Open Image in New Window, and Open Image in Lightbox.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added matching block-level "Link To" override controls (plus "Use add-on default"), and updated front-end rendering so each option now outputs the requested click behavior per gallery/block.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.93 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting: "Allow Simple Lightbox when clicking on a thumbnail" with full save/load support in add-on defaults and block-level "Use add-on default" controls.', 'user-manager'); ?></li>

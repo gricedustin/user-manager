@@ -1748,6 +1748,12 @@ JS;
 		{ label: 'Crossfade', value: 'crossfade' },
 		{ label: 'Slide to Left', value: 'slide_left' }
 	];
+	var linkToOptions = [
+		{ label: 'None', value: 'none' },
+		{ label: 'Open Image', value: 'image' },
+		{ label: 'Open Image in New Window', value: 'image_new_window' },
+		{ label: 'Open Image in Lightbox', value: 'lightbox' }
+	];
 	var fallbackDefaults = {
 		columnsDesktop: parseInt(defaults.columnsDesktop, 10) || 4,
 		columnsDesktopLt50: parseInt(defaults.columnsDesktopLt50, 10) || 4,
@@ -1758,7 +1764,19 @@ JS;
 		fileSize: defaults.fileSize || 'thumbnail',
 		style: defaults.style || 'uniform_grid',
 		pageLimit: parseInt(defaults.pageLimit, 10) || 0,
-		linkTo: 'lightbox',
+		linkTo: (function() {
+			var raw = String(defaults.linkTo || 'lightbox').toLowerCase();
+			if (raw === 'media_permalink' || raw === 'media_file' || raw === 'file' || raw === 'open_image') {
+				raw = 'image';
+			}
+			if (raw === 'new_window' || raw === 'open_image_new_window') {
+				raw = 'image_new_window';
+			}
+			if (['none', 'image', 'image_new_window', 'lightbox'].indexOf(raw) === -1) {
+				raw = 'lightbox';
+			}
+			return raw;
+		})(),
 		albumDescriptionPosition: defaults.albumDescriptionPosition || 'none',
 		descriptionDisplay: defaults.descriptionDisplay || 'none',
 		descriptionValue: defaults.descriptionValue || 'caption',
@@ -1817,7 +1835,7 @@ JS;
 			useDefaultPageLimit: { type: 'boolean', default: true },
 			pageLimit: { type: 'integer', default: parseInt(defaults.pageLimit, 10) || 0 },
 			useDefaultLinkTo: { type: 'boolean', default: true },
-			linkTo: { type: 'string', default: 'lightbox' },
+			linkTo: { type: 'string', default: fallbackDefaults.linkTo },
 			useDefaultAlbumDescriptionPosition: { type: 'boolean', default: true },
 			albumDescriptionPosition: { type: 'string', default: defaults.albumDescriptionPosition || 'none' },
 			useDefaultDescriptionDisplay: { type: 'boolean', default: true },
@@ -1893,7 +1911,16 @@ JS;
 			var effectiveFileSize = useDefaultFileSize ? fallbackDefaults.fileSize : (a.fileSize || fallbackDefaults.fileSize);
 			var effectiveStyle = useDefaultStyle ? fallbackDefaults.style : (a.style || fallbackDefaults.style);
 			var effectivePageLimit = useDefaultPageLimit ? fallbackDefaults.pageLimit : (typeof a.pageLimit === 'number' ? a.pageLimit : fallbackDefaults.pageLimit);
-			var effectiveLinkTo = 'lightbox';
+			var effectiveLinkTo = useDefaultLinkTo ? fallbackDefaults.linkTo : String(a.linkTo || fallbackDefaults.linkTo);
+			if (effectiveLinkTo === 'media_permalink' || effectiveLinkTo === 'media_file' || effectiveLinkTo === 'file' || effectiveLinkTo === 'open_image') {
+				effectiveLinkTo = 'image';
+			}
+			if (effectiveLinkTo === 'new_window' || effectiveLinkTo === 'open_image_new_window') {
+				effectiveLinkTo = 'image_new_window';
+			}
+			if (['none', 'image', 'image_new_window', 'lightbox'].indexOf(effectiveLinkTo) === -1) {
+				effectiveLinkTo = 'lightbox';
+			}
 			var effectiveAlbumDescriptionPosition = useDefaultAlbumDescriptionPosition ? fallbackDefaults.albumDescriptionPosition : (a.albumDescriptionPosition || fallbackDefaults.albumDescriptionPosition);
 			var effectiveDescriptionDisplay = useDefaultDescriptionDisplay ? fallbackDefaults.descriptionDisplay : (a.descriptionDisplay || fallbackDefaults.descriptionDisplay);
 			var effectiveDescriptionValue = useDefaultDescriptionValue ? fallbackDefaults.descriptionValue : (a.descriptionValue || fallbackDefaults.descriptionValue);
@@ -2072,9 +2099,19 @@ JS;
 							checked: useDefaultPageLimit,
 							onChange: function(v){ set({ useDefaultPageLimit: !!v }); }
 						}),
-						element.createElement('p', {
-							style: { margin: '8px 0 14px', fontStyle: 'italic' }
-						}, 'Modal Window is always enabled for gallery image clicks.'),
+						element.createElement(SelectControl, {
+							label: 'Link To',
+							disabled: useDefaultLinkTo,
+							value: effectiveLinkTo,
+							help: useDefaultLinkTo ? ('Using add-on default: ' + String(fallbackDefaults.linkTo)) : '',
+							options: linkToOptions,
+							onChange: function(v){ set({ linkTo: String(v || 'lightbox') }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Link To',
+							checked: useDefaultLinkTo,
+							onChange: function(v){ set({ useDefaultLinkTo: !!v }); }
+						}),
 						element.createElement(SelectControl, {
 							label: 'Display Album Tag Description(s)',
 							disabled: useDefaultAlbumDescriptionPosition,
@@ -2248,6 +2285,7 @@ JS;
 		$use_default_file_size = !empty($attrs['useDefaultFileSize']);
 		$use_default_style = !empty($attrs['useDefaultStyle']);
 		$use_default_page_limit = !empty($attrs['useDefaultPageLimit']);
+		$use_default_link_to = !empty($attrs['useDefaultLinkTo']);
 		$use_default_album_description_position = !empty($attrs['useDefaultAlbumDescriptionPosition']);
 		$use_default_description_display = !empty($attrs['useDefaultDescriptionDisplay']);
 		$use_default_description_value = !empty($attrs['useDefaultDescriptionValue']);
@@ -2289,8 +2327,15 @@ JS;
 		$page_limit = $use_default_page_limit
 			? max(0, absint($defaults['pageLimit']))
 			: max(0, absint($attrs['pageLimit'] ?? $defaults['pageLimit']));
-		// Link behavior is now always modal window/lightbox.
-		$link_to = 'lightbox';
+		$link_to_raw = $use_default_link_to
+			? (string) ($defaults['linkTo'] ?? 'lightbox')
+			: (isset($attrs['linkTo']) ? (string) $attrs['linkTo'] : (string) ($defaults['linkTo'] ?? 'lightbox'));
+		$link_to = sanitize_key($link_to_raw);
+		if (in_array($link_to, ['media_permalink', 'media_file', 'file', 'open_image'], true)) {
+			$link_to = 'image';
+		} elseif (in_array($link_to, ['new_window', 'open_image_new_window'], true)) {
+			$link_to = 'image_new_window';
+		}
 		$album_description_position = $use_default_album_description_position
 			? sanitize_key((string) ($defaults['albumDescriptionPosition'] ?? 'none'))
 			: (isset($attrs['albumDescriptionPosition']) ? sanitize_key((string) $attrs['albumDescriptionPosition']) : sanitize_key((string) ($defaults['albumDescriptionPosition'] ?? 'none')));
@@ -2334,6 +2379,7 @@ JS;
 			$allowed_file_sizes = ['thumbnail', 'medium', 'large', 'full'];
 		}
 		$allowed_styles = array_keys(self::get_media_library_gallery_style_options());
+		$allowed_link_to = array_keys(self::get_media_library_gallery_link_to_options());
 		$allowed_album_description_positions = array_keys(self::get_media_library_gallery_album_description_position_options());
 		$allowed_description_display = array_keys(self::get_media_library_gallery_description_display_options());
 		$allowed_description_values = array_keys(self::get_media_library_gallery_description_value_options());
@@ -2346,6 +2392,9 @@ JS;
 		}
 		if (!in_array($style, $allowed_styles, true)) {
 			$style = 'uniform_grid';
+		}
+		if (!in_array($link_to, $allowed_link_to, true)) {
+			$link_to = 'lightbox';
 		}
 		if (!in_array($album_description_position, $allowed_album_description_positions, true)) {
 			$album_description_position = 'none';
@@ -2383,7 +2432,8 @@ JS;
 			return '';
 		}
 
-		$effective_link_to = 'lightbox';
+		$effective_link_to = $link_to;
+		$allow_lightbox_click_open = $effective_link_to === 'lightbox';
 		if ($style === 'infinite_scroll') {
 			$page_limit = 0;
 		}
@@ -2533,6 +2583,7 @@ JS;
 		if ($lightbox_debug_auto_open) {
 			$lightbox_debug_enabled = true;
 		}
+		$enable_simple_lightbox_for_this_gallery = $allow_lightbox_click_open && $simple_lightbox_thumbnail_click;
 		$timeline_date_format = get_option('date_format');
 		if (!is_string($timeline_date_format) || $timeline_date_format === '') {
 			$timeline_date_format = 'F j, Y';
@@ -2550,7 +2601,7 @@ JS;
 			<?php echo $lightbox_debug_enabled ? ' data-um-lightbox-debug="1"' : ' data-um-lightbox-debug="0"'; ?>
 			<?php echo $lightbox_debug_auto_open ? ' data-um-lightbox-debug-open="1"' : ' data-um-lightbox-debug-open="0"'; ?>
 			data-um-fallback-allow-controls="0"
-			<?php echo $simple_lightbox_thumbnail_click ? ' data-um-lightbox-simple-thumbnail-click="1"' : ' data-um-lightbox-simple-thumbnail-click="0"'; ?>
+			<?php echo $enable_simple_lightbox_for_this_gallery ? ' data-um-lightbox-simple-thumbnail-click="1"' : ' data-um-lightbox-simple-thumbnail-click="0"'; ?>
 		>
 			<?php if ($album_description_position === 'above' && $album_tag_description_html !== '') : ?>
 				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-above">
@@ -2595,8 +2646,10 @@ JS;
 								$description_attr = $image_alt !== '' ? $image_alt : $description_text;
 								?>
 								<figure class="um-media-library-tag-gallery-item um-mltg-carousel-slide" data-slide-index="<?php echo esc_attr((string) $index); ?>">
-									<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
-										<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+									<?php if ($effective_link_to === 'image_new_window' && $image_src) : ?>
+										<a href="<?php echo esc_url((string) $image_src); ?>" target="_blank" rel="noopener noreferrer" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+								<?php elseif ($effective_link_to === 'image' && $image_src) : ?>
+										<a href="<?php echo esc_url((string) $image_src); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 								<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
 									<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
 									<?php else : ?>
@@ -2693,8 +2746,10 @@ JS;
 						}
 						?>
 						<figure class="<?php echo esc_attr(implode(' ', $item_classes)); ?>"<?php echo $is_infinite_hidden ? ' data-um-infinite-hidden="1"' : ''; ?>>
-							<?php if ($effective_link_to === 'media_permalink' && $permalink) : ?>
-								<a href="<?php echo esc_url($permalink); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+							<?php if ($effective_link_to === 'image_new_window' && $image_src) : ?>
+								<a href="<?php echo esc_url((string) $image_src); ?>" target="_blank" rel="noopener noreferrer" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
+							<?php elseif ($effective_link_to === 'image' && $image_src) : ?>
+								<a href="<?php echo esc_url((string) $image_src); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 							<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
 									<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
 							<?php else : ?>
@@ -3777,8 +3832,14 @@ JS;
 		if (isset($settings['media_library_tag_gallery_page_limit'])) {
 			$defaults['pageLimit'] = max(0, absint($settings['media_library_tag_gallery_page_limit']));
 		}
-		// Link behavior is always modal window/lightbox.
-		$defaults['linkTo'] = 'lightbox';
+		if (!empty($settings['media_library_tag_gallery_link_to'])) {
+			$defaults['linkTo'] = sanitize_key((string) $settings['media_library_tag_gallery_link_to']);
+		}
+		if (in_array((string) $defaults['linkTo'], ['media_permalink', 'media_file', 'file', 'open_image'], true)) {
+			$defaults['linkTo'] = 'image';
+		} elseif (in_array((string) $defaults['linkTo'], ['new_window', 'open_image_new_window'], true)) {
+			$defaults['linkTo'] = 'image_new_window';
+		}
 		if (!empty($settings['media_library_tag_gallery_album_description_position'])) {
 			$defaults['albumDescriptionPosition'] = sanitize_key((string) $settings['media_library_tag_gallery_album_description_position']);
 		}
@@ -3824,6 +3885,10 @@ JS;
 		$valid_styles = array_keys(self::get_media_library_gallery_style_options());
 		if (!in_array((string) $defaults['style'], $valid_styles, true)) {
 			$defaults['style'] = 'uniform_grid';
+		}
+		$valid_link_to = array_keys(self::get_media_library_gallery_link_to_options());
+		if (!in_array((string) $defaults['linkTo'], $valid_link_to, true)) {
+			$defaults['linkTo'] = 'lightbox';
 		}
 		$valid_album_description_positions = array_keys(self::get_media_library_gallery_album_description_position_options());
 		if (!in_array((string) $defaults['albumDescriptionPosition'], $valid_album_description_positions, true)) {
@@ -3914,6 +3979,18 @@ JS;
 			'none' => __('None', 'user-manager'),
 			'crossfade' => __('Crossfade', 'user-manager'),
 			'slide_left' => __('Slide to Left', 'user-manager'),
+		];
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_media_library_gallery_link_to_options(): array {
+		return [
+			'none' => __('None', 'user-manager'),
+			'image' => __('Open Image', 'user-manager'),
+			'image_new_window' => __('Open Image in New Window', 'user-manager'),
+			'lightbox' => __('Open Image in Lightbox', 'user-manager'),
 		];
 	}
 

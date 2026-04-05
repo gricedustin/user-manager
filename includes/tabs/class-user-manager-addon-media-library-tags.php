@@ -55,6 +55,13 @@ class User_Manager_Addon_Media_Library_Tags {
 		$description_value = isset($settings['media_library_tag_gallery_description_value']) && is_string($settings['media_library_tag_gallery_description_value']) && $settings['media_library_tag_gallery_description_value'] !== ''
 			? $settings['media_library_tag_gallery_description_value']
 			: (string) $defaults['descriptionValue'];
+		$link_to_options = User_Manager_Core::get_media_library_gallery_link_to_options();
+		$link_to = isset($settings['media_library_tag_gallery_link_to']) && is_string($settings['media_library_tag_gallery_link_to']) && $settings['media_library_tag_gallery_link_to'] !== ''
+			? sanitize_key((string) $settings['media_library_tag_gallery_link_to'])
+			: (string) ($defaults['linkTo'] ?? 'lightbox');
+		if (!isset($link_to_options[$link_to])) {
+			$link_to = 'lightbox';
+		}
 		$lightbox_prev_next_keyboard = isset($settings['media_library_tag_gallery_lightbox_prev_next_keyboard'])
 			? !empty($settings['media_library_tag_gallery_lightbox_prev_next_keyboard'])
 			: !empty($defaults['lightboxPrevNextKeyboard']);
@@ -190,10 +197,13 @@ class User_Manager_Addon_Media_Library_Tags {
 								<input type="number" min="0" class="small-text" id="um-media-library-tags-gallery-page-limit" name="media_library_tag_gallery_page_limit" value="<?php echo esc_attr((string) $page_limit); ?>"<?php echo $form_attr; ?> />
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Set to 0 for unlimited. If greater than 0, pagination is added when results exceed this limit.', 'user-manager'); ?></p>
 							</div>
-							<input type="hidden" name="media_library_tag_gallery_link_to" value="lightbox"<?php echo $form_attr; ?> />
 							<div class="um-form-field">
-								<label><strong><?php esc_html_e('Modal Window', 'user-manager'); ?></strong></label>
-								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Images now open in the modal window by default. The old "Link To" selector has been replaced by the modal window controls below.', 'user-manager'); ?></p>
+								<label for="um-media-library-tags-gallery-link-to"><?php esc_html_e('Link To', 'user-manager'); ?></label>
+								<select id="um-media-library-tags-gallery-link-to" name="media_library_tag_gallery_link_to"<?php echo $form_attr; ?>>
+									<?php foreach ($link_to_options as $link_to_key => $link_to_label) : ?>
+										<option value="<?php echo esc_attr((string) $link_to_key); ?>" <?php selected($link_to, (string) $link_to_key); ?>><?php echo esc_html((string) $link_to_label); ?></option>
+									<?php endforeach; ?>
+								</select>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-description-display"><?php esc_html_e('Description Display', 'user-manager'); ?></label>

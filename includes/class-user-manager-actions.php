@@ -2343,8 +2343,9 @@ class User_Manager_Actions {
 					? sanitize_hex_color(wp_unslash($_POST['media_library_tag_gallery_accent_color']))
 					: '';
 				$settings['media_library_tag_gallery_page_limit'] = isset($_POST['media_library_tag_gallery_page_limit']) ? max(0, absint($_POST['media_library_tag_gallery_page_limit'])) : 0;
-				// Modal Window replaced legacy Link To selector; keep setting pinned to lightbox.
-				$settings['media_library_tag_gallery_link_to'] = 'lightbox';
+				$gallery_link_to = isset($_POST['media_library_tag_gallery_link_to']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_link_to'])) : 'lightbox';
+				$allowed_gallery_link_to = array_keys(User_Manager_Core::get_media_library_gallery_link_to_options());
+				$settings['media_library_tag_gallery_link_to'] = in_array($gallery_link_to, $allowed_gallery_link_to, true) ? $gallery_link_to : 'lightbox';
 				$gallery_album_description_position = isset($_POST['media_library_tag_gallery_album_description_position']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_album_description_position'])) : 'none';
 				$allowed_album_description_positions = array_keys(User_Manager_Core::get_media_library_gallery_album_description_position_options());
 				if (!in_array($gallery_album_description_position, $allowed_album_description_positions, true)) {
