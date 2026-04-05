@@ -248,7 +248,7 @@ class User_Manager_Addon_Media_Library_Tags {
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('How many seconds each photo stays visible during slideshow playback.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
-								<label for="um-media-library-tags-gallery-lightbox-slideshow-transition"><?php esc_html_e('Slideshow Transition (None, Crossfade, Slide to Left)', 'user-manager'); ?></label>
+								<label for="um-media-library-tags-gallery-lightbox-slideshow-transition"><?php esc_html_e('Slideshow Transition', 'user-manager'); ?></label>
 								<select id="um-media-library-tags-gallery-lightbox-slideshow-transition" name="media_library_tag_gallery_lightbox_slideshow_transition"<?php echo $form_attr; ?>>
 									<?php foreach ($lightbox_slideshow_transition_options as $transition_key => $transition_label) : ?>
 										<option value="<?php echo esc_attr((string) $transition_key); ?>" <?php selected($lightbox_slideshow_transition, (string) $transition_key); ?>><?php echo esc_html((string) $transition_label); ?></option>

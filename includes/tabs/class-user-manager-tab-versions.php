@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.106 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag Gallery lightbox Previous/Next buttons to arrow-style controls (&lsaquo; / &rsaquo;) in modal output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Extended resilient inline lightbox fallback runtime to support Play/Pause slideshow, slideshow seconds-per-photo timing, and transition mode classes (none, crossfade, slide-left).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Simplified add-on settings label text from "Slideshow Transition (None, Crossfade, Slide to Left)" to "Slideshow Transition" to remove duplicated verbose wording.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.105 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Media Library Tag Gallery inline fallback bootstrap registration by hooking the helper script to wp_head early, ensuring window.umMltgInline is available before gallery click handlers run.', 'user-manager'); ?></li>

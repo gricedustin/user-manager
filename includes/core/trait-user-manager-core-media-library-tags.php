@@ -2290,13 +2290,13 @@ JS;
 				}
 				return trigger ? [trigger] : [];
 			}
-			function updateControls(overlay, allowPrevNext) {
+			function updateControls(overlay, allowPrevNext, allowSlideshow) {
 				var controlsWrap = overlay.querySelector('.um-mltg-lightbox-controls');
 				var prevBtn = overlay.querySelector('.um-mltg-lightbox-prev');
 				var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
 				var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
 				if (controlsWrap) {
-					controlsWrap.style.display = allowPrevNext ? 'flex' : 'none';
+					controlsWrap.style.display = (allowPrevNext || allowSlideshow) ? 'flex' : 'none';
 				}
 				if (prevBtn) {
 					prevBtn.style.display = allowPrevNext ? 'inline-block' : 'none';
@@ -2305,7 +2305,8 @@ JS;
 					nextBtn.style.display = allowPrevNext ? 'inline-block' : 'none';
 				}
 				if (slideshowBtn) {
-					slideshowBtn.style.display = 'none';
+					slideshowBtn.style.display = allowSlideshow ? 'inline-block' : 'none';
+					slideshowBtn.textContent = 'Play Slideshow';
 				}
 			}
 			function renderOverlay(overlay, trigger, root, items, index) {
@@ -2341,7 +2342,18 @@ JS;
 					tagToolsEl.style.display = 'none';
 				}
 				var allowPrevNext = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-prev-next') === '1');
-				updateControls(overlay, allowPrevNext);
+				var allowSlideshow = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-slideshow') === '1');
+				var slideshowSecondsRaw = root && root.getAttribute ? parseFloat(String(root.getAttribute('data-um-lightbox-seconds') || '3')) : 3;
+				var slideshowSeconds = isFinite(slideshowSecondsRaw) ? Math.max(1, Math.min(60, slideshowSecondsRaw)) : 3;
+				var slideshowTransition = root && root.getAttribute ? String(root.getAttribute('data-um-lightbox-transition') || 'none') : 'none';
+				var normalizedTransition = (slideshowTransition === 'crossfade' || slideshowTransition === 'slide_left') ? slideshowTransition : 'none';
+				updateControls(overlay, allowPrevNext, allowSlideshow);
+				overlay.classList.remove('um-mltg-transition-crossfade', 'um-mltg-transition-slide-left');
+				if (normalizedTransition === 'crossfade') {
+					overlay.classList.add('um-mltg-transition-crossfade');
+				} else if (normalizedTransition === 'slide_left') {
+					overlay.classList.add('um-mltg-transition-slide-left');
+				}
 				if (root && root.id) {
 					overlay.setAttribute('data-um-inline-root-id', root.id);
 				} else {
@@ -2349,6 +2361,9 @@ JS;
 				}
 				overlay.setAttribute('data-um-inline-prevnext', allowPrevNext ? '1' : '0');
 				overlay.setAttribute('data-um-inline-index', String(Math.max(0, index)));
+				overlay.setAttribute('data-um-inline-slideshow', allowSlideshow ? '1' : '0');
+				overlay.setAttribute('data-um-inline-slideshow-seconds', String(slideshowSeconds));
+				overlay.setAttribute('data-um-inline-transition', normalizedTransition);
 				overlay.style.display = 'flex';
 				overlay.setAttribute('aria-hidden', 'false');
 				overlay.setAttribute('tabindex', '-1');
@@ -2357,6 +2372,36 @@ JS;
 				}
 				if (document && document.body) {
 					document.body.style.overflow = 'hidden';
+				}
+				var slideshowTimer = overlay.__umInlineSlideshowTimer || null;
+				if (slideshowTimer) {
+					window.clearInterval(slideshowTimer);
+					overlay.__umInlineSlideshowTimer = null;
+				}
+				var slideshowPlaying = !!overlay.__umInlineSlideshowPlaying;
+				overlay.__umInlineSlideshowPlaying = false;
+				var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
+				if (slideshowBtn && slideshowPlaying && allowSlideshow) {
+					var intervalMs = Math.max(1000, Math.round(slideshowSeconds * 1000));
+					overlay.__umInlineSlideshowPlaying = true;
+					slideshowBtn.textContent = 'Pause Slideshow';
+					overlay.__umInlineSlideshowTimer = window.setInterval(function() {
+						if (overlay.getAttribute('aria-hidden') !== 'false' || overlay.getAttribute('data-um-inline-slideshow') !== '1') {
+							if (overlay.__umInlineSlideshowTimer) {
+								window.clearInterval(overlay.__umInlineSlideshowTimer);
+								overlay.__umInlineSlideshowTimer = null;
+							}
+							overlay.__umInlineSlideshowPlaying = false;
+							if (slideshowBtn) {
+								slideshowBtn.textContent = 'Play Slideshow';
+							}
+							return;
+						}
+						var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
+						if (nextBtn) {
+							api.step(nextBtn, 1, null);
+						}
+					}, intervalMs);
 				}
 				return true;
 			}
@@ -2399,10 +2444,21 @@ JS;
 				}
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
+				overlay.classList.remove('um-mltg-transition-crossfade', 'um-mltg-transition-slide-left');
 				var image = overlay.querySelector('img');
 				if (image) {
 					image.setAttribute('src', '');
+					image.classList.remove('is-transitioning');
 				}
+				var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
+				if (slideshowBtn) {
+					slideshowBtn.textContent = 'Play Slideshow';
+				}
+				if (overlay.__umInlineSlideshowTimer) {
+					window.clearInterval(overlay.__umInlineSlideshowTimer);
+					overlay.__umInlineSlideshowTimer = null;
+				}
+				overlay.__umInlineSlideshowPlaying = false;
 				if (document && document.body) {
 					document.body.style.overflow = '';
 				}
@@ -2454,6 +2510,53 @@ JS;
 				}
 				return renderOverlay(overlay, trigger, root, items, nextIndex);
 			};
+			api.toggleSlideshow = function(button, event) {
+				if (event) {
+					event.preventDefault();
+					if (typeof event.stopImmediatePropagation === 'function') {
+						event.stopImmediatePropagation();
+					} else if (typeof event.stopPropagation === 'function') {
+						event.stopPropagation();
+					}
+				}
+				var overlay = button && button.closest ? button.closest('.um-mltg-lightbox-overlay') : null;
+				if (!overlay || overlay.getAttribute('data-um-inline-slideshow') !== '1') {
+					return false;
+				}
+				if (overlay.__umInlineSlideshowTimer) {
+					window.clearInterval(overlay.__umInlineSlideshowTimer);
+					overlay.__umInlineSlideshowTimer = null;
+					overlay.__umInlineSlideshowPlaying = false;
+					if (button) {
+						button.textContent = 'Play Slideshow';
+					}
+					return false;
+				}
+				var secondsRaw = parseFloat(String(overlay.getAttribute('data-um-inline-slideshow-seconds') || '3'));
+				var intervalMs = Math.max(1000, Math.round((isFinite(secondsRaw) ? secondsRaw : 3) * 1000));
+				overlay.__umInlineSlideshowPlaying = true;
+				if (button) {
+					button.textContent = 'Pause Slideshow';
+				}
+				overlay.__umInlineSlideshowTimer = window.setInterval(function() {
+					if (overlay.getAttribute('aria-hidden') !== 'false' || overlay.getAttribute('data-um-inline-slideshow') !== '1') {
+						if (overlay.__umInlineSlideshowTimer) {
+							window.clearInterval(overlay.__umInlineSlideshowTimer);
+							overlay.__umInlineSlideshowTimer = null;
+						}
+						overlay.__umInlineSlideshowPlaying = false;
+						if (button) {
+							button.textContent = 'Play Slideshow';
+						}
+						return;
+					}
+					var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
+					if (nextBtn) {
+						api.step(nextBtn, 1, null);
+					}
+				}, intervalMs);
+				return false;
+			};
 			api.keydown = function(overlay, event) {
 				if (!overlay || !event) {
 					return true;
@@ -2461,18 +2564,27 @@ JS;
 				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
 					return api.closeFromOverlay(overlay, event);
 				}
-				if (overlay.getAttribute('aria-hidden') !== 'false' || overlay.getAttribute('data-um-inline-prevnext') !== '1') {
+				if (overlay.getAttribute('aria-hidden') !== 'false') {
 					return true;
 				}
-				if (event.key === 'ArrowLeft') {
+				var allowPrevNext = overlay.getAttribute('data-um-inline-prevnext') === '1';
+				if (allowPrevNext && event.key === 'ArrowLeft') {
 					var prevBtn = overlay.querySelector('.um-mltg-lightbox-prev');
 					if (prevBtn) {
 						return api.step(prevBtn, -1, event);
 					}
-				} else if (event.key === 'ArrowRight') {
+				} else if (allowPrevNext && event.key === 'ArrowRight') {
 					var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
 					if (nextBtn) {
 						return api.step(nextBtn, 1, event);
+					}
+				} else if (event.key === ' ') {
+					var allowSlideshow = overlay.getAttribute('data-um-inline-slideshow') === '1';
+					if (allowSlideshow) {
+						var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
+						if (slideshowBtn) {
+							return api.toggleSlideshow(slideshowBtn, event);
+						}
 					}
 				}
 				return true;
@@ -3309,9 +3421,9 @@ JS;
 				<p class="um-mltg-lightbox-tag-feedback" aria-live="polite"></p>
 			</div>
 			<div class="um-mltg-lightbox-controls">
-				<button type="button" class="um-mltg-lightbox-prev" onclick="<?php echo esc_attr($inline_lightbox_prev_onclick); ?>"><?php esc_html_e('Previous', 'user-manager'); ?></button>
-				<button type="button" class="um-mltg-lightbox-next" onclick="<?php echo esc_attr($inline_lightbox_next_onclick); ?>"><?php esc_html_e('Next', 'user-manager'); ?></button>
-				<button type="button" class="um-mltg-lightbox-slideshow-toggle"><?php esc_html_e('Play Slideshow', 'user-manager'); ?></button>
+				<button type="button" class="um-mltg-lightbox-prev" onclick="<?php echo esc_attr($inline_lightbox_prev_onclick); ?>" aria-label="<?php esc_attr_e('Previous image', 'user-manager'); ?>">&lsaquo;</button>
+				<button type="button" class="um-mltg-lightbox-next" onclick="<?php echo esc_attr($inline_lightbox_next_onclick); ?>" aria-label="<?php esc_attr_e('Next image', 'user-manager'); ?>">&rsaquo;</button>
+				<button type="button" class="um-mltg-lightbox-slideshow-toggle" onclick="<?php echo esc_attr($inline_lightbox_slideshow_onclick); ?>"><?php esc_html_e('Play Slideshow', 'user-manager'); ?></button>
 			</div>
 		</div>
 		<script>
