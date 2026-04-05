@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.123 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new gallery style option: "Mosaic Grid (Taller Tiles)" that reuses the existing irregular mosaic pattern with 50% taller base tile rows.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Mosaic (Taller) shares the same large/tall/wide tile placement logic as Mosaic Grid while increasing visual tile height for a taller collage look.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.122 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag description paragraphs now preserve author-entered line breaks by converting newline characters to <br> in front-end output.', 'user-manager'); ?></li>

@@ -1974,6 +1974,7 @@ JS;
 		{ label: 'Justified Row Layout', value: 'justified_rows' },
 		{ label: 'Masonry / Pinterest Layout', value: 'masonry_pinterest' },
 		{ label: 'Mosaic Grid (Irregular Tiles)', value: 'mosaic_grid' },
+		{ label: 'Mosaic Grid (Taller Tiles)', value: 'mosaic_grid_taller' },
 		{ label: 'Polaroid / Scrapbook Layout', value: 'polaroid_scrapbook' },
 		{ label: 'Split Screen Feature Gallery', value: 'split_screen_feature' },
 		{ label: 'Square CSS Crop', value: 'square_crop' },
@@ -3376,7 +3377,7 @@ JS;
 		$show_description_under_photo = in_array($description_display, ['grid', 'both'], true);
 		$show_description_in_lightbox = in_array($description_display, ['lightbox', 'both'], true);
 		$hidden_frontend_tag_slugs = self::get_hidden_frontend_tag_slugs($settings);
-		$css_crop_styles = ['mosaic_grid', 'square_crop', 'wide_rectangle_crop', 'tall_rectangle_crop', 'circle_crop', 'fullscreen_lightbox_grid'];
+		$css_crop_styles = ['mosaic_grid', 'mosaic_grid_taller', 'square_crop', 'wide_rectangle_crop', 'tall_rectangle_crop', 'circle_crop', 'fullscreen_lightbox_grid'];
 
 		$page_num = isset($_GET['um_media_gallery_page']) ? max(1, absint(wp_unslash($_GET['um_media_gallery_page']))) : 1;
 		$offset = 0;
@@ -3694,7 +3695,7 @@ JS;
 						$date_label = get_the_date($timeline_date_format, $attachment_id);
 						$is_infinite_hidden = $style === 'infinite_scroll' && $index >= max(12, $effective_columns_desktop * 3);
 						$item_classes = ['um-media-library-tag-gallery-item'];
-						if ($style === 'mosaic_grid' && !$disable_css_crop_for_small_galleries) {
+						if (in_array($style, ['mosaic_grid', 'mosaic_grid_taller'], true) && !$disable_css_crop_for_small_galleries) {
 							$pattern_slot = $index % 8;
 							if ($pattern_slot === 0) {
 								$item_classes[] = 'um-mltg-mosaic-large';
@@ -3854,18 +3855,31 @@ JS;
 		.um-media-gallery-style-wide_rectangle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 16 / 9; object-fit: cover; }
 		.um-media-gallery-style-tall_rectangle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 3 / 4; object-fit: cover; }
 		.um-media-gallery-style-circle_crop .um-media-library-tag-gallery-item img { aspect-ratio: 1 / 1; object-fit: cover; border-radius: 999px; }
-		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid {
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid,
+		.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-grid {
 			grid-auto-flow: dense;
+		}
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid {
 			grid-auto-rows: clamp(110px, 14vw, 200px);
 		}
-		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item img { width: 100%; height: 100%; object-fit: cover; aspect-ratio: auto; }
-		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item.um-mltg-mosaic-large { grid-column: span 2; grid-row: span 2; }
-		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item.um-mltg-mosaic-tall { grid-row: span 2; }
-		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item.um-mltg-mosaic-wide { grid-column: span 2; }
-		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="2"] .um-media-library-tag-gallery-item.um-mltg-mosaic-tall { grid-row: auto; }
+		.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-grid {
+			grid-auto-rows: clamp(165px, 21vw, 300px);
+		}
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item img,
+		.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-item img { width: 100%; height: 100%; object-fit: cover; aspect-ratio: auto; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item.um-mltg-mosaic-large,
+		.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-item.um-mltg-mosaic-large { grid-column: span 2; grid-row: span 2; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item.um-mltg-mosaic-tall,
+		.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-item.um-mltg-mosaic-tall { grid-row: span 2; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-item.um-mltg-mosaic-wide,
+		.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-item.um-mltg-mosaic-wide { grid-column: span 2; }
+		.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-desktop="2"] .um-media-library-tag-gallery-item.um-mltg-mosaic-tall,
+		.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-grid[data-um-cols-desktop="2"] .um-media-library-tag-gallery-item.um-mltg-mosaic-tall { grid-row: auto; }
 		@media (max-width: 782px) {
 			.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-mobile="1"] .um-media-library-tag-gallery-item,
-			.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-mobile="2"] .um-media-library-tag-gallery-item { grid-column: auto !important; grid-row: auto !important; }
+			.um-media-gallery-style-mosaic_grid .um-media-library-tag-gallery-grid[data-um-cols-mobile="2"] .um-media-library-tag-gallery-item,
+			.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-grid[data-um-cols-mobile="1"] .um-media-library-tag-gallery-item,
+			.um-media-gallery-style-mosaic_grid_taller .um-media-library-tag-gallery-grid[data-um-cols-mobile="2"] .um-media-library-tag-gallery-item { grid-column: auto !important; grid-row: auto !important; }
 		}
 		<?php endif; ?>
 		.um-media-gallery-style-masonry_pinterest .um-media-library-tag-gallery-grid { display: block; column-count: var(--um-mltg-cols-desktop); column-gap: 14px; }
@@ -5608,6 +5622,7 @@ JS;
 			'justified_rows' => __('Justified Row Layout', 'user-manager'),
 			'masonry_pinterest' => __('Masonry / Pinterest Layout', 'user-manager'),
 			'mosaic_grid' => __('Mosaic Grid (Irregular Tiles)', 'user-manager'),
+			'mosaic_grid_taller' => __('Mosaic Grid (Taller Tiles)', 'user-manager'),
 			'perspective_3d' => __('3D Perspective Gallery', 'user-manager'),
 			'polaroid_scrapbook' => __('Polaroid / Scrapbook Layout', 'user-manager'),
 			'split_screen_feature' => __('Split Screen Feature Gallery', 'user-manager'),

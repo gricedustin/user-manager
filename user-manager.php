@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.122
+ * Version: 2.5.123
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.123 - March 16, 2026
+ * - Added new Media Library Tag Gallery style option: "Mosaic Grid (Taller Tiles)" that reuses the mosaic layout with 50% taller base tiles.
+ * - Added mosaic taller style CSS variants for desktop/mobile tile auto-row sizing while preserving existing large/tall/wide tile patterns.
+ *
  * 2.5.122 - March 16, 2026
  * - Media Library Tag gallery descriptions now convert line breaks to <br> so multi-paragraph/plain-text newlines render on the front end.
  * - Allowed inline <b> and <i> formatting tags (and strong/em aliases) in rendered gallery tag descriptions while preserving safe sanitization.
