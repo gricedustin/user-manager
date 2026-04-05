@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.104 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved the inline fallback lightbox helper into a dedicated PHP method and ensured it prints in the front-end head before gallery output, preventing parser breakage in block editor script payloads.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Kept emergency click-open resilience while removing the accidental editor-script contamination that could cause JavaScript syntax failures on front-end pages.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.103 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Removed the Lightbox "Duplicate" quick link from Media Library Tag Gallery modal output.', 'user-manager'); ?></li>
