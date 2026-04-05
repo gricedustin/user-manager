@@ -30,10 +30,13 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_action('manage_media_custom_column', [__CLASS__, 'render_media_library_tags_list_table_column'], 10, 2);
 		add_action('pre_get_posts', [__CLASS__, 'filter_media_library_queries_by_tag']);
 		add_filter('ajax_query_attachments_args', [__CLASS__, 'filter_media_library_ajax_query_by_tag']);
+		add_filter('posts_clauses', [__CLASS__, 'maybe_apply_media_library_lightbox_view_sort_clauses'], 20, 2);
 		add_action('admin_init', [__CLASS__, 'handle_media_library_bulk_apply_tag']);
 		add_action('admin_notices', [__CLASS__, 'maybe_render_media_library_tags_admin_notice']);
 		add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_media_library_tags_admin_assets']);
 		add_action('wp_ajax_user_manager_bulk_apply_media_library_tag', [__CLASS__, 'ajax_bulk_apply_media_library_tag']);
+		add_action('wp_ajax_user_manager_track_media_lightbox_view', [__CLASS__, 'ajax_track_media_library_lightbox_view']);
+		add_action('wp_ajax_nopriv_user_manager_track_media_lightbox_view', [__CLASS__, 'ajax_track_media_library_lightbox_view']);
 		add_filter('attachment_fields_to_edit', [__CLASS__, 'add_media_library_tags_attachment_field'], 10, 2);
 		add_filter('attachment_fields_to_save', [__CLASS__, 'save_media_library_tags_attachment_field'], 10, 2);
 		add_filter('the_content', [__CLASS__, 'replace_media_library_tag_placeholders_in_content'], 20);
@@ -761,6 +764,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 
 		$selected_filter = self::get_requested_media_library_tag_filter_value();
+		$selected_sort = self::get_requested_media_library_sort_value();
+		$sort_options = self::get_media_library_media_admin_sort_options();
 		$no_tags_filter_value = self::get_media_library_no_tags_filter_value();
 		$filter_terms = self::get_media_library_unique_filter_terms();
 		$terms = get_terms([
@@ -789,6 +794,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				?>
 				<option value="<?php echo esc_attr((string) $filter_term['slug']); ?>" <?php selected($selected_filter, (string) $filter_term['slug']); ?>>
 					<?php echo esc_html($option_label); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<label for="um-media-library-sort-filter" class="screen-reader-text"><?php esc_html_e('Sort media by', 'user-manager'); ?></label>
+		<select id="um-media-library-sort-filter" name="um_media_library_sort" class="attachment-filters">
+			<?php foreach ($sort_options as $sort_value => $sort_label) : ?>
+				<option value="<?php echo esc_attr((string) $sort_value); ?>" <?php selected($selected_sort, (string) $sort_value); ?>>
+					<?php echo esc_html((string) $sort_label); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
@@ -835,6 +848,16 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 						window.setTimeout(syncListBulkTagVisibility, 60);
 					});
 				});
+				$('#um-media-library-sort-filter').on('change', function() {
+					var value = String($(this).val() || '');
+					var url = new URL(window.location.href);
+					if (!value) {
+						url.searchParams.delete('um_media_library_sort');
+					} else {
+						url.searchParams.set('um_media_library_sort', value);
+					}
+					window.location.href = url.toString();
+				});
 			})(jQuery);
 		</script>
 		<?php
@@ -861,6 +884,10 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 		if ($post_type !== 'attachment' && !(is_array($post_type) && in_array('attachment', $post_type, true))) {
 			return;
+		}
+		$requested_sort = self::get_requested_media_library_sort_value();
+		if ($requested_sort !== '') {
+			$query->set('um_media_library_sort', $requested_sort);
 		}
 
 		$requested_filter = self::get_requested_media_library_tag_filter_value();
@@ -905,6 +932,10 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	 */
 	public static function filter_media_library_ajax_query_by_tag(array $query): array {
 		$requested_filter = '';
+		$requested_sort = self::get_requested_media_library_sort_value();
+		if ($requested_sort !== '') {
+			$query['um_media_library_sort'] = $requested_sort;
+		}
 
 		if (isset($query['um_media_library_tag'])) {
 			$requested_filter = sanitize_text_field((string) $query['um_media_library_tag']);
@@ -953,6 +984,50 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 		$query['tax_query'] = $tax_query;
 		return $query;
+	}
+
+	/**
+	 * Apply Lightbox Views sorting to media queries using a LEFT JOIN
+	 * so attachments without a stored count are still included.
+	 *
+	 * @param array<string,string> $clauses SQL clauses.
+	 * @param WP_Query             $query   Query object.
+	 * @return array<string,string>
+	 */
+	public static function maybe_apply_media_library_lightbox_view_sort_clauses(array $clauses, $query): array {
+		if (!($query instanceof WP_Query)) {
+			return $clauses;
+		}
+		if (!is_admin()) {
+			return $clauses;
+		}
+		$requested_sort = self::get_requested_media_library_sort_value_from_query($query);
+		if (!in_array($requested_sort, ['lightbox_views_desc', 'lightbox_views_asc'], true)) {
+			return $clauses;
+		}
+		$post_type = $query->get('post_type');
+		if ($post_type === '' || $post_type === null) {
+			$post_type = 'attachment';
+		}
+		if ($post_type !== 'attachment' && !(is_array($post_type) && in_array('attachment', $post_type, true))) {
+			return $clauses;
+		}
+		global $wpdb;
+		if (!($wpdb instanceof wpdb)) {
+			return $clauses;
+		}
+		$join_alias = 'um_mltg_lightbox_views_meta';
+		$meta_key = self::media_library_lightbox_views_meta_key();
+		if (strpos((string) ($clauses['join'] ?? ''), $join_alias) === false) {
+			$clauses['join'] = (string) ($clauses['join'] ?? '') . $wpdb->prepare(
+				" LEFT JOIN {$wpdb->postmeta} AS {$join_alias} ON ({$wpdb->posts}.ID = {$join_alias}.post_id AND {$join_alias}.meta_key = %s) ",
+				$meta_key
+			);
+		}
+		$direction = $requested_sort === 'lightbox_views_asc' ? 'ASC' : 'DESC';
+		$secondary_direction = $direction;
+		$clauses['orderby'] = "CAST(COALESCE({$join_alias}.meta_value, '0') AS UNSIGNED) {$direction}, {$wpdb->posts}.post_date {$secondary_direction}, {$wpdb->posts}.ID {$secondary_direction}";
+		return $clauses;
 	}
 
 	/**
@@ -1058,6 +1133,27 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	}
 
 	/**
+	 * Track a lightbox view for a specific attachment.
+	 */
+	public static function ajax_track_media_library_lightbox_view(): void {
+		$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'um_media_library_lightbox_view')) {
+			wp_send_json_error(['message' => __('Invalid request.', 'user-manager')], 403);
+		}
+		$attachment_id = isset($_POST['attachment_id']) ? absint($_POST['attachment_id']) : 0;
+		if ($attachment_id <= 0 || get_post_type($attachment_id) !== 'attachment') {
+			wp_send_json_error(['message' => __('Invalid media item.', 'user-manager')], 400);
+		}
+		$current = self::get_media_library_lightbox_view_count($attachment_id);
+		$next = $current + 1;
+		update_post_meta($attachment_id, self::media_library_lightbox_views_meta_key(), $next);
+		wp_send_json_success([
+			'attachment_id' => $attachment_id,
+			'lightbox_views' => $next,
+		]);
+	}
+
+	/**
 	 * Show success/error notices after bulk apply actions.
 	 */
 	public static function maybe_render_media_library_tags_admin_notice(): void {
@@ -1110,6 +1206,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 		$terms = wp_get_object_terms($post->ID, self::media_library_tags_taxonomy(), ['fields' => 'names']);
 		$value = is_array($terms) ? implode(', ', array_map('strval', $terms)) : '';
+		$lightbox_views = self::get_media_library_lightbox_view_count((int) $post->ID);
 		$all_terms = get_terms([
 			'taxonomy' => self::media_library_tags_taxonomy(),
 			'hide_empty' => false,
@@ -1137,7 +1234,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'label' => __('Library Tags', 'user-manager'),
 			'input' => 'html',
 			'html'  => '<input type="text" class="text" name="attachments[' . (int) $post->ID . '][um_media_library_tags]" value="' . esc_attr($value) . '" />',
-			'helps' => $quick_links_html . __('Comma-separated tags. Add new tags or remove existing tags for this media item.', 'user-manager'),
+			'helps' => '<div style="margin-bottom:8px;"><strong>' . esc_html__('Lightbox Views:', 'user-manager') . '</strong> ' . esc_html(number_format_i18n($lightbox_views)) . '</div>' . $quick_links_html . __('Comma-separated tags. Add new tags or remove existing tags for this media item.', 'user-manager'),
 		];
 
 		return $form_fields;
@@ -1202,6 +1299,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		$sticky_bulk_toolbar_mobile = !empty($settings['media_library_tags_sticky_bulk_toolbar_mobile']);
 		$config = [
 			'selectedTag' => self::get_requested_media_library_tag_filter_value(),
+			'selectedSort' => self::get_requested_media_library_sort_value(),
+			'sortOptions' => self::get_media_library_media_admin_sort_options_for_js(),
 			'noTagsValue' => self::get_media_library_no_tags_filter_value(),
 			'terms' => $term_options,
 			'bulkTerms' => $term_options,
@@ -1233,6 +1332,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	}
 	var filterTerms = Array.isArray(cfg.filterTerms) && cfg.filterTerms.length ? cfg.filterTerms : (Array.isArray(cfg.terms) ? cfg.terms : []);
 	var bulkTerms = Array.isArray(cfg.bulkTerms) && cfg.bulkTerms.length ? cfg.bulkTerms : (Array.isArray(cfg.terms) ? cfg.terms : []);
+	var sortOptions = Array.isArray(cfg.sortOptions) ? cfg.sortOptions : [];
 
 	function buildOptions(defaultLabel, selected, includeNoTags, termsList) {
 		var html = '<option value="">' + String(defaultLabel || '') + '</option>';
@@ -1257,6 +1357,31 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				+ '</option>';
 		});
 		return html;
+	}
+	function buildSortOptions(selected, optionsList) {
+		var html = '';
+		(optionsList || []).forEach(function(option) {
+			if (!option || typeof option !== 'object') {
+				return;
+			}
+			var optionValue = String(option.value || '');
+			var optionLabel = String(option.label || optionValue || '');
+			var isSelected = selected === optionValue ? ' selected' : '';
+			html += '<option value="' + optionValue.replace(/"/g, '&quot;') + '"' + isSelected + '>'
+				+ optionLabel.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+				+ '</option>';
+		});
+		return html;
+	}
+	function parseSortBy(value) {
+		var raw = String(value || '');
+		var allowed = {};
+		sortOptions.forEach(function(option) {
+			if (option && typeof option === 'object') {
+				allowed[String(option.value || '')] = true;
+			}
+		});
+		return Object.prototype.hasOwnProperty.call(allowed, raw) ? raw : '';
 	}
 
 	function updateUrlParam(param, value) {
@@ -1299,16 +1424,21 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 
 		var selectedTag = String(cfg.selectedTag || '');
+		var selectedSort = parseSortBy(cfg.selectedSort);
 		var filterHtml = buildOptions(cfg.labels && cfg.labels.filterAll, selectedTag, true, filterTerms);
+		var sortHtml = buildSortOptions(selectedSort, sortOptions);
 		var bulkHtml = buildOptions(cfg.labels && cfg.labels.bulkChoose, '', false, bulkTerms);
 		var $filterLabel = $('<label class="screen-reader-text" for="um-media-library-tag-filter-grid">Library Tag filter</label>');
 		var $filter = $('<select id="um-media-library-tag-filter-grid" class="um-media-library-tag-control"></select>').html(filterHtml);
+		var $sortLabel = $('<label class="screen-reader-text" for="um-media-library-sort-filter-grid">Media sort</label>');
+		var $sort = $('<select id="um-media-library-sort-filter-grid" class="um-media-library-tag-control"></select>').html(sortHtml);
 		var $bulkLabel = $('<label class="screen-reader-text" for="um-media-library-tag-bulk-grid">Bulk apply Library Tag</label>');
 		var $bulk = $('<select id="um-media-library-tag-bulk-grid" class="um-media-library-tag-control"></select>').html(bulkHtml);
 		var $newTag = $('<input type="text" id="um-media-library-tag-bulk-grid-new" class="um-media-library-tag-control" />').attr('placeholder', (cfg.labels && cfg.labels.bulkNewTagPlaceholder) || 'or enter tag');
 		var $button = $('<button type="button" class="button media-button"></button>').text((cfg.labels && cfg.labels.bulkButton) || 'Apply Tag(s)');
 		var $bulkWrap = $('<span class="um-media-library-tag-bulk-controls" style="display:none;"></span>');
 		$filter.css({ display: 'inline-block', minWidth: '160px' });
+		$sort.css({ display: 'inline-block', minWidth: '220px' });
 		$bulk.css({ display: 'inline-block', minWidth: '190px' });
 		$newTag.css({ display: 'inline-block', minWidth: '190px' });
 		$button.css({ marginTop: '0' });
@@ -1321,7 +1451,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		});
 		$bulkWrap.append($bulkLabel).append($bulk).append($newTag).append($button);
 
-		$toolbar.append($filterLabel).append($filter).append($bulkWrap);
+		$toolbar.append($filterLabel).append($filter).append($sortLabel).append($sort).append($bulkWrap);
 
 		function isBulkSelectModeActive() {
 			var $toggle = $('.media-toolbar-secondary .select-mode-toggle-button').first();
@@ -1390,6 +1520,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 		$filter.on('change', function() {
 			updateUrlParam('um_media_library_tag', $(this).val());
+		});
+		$sort.on('change', function() {
+			updateUrlParam('um_media_library_sort', $(this).val());
 		});
 
 		$button.on('click', function() {
@@ -2295,11 +2428,77 @@ JS;
 		?>
 		<script>
 		(function() {
+			if (!window.umMediaLibraryLightboxViewTracker) {
+				var trackedByOverlay = {};
+				window.umMediaLibraryLightboxViewTracker = {
+					track: function(trigger) {
+						if (!trigger || !trigger.getAttribute) {
+							return;
+						}
+						var attachmentIdRaw = trigger.getAttribute('data-um-modal-attachment-id') || trigger.getAttribute('data-um-lightbox-attachment-id') || '';
+						var attachmentId = parseInt(String(attachmentIdRaw || '0'), 10);
+						if (isNaN(attachmentId) || attachmentId <= 0) {
+							return;
+						}
+						var root = trigger.closest ? trigger.closest('.um-media-library-tag-gallery') : null;
+						var overlayId = '';
+						if (root && root.id) {
+							overlayId = String(root.id) + '-lightbox';
+						}
+						if (overlayId !== '' && trackedByOverlay[overlayId] === attachmentId) {
+							return;
+						}
+						if (overlayId !== '') {
+							trackedByOverlay[overlayId] = attachmentId;
+						}
+						var trackUrl = root && root.getAttribute ? String(root.getAttribute('data-um-lightbox-track-url') || '') : '';
+						var trackNonce = root && root.getAttribute ? String(root.getAttribute('data-um-lightbox-track-nonce') || '') : '';
+						if (!trackUrl || !trackNonce) {
+							return;
+						}
+						var payload = 'action=user_manager_track_media_lightbox_view'
+							+ '&nonce=' + encodeURIComponent(trackNonce)
+							+ '&attachment_id=' + encodeURIComponent(String(attachmentId));
+						try {
+							if (window.fetch) {
+								window.fetch(trackUrl, {
+									method: 'POST',
+									credentials: 'same-origin',
+									headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+									body: payload
+								}).catch(function() {});
+								return;
+							}
+						} catch (err) {
+						}
+						try {
+							var xhr = new XMLHttpRequest();
+							xhr.open('POST', trackUrl, true);
+							xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+							xhr.send(payload);
+						} catch (err) {
+						}
+					},
+					reset: function(overlayId) {
+						if (!overlayId) {
+							return;
+						}
+						delete trackedByOverlay[String(overlayId)];
+					}
+				};
+			}
 			if (window.umMltgInline) {
 				return;
 			}
 			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
 			var api = {};
+			var tracker = window.umMediaLibraryLightboxViewTracker || null;
+			function trackLightboxView(trigger) {
+				if (!tracker || typeof tracker.track !== 'function' || !trigger) {
+					return;
+				}
+				tracker.track(trigger);
+			}
 			function getItems(root, trigger) {
 				if (root && root.querySelectorAll) {
 					var fromRoot = Array.prototype.slice.call(root.querySelectorAll(triggerSelector));
@@ -2444,6 +2643,7 @@ JS;
 				overlay.setAttribute('data-um-inline-slideshow', allowSlideshow ? '1' : '0');
 				overlay.setAttribute('data-um-inline-slideshow-seconds', String(slideshowSeconds));
 				overlay.setAttribute('data-um-inline-transition', normalizedTransition);
+				trackLightboxView(trigger);
 				bindSwipeHandlers(overlay);
 				overlay.style.display = 'flex';
 				overlay.setAttribute('aria-hidden', 'false');
@@ -2528,6 +2728,12 @@ JS;
 				}
 				if (!overlay) {
 					return false;
+				}
+				if (tracker && typeof tracker.reset === 'function') {
+					var inlineRootId = String(overlay.getAttribute('data-um-inline-root-id') || '');
+					if (inlineRootId) {
+						tracker.reset(inlineRootId + '-lightbox');
+					}
 				}
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
@@ -3049,7 +3255,9 @@ JS;
 			$lightbox_modal_text_color_css = '#ffffff';
 		}
 		$inline_lightbox_overlay_id = $uid . '-lightbox';
-		$inline_lightbox_open_onclick = "if(window.umMltgInline&&window.umMltgInline.open){return !!window.umMltgInline.open(this," . wp_json_encode((string) $inline_lightbox_overlay_id) . ",event);}event.preventDefault();event.stopPropagation();var o=document.getElementById(" . wp_json_encode((string) $inline_lightbox_overlay_id) . ");if(!o){return false;}var s=this.getAttribute('data-um-modal-src')||this.getAttribute('data-um-lightbox-src')||this.getAttribute('href')||'';if(!s){return false;}var i=o.querySelector('img');if(i){i.setAttribute('src',s);}o.style.display='flex';o.setAttribute('aria-hidden','false');if(document&&document.body){document.body.style.overflow='hidden';}return false;";
+		$lightbox_view_track_url = admin_url('admin-ajax.php');
+		$lightbox_view_track_nonce = wp_create_nonce('um_media_library_lightbox_view');
+		$inline_lightbox_open_onclick = "if(window.umMltgInline&&window.umMltgInline.open){return !!window.umMltgInline.open(this," . wp_json_encode((string) $inline_lightbox_overlay_id) . ",event);}event.preventDefault();event.stopPropagation();var o=document.getElementById(" . wp_json_encode((string) $inline_lightbox_overlay_id) . ");if(!o){return false;}var s=this.getAttribute('data-um-modal-src')||this.getAttribute('data-um-lightbox-src')||this.getAttribute('href')||'';if(!s){return false;}if(window.umMediaLibraryLightboxViewTracker&&window.umMediaLibraryLightboxViewTracker.track){window.umMediaLibraryLightboxViewTracker.track(this);}var i=o.querySelector('img');if(i){i.setAttribute('src',s);}o.style.display='flex';o.setAttribute('aria-hidden','false');if(document&&document.body){document.body.style.overflow='hidden';}return false;";
 		$inline_lightbox_close_onclick = "if(window.umMltgInline&&window.umMltgInline.closeFromButton){return !!window.umMltgInline.closeFromButton(this,event);}return false;";
 		$inline_lightbox_overlay_onclick = "if(window.umMltgInline&&window.umMltgInline.backdrop){return !!window.umMltgInline.backdrop(this,event);}return true;";
 		$inline_lightbox_overlay_onkeydown = "if(window.umMltgInline&&window.umMltgInline.keydown){return !!window.umMltgInline.keydown(this,event);}return true;";
@@ -3091,6 +3299,8 @@ JS;
 			data-um-lightbox-transition="<?php echo esc_attr((string) $lightbox_slideshow_transition); ?>"
 			<?php echo $lightbox_debug_enabled ? ' data-um-lightbox-debug="1"' : ' data-um-lightbox-debug="0"'; ?>
 			<?php echo $lightbox_debug_auto_open ? ' data-um-lightbox-debug-open="1"' : ' data-um-lightbox-debug-open="0"'; ?>
+			data-um-lightbox-track-url="<?php echo esc_attr((string) $lightbox_view_track_url); ?>"
+			data-um-lightbox-track-nonce="<?php echo esc_attr((string) $lightbox_view_track_nonce); ?>"
 			data-um-fallback-allow-controls="0"
 			<?php echo $enable_simple_lightbox_for_this_gallery ? ' data-um-lightbox-simple-thumbnail-click="1"' : ' data-um-lightbox-simple-thumbnail-click="0"'; ?>
 			data-um-lightbox-link-mode="<?php echo esc_attr((string) $effective_link_to); ?>"
@@ -3152,7 +3362,7 @@ JS;
 										data-um-modal-index="<?php echo esc_attr((string) $index); ?>"
 										<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : ''; ?>
 										<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>
-										<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>
+										data-um-modal-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
 										onclick="<?php echo esc_attr($inline_lightbox_open_onclick); ?>"
 										aria-label="<?php echo esc_attr($description_attr); ?>"
 									><?php echo $image_html; ?></button>
@@ -3264,7 +3474,7 @@ JS;
 									data-um-modal-index="<?php echo esc_attr((string) $index); ?>"
 									<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : ''; ?>
 									<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>
-									<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>
+									data-um-modal-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
 									onclick="<?php echo esc_attr($inline_lightbox_open_onclick); ?>"
 									aria-label="<?php echo esc_attr($description_attr); ?>"
 								><?php echo $image_html; ?></button>
@@ -3643,6 +3853,7 @@ JS;
 			var image = overlay.querySelector('img');
 			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
 			var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
+			var duplicateLinkEl = null;
 			var tagToolsEl = overlay.querySelector('.um-mltg-lightbox-tag-tools');
 			var tagInputEl = overlay.querySelector('.um-mltg-lightbox-tag-input');
 			var tagAddBtnEl = overlay.querySelector('.um-mltg-lightbox-tag-add-button');
@@ -3654,6 +3865,7 @@ JS;
 			var canManageLightboxTags = <?php echo $show_lightbox_admin_edit_link ? 'true' : 'false'; ?>;
 			var lightboxTagAjaxUrl = <?php echo wp_json_encode((string) $lightbox_tag_ajax_url); ?> || '';
 			var lightboxTagNonce = <?php echo wp_json_encode((string) $lightbox_tag_nonce); ?> || '';
+			var lightboxViewTracker = window.umMediaLibraryLightboxViewTracker || null;
 			var enablePrevNextKeyboard = <?php echo $lightbox_prev_next_keyboard ? 'true' : 'false'; ?>;
 			var enableSwipeNavigation = root.getAttribute('data-um-lightbox-swipe') === '1';
 			var enableSlideshowButton = <?php echo $lightbox_slideshow_button ? 'true' : 'false'; ?>;
@@ -3721,6 +3933,12 @@ JS;
 					href: link.getAttribute('href') || ''
 				});
 				return lightboxLinks.indexOf(link);
+			}
+			function trackLightboxView(link) {
+				if (!lightboxViewTracker || typeof lightboxViewTracker.track !== 'function' || !link) {
+					return;
+				}
+				lightboxViewTracker.track(link);
 			}
 			function stopSlideshow() {
 				if (slideshowTimer) {
@@ -3855,6 +4073,7 @@ JS;
 				if (isNaN(attachmentId) || attachmentId < 1) {
 					attachmentId = 0;
 				}
+				trackLightboxView(link);
 				var shouldAnimate = !!animate && slideshowTransition !== 'none';
 				var applyPayload = function() {
 					image.setAttribute('src', src);
@@ -3966,6 +4185,9 @@ JS;
 			}
 			function closeOverlay() {
 				stopSlideshow();
+				if (lightboxViewTracker && typeof lightboxViewTracker.reset === 'function' && root && root.id) {
+					lightboxViewTracker.reset(String(root.id) + '-lightbox');
+				}
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
 				lightboxDebugLog('Overlay closed');
@@ -4381,6 +4603,7 @@ JS;
 			var tagToolsEl = overlay.querySelector('.um-mltg-lightbox-tag-tools');
 			var controlsWrap = overlay.querySelector('.um-mltg-lightbox-controls');
 			var bodyPrevOverflow = '';
+			var lightboxViewTracker = window.umMediaLibraryLightboxViewTracker || null;
 			var enablePrevNextKeyboard = root.getAttribute('data-um-lightbox-prev-next') === '1';
 			var enableSwipeNavigation = root.getAttribute('data-um-lightbox-swipe') === '1';
 			var lightboxItems = [];
@@ -4441,6 +4664,9 @@ JS;
 				var caption = trigger.getAttribute('data-um-modal-caption') || trigger.getAttribute('data-um-lightbox-caption') || '';
 				var altText = trigger.getAttribute('data-um-modal-alt') || trigger.getAttribute('data-um-lightbox-alt') || '';
 				var editUrl = trigger.getAttribute('data-um-modal-edit-url') || trigger.getAttribute('data-um-lightbox-edit-url') || '';
+				if (lightboxViewTracker && typeof lightboxViewTracker.track === 'function') {
+					lightboxViewTracker.track(trigger);
+				}
 				activeIndex = findItemIndex(trigger);
 				if (activeIndex < 0 && lightboxItems.length) {
 					activeIndex = 0;
@@ -4499,6 +4725,9 @@ JS;
 			}
 
 			function closeOverlay() {
+				if (lightboxViewTracker && typeof lightboxViewTracker.reset === 'function') {
+					lightboxViewTracker.reset('<?php echo esc_js($uid); ?>-lightbox');
+				}
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
 				if (image) {
@@ -4914,6 +5143,93 @@ JS;
 		];
 		asort($options, SORT_NATURAL | SORT_FLAG_CASE);
 		return $options;
+	}
+
+	/**
+	 * Resolve selected Media Library sort value from request.
+	 */
+	private static function get_requested_media_library_sort_value(): string {
+		$value = '';
+		if (isset($_REQUEST['query']) && is_array($_REQUEST['query']) && isset($_REQUEST['query']['um_media_library_sort'])) {
+			$value = sanitize_key((string) wp_unslash($_REQUEST['query']['um_media_library_sort']));
+		}
+		if ($value === '' && isset($_REQUEST['um_media_library_sort'])) {
+			$value = sanitize_key((string) wp_unslash($_REQUEST['um_media_library_sort']));
+		}
+		if ($value === '') {
+			$referer = wp_get_referer();
+			if (!$referer && isset($_SERVER['HTTP_REFERER'])) {
+				$referer = esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER']));
+			}
+			if ($referer) {
+				$parts = wp_parse_url($referer);
+				if (is_array($parts) && !empty($parts['query'])) {
+					parse_str((string) $parts['query'], $query_args);
+					if (is_array($query_args) && isset($query_args['um_media_library_sort'])) {
+						$value = sanitize_key((string) $query_args['um_media_library_sort']);
+					}
+				}
+			}
+		}
+		$options = self::get_media_library_media_admin_sort_options();
+		return isset($options[$value]) ? $value : '';
+	}
+
+	/**
+	 * Resolve selected Media Library sort value from a query.
+	 */
+	private static function get_requested_media_library_sort_value_from_query(WP_Query $query): string {
+		$raw = $query->get('um_media_library_sort');
+		if (!is_string($raw) || $raw === '') {
+			$raw = self::get_requested_media_library_sort_value();
+		}
+		$value = sanitize_key((string) $raw);
+		$options = self::get_media_library_media_admin_sort_options();
+		return isset($options[$value]) ? $value : '';
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	private static function get_media_library_media_admin_sort_options(): array {
+		return [
+			'' => __('Sort by Upload Date (Newest first)', 'user-manager'),
+			'lightbox_views_desc' => __('Sort by Lightbox Views (Highest first)', 'user-manager'),
+			'lightbox_views_asc' => __('Sort by Lightbox Views (Lowest first)', 'user-manager'),
+		];
+	}
+
+	/**
+	 * @return array<int,array{value:string,label:string}>
+	 */
+	private static function get_media_library_media_admin_sort_options_for_js(): array {
+		$options = self::get_media_library_media_admin_sort_options();
+		$rows = [];
+		foreach ($options as $value => $label) {
+			$rows[] = [
+				'value' => (string) $value,
+				'label' => (string) $label,
+			];
+		}
+		return $rows;
+	}
+
+	/**
+	 * Post meta key used to store lightbox view totals.
+	 */
+	private static function media_library_lightbox_views_meta_key(): string {
+		return 'um_media_lightbox_views';
+	}
+
+	/**
+	 * Read a normalized lightbox view count for an attachment.
+	 */
+	private static function get_media_library_lightbox_view_count(int $attachment_id): int {
+		if ($attachment_id <= 0) {
+			return 0;
+		}
+		$value = get_post_meta($attachment_id, self::media_library_lightbox_views_meta_key(), true);
+		return max(0, absint($value));
 	}
 
 	/**

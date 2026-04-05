@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.114 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added per-image Media Library Tag Gallery lightbox view tracking. Each time a lightbox image opens, the attachment now increments a stored "Lightbox Views" meta count.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library attachment edit/tagging UI now displays the current Lightbox Views value near Library Tags for quick backend visibility.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Media Library sort controls (list and grid) for Lightbox Views so admins can sort by highest/lowest viewed media.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.113 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Restricted Access setting under "No access message": "Password Submit Button Text".', 'user-manager'); ?></li>
