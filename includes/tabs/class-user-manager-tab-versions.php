@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.88 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags filter dropdowns in Media Library list/grid now append a trailing star (*) to tag options that are also detected in active navigation menu URLs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reused the existing menu-slug matching logic so the starred dropdown indicators stay aligned with the "Live in Menu Navigation" badge behavior used in the Bulk Editor.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.87 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Removed front-end inline per-photo admin tag controls from Media Library Tags gallery output (tag list + Hide + Duplicate links).', 'user-manager'); ?></li>

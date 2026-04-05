@@ -265,12 +265,30 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	 * @return array<string,bool>
 	 */
 	private static function get_media_library_bulk_editor_menu_slug_matches(array $terms): array {
-		$slug_map = [];
+		$slugs = [];
 		foreach ($terms as $term) {
 			if (!($term instanceof WP_Term)) {
 				continue;
 			}
 			$slug = sanitize_title((string) $term->slug);
+			if ($slug === '') {
+				continue;
+			}
+			$slugs[] = $slug;
+		}
+		return self::get_media_library_menu_slug_matches($slugs);
+	}
+
+	/**
+	 * Build slug=>menu-match map by scanning active menu item URLs.
+	 *
+	 * @param array<int,string> $slugs
+	 * @return array<string,bool>
+	 */
+	private static function get_media_library_menu_slug_matches(array $slugs): array {
+		$slug_map = [];
+		foreach ($slugs as $slug_value) {
+			$slug = sanitize_title((string) $slug_value);
 			if ($slug === '') {
 				continue;
 			}
@@ -693,8 +711,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			</option>
 			<?php foreach ($filter_terms as $filter_term) : ?>
 				<?php if (!is_array($filter_term) || empty($filter_term['slug'])) { continue; } ?>
+				<?php
+				$option_label = (string) ($filter_term['name'] ?? $filter_term['slug']);
+				if (!empty($filter_term['in_menu_nav'])) {
+					$option_label .= ' *';
+				}
+				?>
 				<option value="<?php echo esc_attr((string) $filter_term['slug']); ?>" <?php selected($selected_filter, (string) $filter_term['slug']); ?>>
-					<?php echo esc_html((string) ($filter_term['name'] ?? $filter_term['slug'])); ?>
+					<?php echo esc_html($option_label); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
@@ -1154,8 +1178,12 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				return;
 			}
 			var isSelected = selected && selected === term.slug ? ' selected' : '';
+			var termLabel = String(term.name || term.slug);
+			if (term.inMenuNav || term.in_menu_nav) {
+				termLabel += ' *';
+			}
 			html += '<option value="' + String(term.slug).replace(/"/g, '&quot;') + '"' + isSelected + '>'
-				+ String(term.name || term.slug).replace(/</g, '&lt;').replace(/>/g, '&gt;')
+				+ termLabel.replace(/</g, '&lt;').replace(/>/g, '&gt;')
 				+ '</option>';
 		});
 		return html;
@@ -4585,7 +4613,7 @@ JS;
 	 * - A plain term name remains as one option.
 	 * - A comma-separated term name contributes one option per token.
 	 *
-	 * @return array<int,array{slug:string,name:string}>
+	 * @return array<int,array{slug:string,name:string,in_menu_nav:bool}>
 	 */
 	private static function get_media_library_unique_filter_terms(): array {
 		static $cache = null;
@@ -4635,7 +4663,12 @@ JS;
 			}
 		}
 
-		$options = array_values($options_by_slug);
+		$menu_slug_matches = self::get_media_library_menu_slug_matches(array_keys($options_by_slug));
+		$options = array_values(array_map(static function (array $option) use ($menu_slug_matches): array {
+			$slug = isset($option['slug']) ? sanitize_title((string) $option['slug']) : '';
+			$option['in_menu_nav'] = $slug !== '' && !empty($menu_slug_matches[$slug]);
+			return $option;
+		}, $options_by_slug));
 		usort($options, static function (array $left, array $right): int {
 			return strnatcasecmp((string) ($left['name'] ?? ''), (string) ($right['name'] ?? ''));
 		});
