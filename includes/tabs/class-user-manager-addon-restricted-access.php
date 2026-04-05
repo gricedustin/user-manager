@@ -27,6 +27,7 @@ class User_Manager_Addon_Restricted_Access {
 		$overlay_text_color = isset($settings['restricted_access_overlay_text_color']) ? (string) $settings['restricted_access_overlay_text_color'] : '#ffffff';
 		$overlay_image = isset($settings['restricted_access_overlay_image_url']) ? (string) $settings['restricted_access_overlay_image_url'] : '';
 		$overlay_image_max_width = isset($settings['restricted_access_overlay_image_max_width']) ? (string) $settings['restricted_access_overlay_image_max_width'] : '';
+		$overlay_image_display_above_message = !empty($settings['restricted_access_overlay_image_display_as_normal_above_message']);
 		$render_background_html_for_social_meta = !empty($settings['restricted_access_render_background_html_for_social_meta']);
 		$access_logs = User_Manager_Core::get_restricted_access_history_entries(300);
 		$roles = User_Manager_Core::get_user_roles();
@@ -114,6 +115,13 @@ class User_Manager_Addon_Restricted_Access {
 						<label for="um-restricted-access-overlay-image-max-width"><strong><?php esc_html_e('Full Screen Overlay Image Max Width', 'user-manager'); ?></strong></label>
 						<input type="text" id="um-restricted-access-overlay-image-max-width" name="restricted_access_overlay_image_max_width" class="regular-text" value="<?php echo esc_attr($overlay_image_max_width); ?>" placeholder="<?php esc_attr_e('e.g. 1200px', 'user-manager'); ?>"<?php echo $form_attr; ?> />
 						<p class="description"><?php esc_html_e('Optional. Example values: 1200px, 90vw, 60rem, none.', 'user-manager'); ?></p>
+					</div>
+
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-restricted-access-overlay-image-display-above-message" name="restricted_access_overlay_image_display_as_normal_above_message" value="1" <?php checked($overlay_image_display_above_message); ?><?php echo $form_attr; ?> />
+							<strong><?php esc_html_e('Display as normal Image Above No access message instead of Background Image', 'user-manager'); ?></strong>
+						</label>
 					</div>
 
 					<div class="um-form-field">

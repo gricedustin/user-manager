@@ -186,6 +186,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$bg_color = self::restricted_access_get_overlay_background_color($settings);
 		$text_color = self::restricted_access_get_overlay_text_color($settings);
 		$overlay_img_max_width = self::restricted_access_get_overlay_image_max_width($settings);
+		$show_overlay_image_as_normal = self::restricted_access_show_overlay_image_as_normal_above_message($settings);
 		?>
 		<style id="um-restricted-access-background-overlay-style">
 			body { overflow: hidden !important; }
@@ -205,15 +206,23 @@ trait User_Manager_Core_Restricted_Access_Trait {
 				box-sizing: border-box;
 			}
 			.um-restricted-access-background-overlay-image-wrap {
-				position: absolute;
-				inset: 0;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 				padding: 20px;
 				box-sizing: border-box;
+				<?php if ($show_overlay_image_as_normal) : ?>
+				position: relative;
+				inset: auto;
+				pointer-events: auto;
+				z-index: 1;
+				padding: 0 0 14px;
+				<?php else : ?>
+				position: absolute;
+				inset: 0;
 				pointer-events: none;
 				z-index: 0;
+				<?php endif; ?>
 			}
 			.um-restricted-access-background-overlay-image {
 				display: block;
@@ -227,7 +236,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			}
 			.um-restricted-access-background-overlay-card {
 				position: relative;
-				z-index: 1;
+				z-index: 2;
 				width: 100%;
 				max-width: 560px;
 				padding: 30px 24px;
@@ -285,14 +294,20 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$overlay_img = self::restricted_access_get_overlay_image_url($settings);
 		$has_image = $overlay_img !== '';
 		$show_password_form = !empty($context['show_password_form']);
+		$show_overlay_image_as_normal = self::restricted_access_show_overlay_image_as_normal_above_message($settings);
 		?>
 		<div class="um-restricted-access-background-overlay" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr($message); ?>">
-			<?php if ($has_image) : ?>
+			<?php if ($has_image && !$show_overlay_image_as_normal) : ?>
 				<div class="um-restricted-access-background-overlay-image-wrap" aria-hidden="true">
 					<img class="um-restricted-access-background-overlay-image" src="<?php echo esc_url($overlay_img); ?>" alt="" />
 				</div>
 			<?php endif; ?>
 			<div class="um-restricted-access-background-overlay-card">
+				<?php if ($has_image && $show_overlay_image_as_normal) : ?>
+					<div class="um-restricted-access-background-overlay-image-wrap">
+						<img class="um-restricted-access-background-overlay-image" src="<?php echo esc_url($overlay_img); ?>" alt="" />
+					</div>
+				<?php endif; ?>
 				<h1><?php echo esc_html($message); ?></h1>
 				<?php if ($show_password_form) : ?>
 					<p><?php esc_html_e('Enter shared password to continue.', 'user-manager'); ?></p>
@@ -562,6 +577,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$text_color  = self::restricted_access_get_overlay_text_color($settings);
 		$overlay_img = self::restricted_access_get_overlay_image_url($settings);
 		$overlay_img_max_width = self::restricted_access_get_overlay_image_max_width($settings);
+		$show_overlay_image_as_normal = self::restricted_access_show_overlay_image_as_normal_above_message($settings);
 		$has_image   = $overlay_img !== '';
 		?>
 		<!doctype html>
@@ -588,15 +604,23 @@ trait User_Manager_Core_Restricted_Access_Trait {
 					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 				}
 				.um-restricted-access-overlay-image-wrap {
-					position: fixed;
-					inset: 0;
 					display: flex;
 					align-items: center;
 					justify-content: center;
 					padding: 20px;
 					box-sizing: border-box;
+					<?php if ($show_overlay_image_as_normal) : ?>
+					position: relative;
+					inset: auto;
+					pointer-events: auto;
+					z-index: 1;
+					padding: 0 0 14px;
+					<?php else : ?>
+					position: fixed;
+					inset: 0;
 					pointer-events: none;
 					z-index: 0;
+					<?php endif; ?>
 				}
 				.um-restricted-access-overlay-image {
 					display: block;
@@ -610,7 +634,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 				}
 				.um-restricted-access-card {
 					position: relative;
-					z-index: 1;
+					z-index: 2;
 					width: 100%;
 					max-width: 560px;
 					padding: 30px 24px;
@@ -654,12 +678,17 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			</style>
 		</head>
 		<body class="um-restricted-access-overlay">
-			<?php if ($has_image) : ?>
+			<?php if ($has_image && !$show_overlay_image_as_normal) : ?>
 				<div class="um-restricted-access-overlay-image-wrap" aria-hidden="true">
 					<img class="um-restricted-access-overlay-image" src="<?php echo esc_url($overlay_img); ?>" alt="" />
 				</div>
 			<?php endif; ?>
 			<div class="um-restricted-access-card">
+				<?php if ($has_image && $show_overlay_image_as_normal) : ?>
+					<div class="um-restricted-access-overlay-image-wrap">
+						<img class="um-restricted-access-overlay-image" src="<?php echo esc_url($overlay_img); ?>" alt="" />
+					</div>
+				<?php endif; ?>
 				<h1><?php echo esc_html($message); ?></h1>
 				<?php if ($show_password_form) : ?>
 					<p><?php esc_html_e('Enter shared password to continue.', 'user-manager'); ?></p>
@@ -902,6 +931,15 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		}
 		$sanitized = sanitize_text_field($value);
 		return preg_match('/^[0-9.]+(px|%|vw|vh|rem|em)$/i', $sanitized) ? $sanitized : '';
+	}
+
+	/**
+	 * Whether to render overlay image as normal content above the message.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function restricted_access_show_overlay_image_as_normal_above_message(array $settings): bool {
+		return !empty($settings['restricted_access_overlay_image_display_as_normal_above_message']);
 	}
 }
 

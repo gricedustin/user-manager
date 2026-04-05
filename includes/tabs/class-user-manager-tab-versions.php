@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.90 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access now includes a new checkbox under "Full Screen Overlay Image": "Display as normal Image Above No access message instead of Background Image".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, the overlay image is rendered as normal content above the no-access message (instead of as a full-screen background image) in both standard overlay mode and background-HTML overlay mode.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.89 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media > Library Tags > Bulk Editor now lists only individual tag terms and skips combined comma-style tag names (example: "Pets, Dating").', 'user-manager'); ?></li>
