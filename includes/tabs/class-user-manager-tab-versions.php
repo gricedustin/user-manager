@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.96 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery URL override now supports pipe-separated groups (example: ?tag=gallery1|gallery2|gallery3) to render multiple separate gallery sections in sequence instead of merging all photos into one result set.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When pipe-separated mode is used, each section now prints a centered H2 with the active tag name and a centered paragraph with that tag description (when available) above its corresponding gallery.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.95 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('SEO Basics now resolves Media Library placeholder values inside Page Title Override before printing head meta tags, so [tag-name] and [site-title] work in og:title and twitter:title output.', 'user-manager'); ?></li>

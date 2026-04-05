@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.95
+ * Version: 2.5.96
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.96 - March 16, 2026
+ * - Media Library Tag Gallery URL override now supports pipe-separated groups (example: ?tag=gallery1|gallery2|gallery3) to render separate gallery sections sequentially instead of combining all photos into one query.
+ * - Each pipe-separated gallery section now renders a centered H2 tag title and a centered paragraph with the tag description above that gallery when description text exists.
+ * - Existing plus (+) AND and underscore (_) OR behavior remains intact within each individual pipe-separated section expression.
+ *
  * 2.5.95 - March 16, 2026
  * - Fixed SEO Basics dynamic placeholder replacement for Page Title Override meta outputs so [tag-name] and [site-title] resolve in frontend social title tags.
  * - og:title and twitter:title now use the same resolved Page Title Override text path as document title filters, keeping title placeholder behavior consistent.

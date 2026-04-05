@@ -2271,6 +2271,9 @@ JS;
 
 		$settings = User_Manager_Core::get_settings();
 		$defaults = self::get_media_library_tag_gallery_defaults($settings);
+		$forced_url_tag_expression = isset($attrs['forceUrlTagExpression'])
+			? trim((string) wp_unslash((string) $attrs['forceUrlTagExpression']))
+			: '';
 
 		$tag_slug = isset($attrs['tagSlug']) ? sanitize_title((string) $attrs['tagSlug']) : '';
 		$allow_url_tag_override = !empty($attrs['allowUrlTagOverride']);
@@ -2408,11 +2411,55 @@ JS;
 		if (!in_array($lightbox_slideshow_transition, $allowed_lightbox_slideshow_transitions, true)) {
 			$lightbox_slideshow_transition = 'none';
 		}
+
+		$pipe_tag_groups = [];
+		if ($forced_url_tag_expression === '' && $allow_url_tag_override) {
+			$pipe_tag_groups = self::resolve_media_library_gallery_pipe_tag_override_groups($allow_any_url_param_tag_identifier);
+		}
+		if (!empty($pipe_tag_groups)) {
+			$pipe_sections = [];
+			foreach ($pipe_tag_groups as $pipe_group) {
+				$pipe_expression = isset($pipe_group['expression']) ? trim((string) $pipe_group['expression']) : '';
+				if ($pipe_expression === '') {
+					continue;
+				}
+
+				$pipe_section_attrs = $attrs;
+				$pipe_section_attrs['forceUrlTagExpression'] = $pipe_expression;
+				$pipe_section_attrs['allowUrlTagOverride'] = false;
+				$pipe_section_html = self::render_media_library_tags_gallery_block($pipe_section_attrs);
+				if ($pipe_section_html === '') {
+					continue;
+				}
+
+				$pipe_title = isset($pipe_group['title']) ? trim((string) $pipe_group['title']) : '';
+				$pipe_description = isset($pipe_group['description']) ? trim((string) $pipe_group['description']) : '';
+				$pipe_header_html = '';
+				if ($pipe_title !== '') {
+					$pipe_header_html .= '<h2 class="um-media-library-tag-pipe-title" style="text-align:center;margin:0 0 8px;">' . esc_html($pipe_title) . '</h2>';
+				}
+				if ($pipe_description !== '') {
+					$pipe_header_html .= '<p class="um-media-library-tag-pipe-description" style="text-align:center;margin:0 0 14px;">' . esc_html($pipe_description) . '</p>';
+				}
+
+				$pipe_sections[] = '<div class="um-media-library-tag-pipe-section">' . $pipe_header_html . $pipe_section_html . '</div>';
+			}
+
+			return implode('', $pipe_sections);
+		}
+
 		$url_tag_override = [
 			'mode' => 'none',
 			'slugs' => [],
 		];
-		if ($allow_url_tag_override) {
+		if ($forced_url_tag_expression !== '') {
+			$url_tag_override = self::parse_media_library_gallery_tag_expression($forced_url_tag_expression);
+			if ($url_tag_override['mode'] === 'all') {
+				$tag_slug = '';
+			} elseif (!empty($url_tag_override['slugs'])) {
+				$tag_slug = (string) $url_tag_override['slugs'][0];
+			}
+		} elseif ($allow_url_tag_override) {
 			$url_tag_override = self::resolve_media_library_gallery_url_tag_override($allow_any_url_param_tag_identifier);
 			if ($url_tag_override['mode'] === 'all') {
 				$tag_slug = '';
@@ -4158,6 +4205,81 @@ JS;
 		}
 
 		return $none;
+	}
+
+	/**
+	 * Resolve pipe-separated URL tag override groups for sequential gallery rendering.
+	 *
+	 * Example:
+	 * - ?tag=gallery-one|gallery-two|gallery-three
+	 *
+	 * @param bool $allow_any_parameter Whether any URL parameter key can map to tag slugs.
+	 * @return array<int,array{expression:string,title:string,description:string}>
+	 */
+	private static function resolve_media_library_gallery_pipe_tag_override_groups(bool $allow_any_parameter = false): array {
+		$raw_expressions = [];
+		if (isset($_GET['tag'])) {
+			$raw_tag_value = self::get_raw_query_string_value('tag');
+			if ($raw_tag_value === null) {
+				$raw_tag_value = (string) wp_unslash($_GET['tag']);
+			}
+			$raw_expressions = self::split_media_library_gallery_pipe_expressions($raw_tag_value);
+		}
+		if (empty($raw_expressions) && $allow_any_parameter) {
+			$raw_keys = self::get_raw_query_string_keys();
+			foreach ($raw_keys as $raw_key) {
+				if (!is_string($raw_key) || $raw_key === '' || $raw_key === 'tag') {
+					continue;
+				}
+				$raw_expressions = self::split_media_library_gallery_pipe_expressions($raw_key);
+				if (!empty($raw_expressions)) {
+					break;
+				}
+			}
+		}
+		if (empty($raw_expressions)) {
+			return [];
+		}
+
+		$groups = [];
+		foreach ($raw_expressions as $raw_expression) {
+			$parsed_expression = self::parse_media_library_gallery_tag_expression($raw_expression);
+			if (empty($parsed_expression['mode']) || $parsed_expression['mode'] === 'none') {
+				continue;
+			}
+			$tag_data = self::get_media_library_tag_description_data_for_tag_expression($parsed_expression);
+			$title = trim((string) ($tag_data['name'] ?? ''));
+			if ($title === '' && !empty($parsed_expression['slugs']) && is_array($parsed_expression['slugs'])) {
+				$title = (string) $parsed_expression['slugs'][0];
+			}
+			$description = trim((string) ($tag_data['description'] ?? ''));
+			$groups[] = [
+				'expression' => (string) $raw_expression,
+				'title' => $title,
+				'description' => $description,
+			];
+		}
+		return $groups;
+	}
+
+	/**
+	 * Split a raw expression by pipe separators into sub-expressions.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function split_media_library_gallery_pipe_expressions(string $raw_expression): array {
+		$raw_expression = trim((string) $raw_expression);
+		if ($raw_expression === '' || strpos($raw_expression, '|') === false) {
+			return [];
+		}
+		$parts = preg_split('/\|+/', $raw_expression) ?: [];
+		$parts = array_values(array_filter(array_map(
+			static function ($part): string {
+				return trim((string) $part);
+			},
+			$parts
+		)));
+		return $parts;
 	}
 
 	/**
