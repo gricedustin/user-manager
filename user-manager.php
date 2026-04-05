@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.107
+ * Version: 2.5.108
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.108 - March 16, 2026
+ * - Reordered lightbox controls to place the Play Slideshow button between the Previous and Next arrow buttons.
+ *
  * 2.5.107 - March 16, 2026
  * - Fixed fallback lightbox slideshow button runtime wiring by defining the missing inline slideshow onclick handler variable used in gallery modal markup.
  * - Preserved the new arrow-based Previous/Next controls and resilient slideshow behavior paths introduced in 2.5.106.

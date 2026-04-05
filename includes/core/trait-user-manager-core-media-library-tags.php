@@ -3423,8 +3423,8 @@ JS;
 			</div>
 			<div class="um-mltg-lightbox-controls">
 				<button type="button" class="um-mltg-lightbox-prev" onclick="<?php echo esc_attr($inline_lightbox_prev_onclick); ?>" aria-label="<?php esc_attr_e('Previous image', 'user-manager'); ?>">&lsaquo;</button>
-				<button type="button" class="um-mltg-lightbox-next" onclick="<?php echo esc_attr($inline_lightbox_next_onclick); ?>" aria-label="<?php esc_attr_e('Next image', 'user-manager'); ?>">&rsaquo;</button>
 				<button type="button" class="um-mltg-lightbox-slideshow-toggle" onclick="<?php echo esc_attr($inline_lightbox_slideshow_onclick); ?>"><?php esc_html_e('Play Slideshow', 'user-manager'); ?></button>
+				<button type="button" class="um-mltg-lightbox-next" onclick="<?php echo esc_attr($inline_lightbox_next_onclick); ?>" aria-label="<?php esc_attr_e('Next image', 'user-manager'); ?>">&rsaquo;</button>
 			</div>
 		</div>
 		<script>
