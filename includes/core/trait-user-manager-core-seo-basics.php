@@ -230,8 +230,8 @@ trait User_Manager_Core_SEO_Basics_Trait {
 			return;
 		}
 
-		$title_override = trim((string) get_post_meta($post_id, '_um_seo_basics_title_override', true));
-		$description_override = trim((string) get_post_meta($post_id, '_um_seo_basics_description_override', true));
+		$title_override = self::resolve_seo_basics_dynamic_text((string) get_post_meta($post_id, '_um_seo_basics_title_override', true));
+		$description_override = self::resolve_seo_basics_dynamic_text((string) get_post_meta($post_id, '_um_seo_basics_description_override', true));
 		$image_url = self::get_seo_basics_meta_image_url($post_id);
 
 		if ($title_override === '' && $description_override === '' && $image_url === '') {
@@ -276,7 +276,20 @@ trait User_Manager_Core_SEO_Basics_Trait {
 		if ($post_id <= 0) {
 			return '';
 		}
-		return trim((string) get_post_meta($post_id, '_um_seo_basics_title_override', true));
+		return self::resolve_seo_basics_dynamic_text((string) get_post_meta($post_id, '_um_seo_basics_title_override', true));
+	}
+
+	/**
+	 * Resolve supported dynamic placeholders for SEO Basics values.
+	 */
+	private static function resolve_seo_basics_dynamic_text(string $value): string {
+		$text = trim($value);
+		if ($text === '') {
+			return '';
+		}
+
+		$text = self::replace_media_library_tag_placeholders_in_text($text, false);
+		return trim($text);
 	}
 
 	/**
