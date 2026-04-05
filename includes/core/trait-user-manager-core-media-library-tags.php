@@ -2427,6 +2427,8 @@ JS;
 				$pipe_section_attrs = $attrs;
 				$pipe_section_attrs['forceUrlTagExpression'] = $pipe_expression;
 				$pipe_section_attrs['allowUrlTagOverride'] = false;
+				$pipe_section_attrs['useDefaultAlbumDescriptionPosition'] = false;
+				$pipe_section_attrs['albumDescriptionPosition'] = 'none';
 				$pipe_section_html = self::render_media_library_tags_gallery_block($pipe_section_attrs);
 				if ($pipe_section_html === '') {
 					continue;

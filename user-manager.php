@@ -2,14 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.97
+ * Version: 2.5.98
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
- * 2.5.97 - March 16, 2026
- * - Added 50px bottom margin spacing to each pipe-rendered gallery section so sequential pipe galleries have clearer visual separation.
+ * 2.5.98 - March 16, 2026
+ * - Fixed duplicate tag-description output in pipe-separated gallery mode by suppressing the inner gallery album-description block while keeping the pipe section heading/description output.
+ * - Pipe-separated gallery sections continue to render centered H2 + description once and keep the 50px bottom spacing between sections.
  *
  * 2.5.96 - March 16, 2026
  * - Media Library Tag Gallery URL override now supports pipe-separated groups (example: ?tag=gallery1|gallery2|gallery3) to render separate gallery sections sequentially instead of combining all photos into one query.
