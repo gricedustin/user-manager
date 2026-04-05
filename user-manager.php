@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.88
+ * Version: 2.5.89
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.89 - March 16, 2026
+ * - Library Tags Bulk Editor now lists only individual tag names and omits combined comma-separated tag rows (example: "Pets, Dating").
+ * - Combined tags are filtered out of the Bulk Editor table so split tags like "Pets" and "Dating" remain as separate rows.
+ *
  * 2.5.88 - March 16, 2026
  * - Media Library tag filter dropdown options now append a trailing "*" for tags detected in active menu navigation URLs.
  * - Applied the same menu-navigation star marker to both list-view and grid-view Media Library tag filter dropdowns for consistency.

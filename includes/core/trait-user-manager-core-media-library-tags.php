@@ -167,6 +167,17 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		if (is_wp_error($terms) || !is_array($terms)) {
 			$terms = [];
 		}
+		$terms = array_values(array_filter($terms, static function ($term): bool {
+			if (!($term instanceof WP_Term)) {
+				return false;
+			}
+			$term_name = trim((string) $term->name);
+			if ($term_name === '') {
+				return false;
+			}
+			// Bulk Editor should show only individual tags, not comma-combined tag names.
+			return strpos($term_name, ',') === false;
+		}));
 		$menu_slug_matches = self::get_media_library_bulk_editor_menu_slug_matches($terms);
 
 		$updated_count = isset($_GET['um_bulk_updated']) ? absint(wp_unslash($_GET['um_bulk_updated'])) : 0;

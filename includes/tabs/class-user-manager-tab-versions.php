@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.89 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media > Library Tags > Bulk Editor now lists only individual tag terms and skips combined comma-style tag names (example: "Pets, Dating").', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Editor table rows now focus on single-token Library Tags only, so terms like "Pets" and "Dating" appear as separate editable rows when those individual tags exist.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.88 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags filter dropdowns in Media Library list/grid now append a trailing star (*) to tag options that are also detected in active navigation menu URLs.', 'user-manager'); ?></li>
