@@ -294,6 +294,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		}
 		$settings = $context['settings'];
 		$message = self::restricted_access_get_no_access_message($settings);
+		$password_submit_button_text = self::restricted_access_get_password_submit_button_text($settings);
 		$overlay_img = self::restricted_access_get_overlay_image_url($settings);
 		$has_image = $overlay_img !== '';
 		$show_password_form = !empty($context['show_password_form']);
@@ -317,7 +318,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 					<form class="um-restricted-access-background-overlay-form" method="post" action="">
 						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required />
 						<br />
-						<button type="submit" name="um_restricted_access_submit" value="1"><?php esc_html_e('Access Website', 'user-manager'); ?></button>
+						<button type="submit" name="um_restricted_access_submit" value="1"><?php echo esc_html($password_submit_button_text); ?></button>
 						<?php wp_nonce_field('um_restricted_access_submit', 'um_restricted_access_nonce'); ?>
 					</form>
 					<?php if (self::$restricted_access_password_error !== '') : ?>
@@ -576,6 +577,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		status_header(403);
 
 		$message     = self::restricted_access_get_no_access_message($settings);
+		$password_submit_button_text = self::restricted_access_get_password_submit_button_text($settings);
 		$bg_color    = self::restricted_access_get_overlay_background_color($settings);
 		$text_color  = self::restricted_access_get_overlay_text_color($settings);
 		$overlay_img = self::restricted_access_get_overlay_image_url($settings);
@@ -698,7 +700,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 					<form class="um-restricted-access-form" method="post" action="">
 						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required />
 						<br />
-						<button type="submit" name="um_restricted_access_submit" value="1"><?php esc_html_e('Access Website', 'user-manager'); ?></button>
+						<button type="submit" name="um_restricted_access_submit" value="1"><?php echo esc_html($password_submit_button_text); ?></button>
 						<?php wp_nonce_field('um_restricted_access_submit', 'um_restricted_access_nonce'); ?>
 					</form>
 					<?php if (self::$restricted_access_password_error !== '') : ?>
@@ -929,6 +931,18 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			? sanitize_text_field((string) $settings['restricted_access_no_access_message'])
 			: '';
 		return $text !== '' ? $text : 'This is a private page';
+	}
+
+	/**
+	 * Resolve password submit button text.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function restricted_access_get_password_submit_button_text(array $settings): string {
+		$text = isset($settings['restricted_access_password_submit_button_text'])
+			? sanitize_text_field((string) $settings['restricted_access_password_submit_button_text'])
+			: '';
+		return $text !== '' ? $text : 'Access Website';
 	}
 
 	/**

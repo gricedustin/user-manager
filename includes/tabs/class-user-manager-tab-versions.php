@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.113 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Restricted Access setting under "No access message": "Password Submit Button Text".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Custom password submit button text now renders in both Restricted Access overlay modes (full-page overlay and background HTML overlay).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.112 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Restricted Access shared-password persistence by setting the access cookie across all relevant cookie paths (including site root) and host domain resolution.', 'user-manager'); ?></li>

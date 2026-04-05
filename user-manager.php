@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.112
+ * Version: 2.5.113
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.113 - March 16, 2026
+ * - Added a new Restricted Access setting under No access message: "Password Submit Button Text".
+ * - Shared-password overlays now use the configured custom submit button label in both full-page and background-overlay render modes.
+ *
  * 2.5.112 - March 16, 2026
  * - Fixed Restricted Access shared-password session persistence across different site paths (including homepage) by writing the access cookie on all relevant cookie paths.
  * - Restricted Access cookie now uses a resolved host domain when appropriate so access state remains consistent between protected pages and home navigation.

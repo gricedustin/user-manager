@@ -23,6 +23,7 @@ class User_Manager_Addon_Restricted_Access {
 			? array_map('sanitize_key', $settings['restricted_access_excluded_roles'])
 			: [];
 		$no_access_message = isset($settings['restricted_access_no_access_message']) ? (string) $settings['restricted_access_no_access_message'] : 'This is a private page';
+		$password_submit_button_text = isset($settings['restricted_access_password_submit_button_text']) ? (string) $settings['restricted_access_password_submit_button_text'] : 'Access Website';
 		$overlay_bg = isset($settings['restricted_access_overlay_background_color']) ? (string) $settings['restricted_access_overlay_background_color'] : '#000000';
 		$overlay_text_color = isset($settings['restricted_access_overlay_text_color']) ? (string) $settings['restricted_access_overlay_text_color'] : '#ffffff';
 		$overlay_image = isset($settings['restricted_access_overlay_image_url']) ? (string) $settings['restricted_access_overlay_image_url'] : '';
@@ -91,6 +92,10 @@ class User_Manager_Addon_Restricted_Access {
 					<div class="um-form-field">
 						<label for="um-restricted-access-no-access-message"><strong><?php esc_html_e('No access message', 'user-manager'); ?></strong></label>
 						<input type="text" id="um-restricted-access-no-access-message" name="restricted_access_no_access_message" class="regular-text" value="<?php echo esc_attr($no_access_message); ?>"<?php echo $form_attr; ?> />
+					</div>
+					<div class="um-form-field">
+						<label for="um-restricted-access-password-submit-button-text"><strong><?php esc_html_e('Password Submit Button Text', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-restricted-access-password-submit-button-text" name="restricted_access_password_submit_button_text" class="regular-text" value="<?php echo esc_attr($password_submit_button_text); ?>"<?php echo $form_attr; ?> />
 					</div>
 
 					<div class="um-form-field">
