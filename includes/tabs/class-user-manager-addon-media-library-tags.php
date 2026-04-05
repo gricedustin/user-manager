@@ -68,6 +68,9 @@ class User_Manager_Addon_Media_Library_Tags {
 		$lightbox_swipe_navigation = isset($settings['media_library_tag_gallery_lightbox_swipe_navigation'])
 			? !empty($settings['media_library_tag_gallery_lightbox_swipe_navigation'])
 			: !empty($defaults['lightboxSwipeNavigation']);
+		$lightbox_side_tap_navigation = isset($settings['media_library_tag_gallery_lightbox_tap_side_navigation'])
+			? !empty($settings['media_library_tag_gallery_lightbox_tap_side_navigation'])
+			: !empty($defaults['lightboxTapSideNavigation']);
 		$lightbox_slideshow_button = isset($settings['media_library_tag_gallery_lightbox_slideshow_button'])
 			? !empty($settings['media_library_tag_gallery_lightbox_slideshow_button'])
 			: !empty($defaults['lightboxSlideshowButton']);
@@ -243,6 +246,12 @@ class User_Manager_Addon_Media_Library_Tags {
 								<label>
 									<input type="checkbox" name="media_library_tag_gallery_lightbox_swipe_navigation" value="1" <?php checked($lightbox_swipe_navigation); ?><?php echo $form_attr; ?> />
 									<?php esc_html_e('Allow Swipe to Left or Right to go to Previous or Next Photo', 'user-manager'); ?>
+								</label>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tag_gallery_lightbox_tap_side_navigation" value="1" <?php checked($lightbox_side_tap_navigation); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Allow Tap or Click on Left or Right side of image to go to Previous or Next Photo', 'user-manager'); ?>
 								</label>
 							</div>
 							<div class="um-form-field">

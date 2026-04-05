@@ -1810,6 +1810,8 @@ JS;
 				'lightboxPrevNextKeyboard' => ['type' => 'boolean', 'default' => true],
 				'useDefaultLightboxSwipeNavigation' => ['type' => 'boolean', 'default' => true],
 				'lightboxSwipeNavigation' => ['type' => 'boolean', 'default' => false],
+				'useDefaultLightboxTapSideNavigation' => ['type' => 'boolean', 'default' => true],
+				'lightboxTapSideNavigation' => ['type' => 'boolean', 'default' => false],
 				'useDefaultLightboxSlideshowButton' => ['type' => 'boolean', 'default' => true],
 				'lightboxSlideshowButton' => ['type' => 'boolean', 'default' => false],
 				'useDefaultLightboxSlideshowSeconds' => ['type' => 'boolean', 'default' => true],
@@ -1998,6 +2000,7 @@ JS;
 		descriptionValue: defaults.descriptionValue || 'caption',
 		lightboxPrevNextKeyboard: defaults.lightboxPrevNextKeyboard !== false,
 		lightboxSwipeNavigation: !!defaults.lightboxSwipeNavigation,
+		lightboxTapSideNavigation: !!defaults.lightboxTapSideNavigation,
 		lightboxSlideshowButton: !!defaults.lightboxSlideshowButton,
 		lightboxSlideshowSeconds: (function() {
 			var seconds = parseFloat(defaults.lightboxSlideshowSeconds);
@@ -2063,6 +2066,8 @@ JS;
 			lightboxPrevNextKeyboard: { type: 'boolean', default: defaults.lightboxPrevNextKeyboard !== false },
 			useDefaultLightboxSwipeNavigation: { type: 'boolean', default: true },
 			lightboxSwipeNavigation: { type: 'boolean', default: !!defaults.lightboxSwipeNavigation },
+			useDefaultLightboxTapSideNavigation: { type: 'boolean', default: true },
+			lightboxTapSideNavigation: { type: 'boolean', default: !!defaults.lightboxTapSideNavigation },
 			useDefaultLightboxSlideshowButton: { type: 'boolean', default: true },
 			lightboxSlideshowButton: { type: 'boolean', default: !!defaults.lightboxSlideshowButton },
 			useDefaultLightboxSlideshowSeconds: { type: 'boolean', default: true },
@@ -2116,6 +2121,7 @@ JS;
 			var useDefaultDescriptionValue = !!a.useDefaultDescriptionValue;
 			var useDefaultLightboxPrevNextKeyboard = !!a.useDefaultLightboxPrevNextKeyboard;
 			var useDefaultLightboxSwipeNavigation = !!a.useDefaultLightboxSwipeNavigation;
+			var useDefaultLightboxTapSideNavigation = !!a.useDefaultLightboxTapSideNavigation;
 			var useDefaultLightboxSlideshowButton = !!a.useDefaultLightboxSlideshowButton;
 			var useDefaultLightboxSlideshowSeconds = !!a.useDefaultLightboxSlideshowSeconds;
 			var useDefaultLightboxSlideshowTransition = !!a.useDefaultLightboxSlideshowTransition;
@@ -2146,6 +2152,7 @@ JS;
 			var effectiveDescriptionValue = useDefaultDescriptionValue ? fallbackDefaults.descriptionValue : (a.descriptionValue || fallbackDefaults.descriptionValue);
 			var effectiveLightboxPrevNextKeyboard = useDefaultLightboxPrevNextKeyboard ? !!fallbackDefaults.lightboxPrevNextKeyboard : !!a.lightboxPrevNextKeyboard;
 			var effectiveLightboxSwipeNavigation = useDefaultLightboxSwipeNavigation ? !!fallbackDefaults.lightboxSwipeNavigation : !!a.lightboxSwipeNavigation;
+			var effectiveLightboxTapSideNavigation = useDefaultLightboxTapSideNavigation ? !!fallbackDefaults.lightboxTapSideNavigation : !!a.lightboxTapSideNavigation;
 			var effectiveLightboxSlideshowButton = useDefaultLightboxSlideshowButton ? !!fallbackDefaults.lightboxSlideshowButton : !!a.lightboxSlideshowButton;
 			var effectiveLightboxSlideshowSecondsRaw = useDefaultLightboxSlideshowSeconds ? fallbackDefaults.lightboxSlideshowSeconds : parseFloat(a.lightboxSlideshowSeconds);
 			var effectiveLightboxSlideshowSeconds = isFinite(effectiveLightboxSlideshowSecondsRaw) ? Math.max(1, Math.min(60, effectiveLightboxSlideshowSecondsRaw)) : fallbackDefaults.lightboxSlideshowSeconds;
@@ -2397,6 +2404,18 @@ JS;
 							onChange: function(v){ set({ useDefaultLightboxSwipeNavigation: !!v }); }
 						}),
 						element.createElement(ToggleControl, {
+							label: 'Allow Tap or Click on Left or Right side of image to go to Previous or Next Photo',
+							checked: effectiveLightboxTapSideNavigation,
+							disabled: useDefaultLightboxTapSideNavigation,
+							help: useDefaultLightboxTapSideNavigation ? ('Using add-on default: ' + (fallbackDefaults.lightboxTapSideNavigation ? 'enabled' : 'disabled')) : '',
+							onChange: function(v){ set({ lightboxTapSideNavigation: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
+							label: 'Use add-on default for Lightbox Left/Right Tap Navigation',
+							checked: useDefaultLightboxTapSideNavigation,
+							onChange: function(v){ set({ useDefaultLightboxTapSideNavigation: !!v }); }
+						}),
+						element.createElement(ToggleControl, {
 							label: 'Add a Play Slideshow Button in Lightbox Window',
 							checked: effectiveLightboxSlideshowButton,
 							disabled: useDefaultLightboxSlideshowButton,
@@ -2571,6 +2590,7 @@ JS;
 				return;
 			}
 			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
+			var overlayTapNavigateThresholdRatio = 0.12;
 			var deepLinkParam = 'um_lightbox_image_id';
 			var api = {};
 			var tracker = window.umMediaLibraryLightboxViewTracker || null;
@@ -2706,6 +2726,53 @@ JS;
 					swipeTracking = false;
 				});
 			}
+			function bindTapNavigationHandlers(overlay) {
+				if (!overlay || overlay.__umInlineTapNavBound) {
+					return;
+				}
+				overlay.__umInlineTapNavBound = true;
+				overlay.addEventListener('click', function(event) {
+					if (!event || event.target !== overlay) {
+						return;
+					}
+					var allowTapNavigate = overlay.getAttribute('data-um-inline-tap-nav') === '1';
+					if (!allowTapNavigate || overlay.getAttribute('aria-hidden') !== 'false') {
+						return;
+					}
+					var allowPrevNext = overlay.getAttribute('data-um-inline-prevnext') === '1';
+					var allowSwipe = overlay.getAttribute('data-um-inline-swipe') === '1';
+					if (!allowPrevNext && !allowSwipe) {
+						return;
+					}
+					var rect = overlay.getBoundingClientRect ? overlay.getBoundingClientRect() : null;
+					if (!rect || rect.width <= 0) {
+						return;
+					}
+					var edgeWidth = Math.max(48, Math.round(rect.width * overlayTapNavigateThresholdRatio));
+					var x = typeof event.clientX === 'number' ? event.clientX : 0;
+					var direction = 0;
+					if (x <= rect.left + edgeWidth) {
+						direction = -1;
+					} else if (x >= rect.right - edgeWidth) {
+						direction = 1;
+					}
+					if (!direction) {
+						return;
+					}
+					event.preventDefault();
+					if (typeof event.stopImmediatePropagation === 'function') {
+						event.stopImmediatePropagation();
+					} else if (typeof event.stopPropagation === 'function') {
+						event.stopPropagation();
+					}
+					var navBtn = direction > 0
+						? overlay.querySelector('.um-mltg-lightbox-next')
+						: overlay.querySelector('.um-mltg-lightbox-prev');
+					if (navBtn) {
+						api.step(navBtn, direction, null);
+					}
+				}, true);
+			}
 			function renderOverlay(overlay, trigger, root, items, index, animate) {
 				var src = trigger.getAttribute('data-um-modal-src') || trigger.getAttribute('data-um-lightbox-src') || trigger.getAttribute('href') || '';
 				if (!src) {
@@ -2741,6 +2808,7 @@ JS;
 				}
 				var allowPrevNext = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-prev-next') === '1');
 				var allowSwipe = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-swipe') === '1');
+				var allowTapNavigation = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-tap-nav') === '1');
 				var allowSlideshow = !!(root && root.getAttribute && root.getAttribute('data-um-lightbox-slideshow') === '1');
 				var slideshowSecondsRaw = root && root.getAttribute ? parseFloat(String(root.getAttribute('data-um-lightbox-seconds') || '3')) : 3;
 				var slideshowSeconds = isFinite(slideshowSecondsRaw) ? Math.max(1, Math.min(60, slideshowSecondsRaw)) : 3;
@@ -2767,6 +2835,7 @@ JS;
 				}
 				overlay.setAttribute('data-um-inline-prevnext', allowPrevNext ? '1' : '0');
 				overlay.setAttribute('data-um-inline-swipe', allowSwipe ? '1' : '0');
+				overlay.setAttribute('data-um-inline-tap-nav', allowTapNavigation ? '1' : '0');
 				overlay.setAttribute('data-um-inline-index', String(Math.max(0, index)));
 				overlay.setAttribute('data-um-inline-attachment-id', String(attachmentId));
 				overlay.setAttribute('data-um-inline-slideshow', allowSlideshow ? '1' : '0');
@@ -2775,6 +2844,7 @@ JS;
 				updateAttachmentIdInUrl(attachmentId);
 				trackLightboxView(trigger);
 				bindSwipeHandlers(overlay);
+				bindTapNavigationHandlers(overlay);
 				overlay.style.display = 'flex';
 				overlay.setAttribute('aria-hidden', 'false');
 				overlay.setAttribute('tabindex', '-1');
@@ -3061,6 +3131,7 @@ JS;
 		$use_default_description_value = !empty($attrs['useDefaultDescriptionValue']);
 		$use_default_lightbox_prev_next_keyboard = !empty($attrs['useDefaultLightboxPrevNextKeyboard']);
 		$use_default_lightbox_swipe_navigation = !empty($attrs['useDefaultLightboxSwipeNavigation']);
+		$use_default_lightbox_tap_side_navigation = !empty($attrs['useDefaultLightboxTapSideNavigation']);
 		$use_default_lightbox_slideshow_button = !empty($attrs['useDefaultLightboxSlideshowButton']);
 		$use_default_lightbox_slideshow_seconds = !empty($attrs['useDefaultLightboxSlideshowSeconds']);
 		$use_default_lightbox_slideshow_transition = !empty($attrs['useDefaultLightboxSlideshowTransition']);
@@ -3122,6 +3193,9 @@ JS;
 		$lightbox_swipe_navigation = $use_default_lightbox_swipe_navigation
 			? !empty($defaults['lightboxSwipeNavigation'])
 			: !empty($attrs['lightboxSwipeNavigation']);
+		$lightbox_tap_side_navigation = $use_default_lightbox_tap_side_navigation
+			? !empty($defaults['lightboxTapSideNavigation'])
+			: !empty($attrs['lightboxTapSideNavigation']);
 		$lightbox_slideshow_button = $use_default_lightbox_slideshow_button
 			? !empty($defaults['lightboxSlideshowButton'])
 			: !empty($attrs['lightboxSlideshowButton']);
@@ -3426,6 +3500,7 @@ JS;
 			style="--um-mltg-accent-color:<?php echo esc_attr($accent_color); ?>;--um-mltg-lightbox-modal-bg:<?php echo esc_attr($lightbox_modal_background_color_css); ?>;--um-mltg-lightbox-modal-text:<?php echo esc_attr($lightbox_modal_text_color_css); ?>;"
 			<?php echo $lightbox_prev_next_keyboard ? ' data-um-lightbox-prev-next="1"' : ' data-um-lightbox-prev-next="0"'; ?>
 			<?php echo $lightbox_swipe_navigation ? ' data-um-lightbox-swipe="1"' : ' data-um-lightbox-swipe="0"'; ?>
+			<?php echo $lightbox_tap_side_navigation ? ' data-um-lightbox-tap-nav="1"' : ' data-um-lightbox-tap-nav="0"'; ?>
 			<?php echo $lightbox_slideshow_button ? ' data-um-lightbox-slideshow="1"' : ' data-um-lightbox-slideshow="0"'; ?>
 			data-um-lightbox-seconds="<?php echo esc_attr((string) $lightbox_slideshow_seconds); ?>"
 			data-um-lightbox-transition="<?php echo esc_attr((string) $lightbox_slideshow_transition); ?>"
@@ -4003,11 +4078,13 @@ JS;
 			var lightboxViewTracker = window.umMediaLibraryLightboxViewTracker || null;
 			var enablePrevNextKeyboard = <?php echo $lightbox_prev_next_keyboard ? 'true' : 'false'; ?>;
 			var enableSwipeNavigation = root.getAttribute('data-um-lightbox-swipe') === '1';
+			var enableTapSideNavigation = root.getAttribute('data-um-lightbox-tap-nav') === '1';
 			var enableSlideshowButton = <?php echo $lightbox_slideshow_button ? 'true' : 'false'; ?>;
 			var enableSimpleLightboxThumbnailClick = root.getAttribute('data-um-lightbox-simple-thumbnail-click') === '1';
 			if (enableSimpleLightboxThumbnailClick) {
 				enablePrevNextKeyboard = false;
 				enableSwipeNavigation = false;
+				enableTapSideNavigation = false;
 				enableSlideshowButton = false;
 				canManageLightboxTags = false;
 			}
@@ -4036,6 +4113,7 @@ JS;
 				lightboxLinks: lightboxLinks.length,
 				enablePrevNextKeyboard: enablePrevNextKeyboard,
 				enableSwipeNavigation: enableSwipeNavigation,
+				enableTapSideNavigation: enableTapSideNavigation,
 				enableSlideshowButton: enableSlideshowButton,
 				enableSimpleLightboxThumbnailClick: enableSimpleLightboxThumbnailClick,
 				slideshowSecondsPerPhoto: slideshowSecondsPerPhoto,
@@ -4671,6 +4749,32 @@ JS;
 			overlay.addEventListener('touchcancel', function() {
 				swipeTracking = false;
 			});
+			overlay.addEventListener('click', function(event) {
+				if (!enableTapSideNavigation || overlay.getAttribute('aria-hidden') !== 'false' || activeLightboxIndex < 0) {
+					return;
+				}
+				if (event.target === overlay) {
+					return;
+				}
+				if (event.target && event.target.closest && event.target.closest('.um-mltg-lightbox-close,.um-mltg-lightbox-prev,.um-mltg-lightbox-next,.um-mltg-lightbox-slideshow-toggle,.um-mltg-lightbox-edit-link,.um-mltg-lightbox-tag-tools')) {
+					return;
+				}
+				var bounds = image && image.getBoundingClientRect ? image.getBoundingClientRect() : null;
+				if (!bounds || !isFinite(bounds.left) || !isFinite(bounds.width) || bounds.width <= 0) {
+					return;
+				}
+				var clientX = event.clientX;
+				if (!isFinite(clientX) || clientX < bounds.left || clientX > bounds.right) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				if (clientX < (bounds.left + (bounds.width / 2))) {
+					showLightboxByIndex(activeLightboxIndex - 1);
+				} else {
+					showLightboxByIndex(activeLightboxIndex + 1);
+				}
+			}, true);
 			document.addEventListener('keydown', function(event) {
 				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
 					closeOverlay();
@@ -4829,6 +4933,13 @@ JS;
 			var lightboxViewTracker = window.umMediaLibraryLightboxViewTracker || null;
 			var enablePrevNextKeyboard = root.getAttribute('data-um-lightbox-prev-next') === '1';
 			var enableSwipeNavigation = root.getAttribute('data-um-lightbox-swipe') === '1';
+			var enableTapSideNavigation = root.getAttribute('data-um-lightbox-tap-nav') === '1';
+			var enableSimpleLightboxThumbnailClick = root.getAttribute('data-um-lightbox-simple-thumbnail-click') === '1';
+			if (enableSimpleLightboxThumbnailClick) {
+				enablePrevNextKeyboard = false;
+				enableSwipeNavigation = false;
+				enableTapSideNavigation = false;
+			}
 			var lightboxItems = [];
 			var activeIndex = -1;
 			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
@@ -4978,7 +5089,7 @@ JS;
 			}
 
 			function openByIndex(nextIndex) {
-				if (!enablePrevNextKeyboard && !enableSwipeNavigation) { return; }
+				if (!enablePrevNextKeyboard && !enableSwipeNavigation && !enableTapSideNavigation) { return; }
 				if (!lightboxItems.length) { return; }
 				var idx = nextIndex;
 				if (idx < 0) {
@@ -5069,6 +5180,32 @@ JS;
 					closeOverlay();
 				}
 			});
+			overlay.addEventListener('click', function(event) {
+				if (!enableTapSideNavigation || overlay.getAttribute('aria-hidden') !== 'false' || activeIndex < 0) {
+					return;
+				}
+				if (event.target === overlay) {
+					return;
+				}
+				if (event.target && event.target.closest && event.target.closest('.um-mltg-lightbox-close,.um-mltg-lightbox-prev,.um-mltg-lightbox-next,.um-mltg-lightbox-slideshow-toggle,.um-mltg-lightbox-edit-link,.um-mltg-lightbox-tag-tools')) {
+					return;
+				}
+				var bounds = image && image.getBoundingClientRect ? image.getBoundingClientRect() : null;
+				if (!bounds || !isFinite(bounds.left) || !isFinite(bounds.width) || bounds.width <= 0) {
+					return;
+				}
+				var clientX = event.clientX;
+				if (!isFinite(clientX) || clientX < bounds.left || clientX > bounds.right) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				if (clientX < (bounds.left + (bounds.width / 2))) {
+					openByIndex(activeIndex - 1);
+				} else {
+					openByIndex(activeIndex + 1);
+				}
+			}, true);
 			overlay.addEventListener('touchstart', function(event) {
 				if (!enableSwipeNavigation || overlay.getAttribute('aria-hidden') !== 'false') {
 					swipeTracking = false;
@@ -5235,6 +5372,9 @@ JS;
 		$defaults['lightboxSwipeNavigation'] = isset($settings['media_library_tag_gallery_lightbox_swipe_navigation'])
 			? $settings['media_library_tag_gallery_lightbox_swipe_navigation'] === true || $settings['media_library_tag_gallery_lightbox_swipe_navigation'] === '1'
 			: (bool) $defaults['lightboxSwipeNavigation'];
+		$defaults['lightboxTapSideNavigation'] = isset($settings['media_library_tag_gallery_lightbox_tap_side_navigation'])
+			? $settings['media_library_tag_gallery_lightbox_tap_side_navigation'] === true || $settings['media_library_tag_gallery_lightbox_tap_side_navigation'] === '1'
+			: (bool) ($defaults['lightboxTapSideNavigation'] ?? false);
 		$defaults['lightboxSlideshowButton'] = isset($settings['media_library_tag_gallery_lightbox_slideshow_button'])
 			? $settings['media_library_tag_gallery_lightbox_slideshow_button'] === true || $settings['media_library_tag_gallery_lightbox_slideshow_button'] === '1'
 			: (bool) $defaults['lightboxSlideshowButton'];

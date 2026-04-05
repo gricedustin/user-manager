@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.121 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting: "Allow Tap or Click on Left or Right side of image to go to Previous or Next Photo" directly under the existing swipe setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox now supports left/right side image click (or tap) navigation in both the primary and resilient fallback runtimes when enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.120 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added 25px bottom spacing to Media Library Tag Gallery wrapper output so gallery blocks have consistent space below the gallery container.', 'user-manager'); ?></li>
