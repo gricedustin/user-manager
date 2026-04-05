@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.98
+ * Version: 2.5.99
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.99 - March 16, 2026
+ * - Reworked Media Library Tag Gallery "Open Image in Lightbox" triggers to use a dedicated modal-trigger data path for stronger click reliability.
+ * - Added hardened capture-phase fallback handling so gallery image clicks open the modal even when other scripts/theme handlers are competing for click events.
+ * - Kept backward compatibility for legacy lightbox trigger attributes while prioritizing the new modal trigger attributes.
+ *
  * 2.5.98 - March 16, 2026
  * - Fixed duplicate tag-description output in pipe-separated gallery mode by suppressing the inner gallery album-description block while keeping the pipe section heading/description output.
  * - Pipe-separated gallery sections continue to render centered H2 + description once and keep the 50px bottom spacing between sections.

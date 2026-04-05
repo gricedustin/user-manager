@@ -2651,6 +2651,7 @@ JS;
 			<?php echo $lightbox_debug_auto_open ? ' data-um-lightbox-debug-open="1"' : ' data-um-lightbox-debug-open="0"'; ?>
 			data-um-fallback-allow-controls="0"
 			<?php echo $enable_simple_lightbox_for_this_gallery ? ' data-um-lightbox-simple-thumbnail-click="1"' : ' data-um-lightbox-simple-thumbnail-click="0"'; ?>
+			data-um-lightbox-link-mode="<?php echo esc_attr((string) $effective_link_to); ?>"
 		>
 			<?php if ($album_description_position === 'above' && $album_tag_description_html !== '') : ?>
 				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-above">
@@ -2700,7 +2701,18 @@ JS;
 								<?php elseif ($effective_link_to === 'image' && $image_src) : ?>
 										<a href="<?php echo esc_url((string) $image_src); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 								<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-									<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
+									<button
+										type="button"
+										class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger"
+										data-um-modal-trigger="1"
+										data-um-modal-src="<?php echo esc_attr((string) $image_src); ?>"
+										data-um-modal-alt="<?php echo esc_attr($description_attr); ?>"
+										data-um-modal-index="<?php echo esc_attr((string) $index); ?>"
+										<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : ''; ?>
+										<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>
+										<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>
+										aria-label="<?php echo esc_attr($description_attr); ?>"
+									><?php echo $image_html; ?></button>
 									<?php else : ?>
 										<?php echo $image_html; ?>
 									<?php endif; ?>
@@ -2800,7 +2812,18 @@ JS;
 							<?php elseif ($effective_link_to === 'image' && $image_src) : ?>
 								<a href="<?php echo esc_url((string) $image_src); ?>" class="um-media-library-tag-gallery-link"><?php echo $image_html; ?></a>
 							<?php elseif ($effective_link_to === 'lightbox' && $image_src) : ?>
-									<button type="button" class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-lightbox="1" data-um-lightbox-src="<?php echo esc_attr((string) $image_src); ?>" data-um-lightbox-alt="<?php echo esc_attr($description_attr); ?>" data-um-lightbox-index="<?php echo esc_attr((string) $index); ?>"<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-lightbox-caption="' . esc_attr($description_text) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?><?php echo $show_lightbox_admin_edit_link ? ' data-um-lightbox-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?> aria-label="<?php echo esc_attr($description_attr); ?>"><?php echo $image_html; ?></button>
+								<button
+									type="button"
+									class="um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger"
+									data-um-modal-trigger="1"
+									data-um-modal-src="<?php echo esc_attr((string) $image_src); ?>"
+									data-um-modal-alt="<?php echo esc_attr($description_attr); ?>"
+									data-um-modal-index="<?php echo esc_attr((string) $index); ?>"
+									<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : ''; ?>
+									<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>
+									<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>
+									aria-label="<?php echo esc_attr($description_attr); ?>"
+								><?php echo $image_html; ?></button>
 							<?php else : ?>
 								<?php echo $image_html; ?>
 							<?php endif; ?>
@@ -2890,6 +2913,9 @@ JS;
 		.um-media-library-tag-gallery-item { margin: 0; position: relative; }
 		.um-media-library-tag-gallery-link { display: block; width: 100%; height: 100%; }
 		.um-media-library-tag-gallery-lightbox-trigger {
+			display: block;
+			width: 100%;
+			height: 100%;
 			border: 0;
 			background: transparent;
 			padding: 0;
@@ -3182,13 +3208,20 @@ JS;
 			}
 			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
 			var slideshowTransition = <?php echo wp_json_encode((string) $lightbox_slideshow_transition); ?> || 'none';
-			var lightboxLinks = Array.prototype.slice.call(root.querySelectorAll('[data-um-lightbox="1"]'));
+			var lightboxTriggerSelector = '[data-um-modal-trigger="1"],[data-um-lightbox="1"]';
+			var lightboxLinks = [];
 			var activeLightboxIndex = -1;
 			var activeAttachmentId = 0;
 			var slideshowTimer = null;
 			var slideshowPlaying = false;
 			var bodyPrevOverflow = '';
 			var transitionTimer = null;
+			var suppressClickOpenUntil = 0;
+			function refreshLightboxLinks() {
+				lightboxLinks = Array.prototype.slice.call(root.querySelectorAll(lightboxTriggerSelector));
+				return lightboxLinks;
+			}
+			refreshLightboxLinks();
 			lightboxDebugLog('Runtime initialized', {
 				lightboxLinks: lightboxLinks.length,
 				enablePrevNextKeyboard: enablePrevNextKeyboard,
@@ -3215,12 +3248,12 @@ JS;
 			}
 			function parseLightboxIndex(link) {
 				if (!link) { return -1; }
-				var raw = link.getAttribute('data-um-lightbox-index');
+				var raw = link.getAttribute('data-um-modal-index') || link.getAttribute('data-um-lightbox-index');
 				var parsed = parseInt(raw || '', 10);
 				if (!isNaN(parsed) && parsed >= 0) {
 					return parsed;
 				}
-				lightboxDebugLog('Missing/invalid data-um-lightbox-index; using link array index fallback', {
+				lightboxDebugLog('Missing/invalid modal index; using link array index fallback', {
 					rawIndex: raw || '',
 					href: link.getAttribute('href') || ''
 				});
@@ -3344,17 +3377,17 @@ JS;
 			}
 			function renderLightboxFromLink(link, animate) {
 				if (!link || !image) { return false; }
-				var src = link.getAttribute('data-um-lightbox-src') || link.getAttribute('href') || '';
+				var src = link.getAttribute('data-um-modal-src') || link.getAttribute('data-um-lightbox-src') || link.getAttribute('href') || '';
 				if (!src) {
-					lightboxDebugLog('Render aborted: link has no href/src', {
+					lightboxDebugLog('Render aborted: trigger has no src/href', {
 						index: parseLightboxIndex(link)
 					});
 					return false;
 				}
-				var caption = link.getAttribute('data-um-lightbox-caption') || '';
-				var altText = link.getAttribute('data-um-lightbox-alt') || '';
-				var editUrl = link.getAttribute('data-um-lightbox-edit-url') || '';
-				var attachmentIdRaw = link.getAttribute('data-um-lightbox-attachment-id') || '';
+				var caption = link.getAttribute('data-um-modal-caption') || link.getAttribute('data-um-lightbox-caption') || '';
+				var altText = link.getAttribute('data-um-modal-alt') || link.getAttribute('data-um-lightbox-alt') || '';
+				var editUrl = link.getAttribute('data-um-modal-edit-url') || link.getAttribute('data-um-lightbox-edit-url') || '';
+				var attachmentIdRaw = link.getAttribute('data-um-modal-attachment-id') || link.getAttribute('data-um-lightbox-attachment-id') || '';
 				var attachmentId = parseInt(String(attachmentIdRaw || '0'), 10);
 				if (isNaN(attachmentId) || attachmentId < 1) {
 					attachmentId = 0;
@@ -3554,14 +3587,26 @@ JS;
 					}
 				});
 			}
-			function openLightboxFromLink(link) {
+			function openLightboxFromLink(link, sourceLabel) {
 				if (!link) { return; }
+				refreshLightboxLinks();
 				var initialIndex = parseLightboxIndex(link);
 				if (initialIndex < 0) {
 					initialIndex = lightboxLinks.indexOf(link);
 				}
+				if (initialIndex < 0 && lightboxLinks.length) {
+					initialIndex = 0;
+				}
+				if (initialIndex < 0) {
+					lightboxDebugLog('Open aborted: no lightbox links found for trigger', {
+						source: sourceLabel || 'unknown'
+					});
+					return;
+				}
 				lightboxDebugLog('Opening lightbox from link', {
 					initialIndex: initialIndex,
+					source: sourceLabel || 'unknown',
+					src: link.getAttribute('data-um-modal-src') || link.getAttribute('data-um-lightbox-src') || '',
 					href: link.getAttribute('href') || '',
 					defaultPrevented: false
 				});
@@ -3577,21 +3622,29 @@ JS;
 					ariaHidden: overlay.getAttribute('aria-hidden')
 				});
 			}
-			root.addEventListener('click', function(event) {
-				var evt = event || window.event;
-				var node = evt && evt.target ? evt.target : null;
+			function resolveLightboxTriggerFromEventNode(node) {
 				if (!node || !node.closest) {
-					return;
+					return null;
 				}
-				var link = node.closest('[data-um-lightbox="1"]');
-				if ((!link || !root.contains(link))) {
-					var tile = node.closest('.um-media-library-tag-gallery-item');
-					if (tile && root.contains(tile)) {
-						link = tile.querySelector('[data-um-lightbox="1"]');
+				var link = node.closest(lightboxTriggerSelector);
+				if (link && root.contains(link)) {
+					return link;
+				}
+				var tile = node.closest('.um-media-library-tag-gallery-item');
+				if (tile && root.contains(tile)) {
+					var tileTrigger = tile.querySelector(lightboxTriggerSelector);
+					if (tileTrigger) {
+						return tileTrigger;
 					}
 				}
-				if (!link || !root.contains(link)) {
-					return;
+				return null;
+			}
+			function openLightboxFromEvent(event, sourceLabel) {
+				var evt = event || window.event;
+				var node = evt && evt.target ? evt.target : null;
+				var link = resolveLightboxTriggerFromEventNode(node);
+				if (!link) {
+					return false;
 				}
 				if (evt) {
 					evt.preventDefault();
@@ -3601,7 +3654,23 @@ JS;
 						evt.stopPropagation();
 					}
 				}
-				openLightboxFromLink(link);
+				var now = Date.now();
+				if (now < suppressClickOpenUntil) {
+					return true;
+				}
+				suppressClickOpenUntil = now + 220;
+				openLightboxFromLink(link, sourceLabel || 'event');
+				return true;
+			}
+			root.addEventListener('click', function(event) {
+				openLightboxFromEvent(event, 'root-capture');
+			}, true);
+			document.addEventListener('click', function(event) {
+				var node = event && event.target ? event.target : null;
+				if (!node || !root.contains(node)) {
+					return;
+				}
+				openLightboxFromEvent(event, 'document-capture');
 			}, true);
 			if (closeBtn) {
 				closeBtn.addEventListener('click', closeOverlay);
@@ -3680,10 +3749,13 @@ JS;
 					showLightboxByIndex(activeLightboxIndex + 1);
 				}
 			});
+			if (lightboxDebugAutoOpen) {
+				refreshLightboxLinks();
+			}
 			if (lightboxDebugAutoOpen && lightboxLinks.length) {
 				lightboxDebugLog('Auto-open enabled for first lightbox item');
 				window.setTimeout(function() {
-					openLightboxFromLink(lightboxLinks[0]);
+					openLightboxFromLink(lightboxLinks[0], 'debug-auto-open');
 				}, 80);
 			}
 

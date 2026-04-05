@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.99 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Rebuilt Media Library Tag Gallery lightbox triggers to use dedicated modal data attributes and normalized runtime selector resolution, making "Link To: Open Image in Lightbox" far more resilient across gallery styles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a hardened click-open path with gallery-level and document-level capture fallback so third-party click handlers are less likely to bypass modal opening behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.98 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Pipe-separated Media Library Tag Gallery sections now suppress the built-in album description block inside each rendered sub-gallery so tag descriptions are not shown twice.', 'user-manager'); ?></li>
