@@ -2442,7 +2442,7 @@ JS;
 					$pipe_header_html .= '<p class="um-media-library-tag-pipe-description" style="text-align:center;margin:0 0 14px;">' . esc_html($pipe_description) . '</p>';
 				}
 
-				$pipe_sections[] = '<div class="um-media-library-tag-pipe-section">' . $pipe_header_html . $pipe_section_html . '</div>';
+				$pipe_sections[] = '<div class="um-media-library-tag-pipe-section" style="margin-bottom:50px;">' . $pipe_header_html . $pipe_section_html . '</div>';
 			}
 
 			return implode('', $pipe_sections);
