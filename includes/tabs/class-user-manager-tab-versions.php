@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.126 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Changed Media Library Tag Gallery lightbox deep-link query parameter from um_lightbox_image_id to image for cleaner share URLs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox deep-link auto-open now reads both image (new) and um_lightbox_image_id (legacy) so old shared links continue to open the correct image.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.125 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added per-tag Featured Image support for Media Library Tags in both the taxonomy edit screen and the Library Tags Bulk Editor page.', 'user-manager'); ?></li>

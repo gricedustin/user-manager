@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.125
+ * Version: 2.5.126
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.126 - March 16, 2026
+ * - Updated Media Library Tag Gallery lightbox deep-link query parameter from um_lightbox_image_id to image.
+ * - Auto-open lightbox now resolves from image=<attachment_id> while remaining backward compatible with legacy um_lightbox_image_id links.
+ * - Opening and closing lightbox now writes/clears the image parameter and removes legacy um_lightbox_image_id from the URL.
+ *
  * 2.5.125 - March 16, 2026
  * - Added per-Library-Tag featured image selection in both the Library Tags Bulk Editor and individual Edit Tag screen.
  * - Front-end gallery tag description area now displays the selected tag featured image aligned left beside description content (blog-post featured-image style layout).
