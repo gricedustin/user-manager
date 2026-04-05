@@ -99,6 +99,9 @@ trait User_Manager_Core_Restricted_Access_Trait {
 
 		// Existing timed access cookie grants access.
 		if (self::restricted_access_has_valid_access_cookie()) {
+			// Refresh the cookie so expiry slides forward and normalize
+			// path/domain scope for cross-page navigation consistency.
+			self::restricted_access_set_access_cookie($settings);
 			return;
 		}
 
@@ -743,17 +746,72 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$expires = time() + ($minutes * MINUTE_IN_SECONDS);
 		$sig     = hash_hmac('sha256', (string) $expires, wp_salt('auth'));
 		$value   = $expires . '.' . $sig;
-		$path    = defined('COOKIEPATH') && COOKIEPATH ? COOKIEPATH : '/';
+		$domain  = self::restricted_access_get_cookie_domain();
+		$paths   = self::restricted_access_get_cookie_paths();
 
-		$options = [
+		$options_base = [
 			'expires'  => $expires,
-			'path'     => $path,
 			'secure'   => is_ssl(),
 			'httponly' => true,
 			'samesite' => 'Lax',
 		];
-		setcookie('um_restricted_access', $value, $options);
+		if ($domain !== '') {
+			$options_base['domain'] = $domain;
+		}
+		foreach ($paths as $path) {
+			$options = $options_base;
+			$options['path'] = $path;
+			setcookie('um_restricted_access', $value, $options);
+		}
 		$_COOKIE['um_restricted_access'] = $value;
+	}
+
+	/**
+	 * Resolve all cookie paths that should receive restricted-access cookie.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function restricted_access_get_cookie_paths(): array {
+		$paths = [];
+		if (defined('COOKIEPATH') && is_string(COOKIEPATH) && COOKIEPATH !== '') {
+			$paths[] = COOKIEPATH;
+		}
+		if (defined('SITECOOKIEPATH') && is_string(SITECOOKIEPATH) && SITECOOKIEPATH !== '') {
+			$paths[] = SITECOOKIEPATH;
+		}
+		$paths[] = '/';
+
+		$normalized = [];
+		foreach ($paths as $path) {
+			$raw_path = trim((string) $path);
+			if ($raw_path === '') {
+				continue;
+			}
+			if (strpos($raw_path, '/') !== 0) {
+				$raw_path = '/' . $raw_path;
+			}
+			$normalized[] = $raw_path;
+		}
+		$normalized = array_values(array_unique($normalized));
+		return !empty($normalized) ? $normalized : ['/'];
+	}
+
+	/**
+	 * Resolve cookie domain; empty string means host-only cookie.
+	 */
+	private static function restricted_access_get_cookie_domain(): string {
+		if (defined('COOKIE_DOMAIN') && is_string(COOKIE_DOMAIN) && COOKIE_DOMAIN !== '') {
+			return COOKIE_DOMAIN;
+		}
+		$home_host = wp_parse_url(home_url('/'), PHP_URL_HOST);
+		if (!is_string($home_host) || $home_host === '') {
+			return '';
+		}
+		$home_host = strtolower(trim($home_host));
+		if ($home_host === 'localhost' || filter_var($home_host, FILTER_VALIDATE_IP)) {
+			return '';
+		}
+		return $home_host;
 	}
 
 	/**
