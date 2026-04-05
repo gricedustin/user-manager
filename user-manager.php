@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.85
+ * Version: 2.5.86
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.86 - March 16, 2026
+ * - Added a new Restricted Access setting: "Still Allow Full Page HTML to be Rendered in Background behind Overlay for Social Media Share Link Meta Data".
+ * - When enabled, Restricted Access now lets full page HTML render for crawlers/share scrapers while displaying the access overlay on top for visitors.
+ *
  * 2.5.85 - March 16, 2026
  * - Reverted admin per-photo tag controls from bottom-image overlay back to below-image placement for clearer readability and less visual obstruction.
  * - Added extra bottom margin under admin per-photo tag controls specifically in Mosaic Grid style so Hide/Duplicate links are easier to see and click.

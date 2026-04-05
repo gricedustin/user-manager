@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.86 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access now includes a new setting: "Still Allow Full Page HTML to be Rendered in Background behind Overlay for Social Media Share Link Meta Data".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled in Full Screen Overlay mode, full page HTML (including social meta tags) is still rendered while a fixed overlay is injected on top for visitors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.85 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Reverted admin per-photo tag controls (tag list + Hide/Duplicate) back to the non-overlay inline placement under each image for clearer visibility and interaction.', 'user-manager'); ?></li>

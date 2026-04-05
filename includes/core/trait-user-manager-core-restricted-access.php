@@ -22,6 +22,13 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	private static array $restricted_access_geo_cache = [];
 
 	/**
+	 * Queued background-overlay context for the current request.
+	 *
+	 * @var array{settings:array<string,mixed>,show_password_form:bool}|null
+	 */
+	private static ?array $restricted_access_background_overlay_context = null;
+
+	/**
 	 * Boot restricted access controls when enabled.
 	 *
 	 * @param array<string,mixed> $settings Plugin settings.
@@ -78,7 +85,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		// Logged-in users can view by default unless their role is excluded.
 		if (is_user_logged_in()) {
 			if (self::restricted_access_current_user_has_excluded_role($settings)) {
-				self::render_restricted_access_overlay_and_exit($settings, false);
+				self::maybe_render_restricted_access_overlay($settings, false);
 			}
 			return;
 		}
@@ -117,10 +124,192 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		// Overlay mode: when a shared password is set, show a gate form.
 		if ($has_password) {
 			self::restricted_access_maybe_handle_password_submission($settings);
-			self::render_restricted_access_overlay_and_exit($settings, true);
+			self::maybe_render_restricted_access_overlay($settings, true);
 		}
 
-		self::render_restricted_access_overlay_and_exit($settings, false);
+		self::maybe_render_restricted_access_overlay($settings, false);
+	}
+
+	/**
+	 * Render overlay immediately or queue background HTML overlay mode.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function maybe_render_restricted_access_overlay(array $settings, bool $show_password_form): void {
+		if (self::restricted_access_should_render_background_overlay($settings)) {
+			self::queue_restricted_access_background_overlay($settings, $show_password_form);
+			return;
+		}
+		self::render_restricted_access_overlay_and_exit($settings, $show_password_form);
+	}
+
+	/**
+	 * Whether restricted access should allow normal page HTML rendering in the background.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function restricted_access_should_render_background_overlay(array $settings): bool {
+		return !empty($settings['restricted_access_render_background_html_for_social_meta']);
+	}
+
+	/**
+	 * Queue overlay assets/markup hooks so full template HTML still renders first.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function queue_restricted_access_background_overlay(array $settings, bool $show_password_form): void {
+		nocache_headers();
+		if (!is_array(self::$restricted_access_background_overlay_context)) {
+			self::$restricted_access_background_overlay_context = [
+				'settings' => $settings,
+				'show_password_form' => $show_password_form,
+			];
+			add_action('wp_head', [__CLASS__, 'render_restricted_access_background_overlay_head_assets'], 999);
+			add_action('wp_footer', [__CLASS__, 'render_restricted_access_background_overlay_markup'], 999);
+			return;
+		}
+		self::$restricted_access_background_overlay_context['settings'] = $settings;
+		if ($show_password_form) {
+			self::$restricted_access_background_overlay_context['show_password_form'] = true;
+		}
+	}
+
+	/**
+	 * Print CSS/JS needed for background overlay mode.
+	 */
+	public static function render_restricted_access_background_overlay_head_assets(): void {
+		$context = self::$restricted_access_background_overlay_context;
+		if (!is_array($context) || !isset($context['settings']) || !is_array($context['settings'])) {
+			return;
+		}
+		$settings = $context['settings'];
+		$bg_color = self::restricted_access_get_overlay_background_color($settings);
+		$text_color = self::restricted_access_get_overlay_text_color($settings);
+		$overlay_img_max_width = self::restricted_access_get_overlay_image_max_width($settings);
+		?>
+		<style id="um-restricted-access-background-overlay-style">
+			body { overflow: hidden !important; }
+			.um-restricted-access-background-overlay {
+				position: fixed;
+				inset: 0;
+				z-index: 2147483000;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 100vh;
+				text-align: center;
+				background-color: <?php echo esc_attr($bg_color); ?>;
+				color: <?php echo esc_attr($text_color); ?>;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+				padding: 20px;
+				box-sizing: border-box;
+			}
+			.um-restricted-access-background-overlay-image-wrap {
+				position: absolute;
+				inset: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 20px;
+				box-sizing: border-box;
+				pointer-events: none;
+				z-index: 0;
+			}
+			.um-restricted-access-background-overlay-image {
+				display: block;
+				width: 100%;
+				height: auto;
+				<?php if ($overlay_img_max_width !== '') : ?>
+				max-width: <?php echo esc_html($overlay_img_max_width); ?>;
+				<?php else : ?>
+				max-width: none;
+				<?php endif; ?>
+			}
+			.um-restricted-access-background-overlay-card {
+				position: relative;
+				z-index: 1;
+				width: 100%;
+				max-width: 560px;
+				padding: 30px 24px;
+				box-sizing: border-box;
+			}
+			.um-restricted-access-background-overlay-card h1 {
+				margin: 0 0 16px;
+				font-size: 32px;
+				line-height: 1.2;
+			}
+			.um-restricted-access-background-overlay-card p {
+				margin: 0;
+				font-size: 18px;
+				line-height: 1.5;
+			}
+			.um-restricted-access-background-overlay-form {
+				margin-top: 20px;
+			}
+			.um-restricted-access-background-overlay-form input[type="password"] {
+				width: 100%;
+				max-width: 340px;
+				padding: 10px 12px;
+				font-size: 16px;
+				line-height: 1.3;
+				border-radius: 4px;
+				border: 1px solid rgba(0,0,0,0.25);
+				box-sizing: border-box;
+			}
+			.um-restricted-access-background-overlay-form button {
+				margin-top: 10px;
+				padding: 10px 16px;
+				font-size: 15px;
+				cursor: pointer;
+			}
+			.um-restricted-access-background-overlay-error {
+				margin-top: 12px;
+				font-size: 14px;
+				font-weight: 600;
+				color: #ff4f4f;
+			}
+		</style>
+		<?php
+	}
+
+	/**
+	 * Render overlay markup in footer while preserving page HTML output.
+	 */
+	public static function render_restricted_access_background_overlay_markup(): void {
+		$context = self::$restricted_access_background_overlay_context;
+		if (!is_array($context) || !isset($context['settings']) || !is_array($context['settings'])) {
+			return;
+		}
+		$settings = $context['settings'];
+		$message = self::restricted_access_get_no_access_message($settings);
+		$overlay_img = self::restricted_access_get_overlay_image_url($settings);
+		$has_image = $overlay_img !== '';
+		$show_password_form = !empty($context['show_password_form']);
+		?>
+		<div class="um-restricted-access-background-overlay" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr($message); ?>">
+			<?php if ($has_image) : ?>
+				<div class="um-restricted-access-background-overlay-image-wrap" aria-hidden="true">
+					<img class="um-restricted-access-background-overlay-image" src="<?php echo esc_url($overlay_img); ?>" alt="" />
+				</div>
+			<?php endif; ?>
+			<div class="um-restricted-access-background-overlay-card">
+				<h1><?php echo esc_html($message); ?></h1>
+				<?php if ($show_password_form) : ?>
+					<p><?php esc_html_e('Enter shared password to continue.', 'user-manager'); ?></p>
+					<form class="um-restricted-access-background-overlay-form" method="post" action="">
+						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required />
+						<br />
+						<button type="submit" name="um_restricted_access_submit" value="1"><?php esc_html_e('Access Website', 'user-manager'); ?></button>
+						<?php wp_nonce_field('um_restricted_access_submit', 'um_restricted_access_nonce'); ?>
+					</form>
+					<?php if (self::$restricted_access_password_error !== '') : ?>
+						<div class="um-restricted-access-background-overlay-error"><?php echo esc_html(self::$restricted_access_password_error); ?></div>
+					<?php endif; ?>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+		self::$restricted_access_background_overlay_context = null;
 	}
 
 	/**
