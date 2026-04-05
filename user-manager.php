@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.124
+ * Version: 2.5.125
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.125 - March 16, 2026
+ * - Added per-Library-Tag featured image selection in both the Library Tags Bulk Editor and individual Edit Tag screen.
+ * - Front-end gallery tag description area now displays the selected tag featured image aligned left beside description content (blog-post featured-image style layout).
+ * - Added media picker controls for tag featured image select/replace/remove with preview in bulk and edit-tag admin UIs.
+ *
  * 2.5.124 - March 16, 2026
  * - Fixed Restricted Access overlay viewport coverage on mobile by enforcing full fixed inset coverage with dynamic viewport height fallbacks.
  * - Updated both immediate full-page overlay mode and background HTML overlay mode to use 100dvh/min-height fallback rules so no page background peeks through on mobile.

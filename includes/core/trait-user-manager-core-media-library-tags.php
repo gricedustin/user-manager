@@ -46,6 +46,10 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_action('admin_bar_menu', [__CLASS__, 'add_media_library_tag_admin_bar_shortcut'], 101);
 		add_action('admin_menu', [__CLASS__, 'register_media_library_tags_bulk_editor_submenu']);
 		add_action('admin_post_user_manager_media_library_tags_bulk_editor_save', [__CLASS__, 'handle_media_library_tags_bulk_editor_save']);
+		add_action($taxonomy . '_add_form_fields', [__CLASS__, 'render_media_library_tag_featured_image_add_form_fields']);
+		add_action($taxonomy . '_edit_form_fields', [__CLASS__, 'render_media_library_tag_featured_image_edit_form_fields']);
+		add_action('created_' . $taxonomy, [__CLASS__, 'save_media_library_tag_featured_image_term_meta']);
+		add_action('edited_' . $taxonomy, [__CLASS__, 'save_media_library_tag_featured_image_term_meta']);
 		add_action($taxonomy . '_add_form_fields', [__CLASS__, 'render_media_library_tag_youtube_links_add_form_fields']);
 		add_action($taxonomy . '_edit_form_fields', [__CLASS__, 'render_media_library_tag_youtube_links_edit_form_fields']);
 		add_action('created_' . $taxonomy, [__CLASS__, 'save_media_library_tag_youtube_links_term_meta']);
@@ -160,6 +164,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		if (!current_user_can('upload_files')) {
 			wp_die(esc_html__('You do not have permission to manage Library Tags.', 'user-manager'));
 		}
+		self::enqueue_media_library_tags_bulk_editor_featured_image_assets();
 
 		$taxonomy = self::media_library_tags_taxonomy();
 		$terms = get_terms([
@@ -223,7 +228,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e('Library Tags Bulk Editor', 'user-manager'); ?></h1>
-			<p><?php esc_html_e('Edit all Library Tag titles, slugs, descriptions, and YouTube Video Links in one screen, then save all changes at once.', 'user-manager'); ?></p>
+			<p><?php esc_html_e('Edit all Library Tag titles, slugs, descriptions, featured images, and YouTube Video Links in one screen, then save all changes at once.', 'user-manager'); ?></p>
 			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 				<input type="hidden" name="action" value="user_manager_media_library_tags_bulk_editor_save" />
 				<?php wp_nonce_field('user_manager_media_library_tags_bulk_editor_save', 'user_manager_media_library_tags_bulk_editor_nonce'); ?>
@@ -232,21 +237,25 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 						<tr>
 							<th style="width: 22%;"><?php esc_html_e('Tag Title', 'user-manager'); ?></th>
 							<th style="width: 18%;"><?php esc_html_e('Slug', 'user-manager'); ?></th>
-							<th style="width: 30%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
-							<th style="width: 30%;"><?php esc_html_e('YouTube Video Links', 'user-manager'); ?></th>
+							<th style="width: 22%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
+							<th style="width: 20%;"><?php esc_html_e('Featured Image', 'user-manager'); ?></th>
+							<th style="width: 18%;"><?php esc_html_e('YouTube Video Links', 'user-manager'); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php if (empty($terms)) : ?>
-							<tr><td colspan="4"><?php esc_html_e('No Library Tags found.', 'user-manager'); ?></td></tr>
+							<tr><td colspan="5"><?php esc_html_e('No Library Tags found.', 'user-manager'); ?></td></tr>
 						<?php else : ?>
 							<?php if (!empty($live_in_nav_terms)) : ?>
 								<tr class="um-bulk-editor-section-row">
-									<td colspan="4"><strong><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></strong></td>
+									<td colspan="5"><strong><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></strong></td>
 								</tr>
 								<?php foreach ($live_in_nav_terms as $term) : ?>
 									<?php if (!($term instanceof WP_Term)) { continue; } ?>
-									<?php $youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true); ?>
+									<?php
+									$youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true);
+									$featured_image_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
+									?>
 									<tr>
 										<td>
 											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
@@ -262,6 +271,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 										</td>
 										<td>
 											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
+										</td>
+										<td>
+											<?php echo self::render_media_library_tag_featured_image_bulk_editor_control_html((int) $term->term_id, $featured_image_id); ?>
 										</td>
 										<td>
 											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][youtube_links]" placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"><?php echo esc_textarea($youtube_links_value); ?></textarea>
@@ -272,11 +284,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 							<?php if (!empty($remaining_terms)) : ?>
 								<tr class="um-bulk-editor-section-row">
-									<td colspan="4"><strong><?php esc_html_e('All Other Tags', 'user-manager'); ?></strong></td>
+									<td colspan="5"><strong><?php esc_html_e('All Other Tags', 'user-manager'); ?></strong></td>
 								</tr>
 								<?php foreach ($remaining_terms as $term) : ?>
 									<?php if (!($term instanceof WP_Term)) { continue; } ?>
-									<?php $youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true); ?>
+									<?php
+									$youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true);
+									$featured_image_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
+									?>
 									<tr>
 										<td>
 											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
@@ -292,6 +307,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 										</td>
 										<td>
 											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
+										</td>
+										<td>
+											<?php echo self::render_media_library_tag_featured_image_bulk_editor_control_html((int) $term->term_id, $featured_image_id); ?>
 										</td>
 										<td>
 											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][youtube_links]" placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"><?php echo esc_textarea($youtube_links_value); ?></textarea>
@@ -461,6 +479,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			$youtube_links = isset($raw_term_data['youtube_links'])
 				? self::sanitize_media_library_tag_youtube_links_input((string) $raw_term_data['youtube_links'])
 				: (string) get_term_meta($term_id, self::media_library_tag_youtube_links_meta_key(), true);
+			$featured_image_id = isset($raw_term_data['featured_image_id'])
+				? self::sanitize_media_library_tag_featured_image_id($raw_term_data['featured_image_id'])
+				: self::get_media_library_tag_featured_image_id($term_id);
 
 			if ($name === '') {
 				$name = trim((string) $current_term->name);
@@ -490,6 +511,11 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				delete_term_meta($term_id, self::media_library_tag_youtube_links_meta_key());
 			} else {
 				update_term_meta($term_id, self::media_library_tag_youtube_links_meta_key(), $youtube_links);
+			}
+			if ($featured_image_id <= 0) {
+				delete_term_meta($term_id, self::media_library_tag_featured_image_meta_key());
+			} else {
+				update_term_meta($term_id, self::media_library_tag_featured_image_meta_key(), $featured_image_id);
 			}
 			$updated++;
 		}
@@ -547,6 +573,260 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		$normalized_description = str_replace(["\r\n", "\r"], "\n", $sanitized_description);
 
 		return nl2br($normalized_description);
+	}
+
+	/**
+	 * Meta key for Library Tag featured image.
+	 */
+	private static function media_library_tag_featured_image_meta_key(): string {
+		return 'um_media_library_tag_featured_image_id';
+	}
+
+	/**
+	 * Resolve one Library Tag featured image attachment ID.
+	 */
+	private static function get_media_library_tag_featured_image_id(int $term_id): int {
+		if ($term_id <= 0) {
+			return 0;
+		}
+		return absint(get_term_meta($term_id, self::media_library_tag_featured_image_meta_key(), true));
+	}
+
+	/**
+	 * Sanitize a featured image attachment ID from request input.
+	 *
+	 * @param mixed $raw_value
+	 */
+	private static function sanitize_media_library_tag_featured_image_id($raw_value): int {
+		$attachment_id = absint($raw_value);
+		if ($attachment_id <= 0) {
+			return 0;
+		}
+		$attachment = get_post($attachment_id);
+		if (!($attachment instanceof WP_Post) || $attachment->post_type !== 'attachment') {
+			return 0;
+		}
+		$mime = get_post_mime_type($attachment_id);
+		if (!is_string($mime) || strpos($mime, 'image/') !== 0) {
+			return 0;
+		}
+		return $attachment_id;
+	}
+
+	/**
+	 * Render featured image field on "Add Library Tag" form.
+	 */
+	public static function render_media_library_tag_featured_image_add_form_fields(string $taxonomy = ''): void {
+		self::enqueue_media_library_tags_featured_image_picker_assets();
+		?>
+		<div class="form-field term-um-media-library-tag-featured-image-wrap">
+			<label for="um-media-library-tag-featured-image-id"><?php esc_html_e('Featured Image', 'user-manager'); ?></label>
+			<input type="hidden" id="um-media-library-tag-featured-image-id" name="um_media_library_tag_featured_image_id" class="um-media-library-tag-featured-image-id" value="" />
+			<div class="um-media-library-tag-featured-image-preview"></div>
+			<p style="margin-top:8px;">
+				<button type="button" class="button um-media-library-tag-featured-image-select"><?php esc_html_e('Select Featured Image', 'user-manager'); ?></button>
+				<button type="button" class="button um-media-library-tag-featured-image-remove" style="display:none;"><?php esc_html_e('Remove Featured Image', 'user-manager'); ?></button>
+			</p>
+			<p><?php esc_html_e('Shows on the front-end next to the tag description when this tag is active in the gallery.', 'user-manager'); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render featured image field on "Edit Library Tag" form.
+	 */
+	public static function render_media_library_tag_featured_image_edit_form_fields(WP_Term $term, string $taxonomy = ''): void {
+		self::enqueue_media_library_tags_featured_image_picker_assets();
+		$attachment_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
+		$preview_html = $attachment_id > 0
+			? wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'um-media-library-tag-featured-image-preview-image'])
+			: '';
+		?>
+		<tr class="form-field term-um-media-library-tag-featured-image-wrap">
+			<th scope="row">
+				<label for="um-media-library-tag-featured-image-id"><?php esc_html_e('Featured Image', 'user-manager'); ?></label>
+			</th>
+			<td>
+				<input type="hidden" id="um-media-library-tag-featured-image-id" name="um_media_library_tag_featured_image_id" class="um-media-library-tag-featured-image-id" value="<?php echo esc_attr((string) $attachment_id); ?>" />
+				<div class="um-media-library-tag-featured-image-preview"><?php echo $preview_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+				<p style="margin-top:8px;">
+					<button type="button" class="button um-media-library-tag-featured-image-select"><?php echo $attachment_id > 0 ? esc_html__('Replace Featured Image', 'user-manager') : esc_html__('Select Featured Image', 'user-manager'); ?></button>
+					<button type="button" class="button um-media-library-tag-featured-image-remove" <?php echo $attachment_id > 0 ? '' : 'style="display:none;"'; ?>><?php esc_html_e('Remove Featured Image', 'user-manager'); ?></button>
+				</p>
+				<p class="description"><?php esc_html_e('Shows on the front-end next to the tag description when this tag is active in the gallery.', 'user-manager'); ?></p>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Save featured image term meta for Library Tags.
+	 */
+	public static function save_media_library_tag_featured_image_term_meta(int $term_id): void {
+		if ($term_id <= 0 || !current_user_can('upload_files')) {
+			return;
+		}
+		$raw_value = isset($_POST['um_media_library_tag_featured_image_id'])
+			? wp_unslash($_POST['um_media_library_tag_featured_image_id'])
+			: '';
+		$attachment_id = self::sanitize_media_library_tag_featured_image_id($raw_value);
+		if ($attachment_id <= 0) {
+			delete_term_meta($term_id, self::media_library_tag_featured_image_meta_key());
+			return;
+		}
+		update_term_meta($term_id, self::media_library_tag_featured_image_meta_key(), $attachment_id);
+	}
+
+	/**
+	 * Render featured image selector controls for one bulk editor row.
+	 */
+	private static function render_media_library_tag_featured_image_bulk_editor_control_html(int $term_id, int $attachment_id): string {
+		$term_id = absint($term_id);
+		$attachment_id = absint($attachment_id);
+		$preview_html = '';
+		if ($attachment_id > 0) {
+			$preview_html = wp_get_attachment_image(
+				$attachment_id,
+				'medium',
+				false,
+				[
+					'class' => 'um-media-library-tag-featured-image-preview-image',
+				]
+			);
+		}
+		$remove_style = $attachment_id > 0 ? '' : ' style="display:none;"';
+		$select_label = $attachment_id > 0
+			? esc_html__('Replace Featured Image', 'user-manager')
+			: esc_html__('Select Featured Image', 'user-manager');
+		ob_start();
+		?>
+		<div class="um-bulk-featured-image-control" data-um-term-id="<?php echo esc_attr((string) $term_id); ?>">
+			<input
+				type="hidden"
+				class="um-bulk-featured-image-id"
+				name="um_bulk_terms[<?php echo esc_attr((string) $term_id); ?>][featured_image_id]"
+				value="<?php echo esc_attr((string) $attachment_id); ?>"
+			/>
+			<div class="um-bulk-featured-image-preview"><?php echo $preview_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+			<p style="margin:8px 0 0;">
+				<button type="button" class="button button-small um-bulk-featured-image-select"><?php echo esc_html($select_label); ?></button>
+				<button type="button" class="button button-small um-bulk-featured-image-remove"<?php echo $remove_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>><?php esc_html_e('Remove', 'user-manager'); ?></button>
+			</p>
+		</div>
+		<?php
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Enqueue media picker assets for the Library Tags Bulk Editor page.
+	 */
+	private static function enqueue_media_library_tags_bulk_editor_featured_image_assets(): void {
+		self::enqueue_media_library_tags_featured_image_picker_assets();
+	}
+
+	/**
+	 * Enqueue shared featured image picker assets for Library Tag admin forms.
+	 */
+	private static function enqueue_media_library_tags_featured_image_picker_assets(): void {
+		static $enqueued = false;
+		if ($enqueued) {
+			return;
+		}
+		$enqueued = true;
+
+		wp_enqueue_media();
+		wp_register_script('um-media-library-tag-featured-image-picker', false, ['jquery'], self::VERSION, true);
+		$script = <<<'JS'
+(function($){
+	var frame = null;
+	function ensureFrame(){
+		if (frame) {
+			return frame;
+		}
+		frame = wp.media({
+			title: 'Select Featured Image',
+			button: { text: 'Use Featured Image' },
+			multiple: false
+		});
+		return frame;
+	}
+	function getImageHtml(attachment){
+		if (!attachment || !attachment.id) {
+			return '';
+		}
+		var src = '';
+		if (attachment.sizes && attachment.sizes.medium && attachment.sizes.medium.url) {
+			src = attachment.sizes.medium.url;
+		} else if (attachment.sizes && attachment.sizes.full && attachment.sizes.full.url) {
+			src = attachment.sizes.full.url;
+		} else if (attachment.url) {
+			src = attachment.url;
+		}
+		if (!src) {
+			return '';
+		}
+		return '<img src="' + String(src).replace(/"/g, '&quot;') + '" class="um-media-library-tag-featured-image-preview-image attachment-medium size-medium" alt="" />';
+	}
+	function setControlValue($scope, id, imageHtml){
+		var hasImage = parseInt(id, 10) > 0;
+		$scope.find('.um-media-library-tag-featured-image-id, .um-bulk-featured-image-id').first().val(hasImage ? String(id) : '');
+		$scope.find('.um-media-library-tag-featured-image-preview, .um-bulk-featured-image-preview').first().html(hasImage ? imageHtml : '');
+		$scope.find('.um-media-library-tag-featured-image-remove, .um-bulk-featured-image-remove').first().toggle(hasImage);
+		var label = hasImage ? 'Replace Featured Image' : 'Select Featured Image';
+		$scope.find('.um-media-library-tag-featured-image-select, .um-bulk-featured-image-select').first().text(label);
+	}
+	$(document).on('click', '.um-media-library-tag-featured-image-select, .um-bulk-featured-image-select', function(e){
+		e.preventDefault();
+		var $scope = $(this).closest('.term-um-media-library-tag-featured-image-wrap, .um-bulk-featured-image-control');
+		if (!$scope.length) {
+			return;
+		}
+		var picker = ensureFrame();
+		picker.off('select');
+		picker.on('select', function(){
+			var selection = picker.state().get('selection');
+			var attachment = selection && selection.first ? selection.first().toJSON() : null;
+			if (!attachment || !attachment.id) {
+				return;
+			}
+			var imageHtml = getImageHtml(attachment);
+			setControlValue($scope, attachment.id, imageHtml);
+		});
+		picker.open();
+	});
+	$(document).on('click', '.um-media-library-tag-featured-image-remove, .um-bulk-featured-image-remove', function(e){
+		e.preventDefault();
+		var $scope = $(this).closest('.term-um-media-library-tag-featured-image-wrap, .um-bulk-featured-image-control');
+		if (!$scope.length) {
+			return;
+		}
+		setControlValue($scope, 0, '');
+	});
+})(jQuery);
+JS;
+		wp_add_inline_script('um-media-library-tag-featured-image-picker', $script, 'after');
+		wp_enqueue_script('um-media-library-tag-featured-image-picker');
+
+		$styles = <<<'CSS'
+.um-media-library-tag-featured-image-preview,
+.um-bulk-featured-image-preview {
+	margin-top: 8px;
+}
+.um-media-library-tag-featured-image-preview-image,
+.um-bulk-featured-image-preview img {
+	display: block;
+	max-width: 200px;
+	height: auto;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+.um-bulk-featured-image-control .button + .button {
+	margin-left: 6px;
+}
+CSS;
+		wp_register_style('um-media-library-tag-featured-image-picker', false, [], self::VERSION);
+		wp_enqueue_style('um-media-library-tag-featured-image-picker');
+		wp_add_inline_style('um-media-library-tag-featured-image-picker', $styles);
 	}
 
 	/**
@@ -3779,6 +4059,33 @@ JS;
 .um-media-library-tag-description-wrap .um-media-library-tag-edit-description-link {
 	margin-left: 4px;
 }
+.um-media-library-tag-description-layout {
+	display: flex;
+	align-items: flex-start;
+	gap: 18px;
+}
+.um-media-library-tag-description-featured {
+	margin: 0;
+	flex: 0 0 auto;
+}
+.um-media-library-tag-description-featured .um-media-library-tag-description-featured-image {
+	display: block;
+	max-width: min(42vw, 360px);
+	height: auto;
+}
+.um-media-library-tag-description-text {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+@media (max-width: 782px) {
+	.um-media-library-tag-description-layout {
+		flex-direction: column;
+		gap: 12px;
+	}
+	.um-media-library-tag-description-featured .um-media-library-tag-description-featured-image {
+		max-width: 100%;
+	}
+}
 		.um-media-library-tag-videos-wrap {
 			margin: 0 0 14px;
 			display: grid;
@@ -6379,6 +6686,7 @@ JS;
 		$names = [];
 		$descriptions = [];
 		$edit_urls = [];
+		$featured_image_ids = [];
 		foreach ($slugs as $slug) {
 			$term = get_term_by('slug', $slug, $taxonomy);
 			if (!$term instanceof WP_Term) {
@@ -6398,6 +6706,7 @@ JS;
 				);
 			}
 			$edit_urls[] = $edit_url;
+			$featured_image_ids[] = self::get_media_library_tag_featured_image_id((int) $term->term_id);
 		}
 		if (empty($names)) {
 			return $empty;
@@ -6410,6 +6719,8 @@ JS;
 			'names' => $names,
 			'descriptions' => $descriptions,
 			'editDescriptionUrls' => $edit_urls,
+			'featuredImageId' => (int) ($featured_image_ids[0] ?? 0),
+			'featuredImageIds' => $featured_image_ids,
 		];
 	}
 
@@ -6454,17 +6765,70 @@ JS;
 				$edit_link
 			);
 		}
+		$description_html = '';
 		if (!empty($description_paragraphs)) {
-			return implode('', $description_paragraphs);
-		}
-		if ($edit_description_url !== '' && $description !== '') {
-			return self::format_media_library_tag_description_html($description) . sprintf(
+			$description_html = implode('', $description_paragraphs);
+		} elseif ($edit_description_url !== '' && $description !== '') {
+			$description_html = self::format_media_library_tag_description_html($description) . sprintf(
 				' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
 				esc_url($edit_description_url),
 				esc_html__('Edit Tag Description', 'user-manager')
 			);
+		} else {
+			$description_html = self::format_media_library_tag_description_html($description);
 		}
-		return self::format_media_library_tag_description_html($description);
+		$featured_image_html = self::render_media_library_tag_featured_image_html($tag_description_data);
+		if ($featured_image_html !== '' && $description_html !== '') {
+			return '<div class="um-media-library-tag-description-layout">' . $featured_image_html . '<div class="um-media-library-tag-description-text">' . $description_html . '</div></div>';
+		}
+		if ($featured_image_html !== '') {
+			return '<div class="um-media-library-tag-description-layout">' . $featured_image_html . '</div>';
+		}
+		return $description_html;
+	}
+
+	/**
+	 * Render tag featured image HTML for description layout.
+	 *
+	 * @param array{
+	 *   featuredImageId?:int,
+	 *   featuredImageIds?:array<int,int>
+	 * } $tag_description_data
+	 */
+	private static function render_media_library_tag_featured_image_html(array $tag_description_data): string {
+		$featured_image_ids = isset($tag_description_data['featuredImageIds']) && is_array($tag_description_data['featuredImageIds'])
+			? array_values(array_filter(array_map('absint', $tag_description_data['featuredImageIds'])))
+			: [];
+		if (empty($featured_image_ids)) {
+			$single_featured_image_id = isset($tag_description_data['featuredImageId']) ? absint($tag_description_data['featuredImageId']) : 0;
+			if ($single_featured_image_id > 0) {
+				$featured_image_ids = [$single_featured_image_id];
+			}
+		}
+		if (empty($featured_image_ids)) {
+			return '';
+		}
+
+		$attachment_id = absint($featured_image_ids[0]);
+		if ($attachment_id <= 0) {
+			return '';
+		}
+
+		$image_html = wp_get_attachment_image(
+			$attachment_id,
+			'large',
+			false,
+			[
+				'class' => 'um-media-library-tag-description-featured-image wp-post-image',
+				'loading' => 'lazy',
+				'decoding' => 'async',
+			]
+		);
+		if (!is_string($image_html) || $image_html === '') {
+			return '';
+		}
+
+		return '<figure class="um-media-library-tag-description-featured">' . $image_html . '</figure>';
 	}
 
 	/**

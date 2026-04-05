@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.125 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added per-tag Featured Image support for Media Library Tags in both the taxonomy edit screen and the Library Tags Bulk Editor page.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end gallery tag descriptions now render the tag Featured Image left-aligned beside the description content when an image is assigned.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.124 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Restricted Access full-screen overlay coverage on mobile by enforcing viewport-height overlays with fixed inset positioning and dynamic viewport units.', 'user-manager'); ?></li>
