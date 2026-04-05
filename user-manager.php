@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.91
+ * Version: 2.5.92
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.92 - March 16, 2026
+ * - Library Tags Bulk Editor now splits rows into two sections: tags that are live in menu navigation first, then all remaining tags below.
+ * - Added section header rows in the Bulk Editor table to clearly separate "Live in Menu Navigation" tags from other tags.
+ *
  * 2.5.91 - March 16, 2026
  * - Added support for [site-title] placeholder replacement alongside [tag-name] and [tag-description].
  * - [site-title] now resolves to the WordPress Site Title and is supported in post title/content placeholder paths and HTML <title> replacement flows.

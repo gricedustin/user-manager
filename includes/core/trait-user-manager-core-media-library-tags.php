@@ -179,6 +179,19 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			return strpos($term_name, ',') === false;
 		}));
 		$menu_slug_matches = self::get_media_library_bulk_editor_menu_slug_matches($terms);
+		$live_in_nav_terms = [];
+		$remaining_terms = [];
+		foreach ($terms as $term) {
+			if (!($term instanceof WP_Term)) {
+				continue;
+			}
+			$term_slug = sanitize_title((string) $term->slug);
+			if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) {
+				$live_in_nav_terms[] = $term;
+				continue;
+			}
+			$remaining_terms[] = $term;
+		}
 
 		$updated_count = isset($_GET['um_bulk_updated']) ? absint(wp_unslash($_GET['um_bulk_updated'])) : 0;
 		if ($updated_count > 0) {
@@ -223,30 +236,65 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 						<?php if (empty($terms)) : ?>
 							<tr><td colspan="4"><?php esc_html_e('No Library Tags found.', 'user-manager'); ?></td></tr>
 						<?php else : ?>
-							<?php foreach ($terms as $term) : ?>
-								<?php if (!($term instanceof WP_Term)) { continue; } ?>
-								<?php $youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true); ?>
-								<tr>
-									<td>
-										<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
-									</td>
-									<td>
-										<?php $term_slug = sanitize_title((string) $term->slug); ?>
-										<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
-										<?php if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) : ?>
-											<div style="margin-top:6px;">
-												<span class="um-menu-live-navigation-badge"><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></span>
-											</div>
-										<?php endif; ?>
-									</td>
-									<td>
-										<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
-									</td>
-									<td>
-										<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][youtube_links]" placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"><?php echo esc_textarea($youtube_links_value); ?></textarea>
-									</td>
+							<?php if (!empty($live_in_nav_terms)) : ?>
+								<tr class="um-bulk-editor-section-row">
+									<td colspan="4"><strong><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></strong></td>
 								</tr>
-							<?php endforeach; ?>
+								<?php foreach ($live_in_nav_terms as $term) : ?>
+									<?php if (!($term instanceof WP_Term)) { continue; } ?>
+									<?php $youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true); ?>
+									<tr>
+										<td>
+											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
+										</td>
+										<td>
+											<?php $term_slug = sanitize_title((string) $term->slug); ?>
+											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
+											<?php if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) : ?>
+												<div style="margin-top:6px;">
+													<span class="um-menu-live-navigation-badge"><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></span>
+												</div>
+											<?php endif; ?>
+										</td>
+										<td>
+											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
+										</td>
+										<td>
+											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][youtube_links]" placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"><?php echo esc_textarea($youtube_links_value); ?></textarea>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							<?php endif; ?>
+
+							<?php if (!empty($remaining_terms)) : ?>
+								<tr class="um-bulk-editor-section-row">
+									<td colspan="4"><strong><?php esc_html_e('All Other Tags', 'user-manager'); ?></strong></td>
+								</tr>
+								<?php foreach ($remaining_terms as $term) : ?>
+									<?php if (!($term instanceof WP_Term)) { continue; } ?>
+									<?php $youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true); ?>
+									<tr>
+										<td>
+											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
+										</td>
+										<td>
+											<?php $term_slug = sanitize_title((string) $term->slug); ?>
+											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
+											<?php if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) : ?>
+												<div style="margin-top:6px;">
+													<span class="um-menu-live-navigation-badge"><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></span>
+												</div>
+											<?php endif; ?>
+										</td>
+										<td>
+											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
+										</td>
+										<td>
+											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][youtube_links]" placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"><?php echo esc_textarea($youtube_links_value); ?></textarea>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							<?php endif; ?>
 						<?php endif; ?>
 					</tbody>
 				</table>
@@ -264,6 +312,16 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			color: #1f6f43;
 			border: 1px solid #c8e6ce;
 			font-weight: 600;
+		}
+		.um-bulk-editor-section-row td {
+			background: #f6f7f7;
+			border-top: 1px solid #dcdcde;
+			font-size: 12px;
+			letter-spacing: 0.02em;
+			text-transform: uppercase;
+			color: #50575e;
+			padding-top: 8px;
+			padding-bottom: 8px;
 		}
 		</style>
 		<?php
