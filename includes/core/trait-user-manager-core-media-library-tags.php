@@ -2309,7 +2309,7 @@ JS;
 					slideshowBtn.textContent = 'Play Slideshow';
 				}
 			}
-			function renderOverlay(overlay, trigger, root, items, index) {
+			function renderOverlay(overlay, trigger, root, items, index, animate) {
 				var src = trigger.getAttribute('data-um-modal-src') || trigger.getAttribute('data-um-lightbox-src') || trigger.getAttribute('href') || '';
 				if (!src) {
 					return false;
@@ -2354,6 +2354,13 @@ JS;
 				} else if (normalizedTransition === 'slide_left') {
 					overlay.classList.add('um-mltg-transition-slide-left');
 				}
+				var shouldAnimate = !!animate && normalizedTransition !== 'none';
+				if (image) {
+					image.classList.remove('is-transitioning');
+				}
+				if (shouldAnimate && image) {
+					image.classList.add('is-transitioning');
+				}
 				if (root && root.id) {
 					overlay.setAttribute('data-um-inline-root-id', root.id);
 				} else {
@@ -2372,6 +2379,11 @@ JS;
 				}
 				if (document && document.body) {
 					document.body.style.overflow = 'hidden';
+				}
+				if (shouldAnimate && image) {
+					window.setTimeout(function() {
+						image.classList.remove('is-transitioning');
+					}, 160);
 				}
 				var slideshowTimer = overlay.__umInlineSlideshowTimer || null;
 				if (slideshowTimer) {
@@ -2428,7 +2440,8 @@ JS;
 				if (index < 0) {
 					index = 0;
 				}
-				return renderOverlay(overlay, trigger, root, items, index);
+				var shouldAnimate = overlay.getAttribute('aria-hidden') === 'false';
+				return renderOverlay(overlay, trigger, root, items, index, shouldAnimate);
 			};
 			api.closeFromOverlay = function(overlay, event) {
 				if (event) {
@@ -2508,7 +2521,8 @@ JS;
 				if (!trigger) {
 					return false;
 				}
-				return renderOverlay(overlay, trigger, root, items, nextIndex);
+				var shouldAnimate = overlay.getAttribute('aria-hidden') === 'false';
+				return renderOverlay(overlay, trigger, root, items, nextIndex, shouldAnimate);
 			};
 			api.toggleSlideshow = function(button, event) {
 				if (event) {
@@ -2956,9 +2970,9 @@ JS;
 		$inline_lightbox_close_onclick = "if(window.umMltgInline&&window.umMltgInline.closeFromButton){return !!window.umMltgInline.closeFromButton(this,event);}return false;";
 		$inline_lightbox_overlay_onclick = "if(window.umMltgInline&&window.umMltgInline.backdrop){return !!window.umMltgInline.backdrop(this,event);}return true;";
 		$inline_lightbox_overlay_onkeydown = "if(window.umMltgInline&&window.umMltgInline.keydown){return !!window.umMltgInline.keydown(this,event);}return true;";
-		$inline_lightbox_prev_onclick = "if(window.umMltgInline&&window.umMltgInline.step){return !!window.umMltgInline.step(this,-1,event);}return false;";
-		$inline_lightbox_next_onclick = "if(window.umMltgInline&&window.umMltgInline.step){return !!window.umMltgInline.step(this,1,event);}return false;";
-		$inline_lightbox_slideshow_onclick = "if(window.umMltgInline&&window.umMltgInline.toggleSlideshow){return !!window.umMltgInline.toggleSlideshow(this,event);}return false;";
+		$inline_lightbox_prev_onclick = "if(window.umMltgInline&&window.umMltgInline.step){return !!window.umMltgInline.step(this,-1,event);}event.preventDefault();return false;";
+		$inline_lightbox_next_onclick = "if(window.umMltgInline&&window.umMltgInline.step){return !!window.umMltgInline.step(this,1,event);}event.preventDefault();return false;";
+		$inline_lightbox_slideshow_onclick = "if(window.umMltgInline&&window.umMltgInline.toggleSlideshow){return !!window.umMltgInline.toggleSlideshow(this,event);}event.preventDefault();return false;";
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';

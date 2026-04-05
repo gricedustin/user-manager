@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.109 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Applied slideshow transition classes in the resilient/fallback lightbox runtime during step changes so "Slideshow Transition" now visibly affects fallback slideshow playback.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fallback slideshow step changes now trigger the same image transition CSS class flow used by the main runtime (crossfade / slide-left) instead of hard cuts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.108 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Reordered lightbox controls to display as Previous arrow, Play Slideshow button, Next arrow so Play appears centered between navigation arrows.', 'user-manager'); ?></li>
