@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.100 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a lightweight fallback modal runtime for Media Library Tag Gallery so image clicks can still open when the primary lightbox script is interrupted by unrelated front-end JavaScript errors.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated runtime trigger selector matching to avoid brittle quoted-attribute dependency and support class/data-attribute trigger detection paths.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.99 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Rebuilt Media Library Tag Gallery lightbox triggers to use dedicated modal data attributes and normalized runtime selector resolution, making "Link To: Open Image in Lightbox" far more resilient across gallery styles.', 'user-manager'); ?></li>

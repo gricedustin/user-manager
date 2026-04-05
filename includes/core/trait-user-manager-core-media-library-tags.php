@@ -3208,7 +3208,7 @@ JS;
 			}
 			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
 			var slideshowTransition = <?php echo wp_json_encode((string) $lightbox_slideshow_transition); ?> || 'none';
-			var lightboxTriggerSelector = '[data-um-modal-trigger="1"],[data-um-lightbox="1"]';
+			var lightboxTriggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
 			var lightboxLinks = [];
 			var activeLightboxIndex = -1;
 			var activeAttachmentId = 0;
@@ -3863,6 +3863,132 @@ JS;
 					}
 				}
 			}
+			if (overlay) {
+				overlay.setAttribute('data-um-lightbox-ready', '1');
+			}
+		})();
+		</script>
+		<script>
+		(function() {
+			var root = document.getElementById('<?php echo esc_js($uid); ?>');
+			if (!root) { return; }
+			var overlay = document.getElementById('<?php echo esc_js($uid); ?>-lightbox');
+			if (!overlay) { return; }
+			if (overlay.getAttribute('data-um-lightbox-ready') === '1') { return; }
+			if (overlay.getAttribute('data-um-lightbox-fallback-bound') === '1') { return; }
+			overlay.setAttribute('data-um-lightbox-fallback-bound', '1');
+
+			var closeBtn = overlay.querySelector('.um-mltg-lightbox-close');
+			var image = overlay.querySelector('img');
+			var captionEl = overlay.querySelector('.um-mltg-lightbox-caption');
+			var editLinkEl = overlay.querySelector('.um-mltg-lightbox-edit-link');
+			var duplicateLinkEl = overlay.querySelector('.um-mltg-lightbox-duplicate-link');
+			var tagToolsEl = overlay.querySelector('.um-mltg-lightbox-tag-tools');
+			var controlsWrap = overlay.querySelector('.um-mltg-lightbox-controls');
+			var bodyPrevOverflow = '';
+			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
+
+			if (controlsWrap) {
+				controlsWrap.style.display = 'none';
+			}
+			if (duplicateLinkEl) {
+				duplicateLinkEl.style.display = 'none';
+			}
+			if (tagToolsEl) {
+				tagToolsEl.style.display = 'none';
+			}
+
+			function resolveTrigger(node) {
+				if (!node || !node.closest) { return null; }
+				var trigger = node.closest(triggerSelector);
+				if (trigger && root.contains(trigger)) {
+					return trigger;
+				}
+				var tile = node.closest('.um-media-library-tag-gallery-item');
+				if (tile && root.contains(tile)) {
+					return tile.querySelector(triggerSelector);
+				}
+				return null;
+			}
+
+			function openFromTrigger(trigger) {
+				if (!trigger || !image) { return; }
+				var src = trigger.getAttribute('data-um-modal-src') || trigger.getAttribute('data-um-lightbox-src') || trigger.getAttribute('href') || '';
+				if (!src) { return; }
+				var caption = trigger.getAttribute('data-um-modal-caption') || trigger.getAttribute('data-um-lightbox-caption') || '';
+				var altText = trigger.getAttribute('data-um-modal-alt') || trigger.getAttribute('data-um-lightbox-alt') || '';
+				var editUrl = trigger.getAttribute('data-um-modal-edit-url') || trigger.getAttribute('data-um-lightbox-edit-url') || '';
+
+				image.setAttribute('src', src);
+				image.setAttribute('alt', altText);
+				if (captionEl) {
+					captionEl.textContent = caption;
+					captionEl.style.display = caption ? 'block' : 'none';
+				}
+				if (editLinkEl) {
+					if (editUrl) {
+						editLinkEl.setAttribute('href', editUrl);
+						editLinkEl.style.display = 'inline-block';
+					} else {
+						editLinkEl.setAttribute('href', '#');
+						editLinkEl.style.display = 'none';
+					}
+				}
+				if (document && document.body) {
+					bodyPrevOverflow = document.body.style.overflow || '';
+					document.body.style.overflow = 'hidden';
+				}
+				overlay.style.display = 'flex';
+				overlay.setAttribute('aria-hidden', 'false');
+			}
+
+			function closeOverlay() {
+				overlay.style.display = 'none';
+				overlay.setAttribute('aria-hidden', 'true');
+				if (image) {
+					image.setAttribute('src', '');
+				}
+				if (captionEl) {
+					captionEl.textContent = '';
+					captionEl.style.display = 'none';
+				}
+				if (editLinkEl) {
+					editLinkEl.setAttribute('href', '#');
+					editLinkEl.style.display = 'none';
+				}
+				if (document && document.body) {
+					document.body.style.overflow = bodyPrevOverflow;
+				}
+			}
+
+			root.addEventListener('click', function(event) {
+				var trigger = resolveTrigger(event && event.target ? event.target : null);
+				if (!trigger) { return; }
+				event.preventDefault();
+				if (typeof event.stopImmediatePropagation === 'function') {
+					event.stopImmediatePropagation();
+				} else {
+					event.stopPropagation();
+				}
+				openFromTrigger(trigger);
+			}, true);
+
+			if (closeBtn) {
+				closeBtn.addEventListener('click', function(event) {
+					event.preventDefault();
+					closeOverlay();
+				});
+			}
+			overlay.addEventListener('click', function(event) {
+				if (event.target === overlay) {
+					closeOverlay();
+				}
+			});
+			document.addEventListener('keydown', function(event) {
+				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+					closeOverlay();
+				}
+			});
 		})();
 		</script>
 		<?php
