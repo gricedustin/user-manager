@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.85 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reverted admin per-photo tag controls (tag list + Hide/Duplicate) back to the non-overlay inline placement under each image for clearer visibility and interaction.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added extra bottom spacing for Mosaic Grid image wrappers so inline admin controls have more room and are easier to read/click in mosaic layout.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.84 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Administrator-only per-photo tag actions (tag list + Hide/Duplicate) are now rendered as an overlay pinned to the bottom of each gallery image instead of below the photo flow.', 'user-manager'); ?></li>
