@@ -192,7 +192,14 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$show_overlay_image_as_normal = self::restricted_access_show_overlay_image_as_normal_above_message($settings);
 		?>
 		<style id="um-restricted-access-background-overlay-style">
-			body { overflow: hidden !important; }
+			html, body {
+				margin: 0 !important;
+				padding: 0 !important;
+				width: 100%;
+				min-height: 100%;
+				overflow: hidden !important;
+				overscroll-behavior: none;
+			}
 			.um-restricted-access-background-overlay {
 				position: fixed;
 				inset: 0;
@@ -200,13 +207,19 @@ trait User_Manager_Core_Restricted_Access_Trait {
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				min-height: 100vh;
+				width: 100vw;
+				height: 100vh;
+				min-height: 100svh;
+				height: 100dvh;
 				text-align: center;
 				background-color: <?php echo esc_attr($bg_color); ?>;
 				color: <?php echo esc_attr($text_color); ?>;
 				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 				padding: 20px;
+				padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
 				box-sizing: border-box;
+				overflow: auto;
+				-webkit-overflow-scrolling: touch;
 			}
 			.um-restricted-access-background-overlay-image-wrap {
 				display: flex;
@@ -597,16 +610,29 @@ trait User_Manager_Core_Restricted_Access_Trait {
 					padding: 0;
 					width: 100%;
 					height: 100%;
+					min-height: 100%;
+					overflow: hidden;
+					overscroll-behavior: none;
 				}
 				body.um-restricted-access-overlay {
+					position: fixed;
+					inset: 0;
+					width: 100vw;
+					height: 100vh;
+					min-height: 100svh;
+					height: 100dvh;
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					min-height: 100vh;
 					text-align: center;
 					background-color: <?php echo esc_attr($bg_color); ?>;
 					color: <?php echo esc_attr($text_color); ?>;
 					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+					padding: 20px;
+					padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+					box-sizing: border-box;
+					overflow: auto;
+					-webkit-overflow-scrolling: touch;
 				}
 				.um-restricted-access-overlay-image-wrap {
 					display: flex;

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.123
+ * Version: 2.5.124
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.124 - March 16, 2026
+ * - Fixed Restricted Access overlay viewport coverage on mobile by enforcing full fixed inset coverage with dynamic viewport height fallbacks.
+ * - Updated both immediate full-page overlay mode and background HTML overlay mode to use 100dvh/min-height fallback rules so no page background peeks through on mobile.
+ *
  * 2.5.123 - March 16, 2026
  * - Added new Media Library Tag Gallery style option: "Mosaic Grid (Taller Tiles)" that reuses the mosaic layout with 50% taller base tiles.
  * - Added mosaic taller style CSS variants for desktop/mobile tile auto-row sizing while preserving existing large/tall/wide tile patterns.
