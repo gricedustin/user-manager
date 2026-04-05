@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.101 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restored fallback lightbox support for "Add Previous & Next Links in Lightbox Window and Allow Keyboard Arrows Shortcut" so those controls continue to work even when the primary lightbox runtime is unavailable.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fallback modal runtime now reads the same Lightbox Previous/Next setting and supports Previous/Next button navigation plus ArrowLeft/ArrowRight keyboard shortcuts when enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.100 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a lightweight fallback modal runtime for Media Library Tag Gallery so image clicks can still open when the primary lightbox script is interrupted by unrelated front-end JavaScript errors.', 'user-manager'); ?></li>

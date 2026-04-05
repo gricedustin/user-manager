@@ -3886,11 +3886,26 @@ JS;
 			var tagToolsEl = overlay.querySelector('.um-mltg-lightbox-tag-tools');
 			var controlsWrap = overlay.querySelector('.um-mltg-lightbox-controls');
 			var bodyPrevOverflow = '';
+			var enablePrevNextKeyboard = root.getAttribute('data-um-lightbox-prev-next') === '1';
+			var lightboxItems = [];
+			var activeIndex = -1;
 			var triggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
 
-			if (controlsWrap) {
-				controlsWrap.style.display = 'none';
+			function refreshItems() {
+				lightboxItems = Array.prototype.slice.call(root.querySelectorAll(triggerSelector));
+				return lightboxItems;
 			}
+			refreshItems();
+
+			var prevBtn = overlay.querySelector('.um-mltg-lightbox-prev');
+			var nextBtn = overlay.querySelector('.um-mltg-lightbox-next');
+			var slideshowBtn = overlay.querySelector('.um-mltg-lightbox-slideshow-toggle');
+			if (controlsWrap) {
+				controlsWrap.style.display = enablePrevNextKeyboard ? 'flex' : 'none';
+			}
+			if (prevBtn) { prevBtn.style.display = enablePrevNextKeyboard ? 'inline-block' : 'none'; }
+			if (nextBtn) { nextBtn.style.display = enablePrevNextKeyboard ? 'inline-block' : 'none'; }
+			if (slideshowBtn) { slideshowBtn.style.display = 'none'; }
 			if (duplicateLinkEl) {
 				duplicateLinkEl.style.display = 'none';
 			}
@@ -3911,13 +3926,28 @@ JS;
 				return null;
 			}
 
+			function findItemIndex(trigger) {
+				if (!trigger) { return -1; }
+				var indexRaw = trigger.getAttribute('data-um-modal-index') || trigger.getAttribute('data-um-lightbox-index');
+				var parsed = parseInt(String(indexRaw || ''), 10);
+				if (!isNaN(parsed) && parsed >= 0) {
+					return parsed;
+				}
+				return lightboxItems.indexOf(trigger);
+			}
+
 			function openFromTrigger(trigger) {
 				if (!trigger || !image) { return; }
+				refreshItems();
 				var src = trigger.getAttribute('data-um-modal-src') || trigger.getAttribute('data-um-lightbox-src') || trigger.getAttribute('href') || '';
 				if (!src) { return; }
 				var caption = trigger.getAttribute('data-um-modal-caption') || trigger.getAttribute('data-um-lightbox-caption') || '';
 				var altText = trigger.getAttribute('data-um-modal-alt') || trigger.getAttribute('data-um-lightbox-alt') || '';
 				var editUrl = trigger.getAttribute('data-um-modal-edit-url') || trigger.getAttribute('data-um-lightbox-edit-url') || '';
+				activeIndex = findItemIndex(trigger);
+				if (activeIndex < 0 && lightboxItems.length) {
+					activeIndex = 0;
+				}
 
 				image.setAttribute('src', src);
 				image.setAttribute('alt', altText);
@@ -3942,6 +3972,20 @@ JS;
 				overlay.setAttribute('aria-hidden', 'false');
 			}
 
+			function openByIndex(nextIndex) {
+				if (!enablePrevNextKeyboard) { return; }
+				if (!lightboxItems.length) { return; }
+				var idx = nextIndex;
+				if (idx < 0) {
+					idx = lightboxItems.length - 1;
+				} else if (idx >= lightboxItems.length) {
+					idx = 0;
+				}
+				var nextTrigger = lightboxItems[idx];
+				if (!nextTrigger) { return; }
+				openFromTrigger(nextTrigger);
+			}
+
 			function closeOverlay() {
 				overlay.style.display = 'none';
 				overlay.setAttribute('aria-hidden', 'true');
@@ -3959,6 +4003,7 @@ JS;
 				if (document && document.body) {
 					document.body.style.overflow = bodyPrevOverflow;
 				}
+				activeIndex = -1;
 			}
 
 			root.addEventListener('click', function(event) {
@@ -3979,6 +4024,22 @@ JS;
 					closeOverlay();
 				});
 			}
+			if (prevBtn) {
+				prevBtn.addEventListener('click', function(event) {
+					event.preventDefault();
+					event.stopPropagation();
+					if (!enablePrevNextKeyboard || activeIndex < 0) { return; }
+					openByIndex(activeIndex - 1);
+				});
+			}
+			if (nextBtn) {
+				nextBtn.addEventListener('click', function(event) {
+					event.preventDefault();
+					event.stopPropagation();
+					if (!enablePrevNextKeyboard || activeIndex < 0) { return; }
+					openByIndex(activeIndex + 1);
+				});
+			}
 			overlay.addEventListener('click', function(event) {
 				if (event.target === overlay) {
 					closeOverlay();
@@ -3987,6 +4048,17 @@ JS;
 			document.addEventListener('keydown', function(event) {
 				if (event.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
 					closeOverlay();
+					return;
+				}
+				if (!enablePrevNextKeyboard || overlay.getAttribute('aria-hidden') !== 'false' || activeIndex < 0) {
+					return;
+				}
+				if (event.key === 'ArrowLeft') {
+					event.preventDefault();
+					openByIndex(activeIndex - 1);
+				} else if (event.key === 'ArrowRight') {
+					event.preventDefault();
+					openByIndex(activeIndex + 1);
 				}
 			});
 		})();
