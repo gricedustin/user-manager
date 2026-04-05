@@ -51,7 +51,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.115';
+	const VERSION = '2.5.116';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -2728,7 +2728,15 @@ html body .woocommerce-layout__header {
 		]);
 
 		if (!is_wp_error($terms) && count($terms) === 1) {
-			$term_id = (int) $terms[0];
+			$first_term = $terms[0];
+			if ($first_term instanceof WP_Term) {
+				$term_id = absint($first_term->term_id);
+			} else {
+				$term_id = absint($first_term);
+			}
+			if ($term_id <= 0) {
+				return;
+			}
 			$url     = add_query_arg(
 				[
 					'action'   => 'edit',

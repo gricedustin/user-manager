@@ -377,10 +377,20 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 
 		$menu_ids = array_values(array_unique(array_filter(array_map('absint', $menu_locations))));
-		$menu_ids = array_values(array_unique(array_merge(
-			$menu_ids,
-			array_filter(array_map('absint', wp_get_nav_menus([], 'ids')))
-		)));
+		$all_menus = wp_get_nav_menus(['hide_empty' => false]);
+		if (is_array($all_menus) && !empty($all_menus)) {
+			$all_menu_ids = [];
+			foreach ($all_menus as $menu_term) {
+				if (!($menu_term instanceof WP_Term)) {
+					continue;
+				}
+				$menu_term_id = absint($menu_term->term_id);
+				if ($menu_term_id > 0) {
+					$all_menu_ids[] = $menu_term_id;
+				}
+			}
+			$menu_ids = array_values(array_unique(array_merge($menu_ids, $all_menu_ids)));
+		}
 		if (empty($menu_ids)) {
 			return $slug_map;
 		}

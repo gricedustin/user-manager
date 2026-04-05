@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.115
+ * Version: 2.5.116
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.116 - March 16, 2026
+ * - Fixed WP_Term-to-integer conversion warnings by hardening menu and term ID handling in Media Library Tags and Quick Search term redirects.
+ * - Updated term edit-link rendering paths to normalize term IDs through absint() before building edit URLs.
+ *
  * 2.5.115 - March 16, 2026
  * - Deepened Restricted Access cookie persistence by validating all matching cookie candidates from raw request headers (not only the single parsed PHP cookie value).
  * - Restricted Access now writes signed access cookies across host-only + host-domain variants and common www/non-www host forms to reduce cross-route cookie mismatch.

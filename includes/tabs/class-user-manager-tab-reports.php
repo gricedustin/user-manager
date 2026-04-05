@@ -4236,8 +4236,9 @@ class User_Manager_Tab_Reports {
 					<?php foreach ($rows as $row) : ?>
 						<tr>
 							<td>
-								<?php if (!empty($row['term_id'])) : ?>
-									<a href="<?php echo esc_url(get_edit_term_link((int) $row['term_id'], 'product_cat')); ?>">
+								<?php $term_id = isset($row['term_id']) ? absint($row['term_id']) : 0; ?>
+								<?php if ($term_id > 0) : ?>
+									<a href="<?php echo esc_url(get_edit_term_link($term_id, 'product_cat')); ?>">
 										<?php echo esc_html($row['name'] ?: '—'); ?>
 									</a>
 								<?php else : ?>
@@ -4319,8 +4320,9 @@ class User_Manager_Tab_Reports {
 					<?php foreach ($rows as $row) : ?>
 						<tr>
 							<td>
-								<?php if (!empty($row['term_id'])) : ?>
-									<a href="<?php echo esc_url(get_edit_term_link((int) $row['term_id'], 'product_tag')); ?>">
+								<?php $term_id = isset($row['term_id']) ? absint($row['term_id']) : 0; ?>
+								<?php if ($term_id > 0) : ?>
+									<a href="<?php echo esc_url(get_edit_term_link($term_id, 'product_tag')); ?>">
 										<?php echo esc_html($row['name'] ?: '—'); ?>
 									</a>
 								<?php else : ?>

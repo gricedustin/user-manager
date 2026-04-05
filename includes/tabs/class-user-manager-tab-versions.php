@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.116 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed WP_Term to int conversion warnings in Media Library menu-tag matching by extracting menu term IDs from wp_get_nav_menus() term objects before normalization.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Hardened term-ID handling in quick-search single-term redirects and category/tag report edit links so term objects are never passed directly into integer casts/absint paths.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.115 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Hardened Restricted Access shared-password session persistence by validating across all duplicate um_restricted_access cookie values present in the raw Cookie header, not only the single parsed $_COOKIE value.', 'user-manager'); ?></li>
