@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.110
+ * Version: 2.5.111
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.111 - March 16, 2026
+ * - Removed pre-click hover styling on Media Library Tag Gallery images when using Link To: Open Image in Lightbox.
+ * - Lightbox trigger buttons now keep neutral visual state on hover/focus/active so images do not visually shift before opening.
+ * - Style-specific hover transforms for Polaroid Scrapbook and Perspective 3D now apply only when link mode is not lightbox.
+ *
  * 2.5.110 - March 16, 2026
  * - Added a new Media Library Tag Gallery setting: "Allow Swipe to Left or Right to go to Previous or Next Photo."
  * - Wired swipe navigation through add-on defaults, block-level override controls, and gallery runtime data attributes.

@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.111 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed pre-open hover styling from Media Library Tag Gallery images when Link To is set to Lightbox, so thumbnails no longer animate/change on hover before opening the modal.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Kept hover styling behavior for non-lightbox link modes (Open Image / New Window) to avoid changing non-lightbox gallery interactions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.110 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Media Library Tags setting: "Allow Swipe to Left or Right to go to Previous or Next Photo".', 'user-manager'); ?></li>
