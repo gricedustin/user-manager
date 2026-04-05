@@ -942,7 +942,14 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	 */
 	public static function filter_media_library_ajax_query_by_tag(array $query): array {
 		$requested_filter = '';
-		$requested_sort = self::get_requested_media_library_sort_value();
+		$requested_sort = isset($query['um_media_library_sort']) ? sanitize_key((string) $query['um_media_library_sort']) : '';
+		if ($requested_sort === '') {
+			$requested_sort = self::get_requested_media_library_sort_value();
+		}
+		$sort_options = self::get_media_library_media_admin_sort_options();
+		if ($requested_sort !== '' && !isset($sort_options[$requested_sort])) {
+			$requested_sort = '';
+		}
 		if ($requested_sort !== '') {
 			$query['um_media_library_sort'] = $requested_sort;
 		}
@@ -1413,6 +1420,48 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		}
 		window.location.href = url.toString();
 	}
+	function setUrlParamWithoutReload(param, value) {
+		try {
+			var url = new URL(window.location.href);
+			if (!value) {
+				url.searchParams.delete(param);
+			} else {
+				url.searchParams.set(param, value);
+			}
+			if (window.history && typeof window.history.replaceState === 'function') {
+				window.history.replaceState(window.history.state, '', url.toString());
+				return true;
+			}
+		} catch (err) {
+		}
+		return false;
+	}
+	function applySortToMediaFrame(sortValue, forceRefresh) {
+		var selectedSort = parseSortBy(sortValue);
+		try {
+			if (!window.wp || !wp.media || !wp.media.frame || !wp.media.frame.state) {
+				return false;
+			}
+			var state = wp.media.frame.state();
+			if (!state) {
+				return false;
+			}
+			if (state.props && state.props.set) {
+				state.props.set({ um_media_library_sort: selectedSort });
+			}
+			var library = state.get ? state.get('library') : null;
+			if (!library || !library.props || !library.props.set) {
+				return false;
+			}
+			library.props.set({ um_media_library_sort: selectedSort });
+			if (forceRefresh && typeof library._requery === 'function') {
+				library._requery(true);
+			}
+			return true;
+		} catch (err) {
+			return false;
+		}
+	}
 
 	function getSelectedMediaIdsFromGrid() {
 		var ids = [];
@@ -1542,8 +1591,19 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			updateUrlParam('um_media_library_tag', $(this).val());
 		});
 		$sort.on('change', function() {
-			updateUrlParam('um_media_library_sort', $(this).val());
+			var nextSort = parseSortBy($(this).val());
+			cfg.selectedSort = nextSort;
+			var applied = applySortToMediaFrame(nextSort, true);
+			var updatedUrl = setUrlParamWithoutReload('um_media_library_sort', nextSort);
+			if (!applied || !updatedUrl) {
+				updateUrlParam('um_media_library_sort', nextSort);
+			}
 		});
+		if (selectedSort) {
+			window.setTimeout(function() {
+				applySortToMediaFrame(selectedSort, true);
+			}, 60);
+		}
 
 		$button.on('click', function() {
 			var tag = String($bulk.val() || '');
@@ -5422,8 +5482,8 @@ JS;
 	private static function get_media_library_media_admin_sort_options(): array {
 		return [
 			'' => __('Sort by Upload Date (Newest first)', 'user-manager'),
-			'lightbox_views_desc' => __('Sort by Lightbox Views (Highest first)', 'user-manager'),
-			'lightbox_views_asc' => __('Sort by Lightbox Views (Lowest first)', 'user-manager'),
+			'lightbox_views_desc' => __('Sort by Views (Highest first)', 'user-manager'),
+			'lightbox_views_asc' => __('Sort by Views (Lowest first)', 'user-manager'),
 		];
 	}
 

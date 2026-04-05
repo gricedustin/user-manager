@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.119 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library admin sort labels to use neutral "Views" wording instead of "Lightbox Views" in list/grid sort dropdowns.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixed grid-view Media Library sort behavior so selecting a sort option now applies immediately to the wp.media attachment query and refreshes results in-place.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.118 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added lightbox deep-link URLs for Media Library Tag Gallery images using the um_lightbox_image_id query parameter so opening an image writes its attachment ID to the URL.', 'user-manager'); ?></li>

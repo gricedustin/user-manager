@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.118
+ * Version: 2.5.119
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.119 - March 16, 2026
+ * - Renamed Media Library sort option labels from "Lightbox Views" to "Views" in the admin dropdown UI.
+ * - Fixed Media Library grid sort behavior so changing the sort dropdown applies the selected order to attachment queries in-place.
+ * - Grid sort now persists sort query state in the URL without requiring a full page reload when supported.
+ *
  * 2.5.118 - March 16, 2026
  * - Added lightbox deep-link support with URL parameter um_lightbox_image_id=<attachment_id> when opening Media Library Tag Gallery images.
  * - Shared links with um_lightbox_image_id now auto-open the matching image in lightbox on page load (primary and resilient fallback runtimes).
