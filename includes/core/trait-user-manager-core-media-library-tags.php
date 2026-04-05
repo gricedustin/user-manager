@@ -2615,6 +2615,9 @@ JS;
 		if (!is_string($lightbox_modal_text_color_css) || $lightbox_modal_text_color_css === '') {
 			$lightbox_modal_text_color_css = '#ffffff';
 		}
+		$inline_lightbox_overlay_id = $uid . '-lightbox';
+		$inline_lightbox_open_onclick = "event.preventDefault();event.stopPropagation();var o=document.getElementById(" . wp_json_encode((string) $inline_lightbox_overlay_id) . ");if(!o){return false;}var src=this.getAttribute('data-um-modal-src')||this.getAttribute('data-um-lightbox-src')||this.getAttribute('href')||'';if(!src){return false;}var i=o.querySelector('img');if(i){i.setAttribute('src',src);i.setAttribute('alt',this.getAttribute('data-um-modal-alt')||this.getAttribute('data-um-lightbox-alt')||'');}var c=o.querySelector('.um-mltg-lightbox-caption');if(c){var t=this.getAttribute('data-um-modal-caption')||this.getAttribute('data-um-lightbox-caption')||'';c.textContent=t;c.style.display=t?'block':'none';}var e=o.querySelector('.um-mltg-lightbox-edit-link');if(e){var u=this.getAttribute('data-um-modal-edit-url')||this.getAttribute('data-um-lightbox-edit-url')||'';if(u){e.setAttribute('href',u);e.style.display='inline-block';}else{e.setAttribute('href','#');e.style.display='none';}}var id=this.getAttribute('data-um-modal-attachment-id')||this.getAttribute('data-um-lightbox-attachment-id')||'';var d=o.querySelector('.um-mltg-lightbox-duplicate-link');if(d){d.style.display=id?'inline-block':'none';}var tt=o.querySelector('.um-mltg-lightbox-tag-tools');if(tt){tt.style.display='none';}var cw=o.querySelector('.um-mltg-lightbox-controls');if(cw){cw.style.display='none';}o.style.display='flex';o.setAttribute('aria-hidden','false');if(document&&document.body){document.body.style.overflow='hidden';}return false;";
+		$inline_lightbox_close_onclick = "var o=this.closest('.um-mltg-lightbox-overlay');if(o){o.style.display='none';o.setAttribute('aria-hidden','true');var i=o.querySelector('img');if(i){i.setAttribute('src','');}}if(document&&document.body){document.body.style.overflow='';}return false;";
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
@@ -2711,6 +2714,7 @@ JS;
 										<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : ''; ?>
 										<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>
 										<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>
+										onclick="<?php echo esc_attr($inline_lightbox_open_onclick); ?>"
 										aria-label="<?php echo esc_attr($description_attr); ?>"
 									><?php echo $image_html; ?></button>
 									<?php else : ?>
@@ -2822,6 +2826,7 @@ JS;
 									<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : ''; ?>
 									<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>
 									<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-attachment-id="' . esc_attr((string) $attachment_id) . '"' : ''; ?>
+									onclick="<?php echo esc_attr($inline_lightbox_open_onclick); ?>"
 									aria-label="<?php echo esc_attr($description_attr); ?>"
 								><?php echo $image_html; ?></button>
 							<?php else : ?>
@@ -3066,7 +3071,7 @@ JS;
 		window.__UM_MLTG_FORCE_DEBUG_OPEN = <?php echo $lightbox_debug_auto_open ? 'true' : 'false'; ?> || !!window.__UM_MLTG_FORCE_DEBUG_OPEN;
 		</script>
 		<div class="um-mltg-lightbox-overlay" id="<?php echo esc_attr($uid); ?>-lightbox" aria-hidden="true">
-			<button type="button" class="um-mltg-lightbox-close" aria-label="<?php esc_attr_e('Close image', 'user-manager'); ?>">&times;</button>
+			<button type="button" class="um-mltg-lightbox-close" onclick="<?php echo esc_attr($inline_lightbox_close_onclick); ?>" aria-label="<?php esc_attr_e('Close image', 'user-manager'); ?>">&times;</button>
 			<img src="" alt="" />
 			<p class="um-mltg-lightbox-caption"></p>
 			<a href="#" class="um-mltg-lightbox-edit-link" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Edit image', 'user-manager'); ?></a>

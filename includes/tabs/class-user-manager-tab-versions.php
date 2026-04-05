@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.102 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added inline lightbox-open fallback directly on Media Library Tag Gallery image trigger elements so clicks can still open images even when external scripts throw page-level JS errors.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added inline close fallback on the lightbox close button to keep modal exit behavior available during degraded front-end script conditions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.101 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Restored fallback lightbox support for "Add Previous & Next Links in Lightbox Window and Allow Keyboard Arrows Shortcut" so those controls continue to work even when the primary lightbox runtime is unavailable.', 'user-manager'); ?></li>
