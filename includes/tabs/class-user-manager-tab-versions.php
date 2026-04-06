@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.131 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed an early translation-loading timing issue by deferring Media Library Tag Video Library legacy migration to run on init instead of during plugin bootstrap.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added init guards to the migration path to prevent pre-init taxonomy registration from triggering WordPress 6.7+ _load_textdomain_just_in_time notices for the user-manager textdomain.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.130 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag Gallery placeholder resolution now supports URL `title` override so `[tag-name]` can use `?title=...` when present.', 'user-manager'); ?></li>

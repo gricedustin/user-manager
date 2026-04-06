@@ -24,6 +24,19 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 	}
 
 	/**
+	 * Init-safe wrapper for one-time migration.
+	 *
+	 * Prevents translation-triggering taxonomy registration from running too
+	 * early during plugin bootstrap on WP 6.7+.
+	 */
+	public static function maybe_migrate_legacy_term_youtube_links_to_video_library_on_init(): void {
+		if (!did_action('init')) {
+			return;
+		}
+		self::maybe_migrate_legacy_term_youtube_links_to_video_library();
+	}
+
+	/**
 	 * Register "Video Library" submenu under Media.
 	 */
 	public static function register_media_library_tag_video_library_submenu(): void {
@@ -673,6 +686,10 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 	 * One-time migration from legacy per-term YouTube links meta.
 	 */
 	private static function maybe_migrate_legacy_term_youtube_links_to_video_library(): void {
+		if (!did_action('init')) {
+			return;
+		}
+
 		$already_migrated = get_option(self::media_library_tag_video_library_legacy_migration_flag_option_key(), false);
 		if ($already_migrated) {
 			return;

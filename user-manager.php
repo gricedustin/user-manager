@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.130
+ * Version: 2.5.131
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.131 - March 16, 2026
+ * - Fixed an early-boot translation timing issue by deferring Media Library Video legacy migration to run on init instead of plugin bootstrap.
+ * - Added an init guard around Video Library legacy migration so taxonomy registration and i18n label calls cannot execute before init.
+ *
  * 2.5.130 - March 16, 2026
  * - [tag-name] placeholder replacement now supports URL title override via ?title=... so custom heading text can drive placeholder output.
  * - When a valid Media Library Tag URL override is active, title query param is sanitized and used as [tag-name] value while tag descriptions continue resolving from selected tags.
