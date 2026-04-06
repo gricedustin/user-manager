@@ -119,6 +119,20 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 		<div class="wrap">
 			<h1><?php esc_html_e('Video Library', 'user-manager'); ?></h1>
 			<p><?php esc_html_e('Add and manage YouTube videos in one place, then assign Library Tags to control where they appear in your front-end media gallery blocks.', 'user-manager'); ?></p>
+			<div class="notice notice-info" style="margin:12px 0 16px; padding:10px 12px;">
+				<p style="margin:0 0 8px;">
+					<strong><?php esc_html_e('Shortcode:', 'user-manager'); ?></strong>
+					<code>[um_media_library_tag_videos tags="tag-expression" desktop_columns="3"]</code>
+				</p>
+				<p style="margin:0 0 6px;"><?php esc_html_e('Tag expression examples:', 'user-manager'); ?></p>
+				<ul style="margin:0 0 8px 20px; list-style:disc;">
+					<li><code>tag1</code> &mdash; <?php esc_html_e('single tag', 'user-manager'); ?></li>
+					<li><code>tag1+tag2</code> &mdash; <?php esc_html_e('must have both tags (AND)', 'user-manager'); ?></li>
+					<li><code>tag1_tag2</code> &mdash; <?php esc_html_e('must have either tag (OR)', 'user-manager'); ?></li>
+					<li><code>tag1|tag2</code> &mdash; <?php esc_html_e('loop each tag independently on separate rows with tag title/description above each row', 'user-manager'); ?></li>
+				</ul>
+				<p style="margin:0; color:#50575e;"><?php esc_html_e('desktop_columns is optional (1-4). If omitted, columns auto-size based on number of videos.', 'user-manager'); ?></p>
+			</div>
 			<?php if ($notice === 'saved') : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e('Video saved successfully.', 'user-manager'); ?></p></div>
 			<?php elseif ($notice === 'deleted') : ?>

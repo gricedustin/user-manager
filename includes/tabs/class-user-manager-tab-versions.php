@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.140 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new `[um_media_library_tag_videos]` shortcode to render Video Library embeds using the same front-end layout/classes as Media Library Tag Gallery videos.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Shortcode now supports tag expressions (`tag1`, `tag1+tag2`, `tag1_tag2`, `tag1|tag2`) plus optional desktop column override (`desktop_columns` / `columns`, 1-4).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Video Library admin page now includes a shortcode usage note with expression examples and parameter guidance.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.139 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Refactored Media Library Tag lightbox trigger onclick handler to a compact API-only call path, reducing inline attribute JavaScript size and preventing parser edge cases that could block lightbox opening.', 'user-manager'); ?></li>

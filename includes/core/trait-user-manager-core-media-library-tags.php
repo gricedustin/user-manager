@@ -57,6 +57,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_action('created_' . $taxonomy, [__CLASS__, 'save_media_library_tag_featured_image_term_meta']);
 		add_action('edited_' . $taxonomy, [__CLASS__, 'save_media_library_tag_featured_image_term_meta']);
 		add_action('wp_head', [__CLASS__, 'print_media_library_tags_inline_lightbox_bootstrap'], 1);
+		add_shortcode('um_media_library_tag_videos', [__CLASS__, 'render_media_library_tag_videos_shortcode']);
 	}
 
 	/**
@@ -880,8 +881,9 @@ CSS;
 	 * Render YouTube video embeds for active URL tags (or the block tag fallback).
 	 *
 	 * @param array{mode?:string,slugs?:array<int,string>,primarySlug?:string} $tag_override
+	 * @param array{desktopColumns?:int}                                        $render_options
 	 */
-	private static function render_media_library_tag_youtube_videos_html(array $tag_override, string $fallback_tag_slug = ''): string {
+	private static function render_media_library_tag_youtube_videos_html(array $tag_override, string $fallback_tag_slug = '', array $render_options = []): string {
 		$tag_slugs = isset($tag_override['slugs']) && is_array($tag_override['slugs'])
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $tag_override['slugs']))))
 			: [];
@@ -933,7 +935,12 @@ CSS;
 		}
 
 		$video_count = count($video_items);
-		$desktop_video_columns = max(1, min(4, $video_count));
+		$desktop_columns_override = isset($render_options['desktopColumns']) ? absint((int) $render_options['desktopColumns']) : 0;
+		if ($desktop_columns_override > 0) {
+			$desktop_video_columns = max(1, min(4, $desktop_columns_override));
+		} else {
+			$desktop_video_columns = max(1, min(4, $video_count));
+		}
 		$wrap_classes = ['um-media-library-tag-videos-wrap'];
 		if ($video_count > 1) {
 			$wrap_classes[] = 'um-media-library-tag-videos-wrap-multi';
@@ -945,6 +952,74 @@ CSS;
 			esc_attr(implode(' ', $wrap_classes)),
 			implode('', $video_items)
 		);
+	}
+
+	/**
+	 * Shortcode renderer for Video Library rows.
+	 *
+	 * Supported tag expression formats:
+	 * - tag1        (single tag)
+	 * - tag1+tag2   (AND)
+	 * - tag1_tag2   (OR)
+	 * - tag1|tag2   (pipe split into independent sections)
+	 *
+	 * @param array<string,mixed> $atts
+	 */
+	public static function render_media_library_tag_videos_shortcode($atts = []): string {
+		$atts = shortcode_atts(
+			[
+				'tags' => '',
+				'tag' => '',
+				'desktop_columns' => '',
+				'columns' => '',
+			],
+			is_array($atts) ? $atts : [],
+			'um_media_library_tag_videos'
+		);
+
+		$raw_expression = trim((string) ($atts['tags'] !== '' ? $atts['tags'] : $atts['tag']));
+		if ($raw_expression === '') {
+			return '';
+		}
+
+		$desktop_columns_raw = $atts['desktop_columns'] !== '' ? $atts['desktop_columns'] : $atts['columns'];
+		$desktop_columns = max(0, min(4, absint((int) $desktop_columns_raw)));
+		$render_options = $desktop_columns > 0 ? ['desktopColumns' => $desktop_columns] : [];
+
+		$pipe_expressions = self::split_media_library_gallery_pipe_expressions($raw_expression);
+		if (!empty($pipe_expressions)) {
+			$sections = [];
+			foreach ($pipe_expressions as $pipe_expression) {
+				$parsed_expression = self::parse_media_library_gallery_tag_expression($pipe_expression);
+				if (empty($parsed_expression['mode']) || $parsed_expression['mode'] === 'none') {
+					continue;
+				}
+				$videos_html = self::render_media_library_tag_youtube_videos_html($parsed_expression, '', $render_options);
+				if ($videos_html === '') {
+					continue;
+				}
+				$tag_data = self::get_media_library_tag_description_data_for_tag_expression($parsed_expression);
+				$title = trim((string) ($tag_data['name'] ?? ''));
+				$description = trim((string) ($tag_data['description'] ?? ''));
+				$header_html = '';
+				if ($title !== '') {
+					$header_html .= '<h2 class="um-media-library-tag-pipe-title" style="text-align:center;margin:0 0 8px;">' . esc_html($title) . '</h2>';
+				}
+				if ($description !== '') {
+					$header_html .= '<p class="um-media-library-tag-pipe-description" style="text-align:center;margin:0 0 14px;">' . esc_html($description) . '</p>';
+				}
+				$sections[] = '<div class="um-media-library-tag-pipe-section" style="margin-bottom:50px;">' . $header_html . $videos_html . '</div>';
+			}
+
+			return !empty($sections) ? implode('', $sections) : '';
+		}
+
+		$tag_override = self::parse_media_library_gallery_tag_expression($raw_expression);
+		if (empty($tag_override['mode']) || $tag_override['mode'] === 'none') {
+			return '';
+		}
+
+		return self::render_media_library_tag_youtube_videos_html($tag_override, '', $render_options);
 	}
 
 	/**
