@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.135 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added two new Video Library display settings under Activate Video Library: "Display Video Title under each video" and "Display Video Description under each video".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end Media Library Tag video embeds now conditionally render each video title and/or description under the iframe based on those new settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.134 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Hardened Media Library Tag Gallery deep-link auto-open for `?image=<attachment_id>` by adding an early retry path in head bootstrap that repeatedly attempts opening until gallery triggers are available.', 'user-manager'); ?></li>

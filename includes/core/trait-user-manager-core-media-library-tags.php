@@ -897,6 +897,9 @@ CSS;
 		if (empty($video_records)) {
 			return '';
 		}
+		$settings = User_Manager_Core::get_settings();
+		$display_video_title = !empty($settings['media_library_tag_video_library_display_title']);
+		$display_video_description = !empty($settings['media_library_tag_video_library_display_description']);
 
 		$video_items = [];
 		foreach ($video_records as $video_record) {
@@ -909,10 +912,20 @@ CSS;
 				continue;
 			}
 			$embed_url = 'https://www.youtube.com/embed/' . rawurlencode($video_id);
+			$video_title = isset($video_record['title']) ? trim((string) $video_record['title']) : '';
+			$video_description = isset($video_record['description']) ? trim((string) $video_record['description']) : '';
+			$meta_html = '';
+			if ($display_video_title && $video_title !== '') {
+				$meta_html .= '<h4 class="um-media-library-tag-video-title">' . esc_html($video_title) . '</h4>';
+			}
+			if ($display_video_description && $video_description !== '') {
+				$meta_html .= '<p class="um-media-library-tag-video-description">' . esc_html($video_description) . '</p>';
+			}
 			$video_items[] = sprintf(
-				'<div class="um-media-library-tag-video-item"><iframe src="%1$s" title="%2$s" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>',
+				'<div class="um-media-library-tag-video-item"><iframe src="%1$s" title="%2$s" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>%3$s</div>',
 				esc_url($embed_url),
-				esc_attr__('YouTube video', 'user-manager')
+				esc_attr__('YouTube video', 'user-manager'),
+				$meta_html
 			);
 		}
 		if (empty($video_items)) {
@@ -4091,6 +4104,16 @@ JS;
 			width: 100%;
 			height: 100%;
 			border: 0;
+		}
+		.um-media-library-tag-video-title {
+			margin: 10px 0 6px;
+			font-size: 18px;
+			line-height: 1.35;
+		}
+		.um-media-library-tag-video-description {
+			margin: 0;
+			font-size: 14px;
+			line-height: 1.5;
 		}
 		@media (max-width: 782px) {
 			.um-media-library-tag-videos-wrap-multi {

@@ -16,6 +16,8 @@ class User_Manager_Addon_Media_Library_Tags {
 		$defaults = User_Manager_Core::get_media_library_tag_gallery_defaults();
 		$gallery_block_enabled = !empty($settings['media_library_tag_gallery_block_enabled']);
 		$video_library_enabled = !empty($settings['media_library_tag_video_library_enabled']);
+		$video_library_display_title = !empty($settings['media_library_tag_video_library_display_title']);
+		$video_library_display_description = !empty($settings['media_library_tag_video_library_display_description']);
 		$columns_desktop = isset($settings['media_library_tag_gallery_columns_desktop'])
 			? max(1, min(8, (int) $settings['media_library_tag_gallery_columns_desktop']))
 			: (int) $defaults['columnsDesktop'];
@@ -160,6 +162,18 @@ class User_Manager_Addon_Media_Library_Tags {
 						<p class="description">
 							<?php esc_html_e('Adds a "Video Library" submenu under Media where YouTube videos can be created, tagged, and edited in one centralized screen.', 'user-manager'); ?>
 						</p>
+					</div>
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-media-library-tags-video-library-display-title" name="media_library_tag_video_library_display_title" value="1" <?php checked($video_library_display_title); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Display Video Title under each video', 'user-manager'); ?>
+						</label>
+					</div>
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-media-library-tags-video-library-display-description" name="media_library_tag_video_library_display_description" value="1" <?php checked($video_library_display_description); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Display Video Description under each video', 'user-manager'); ?>
+						</label>
 					</div>
 
 					<div id="um-media-library-tags-gallery-settings" style="<?php echo $gallery_block_enabled ? '' : 'display:none;'; ?>">

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.134
+ * Version: 2.5.135
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.135 - March 16, 2026
+ * - Added two new Video Library display settings under Media Library Tags: "Display Video Title under each video" and "Display Video Description under each video."
+ * - Front-end Media Library Tag Gallery video embeds now optionally render each video's saved title and/or description beneath the iframe when those settings are enabled.
+ *
  * 2.5.134 - March 16, 2026
  * - Added a front-end deep-link auto-open retry helper for Media Library Tag Gallery that re-attempts opening `?image=<attachment_id>` via the resilient inline lightbox API when other scripts fail later on the page.
  * - Deep-link auto-open now includes delayed retries after DOM ready/load so shared `&image=` links can still open reliably even when unrelated JavaScript errors interrupt gallery runtime initialization.

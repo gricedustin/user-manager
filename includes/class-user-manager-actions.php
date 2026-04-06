@@ -2312,6 +2312,8 @@ class User_Manager_Actions {
 				$settings['media_library_tags_enabled'] = isset($_POST['media_library_tags_enabled']) && $_POST['media_library_tags_enabled'] === '1';
 				$settings['media_library_tag_gallery_block_enabled'] = isset($_POST['media_library_tag_gallery_block_enabled']) && $_POST['media_library_tag_gallery_block_enabled'] === '1';
 				$settings['media_library_tag_video_library_enabled'] = isset($_POST['media_library_tag_video_library_enabled']) && $_POST['media_library_tag_video_library_enabled'] === '1';
+				$settings['media_library_tag_video_library_display_title'] = isset($_POST['media_library_tag_video_library_display_title']) && $_POST['media_library_tag_video_library_display_title'] === '1';
+				$settings['media_library_tag_video_library_display_description'] = isset($_POST['media_library_tag_video_library_display_description']) && $_POST['media_library_tag_video_library_display_description'] === '1';
 				$settings['media_library_tag_gallery_columns_desktop'] = isset($_POST['media_library_tag_gallery_columns_desktop']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop']))) : 4;
 				$settings['media_library_tag_gallery_columns_desktop_lt_50'] = isset($_POST['media_library_tag_gallery_columns_desktop_lt_50']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop_lt_50']))) : $settings['media_library_tag_gallery_columns_desktop'];
 				$settings['media_library_tag_gallery_columns_desktop_lt_25'] = isset($_POST['media_library_tag_gallery_columns_desktop_lt_25']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop_lt_25']))) : $settings['media_library_tag_gallery_columns_desktop_lt_50'];
