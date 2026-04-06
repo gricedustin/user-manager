@@ -5311,6 +5311,11 @@ JS;
 				if (event.target && event.target.closest && event.target.closest('.um-mltg-lightbox-close,.um-mltg-lightbox-prev,.um-mltg-lightbox-next,.um-mltg-lightbox-slideshow-toggle,.um-mltg-lightbox-edit-link,.um-mltg-lightbox-tag-tools')) {
 					return;
 				}
+				// Tap-side navigation should only react to clicks on the actual image,
+				// not arbitrary background/container clicks.
+				if (!image || event.target !== image) {
+					return;
+				}
 				var bounds = image && image.getBoundingClientRect ? image.getBoundingClientRect() : null;
 				if (!bounds || !isFinite(bounds.left) || !isFinite(bounds.width) || bounds.width <= 0) {
 					return;
@@ -5755,6 +5760,11 @@ JS;
 					return;
 				}
 				if (event.target && event.target.closest && event.target.closest('.um-mltg-lightbox-close,.um-mltg-lightbox-prev,.um-mltg-lightbox-next,.um-mltg-lightbox-slideshow-toggle,.um-mltg-lightbox-edit-link,.um-mltg-lightbox-tag-tools')) {
+					return;
+				}
+				// Tap-side navigation should only react to clicks on the actual image,
+				// not arbitrary background/container clicks.
+				if (!image || event.target !== image) {
 					return;
 				}
 				var bounds = image && image.getBoundingClientRect ? image.getBoundingClientRect() : null;

@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.144
+ * Version: 2.5.145
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.145 - March 16, 2026
+ * - Updated lightbox tap-side navigation behavior to only trigger previous/next when clicking directly on the displayed image element (left/right half of the image).
+ * - Kept overlay/backdrop click-to-close behavior intact so clicking outside the image still closes the lightbox.
+ *
  * 2.5.144 - March 16, 2026
  * - Added new Media > Tag Groups admin page to create/manage tag groups with a Parent Tag and multiple related member tags.
  * - Added front-end related group links above gallery description area: when current tag belongs to a group, show links to other group tags plus a Parent Tag link.

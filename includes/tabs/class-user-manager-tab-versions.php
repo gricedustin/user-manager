@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.145 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated lightbox tap-side navigation behavior so left/right tap navigation only responds when clicking the actual displayed image, not surrounding overlay/background area.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Backdrop clicks outside the image continue to close the lightbox, preserving expected close-on-background behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.144 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Media > Tag Groups page to create parent-tag groups and assign related member tags from existing Library Tags.', 'user-manager'); ?></li>
