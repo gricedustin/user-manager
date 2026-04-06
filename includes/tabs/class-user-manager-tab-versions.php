@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.149 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Tag Group breadcrumb rendering so the currently viewed tag is always displayed in the list as non-link text with a dedicated current-tag class and bold styling.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied current-tag non-link behavior consistently for both parent-tag and member-tag views.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.148 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added sortable ordering controls to Media > Tag Groups: selected group tags can now be drag-and-dropped into a custom display order before saving.', 'user-manager'); ?></li>

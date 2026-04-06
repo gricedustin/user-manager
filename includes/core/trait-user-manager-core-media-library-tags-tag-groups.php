@@ -560,7 +560,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 
 		$related_slugs = [];
 		foreach ($member_slugs as $member_slug) {
-			if ($member_slug === '' || $member_slug === $current_tag_slug) {
+			if ($member_slug === '') {
 				continue;
 			}
 			$related_slugs[] = $member_slug;
@@ -573,21 +573,35 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		$related_links = [];
 		foreach ($related_slugs as $related_slug) {
 			$related_name = isset($slug_name_map[$related_slug]) ? (string) $slug_name_map[$related_slug] : $related_slug;
-			$related_links[] = sprintf(
-				'<a href="%1$s">%2$s</a>',
-				esc_url(self::build_media_library_tag_group_frontend_url($related_slug)),
-				esc_html($related_name)
-			);
+			if ($related_slug === $current_tag_slug) {
+				$related_links[] = sprintf(
+					'<span class="um-media-library-tag-group-links-current"><strong>%1$s</strong></span>',
+					esc_html($related_name)
+				);
+			} else {
+				$related_links[] = sprintf(
+					'<a href="%1$s">%2$s</a>',
+					esc_url(self::build_media_library_tag_group_frontend_url($related_slug)),
+					esc_html($related_name)
+				);
+			}
 		}
 
 		$parent_link_html = '';
 		if ($parent_slug !== '') {
 			$parent_name = isset($slug_name_map[$parent_slug]) ? (string) $slug_name_map[$parent_slug] : $parent_slug;
-			$parent_link_html = sprintf(
-				'<a href="%1$s">%2$s</a>',
-				esc_url(self::build_media_library_tag_group_frontend_url($parent_slug)),
-				esc_html($parent_name)
-			);
+			if ($parent_slug === $current_tag_slug) {
+				$parent_link_html = sprintf(
+					'<span class="um-media-library-tag-group-links-current"><strong>%1$s</strong></span>',
+					esc_html($parent_name)
+				);
+			} else {
+				$parent_link_html = sprintf(
+					'<a href="%1$s">%2$s</a>',
+					esc_url(self::build_media_library_tag_group_frontend_url($parent_slug)),
+					esc_html($parent_name)
+				);
+			}
 		}
 
 		if (empty($related_links) && $parent_link_html === '') {
