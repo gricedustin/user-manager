@@ -2,15 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.147
+ * Version: 2.5.148
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
- * 2.5.147 - March 16, 2026
- * - Updated Tag Group breadcrumb link behavior for parent-tag views: when current tag is the parent, include that parent tag in the right-side related link list for consistent cross-screen navigation presentation.
- * - Parent link remains visible on all group views while preserving single-line breadcrumb output format.
+ * 2.5.148 - March 16, 2026
+ * - Added manual ordering support for Tag Groups: selected group tags can now be dragged/reordered in the Tag Groups admin form and saved in that custom sequence.
+ * - Front-end Tag Group related-link output now follows the saved tag order so links display in the exact order configured in Media > Tag Groups.
  *
  * 2.5.144 - March 16, 2026
  * - Added new Media > Tag Groups admin page to create/manage tag groups with a Parent Tag and multiple related member tags.

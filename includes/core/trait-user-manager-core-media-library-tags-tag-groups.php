@@ -118,6 +118,11 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 										<?php endif; ?>
 									</div>
 									<p class="description" style="margin-top:8px;"><?php esc_html_e('Select the related tags that belong to this group. The parent tag is automatically excluded from this list.', 'user-manager'); ?></p>
+									<div id="um-tag-group-order-wrap" class="um-tag-group-order-wrap">
+										<strong><?php esc_html_e('Display Order', 'user-manager'); ?></strong>
+										<p class="description" style="margin:6px 0 8px;"><?php esc_html_e('Drag selected tags to control the order shown on the front end.', 'user-manager'); ?></p>
+										<ul id="um-tag-group-order-list" class="um-tag-group-order-list"></ul>
+									</div>
 								</td>
 							</tr>
 						</tbody>
@@ -209,16 +214,51 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			border-color: #dcdcde;
 			color: #50575e;
 		}
+		.um-tag-group-order-wrap {
+			margin-top: 14px;
+			max-width: 620px;
+		}
+		.um-tag-group-order-list {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+		.um-tag-group-order-item {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 6px 10px;
+			border: 1px solid #dcdcde;
+			border-radius: 4px;
+			background: #fff;
+			cursor: move;
+			user-select: none;
+		}
+		.um-tag-group-order-item .dashicons {
+			color: #8c8f94;
+			font-size: 16px;
+			width: 16px;
+			height: 16px;
+		}
+		.um-tag-group-order-item.is-dragging {
+			opacity: 0.55;
+		}
 		</style>
 		<script>
 		(function(){
 			var picker = document.getElementById('um-tag-group-picker');
 			var hiddenInput = document.getElementById('um-tag-group-member-slugs');
 			var parentSelect = document.getElementById('um-tag-group-parent-slug');
-			if (!picker || !hiddenInput || !parentSelect) {
+			var orderList = document.getElementById('um-tag-group-order-list');
+			var orderWrap = document.getElementById('um-tag-group-order-wrap');
+			if (!picker || !hiddenInput || !parentSelect || !orderList || !orderWrap) {
 				return;
 			}
 			var selected = {};
+			var selectedOrder = [];
 			function normalizeSlug(value) {
 				return String(value || '').toLowerCase().replace(/[^a-z0-9\-_]/g, '');
 			}
@@ -228,11 +268,52 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					var normalized = normalizeSlug(slug.trim());
 					if (normalized) {
 						selected[normalized] = true;
+						selectedOrder.push(normalized);
 					}
+				});
+				selectedOrder = selectedOrder.filter(function(slug, idx, list){
+					return list.indexOf(slug) === idx;
 				});
 			}
 			function syncHiddenField() {
-				hiddenInput.value = Object.keys(selected).join(',');
+				hiddenInput.value = selectedOrder.join(',');
+			}
+			function ensureSelectionOrderSync() {
+				selectedOrder = selectedOrder.filter(function(slug) {
+					return !!selected[slug];
+				});
+				Object.keys(selected).forEach(function(slug) {
+					if (selectedOrder.indexOf(slug) === -1) {
+						selectedOrder.push(slug);
+					}
+				});
+			}
+			function renderOrderList() {
+				ensureSelectionOrderSync();
+				orderList.innerHTML = '';
+				if (!selectedOrder.length) {
+					orderWrap.style.display = 'none';
+					return;
+				}
+				orderWrap.style.display = 'block';
+				var pills = picker.querySelectorAll('.um-tag-group-pill');
+				var namesBySlug = {};
+				for (var i = 0; i < pills.length; i++) {
+					var pill = pills[i];
+					var slug = normalizeSlug(pill.getAttribute('data-tag-slug'));
+					if (!slug) {
+						continue;
+					}
+					namesBySlug[slug] = String(pill.textContent || slug).trim();
+				}
+				selectedOrder.forEach(function(slug) {
+					var li = document.createElement('li');
+					li.className = 'um-tag-group-order-item';
+					li.setAttribute('draggable', 'true');
+					li.setAttribute('data-tag-slug', slug);
+					li.innerHTML = '<span class="dashicons dashicons-menu"></span><span>' + String(namesBySlug[slug] || slug) + '</span>';
+					orderList.appendChild(li);
+				});
 			}
 			function syncPills() {
 				var parentSlug = normalizeSlug(parentSelect.value);
@@ -259,6 +340,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 						pill.setAttribute('aria-pressed', 'false');
 					}
 				}
+				renderOrderList();
 			}
 			readInitial();
 			syncPills();
@@ -283,6 +365,48 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					selected[slug] = true;
 				}
 				syncPills();
+				syncHiddenField();
+			});
+			orderList.addEventListener('dragstart', function(event) {
+				var item = event.target && event.target.closest ? event.target.closest('.um-tag-group-order-item') : null;
+				if (!item) {
+					return;
+				}
+				item.classList.add('is-dragging');
+				event.dataTransfer.effectAllowed = 'move';
+				event.dataTransfer.setData('text/plain', String(item.getAttribute('data-tag-slug') || ''));
+			});
+			orderList.addEventListener('dragend', function(event) {
+				var item = event.target && event.target.closest ? event.target.closest('.um-tag-group-order-item') : null;
+				if (item) {
+					item.classList.remove('is-dragging');
+				}
+			});
+			orderList.addEventListener('dragover', function(event) {
+				event.preventDefault();
+				var dragging = orderList.querySelector('.um-tag-group-order-item.is-dragging');
+				var target = event.target && event.target.closest ? event.target.closest('.um-tag-group-order-item') : null;
+				if (!dragging || !target || dragging === target) {
+					return;
+				}
+				var rect = target.getBoundingClientRect();
+				var placeBefore = event.clientY < (rect.top + rect.height / 2);
+				if (placeBefore) {
+					orderList.insertBefore(dragging, target);
+				} else {
+					orderList.insertBefore(dragging, target.nextSibling);
+				}
+			});
+			orderList.addEventListener('drop', function(event) {
+				event.preventDefault();
+				var nodes = orderList.querySelectorAll('.um-tag-group-order-item');
+				selectedOrder = [];
+				for (var i = 0; i < nodes.length; i++) {
+					var slug = normalizeSlug(nodes[i].getAttribute('data-tag-slug'));
+					if (slug && selectedOrder.indexOf(slug) === -1) {
+						selectedOrder.push(slug);
+					}
+				}
 				syncHiddenField();
 			});
 		})();
