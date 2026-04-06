@@ -45,6 +45,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_filter('pre_get_document_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title'], 20);
 		add_action('admin_bar_menu', [__CLASS__, 'add_media_library_tag_admin_bar_shortcut'], 101);
 		add_action('admin_menu', [__CLASS__, 'register_media_library_tags_bulk_editor_submenu']);
+		add_action('admin_menu', [__CLASS__, 'register_media_library_tag_groups_submenu']);
+		add_action('admin_post_user_manager_media_library_tag_groups_save', [__CLASS__, 'handle_media_library_tag_groups_save']);
+		add_action('admin_post_user_manager_media_library_tag_groups_delete', [__CLASS__, 'handle_media_library_tag_groups_delete']);
 		add_action('init', [__CLASS__, 'maybe_migrate_legacy_term_youtube_links_to_video_library_on_init'], 30);
 		if (!empty($settings['media_library_tag_video_library_enabled'])) {
 			add_action('admin_menu', [__CLASS__, 'register_media_library_tag_video_library_submenu']);
@@ -3931,6 +3934,10 @@ JS;
 					'featuredLightboxIndex' => $show_featured_description_image_in_lightbox_collection ? 0 : -1,
 				]
 			);
+			$group_links_html = self::render_media_library_tag_group_links_html_for_expression($url_tag_override);
+			if ($group_links_html !== '') {
+				$album_tag_description_html = $group_links_html . $album_tag_description_html;
+			}
 		}
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
 		$lightbox_tag_nonce = $show_lightbox_admin_edit_link ? wp_create_nonce('um_media_library_tags_ajax') : '';

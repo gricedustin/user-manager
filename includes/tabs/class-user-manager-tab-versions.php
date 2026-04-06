@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.144 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Media > Tag Groups page to create parent-tag groups and assign related member tags from existing Library Tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag Group links now render above gallery tag descriptions on the front end: all other tags in the matching group plus a Parent Tag link, for both single and multi-tag expressions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Tag Groups save/delete handlers and persistent storage for group definitions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.143 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Redesigned Library Tags Bulk Editor table into a two-column layout: consolidated Tag Title, Slug, Featured Image, and Video Library summary into one "Tag Details" column.', 'user-manager'); ?></li>

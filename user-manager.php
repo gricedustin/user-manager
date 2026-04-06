@@ -2,15 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.143
+ * Version: 2.5.144
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
- * 2.5.143 - March 16, 2026
- * - Reworked Media > Library Tags Bulk Editor table into a two-column layout: a consolidated "Tag Details" column (title, slug, featured image, video summary) plus a dedicated large "Description" textarea column.
- * - Increased bulk description editing space with taller resizable textareas to maximize writing room while keeping all non-description controls grouped together.
+ * 2.5.144 - March 16, 2026
+ * - Added new Media > Tag Groups admin page to create/manage tag groups with a Parent Tag and multiple related member tags.
+ * - Added front-end related group links above gallery description area: when current tag belongs to a group, show links to other group tags plus a Parent Tag link.
+ * - Added Bulk Editor-adjacent Media submenu entry for Tag Groups and secure save/delete handlers for group records.
  *
  * 2.5.142 - March 16, 2026
  * - Added shared CSS injection for `[um_media_library_tag_videos]` shortcode output so video grid classes always render with correct multi-column layout even when no gallery block is present on the page.
