@@ -15,6 +15,7 @@ class User_Manager_Addon_Media_Library_Tags {
 
 		$defaults = User_Manager_Core::get_media_library_tag_gallery_defaults();
 		$gallery_block_enabled = !empty($settings['media_library_tag_gallery_block_enabled']);
+		$video_library_enabled = !empty($settings['media_library_tag_video_library_enabled']);
 		$columns_desktop = isset($settings['media_library_tag_gallery_columns_desktop'])
 			? max(1, min(8, (int) $settings['media_library_tag_gallery_columns_desktop']))
 			: (int) $defaults['columnsDesktop'];
@@ -146,6 +147,15 @@ class User_Manager_Addon_Media_Library_Tags {
 						</label>
 						<p class="description">
 							<?php esc_html_e('Registers a gallery block for posts/pages that can show images from a selected Library Tag (or All tags by default).', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-media-library-tags-video-library-enabled" name="media_library_tag_video_library_enabled" value="1" <?php checked($video_library_enabled); ?><?php echo $form_attr; ?> />
+							<?php esc_html_e('Activate Video Library', 'user-manager'); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e('Adds a "Video Library" submenu under Media where YouTube videos can be created, tagged, and edited in one centralized screen.', 'user-manager'); ?>
 						</p>
 					</div>
 

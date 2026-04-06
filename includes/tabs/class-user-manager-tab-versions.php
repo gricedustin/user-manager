@@ -39,6 +39,17 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.128 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new optional "Activate Video Library" setting under the Media Library Tags add-on settings.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, Media now includes a new "Video Library" page with a full add/edit form for YouTube link, title, description, date, and clickable Library Tag assignment.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a saved-videos table on the new Video Library page with per-row Edit actions that repopulate the same form for updates.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Library Tags Bulk Editor now replaces per-tag YouTube textareas with a Video Library summary column and manage links.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end gallery YouTube embeds now source from the centralized Video Library records assigned to active Library Tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added one-time migration to import existing legacy per-tag YouTube link meta into the new centralized Video Library records.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.127 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Media Library Tag description layout so text wraps around the tag Featured Image (including below the image) for a true flowing article-style presentation.', 'user-manager'); ?></li>

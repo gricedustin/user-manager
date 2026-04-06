@@ -17,6 +17,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-emali-log.php';
 require_once __DIR__ . '/core/trait-user-manager-core-fatal-error-debugger.php';
 require_once __DIR__ . '/core/trait-user-manager-core-invoice-approval.php';
 require_once __DIR__ . '/core/trait-user-manager-core-media-library-tags.php';
+require_once __DIR__ . '/core/trait-user-manager-core-media-library-tags-video-library.php';
 require_once __DIR__ . '/core/trait-user-manager-core-my-account-menu-tiles.php';
 require_once __DIR__ . '/core/trait-user-manager-core-order-received-page-customizer.php';
 require_once __DIR__ . '/core/trait-user-manager-core-page-blocks.php';
@@ -36,6 +37,7 @@ final class User_Manager_Core {
 	use User_Manager_Core_Fatal_Error_Debugger_Trait;
 	use User_Manager_Core_Invoice_Approval_Trait;
 	use User_Manager_Core_Media_Library_Tags_Trait;
+	use User_Manager_Core_Media_Library_Tags_Video_Library_Trait;
 	use User_Manager_Core_My_Account_Menu_Tiles_Trait;
 	use User_Manager_Core_Order_Received_Page_Customizer_Trait;
 	use User_Manager_Core_Page_Blocks_Trait;
@@ -51,7 +53,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.127';
+	const VERSION = '2.5.128';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';

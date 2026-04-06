@@ -45,15 +45,16 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_filter('pre_get_document_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title'], 20);
 		add_action('admin_bar_menu', [__CLASS__, 'add_media_library_tag_admin_bar_shortcut'], 101);
 		add_action('admin_menu', [__CLASS__, 'register_media_library_tags_bulk_editor_submenu']);
+		self::maybe_migrate_legacy_term_youtube_links_to_video_library();
+		if (!empty($settings['media_library_tag_video_library_enabled'])) {
+			add_action('admin_menu', [__CLASS__, 'register_media_library_tag_video_library_submenu']);
+			add_action('admin_post_user_manager_media_library_tag_video_library_save', [__CLASS__, 'handle_media_library_tag_video_library_save']);
+		}
 		add_action('admin_post_user_manager_media_library_tags_bulk_editor_save', [__CLASS__, 'handle_media_library_tags_bulk_editor_save']);
 		add_action($taxonomy . '_add_form_fields', [__CLASS__, 'render_media_library_tag_featured_image_add_form_fields']);
 		add_action($taxonomy . '_edit_form_fields', [__CLASS__, 'render_media_library_tag_featured_image_edit_form_fields']);
 		add_action('created_' . $taxonomy, [__CLASS__, 'save_media_library_tag_featured_image_term_meta']);
 		add_action('edited_' . $taxonomy, [__CLASS__, 'save_media_library_tag_featured_image_term_meta']);
-		add_action($taxonomy . '_add_form_fields', [__CLASS__, 'render_media_library_tag_youtube_links_add_form_fields']);
-		add_action($taxonomy . '_edit_form_fields', [__CLASS__, 'render_media_library_tag_youtube_links_edit_form_fields']);
-		add_action('created_' . $taxonomy, [__CLASS__, 'save_media_library_tag_youtube_links_term_meta']);
-		add_action('edited_' . $taxonomy, [__CLASS__, 'save_media_library_tag_youtube_links_term_meta']);
 		add_action('wp_head', [__CLASS__, 'print_media_library_tags_inline_lightbox_bootstrap'], 1);
 	}
 
@@ -228,7 +229,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e('Library Tags Bulk Editor', 'user-manager'); ?></h1>
-			<p><?php esc_html_e('Edit all Library Tag titles, slugs, descriptions, featured images, and YouTube Video Links in one screen, then save all changes at once.', 'user-manager'); ?></p>
+			<p><?php esc_html_e('Edit all Library Tag titles, slugs, descriptions, and featured images in one screen, then save all changes at once. Video links are now managed in Media > Video Library.', 'user-manager'); ?></p>
 			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 				<input type="hidden" name="action" value="user_manager_media_library_tags_bulk_editor_save" />
 				<?php wp_nonce_field('user_manager_media_library_tags_bulk_editor_save', 'user_manager_media_library_tags_bulk_editor_nonce'); ?>
@@ -239,7 +240,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 							<th style="width: 18%;"><?php esc_html_e('Slug', 'user-manager'); ?></th>
 							<th style="width: 22%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
 							<th style="width: 20%;"><?php esc_html_e('Featured Image', 'user-manager'); ?></th>
-							<th style="width: 18%;"><?php esc_html_e('YouTube Video Links', 'user-manager'); ?></th>
+							<th style="width: 18%;"><?php esc_html_e('Video Library', 'user-manager'); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -253,7 +254,6 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 								<?php foreach ($live_in_nav_terms as $term) : ?>
 									<?php if (!($term instanceof WP_Term)) { continue; } ?>
 									<?php
-									$youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true);
 									$featured_image_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
 									?>
 									<tr>
@@ -276,7 +276,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 											<?php echo self::render_media_library_tag_featured_image_bulk_editor_control_html((int) $term->term_id, $featured_image_id); ?>
 										</td>
 										<td>
-											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][youtube_links]" placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"><?php echo esc_textarea($youtube_links_value); ?></textarea>
+											<?php echo self::render_media_library_tag_video_library_summary_cell_html((string) $term->slug); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -289,7 +289,6 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 								<?php foreach ($remaining_terms as $term) : ?>
 									<?php if (!($term instanceof WP_Term)) { continue; } ?>
 									<?php
-									$youtube_links_value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true);
 									$featured_image_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
 									?>
 									<tr>
@@ -312,7 +311,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 											<?php echo self::render_media_library_tag_featured_image_bulk_editor_control_html((int) $term->term_id, $featured_image_id); ?>
 										</td>
 										<td>
-											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][youtube_links]" placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"><?php echo esc_textarea($youtube_links_value); ?></textarea>
+											<?php echo self::render_media_library_tag_video_library_summary_cell_html((string) $term->slug); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -476,9 +475,6 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			$description = isset($raw_term_data['description'])
 				? self::sanitize_media_library_tag_description_input((string) $raw_term_data['description'])
 				: (string) $current_term->description;
-			$youtube_links = isset($raw_term_data['youtube_links'])
-				? self::sanitize_media_library_tag_youtube_links_input((string) $raw_term_data['youtube_links'])
-				: (string) get_term_meta($term_id, self::media_library_tag_youtube_links_meta_key(), true);
 			$featured_image_id = isset($raw_term_data['featured_image_id'])
 				? self::sanitize_media_library_tag_featured_image_id($raw_term_data['featured_image_id'])
 				: self::get_media_library_tag_featured_image_id($term_id);
@@ -506,11 +502,6 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 					$result->get_error_message()
 				);
 				continue;
-			}
-			if ($youtube_links === '') {
-				delete_term_meta($term_id, self::media_library_tag_youtube_links_meta_key());
-			} else {
-				update_term_meta($term_id, self::media_library_tag_youtube_links_meta_key(), $youtube_links);
 			}
 			if ($featured_image_id <= 0) {
 				delete_term_meta($term_id, self::media_library_tag_featured_image_meta_key());
@@ -830,112 +821,6 @@ CSS;
 	}
 
 	/**
-	 * Meta key for Library Tag YouTube links.
-	 */
-	private static function media_library_tag_youtube_links_meta_key(): string {
-		return 'um_media_library_tag_youtube_links';
-	}
-
-	/**
-	 * Render YouTube links field on "Add Library Tag" form.
-	 */
-	public static function render_media_library_tag_youtube_links_add_form_fields(string $taxonomy = ''): void {
-		?>
-		<div class="form-field term-um-media-library-tag-youtube-links-wrap">
-			<label for="um-media-library-tag-youtube-links"><?php esc_html_e('YouTube Video Links', 'user-manager'); ?></label>
-			<textarea
-				name="um_media_library_tag_youtube_links"
-				id="um-media-library-tag-youtube-links"
-				rows="5"
-				placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"
-				style="width: 100%;"
-			></textarea>
-			<p><?php esc_html_e('Add one YouTube video URL per line. These videos are displayed above the gallery on the front end.', 'user-manager'); ?></p>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Render YouTube links field on "Edit Library Tag" form.
-	 */
-	public static function render_media_library_tag_youtube_links_edit_form_fields(WP_Term $term, string $taxonomy = ''): void {
-		$value = (string) get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true);
-		?>
-		<tr class="form-field term-um-media-library-tag-youtube-links-wrap">
-			<th scope="row">
-				<label for="um-media-library-tag-youtube-links"><?php esc_html_e('YouTube Video Links', 'user-manager'); ?></label>
-			</th>
-			<td>
-				<textarea
-					name="um_media_library_tag_youtube_links"
-					id="um-media-library-tag-youtube-links"
-					rows="6"
-					placeholder="<?php echo esc_attr__('One YouTube URL per line', 'user-manager'); ?>"
-					style="width: 100%;"
-				><?php echo esc_textarea($value); ?></textarea>
-				<p class="description"><?php esc_html_e('Add one YouTube video URL per line. These videos are displayed above the gallery on the front end.', 'user-manager'); ?></p>
-			</td>
-		</tr>
-		<?php
-	}
-
-	/**
-	 * Save YouTube links term meta for Library Tags.
-	 */
-	public static function save_media_library_tag_youtube_links_term_meta(int $term_id): void {
-		if ($term_id <= 0 || !current_user_can('upload_files')) {
-			return;
-		}
-		$raw_value = isset($_POST['um_media_library_tag_youtube_links'])
-			? wp_unslash($_POST['um_media_library_tag_youtube_links'])
-			: '';
-		$sanitized_value = self::sanitize_media_library_tag_youtube_links_input($raw_value);
-		if ($sanitized_value === '') {
-			delete_term_meta($term_id, self::media_library_tag_youtube_links_meta_key());
-			return;
-		}
-		update_term_meta($term_id, self::media_library_tag_youtube_links_meta_key(), $sanitized_value);
-	}
-
-	/**
-	 * Parse YouTube links from textarea value and return unique canonical URLs.
-	 *
-	 * @param mixed $raw_value Raw textarea value.
-	 * @return array<int,string>
-	 */
-	private static function get_sanitized_media_library_tag_youtube_links_list($raw_value): array {
-		$lines = preg_split('/\r\n|\r|\n/', (string) $raw_value);
-		if (!is_array($lines)) {
-			return [];
-		}
-
-		$sanitized_urls = [];
-		foreach ($lines as $line) {
-			$video_id = self::get_media_library_tag_youtube_video_id_from_url((string) $line);
-			if ($video_id === '') {
-				continue;
-			}
-			$canonical_url = 'https://www.youtube.com/watch?v=' . $video_id;
-			$sanitized_urls[$canonical_url] = $canonical_url;
-		}
-
-		return array_values($sanitized_urls);
-	}
-
-	/**
-	 * Sanitize YouTube links textarea input for storage.
-	 *
-	 * @param mixed $raw_value Raw textarea value.
-	 */
-	private static function sanitize_media_library_tag_youtube_links_input($raw_value): string {
-		$urls = self::get_sanitized_media_library_tag_youtube_links_list($raw_value);
-		if (empty($urls)) {
-			return '';
-		}
-		return implode("\n", $urls);
-	}
-
-	/**
 	 * Extract a YouTube video ID from a YouTube URL.
 	 */
 	private static function get_media_library_tag_youtube_video_id_from_url(string $raw_url): string {
@@ -991,38 +876,6 @@ CSS;
 	}
 
 	/**
-	 * Collect unique YouTube URLs across one or many Library Tag slugs.
-	 *
-	 * @param array<int,string> $tag_slugs
-	 * @return array<int,string>
-	 */
-	private static function get_media_library_tag_youtube_video_urls_for_slugs(array $tag_slugs): array {
-		if (empty($tag_slugs)) {
-			return [];
-		}
-
-		$taxonomy = self::media_library_tags_taxonomy();
-		$all_urls = [];
-		foreach ($tag_slugs as $tag_slug) {
-			$tag_slug = sanitize_title((string) $tag_slug);
-			if ($tag_slug === '') {
-				continue;
-			}
-			$term = get_term_by('slug', $tag_slug, $taxonomy);
-			if (!$term instanceof WP_Term) {
-				continue;
-			}
-			$raw_meta = get_term_meta((int) $term->term_id, self::media_library_tag_youtube_links_meta_key(), true);
-			$term_urls = self::get_sanitized_media_library_tag_youtube_links_list($raw_meta);
-			foreach ($term_urls as $term_url) {
-				$all_urls[$term_url] = $term_url;
-			}
-		}
-
-		return array_values($all_urls);
-	}
-
-	/**
 	 * Render YouTube video embeds for active URL tags (or the block tag fallback).
 	 *
 	 * @param array{mode?:string,slugs?:array<int,string>,primarySlug?:string} $tag_override
@@ -1039,13 +892,17 @@ CSS;
 			return '';
 		}
 
-		$video_urls = self::get_media_library_tag_youtube_video_urls_for_slugs($tag_slugs);
-		if (empty($video_urls)) {
+		$video_records = self::get_media_library_tag_video_library_records_for_slugs($tag_slugs);
+		if (empty($video_records)) {
 			return '';
 		}
 
 		$video_items = [];
-		foreach ($video_urls as $video_url) {
+		foreach ($video_records as $video_record) {
+			if (!is_array($video_record) || empty($video_record['youtubeUrl'])) {
+				continue;
+			}
+			$video_url = (string) $video_record['youtubeUrl'];
 			$video_id = self::get_media_library_tag_youtube_video_id_from_url((string) $video_url);
 			if ($video_id === '') {
 				continue;
