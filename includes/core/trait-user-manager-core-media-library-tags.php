@@ -3768,9 +3768,11 @@ JS;
 		$inline_lightbox_slideshow_onclick = "if(window.umMltgInline&&window.umMltgInline.toggleSlideshow){return !!window.umMltgInline.toggleSlideshow(this,event);}event.preventDefault();return false;";
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
+		// Featured image should remain a lightbox trigger whenever Link To is
+		// lightbox, even if duplicate featured-image tiles are hidden from the
+		// main gallery grid.
 		$show_featured_description_image_in_lightbox_collection = $allow_lightbox_click_open
-			&& $featured_description_attachment_id > 0
-			&& !($hide_featured_image_duplicate_in_tagged_images && $featured_image_exists_in_tagged_images);
+			&& $featured_description_attachment_id > 0;
 		$featured_lightbox_index_offset = $show_featured_description_image_in_lightbox_collection ? 1 : 0;
 		if ($album_description_position !== 'none') {
 			$album_tag_description_html = self::render_media_library_tag_description_paragraphs_html(

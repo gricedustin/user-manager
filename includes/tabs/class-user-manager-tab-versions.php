@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.136 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tag description featured-image lightbox trigger behavior so the featured image still opens in lightbox when Link To is set to "Open Image in Lightbox", even when duplicate featured-image tiles are hidden from the gallery grid.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preserved duplicate-tile hiding in the gallery grid while keeping the description featured image available as a lightbox entry point.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.135 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added two new Video Library display settings under Activate Video Library: "Display Video Title under each video" and "Display Video Description under each video".', 'user-manager'); ?></li>

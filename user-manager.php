@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.135
+ * Version: 2.5.136
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.136 - March 16, 2026
+ * - Fixed tag description Featured Image lightbox trigger behavior so the featured image still opens in lightbox when Link To is set to "Open Image in Lightbox", even when duplicate featured image tiles are hidden from the gallery grid.
+ * - Preserved duplicate-hiding behavior for gallery tiles while keeping the description-area featured image in the lightbox collection for direct click-to-open.
+ *
  * 2.5.135 - March 16, 2026
  * - Added two new Video Library display settings under Media Library Tags: "Display Video Title under each video" and "Display Video Description under each video."
  * - Front-end Media Library Tag Gallery video embeds now optionally render each video's saved title and/or description beneath the iframe when those settings are enabled.
