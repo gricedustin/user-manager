@@ -99,6 +99,9 @@ class User_Manager_Addon_Media_Library_Tags {
 		$simple_lightbox_thumbnail_click = isset($settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'])
 			? !empty($settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'])
 			: !empty($defaults['simpleLightboxThumbnailClick']);
+		$hide_featured_image_duplicate_in_tagged_images = isset($settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
+			? !empty($settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
+			: !empty($defaults['hideFeaturedImageDuplicateInTaggedImages']);
 		$disable_css_crop_threshold = isset($settings['media_library_tag_gallery_disable_css_crop_under_total'])
 			? max(0, (int) $settings['media_library_tag_gallery_disable_css_crop_under_total'])
 			: (int) ($defaults['disableCssCropUnderTotal'] ?? 0);
@@ -287,6 +290,13 @@ class User_Manager_Addon_Media_Library_Tags {
 									<?php esc_html_e('Allow Simple Lightbox when clicking on a thumbnail', 'user-manager'); ?>
 								</label>
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Uses a simplified image-only lightbox for thumbnail clicks (close button + image only).', 'user-manager'); ?></p>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images" value="1" <?php checked($hide_featured_image_duplicate_in_tagged_images); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Hide duplicate of tag Featured Image when it also exists in tagged gallery images', 'user-manager'); ?>
+								</label>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Enabled by default. Keeps one featured image near the description and removes duplicate tile copies from the gallery grid.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-disable-css-crop-below-total"><?php esc_html_e('Do Not CSS Crop Any Images if Gallery Photos Total is Less Than...', 'user-manager'); ?></label>

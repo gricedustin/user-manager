@@ -3649,12 +3649,8 @@ JS;
 				$tag_slug = (string) $url_tag_override['slugs'][0];
 			}
 		}
+		$tag_description_data = self::get_media_library_tag_description_data_for_tag_expression($url_tag_override);
 		$album_tag_description_html = '';
-		if ($album_description_position !== 'none') {
-			$album_tag_description_html = self::render_media_library_tag_description_paragraphs_html(
-				self::get_media_library_tag_description_data_for_tag_expression($url_tag_override)
-			);
-		}
 		$album_tag_youtube_videos_html = self::render_media_library_tag_youtube_videos_html($url_tag_override, $tag_slug);
 		$has_effective_tag_value = ($tag_slug !== '' || !empty($url_tag_override['slugs']));
 		if ($require_tag_value && !$has_effective_tag_value) {
@@ -3669,6 +3665,11 @@ JS;
 		$show_description_under_photo = in_array($description_display, ['grid', 'both'], true);
 		$show_description_in_lightbox = in_array($description_display, ['lightbox', 'both'], true);
 		$hidden_frontend_tag_slugs = self::get_hidden_frontend_tag_slugs($settings);
+		$hide_featured_image_duplicate_in_tagged_images = !empty($defaults['hideFeaturedImageDuplicateInTaggedImages']);
+		$featured_description_attachment_id = isset($tag_description_data['featuredImageId']) ? absint($tag_description_data['featuredImageId']) : 0;
+		if ($featured_description_attachment_id <= 0 && !empty($tag_description_data['featuredImageIds']) && is_array($tag_description_data['featuredImageIds'])) {
+			$featured_description_attachment_id = absint((int) ($tag_description_data['featuredImageIds'][0] ?? 0));
+		}
 		$css_crop_styles = ['mosaic_grid', 'mosaic_grid_taller', 'square_crop', 'wide_rectangle_crop', 'tall_rectangle_crop', 'circle_crop', 'fullscreen_lightbox_grid'];
 
 		$page_num = isset($_GET['um_media_gallery_page']) ? max(1, absint(wp_unslash($_GET['um_media_gallery_page']))) : 1;
@@ -3769,6 +3770,21 @@ JS;
 		if (!is_array($attachments)) {
 			$attachments = [];
 		}
+		$featured_image_exists_in_tagged_images = false;
+		foreach ($attachments as $attachment_candidate) {
+			if (!($attachment_candidate instanceof WP_Post)) {
+				continue;
+			}
+			if ((int) $attachment_candidate->ID === $featured_description_attachment_id) {
+				$featured_image_exists_in_tagged_images = true;
+				break;
+			}
+		}
+		if ($hide_featured_image_duplicate_in_tagged_images && $featured_description_attachment_id > 0) {
+			$attachments = array_values(array_filter($attachments, static function ($attachment) use ($featured_description_attachment_id): bool {
+				return !($attachment instanceof WP_Post) || (int) $attachment->ID !== $featured_description_attachment_id;
+			}));
+		}
 		$attachment_count = count($attachments);
 		$effective_columns_desktop = $columns_desktop;
 		if ($attachment_count < 10) {
@@ -3807,6 +3823,24 @@ JS;
 		$inline_lightbox_slideshow_onclick = "if(window.umMltgInline&&window.umMltgInline.toggleSlideshow){return !!window.umMltgInline.toggleSlideshow(this,event);}event.preventDefault();return false;";
 		$total_pages = ($page_limit > 0 && isset($query->max_num_pages)) ? max(1, (int) $query->max_num_pages) : 1;
 		$show_lightbox_admin_edit_link = current_user_can('manage_options');
+		$show_featured_description_image_in_lightbox_collection = $allow_lightbox_click_open
+			&& $featured_description_attachment_id > 0
+			&& !($hide_featured_image_duplicate_in_tagged_images && $featured_image_exists_in_tagged_images);
+		$featured_lightbox_index_offset = $show_featured_description_image_in_lightbox_collection ? 1 : 0;
+		if ($album_description_position !== 'none') {
+			$album_tag_description_html = self::render_media_library_tag_description_paragraphs_html(
+				$tag_description_data,
+				[
+					'linkTo' => $effective_link_to,
+					'descriptionValue' => $description_value,
+					'showDescriptionInLightbox' => $show_description_in_lightbox,
+					'showLightboxAdminEditLink' => $show_lightbox_admin_edit_link,
+					'inlineLightboxOpenOnclick' => $inline_lightbox_open_onclick,
+					'featuredLightboxEnabled' => $show_featured_description_image_in_lightbox_collection,
+					'featuredLightboxIndex' => $show_featured_description_image_in_lightbox_collection ? 0 : -1,
+				]
+			);
+		}
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
 		$lightbox_tag_nonce = $show_lightbox_admin_edit_link ? wp_create_nonce('um_media_library_tags_ajax') : '';
 		$lightbox_debug_enabled = false;
@@ -3901,7 +3935,7 @@ JS;
 										data-um-modal-trigger="1"
 										data-um-modal-src="<?php echo esc_attr((string) $image_src); ?>"
 										data-um-modal-alt="<?php echo esc_attr($description_attr); ?>"
-										data-um-modal-index="<?php echo esc_attr((string) $index); ?>"
+										data-um-modal-index="<?php echo esc_attr((string) ($index + $featured_lightbox_index_offset)); ?>"
 										<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : ''; ?>
 										<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>
 										data-um-modal-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
@@ -4013,7 +4047,7 @@ JS;
 									data-um-modal-trigger="1"
 									data-um-modal-src="<?php echo esc_attr((string) $image_src); ?>"
 									data-um-modal-alt="<?php echo esc_attr($description_attr); ?>"
-									data-um-modal-index="<?php echo esc_attr((string) $index); ?>"
+									data-um-modal-index="<?php echo esc_attr((string) ($index + $featured_lightbox_index_offset)); ?>"
 									<?php echo ($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : ''; ?>
 									<?php echo $show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : ''; ?>
 									data-um-modal-attachment-id="<?php echo esc_attr((string) $attachment_id); ?>"
@@ -4072,13 +4106,11 @@ JS;
 	margin-left: 4px;
 }
 .um-media-library-tag-description-layout {
-	display: flex;
-	align-items: flex-start;
-	gap: 18px;
+	display: block;
 }
 .um-media-library-tag-description-featured {
-	margin: 0;
-	flex: 0 0 auto;
+	margin: 0 18px 10px 0;
+	float: left;
 }
 .um-media-library-tag-description-featured .um-media-library-tag-description-featured-image {
 	display: block;
@@ -4087,12 +4119,19 @@ JS;
 }
 .um-media-library-tag-description-text {
 	min-width: 0;
-	flex: 1 1 auto;
+}
+.um-media-library-tag-description-layout-with-floating-image::after {
+	content: "";
+	display: table;
+	clear: both;
 }
 @media (max-width: 782px) {
 	.um-media-library-tag-description-layout {
-		flex-direction: column;
-		gap: 12px;
+		display: block;
+	}
+	.um-media-library-tag-description-featured {
+		float: none;
+		margin: 0 0 12px;
 	}
 	.um-media-library-tag-description-featured .um-media-library-tag-description-featured-image {
 		max-width: 100%;
@@ -5698,6 +5737,7 @@ JS;
 			'lightboxModalBackgroundColor' => '#000000',
 			'lightboxModalTextColor' => '#ffffff',
 			'simpleLightboxThumbnailClick' => true,
+			'hideFeaturedImageDuplicateInTaggedImages' => true,
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -5798,6 +5838,9 @@ JS;
 		$defaults['simpleLightboxThumbnailClick'] = isset($settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'])
 			? $settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'] === true || $settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'] === '1'
 			: (bool) $defaults['simpleLightboxThumbnailClick'];
+		$defaults['hideFeaturedImageDuplicateInTaggedImages'] = isset($settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
+			? $settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === true || $settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === '1'
+			: (bool) ($defaults['hideFeaturedImageDuplicateInTaggedImages'] ?? true);
 		$defaults['lightboxModalBackgroundColor'] = sanitize_hex_color((string) ($defaults['lightboxModalBackgroundColor'] ?? '#000000')) ?: '#000000';
 		$defaults['lightboxModalTextColor'] = sanitize_hex_color((string) ($defaults['lightboxModalTextColor'] ?? '#ffffff')) ?: '#ffffff';
 		$valid_lightbox_slideshow_transitions = ['none', 'crossfade', 'slide_left'];
@@ -6664,7 +6707,9 @@ JS;
 	 *   editDescriptionUrl:string,
 	 *   names:array<int,string>,
 	 *   descriptions:array<int,string>,
-	 *   editDescriptionUrls:array<int,string>
+	 *   editDescriptionUrls:array<int,string>,
+	 *   featuredImageId:int,
+	 *   featuredImageIds:array<int,int>
 	 * }
 	 */
 	private static function get_media_library_tag_placeholder_values(): array {
@@ -6677,6 +6722,8 @@ JS;
 				'names' => [],
 				'descriptions' => [],
 				'editDescriptionUrls' => [],
+				'featuredImageId' => 0,
+				'featuredImageIds' => [],
 			];
 		}
 
@@ -6767,10 +6814,21 @@ JS;
 	 *   description?:string,
 	 *   editDescriptionUrl?:string,
 	 *   descriptions?:array<int,string>,
-	 *   editDescriptionUrls?:array<int,string>
+	 *   editDescriptionUrls?:array<int,string>,
+	 *   featuredImageId?:int,
+	 *   featuredImageIds?:array<int,int>
 	 * } $tag_description_data
+	 * @param array{
+	 *   linkTo?:string,
+	 *   descriptionValue?:string,
+	 *   showDescriptionInLightbox?:bool,
+	 *   showLightboxAdminEditLink?:bool,
+	 *   inlineLightboxOpenOnclick?:string,
+	 *   featuredLightboxEnabled?:bool,
+	 *   featuredLightboxIndex?:int
+	 * } $layout_options
 	 */
-	private static function render_media_library_tag_description_paragraphs_html(array $tag_description_data): string {
+	private static function render_media_library_tag_description_paragraphs_html(array $tag_description_data, array $layout_options = []): string {
 		$description = trim((string) ($tag_description_data['description'] ?? ''));
 		$edit_description_url = (string) ($tag_description_data['editDescriptionUrl'] ?? '');
 		$descriptions = isset($tag_description_data['descriptions']) && is_array($tag_description_data['descriptions'])
@@ -6813,14 +6871,14 @@ JS;
 		} else {
 			$description_html = self::format_media_library_tag_description_html($description);
 		}
-		$featured_image_html = self::render_media_library_tag_featured_image_html($tag_description_data);
-		if ($featured_image_html !== '' && $description_html !== '') {
-			return '<div class="um-media-library-tag-description-layout">' . $featured_image_html . '<div class="um-media-library-tag-description-text">' . $description_html . '</div></div>';
+		$featured_image_html = self::render_media_library_tag_featured_image_html($tag_description_data, $layout_options);
+		if ($featured_image_html === '') {
+			return $description_html;
 		}
-		if ($featured_image_html !== '') {
-			return '<div class="um-media-library-tag-description-layout">' . $featured_image_html . '</div>';
+		if ($description_html === '') {
+			return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-with-floating-image">' . $featured_image_html . '</div>';
 		}
-		return $description_html;
+		return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-with-floating-image">' . $featured_image_html . $description_html . '</div>';
 	}
 
 	/**
@@ -6830,8 +6888,17 @@ JS;
 	 *   featuredImageId?:int,
 	 *   featuredImageIds?:array<int,int>
 	 * } $tag_description_data
+	 * @param array{
+	 *   linkTo?:string,
+	 *   descriptionValue?:string,
+	 *   showDescriptionInLightbox?:bool,
+	 *   showLightboxAdminEditLink?:bool,
+	 *   inlineLightboxOpenOnclick?:string,
+	 *   featuredLightboxEnabled?:bool,
+	 *   featuredLightboxIndex?:int
+	 * } $layout_options
 	 */
-	private static function render_media_library_tag_featured_image_html(array $tag_description_data): string {
+	private static function render_media_library_tag_featured_image_html(array $tag_description_data, array $layout_options = []): string {
 		$featured_image_ids = isset($tag_description_data['featuredImageIds']) && is_array($tag_description_data['featuredImageIds'])
 			? array_values(array_filter(array_map('absint', $tag_description_data['featuredImageIds'])))
 			: [];
@@ -6862,6 +6929,34 @@ JS;
 		);
 		if (!is_string($image_html) || $image_html === '') {
 			return '';
+		}
+
+		$effective_link_to = isset($layout_options['linkTo']) ? sanitize_key((string) $layout_options['linkTo']) : '';
+		$show_description_in_lightbox = !empty($layout_options['showDescriptionInLightbox']);
+		$show_lightbox_admin_edit_link = !empty($layout_options['showLightboxAdminEditLink']);
+		$inline_lightbox_open_onclick = isset($layout_options['inlineLightboxOpenOnclick']) ? (string) $layout_options['inlineLightboxOpenOnclick'] : '';
+		$featured_lightbox_enabled = !empty($layout_options['featuredLightboxEnabled']);
+		$featured_lightbox_index = isset($layout_options['featuredLightboxIndex']) ? (int) $layout_options['featuredLightboxIndex'] : -1;
+
+		$image_alt = trim((string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true));
+		$description_value = isset($layout_options['descriptionValue']) ? sanitize_key((string) $layout_options['descriptionValue']) : 'caption';
+		$description_text = self::get_media_library_gallery_description_text($attachment_id, $description_value);
+		$description_attr = $image_alt !== '' ? $image_alt : $description_text;
+		$image_src = wp_get_attachment_image_url($attachment_id, 'full');
+
+		if ($featured_lightbox_enabled && $effective_link_to === 'lightbox' && $image_src) {
+			$link_html = sprintf(
+				'<button type="button" class="um-media-library-tag-description-featured-trigger um-media-library-tag-gallery-link um-media-library-tag-gallery-lightbox-trigger" data-um-modal-trigger="1" data-um-modal-src="%1$s" data-um-modal-alt="%2$s" data-um-modal-index="%3$s"%4$s%5$s data-um-modal-attachment-id="%6$d" onclick="%7$s" aria-label="%2$s">%8$s</button>',
+				esc_attr((string) $image_src),
+				esc_attr($description_attr),
+				esc_attr((string) max(0, $featured_lightbox_index)),
+				($show_description_in_lightbox && $description_text !== '') ? ' data-um-modal-caption="' . esc_attr($description_text) . '"' : '',
+				$show_lightbox_admin_edit_link ? ' data-um-modal-edit-url="' . esc_attr((string) get_edit_post_link($attachment_id, '')) . '"' : '',
+				$attachment_id,
+				esc_attr($inline_lightbox_open_onclick),
+				$image_html
+			);
+			return '<figure class="um-media-library-tag-description-featured">' . $link_html . '</figure>';
 		}
 
 		return '<figure class="um-media-library-tag-description-featured">' . $image_html . '</figure>';

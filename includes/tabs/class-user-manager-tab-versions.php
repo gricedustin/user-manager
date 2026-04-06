@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.127 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag description layout so text wraps around the tag Featured Image (including below the image) for a true flowing article-style presentation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag Featured Image now opens in the same lightbox collection as gallery images, including prev/next and deep-link index continuity.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new default-enabled setting to hide duplicate featured-image tiles when that same attachment already exists in the tagged gallery image set.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.126 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Changed Media Library Tag Gallery lightbox deep-link query parameter from um_lightbox_image_id to image for cleaner share URLs.', 'user-manager'); ?></li>

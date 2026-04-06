@@ -2386,6 +2386,8 @@ class User_Manager_Actions {
 					: '';
 				$settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'] = isset($_POST['media_library_tag_gallery_simple_lightbox_thumbnail_click'])
 					&& $_POST['media_library_tag_gallery_simple_lightbox_thumbnail_click'] === '1';
+				$settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] = isset($_POST['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
+					&& $_POST['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === '1';
 				$settings['media_library_tags_show_tags_on_thumbnails_bulk_select'] = isset($_POST['media_library_tags_show_tags_on_thumbnails_bulk_select']) && $_POST['media_library_tags_show_tags_on_thumbnails_bulk_select'] === '1';
 				$settings['media_library_tags_sticky_bulk_toolbar_mobile'] = isset($_POST['media_library_tags_sticky_bulk_toolbar_mobile']) && $_POST['media_library_tags_sticky_bulk_toolbar_mobile'] === '1';
 				$settings['media_library_tag_gallery_hidden_frontend_tags'] = isset($_POST['media_library_tag_gallery_hidden_frontend_tags'])
