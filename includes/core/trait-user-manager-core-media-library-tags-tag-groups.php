@@ -441,6 +441,9 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			}
 			$related_slugs[] = $member_slug;
 		}
+		if ($current_tag_slug === $parent_slug && $parent_slug !== '') {
+			array_unshift($related_slugs, $parent_slug);
+		}
 		$related_slugs = array_values(array_unique($related_slugs));
 
 		$related_links = [];
@@ -454,7 +457,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		}
 
 		$parent_link_html = '';
-		if ($parent_slug !== '' && $parent_slug !== $current_tag_slug) {
+		if ($parent_slug !== '') {
 			$parent_name = isset($slug_name_map[$parent_slug]) ? (string) $slug_name_map[$parent_slug] : $parent_slug;
 			$parent_link_html = sprintf(
 				'<a href="%1$s">%2$s</a>',
