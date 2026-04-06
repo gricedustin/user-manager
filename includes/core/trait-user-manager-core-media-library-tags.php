@@ -922,7 +922,7 @@ CSS;
 				$meta_html .= '<p class="um-media-library-tag-video-description">' . esc_html($video_description) . '</p>';
 			}
 			$video_items[] = sprintf(
-				'<div class="um-media-library-tag-video-item"><iframe src="%1$s" title="%2$s" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>%3$s</div>',
+				'<div class="um-media-library-tag-video-item"><div class="um-media-library-tag-video-frame"><iframe src="%1$s" title="%2$s" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>%3$s</div>',
 				esc_url($embed_url),
 				esc_attr__('YouTube video', 'user-manager'),
 				$meta_html
@@ -932,9 +932,12 @@ CSS;
 			return '';
 		}
 
+		$video_count = count($video_items);
+		$desktop_video_columns = max(1, min(4, $video_count));
 		$wrap_classes = ['um-media-library-tag-videos-wrap'];
-		if (count($video_items) > 1) {
+		if ($video_count > 1) {
 			$wrap_classes[] = 'um-media-library-tag-videos-wrap-multi';
+			$wrap_classes[] = 'um-media-library-tag-videos-wrap-cols-' . $desktop_video_columns;
 		}
 
 		return sprintf(
@@ -4088,22 +4091,33 @@ JS;
 	}
 }
 		.um-media-library-tag-videos-wrap {
-			margin: 0 0 14px;
+			margin: 0 0 22px;
 			display: grid;
 			grid-template-columns: 1fr;
-			gap: 14px;
+			gap: 20px;
 		}
 		.um-media-library-tag-videos-wrap-multi {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
+		.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-3 {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-4 {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
 		.um-media-library-tag-video-item {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+		}
+		.um-media-library-tag-video-frame {
 			position: relative;
 			padding-top: 56.25%;
 			background: #000;
 			border-radius: 6px;
 			overflow: hidden;
 		}
-		.um-media-library-tag-video-item iframe {
+		.um-media-library-tag-video-frame iframe {
 			position: absolute;
 			inset: 0;
 			width: 100%;
@@ -4111,14 +4125,15 @@ JS;
 			border: 0;
 		}
 		.um-media-library-tag-video-title {
-			margin: 10px 0 6px;
-			font-size: 18px;
+			margin: 14px 0 8px;
+			font-size: 17px;
 			line-height: 1.35;
 		}
 		.um-media-library-tag-video-description {
 			margin: 0;
 			font-size: 14px;
-			line-height: 1.5;
+			line-height: 1.55;
+			overflow-wrap: anywhere;
 		}
 		@media (max-width: 782px) {
 			.um-media-library-tag-videos-wrap-multi {

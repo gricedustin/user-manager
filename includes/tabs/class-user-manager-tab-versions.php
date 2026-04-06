@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.138 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Improved Media Library Tag video embed layout so title/description metadata has dedicated space below each iframe and no longer gets clipped by the video frame container.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added responsive desktop column scaling for multiple videos: 2 columns for 2 videos, 3 columns for 3 videos, and up to 4 columns for 4+ videos (mobile still collapses to one column).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.137 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Hardened Media Library Tag lightbox inline JavaScript query-param regex escaping in all deep-link and debug query readers to prevent parser edge cases from breaking runtime initialization.', 'user-manager'); ?></li>
