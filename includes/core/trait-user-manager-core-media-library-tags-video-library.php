@@ -117,6 +117,8 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			<p><?php esc_html_e('Add and manage YouTube videos in one place, then assign Library Tags to control where they appear in your front-end media gallery blocks.', 'user-manager'); ?></p>
 			<?php if ($notice === 'saved') : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e('Video saved successfully.', 'user-manager'); ?></p></div>
+			<?php elseif ($notice === 'deleted') : ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e('Video deleted successfully.', 'user-manager'); ?></p></div>
 			<?php elseif ($notice === 'invalid_youtube') : ?>
 				<div class="notice notice-error is-dismissible"><p><?php esc_html_e('Please enter a valid YouTube URL.', 'user-manager'); ?></p></div>
 			<?php endif; ?>
@@ -184,7 +186,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 						<th style="width:11%;"><?php esc_html_e('Date', 'user-manager'); ?></th>
 						<th style="width:22%;"><?php esc_html_e('Tags', 'user-manager'); ?></th>
 						<th style="width:15%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
-						<th style="width:6%;"><?php esc_html_e('Edit', 'user-manager'); ?></th>
+						<th style="width:6%;"><?php esc_html_e('Actions', 'user-manager'); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -217,6 +219,16 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 								],
 								admin_url('upload.php')
 							);
+							$delete_url = wp_nonce_url(
+								add_query_arg(
+									[
+										'action' => 'user_manager_media_library_tag_video_library_delete',
+										'video_id' => (string) $item['id'],
+									],
+									admin_url('admin-post.php')
+								),
+								'user_manager_media_library_tag_video_library_delete_' . (string) $item['id']
+							);
 							?>
 							<tr>
 								<td>
@@ -228,7 +240,10 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 								<td><?php echo $row_date !== '' ? esc_html($row_date) : '—'; ?></td>
 								<td><?php echo !empty($row_tag_names) ? esc_html(implode(', ', $row_tag_names)) : '—'; ?></td>
 								<td><?php echo $row_description !== '' ? esc_html(wp_trim_words($row_description, 16)) : '—'; ?></td>
-								<td><a class="button button-small" href="<?php echo esc_url($edit_url); ?>"><?php esc_html_e('Edit', 'user-manager'); ?></a></td>
+								<td>
+									<a class="button button-small" href="<?php echo esc_url($edit_url); ?>"><?php esc_html_e('Edit', 'user-manager'); ?></a>
+									<a class="button button-small" style="margin-top:6px;" href="<?php echo esc_url($delete_url); ?>" onclick="return window.confirm(<?php echo wp_json_encode(__('Delete this video?', 'user-manager')); ?>);"><?php esc_html_e('Delete', 'user-manager'); ?></a>
+								</td>
 							</tr>
 						<?php endforeach; ?>
 					<?php endif; ?>
@@ -390,6 +405,53 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			admin_url('upload.php')
 		);
 		wp_safe_redirect($redirect_url);
+		exit;
+	}
+
+	/**
+	 * Handle Video Library delete.
+	 */
+	public static function handle_media_library_tag_video_library_delete(): void {
+		if (!current_user_can('upload_files')) {
+			wp_die(esc_html__('You do not have permission to manage the Video Library.', 'user-manager'));
+		}
+		$video_id = isset($_GET['video_id']) ? sanitize_key((string) wp_unslash($_GET['video_id'])) : '';
+		if ($video_id === '') {
+			wp_safe_redirect(
+				add_query_arg(
+					[
+						'page' => 'um-media-library-tag-video-library',
+					],
+					admin_url('upload.php')
+				)
+			);
+			exit;
+		}
+		check_admin_referer('user_manager_media_library_tag_video_library_delete_' . $video_id);
+
+		$items = self::get_media_library_tag_video_library_items();
+		$kept_items = [];
+		foreach ($items as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+			$item_id = isset($item['id']) ? sanitize_key((string) $item['id']) : '';
+			if ($item_id !== '' && hash_equals($video_id, $item_id)) {
+				continue;
+			}
+			$kept_items[] = $item;
+		}
+		self::update_media_library_tag_video_library_items($kept_items);
+
+		wp_safe_redirect(
+			add_query_arg(
+				[
+					'page' => 'um-media-library-tag-video-library',
+					'um_video_library_notice' => 'deleted',
+				],
+				admin_url('upload.php')
+			)
+		);
 		exit;
 	}
 

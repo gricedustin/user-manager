@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.131
+ * Version: 2.5.132
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.132 - March 16, 2026
+ * - Added a Delete button in the Video Library table row action column on Media > Video Library.
+ * - Added secure delete handling (nonce + capability check) so saved video records can be removed directly from the Video Library list.
+ *
  * 2.5.131 - March 16, 2026
  * - Fixed an early-boot translation timing issue by deferring Media Library Video legacy migration to run on init instead of plugin bootstrap.
  * - Added an init guard around Video Library legacy migration so taxonomy registration and i18n label calls cannot execute before init.
