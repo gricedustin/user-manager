@@ -6593,7 +6593,26 @@ JS;
 
 		$allow_any = !empty($config['allowAny']);
 		$tag_override = self::resolve_media_library_gallery_url_tag_override($allow_any);
-		return self::get_media_library_tag_description_data_for_tag_expression($tag_override);
+		$placeholder_values = self::get_media_library_tag_description_data_for_tag_expression($tag_override);
+		$title_override = self::get_media_library_gallery_title_query_override();
+		if ($title_override !== '') {
+			$placeholder_values['name'] = $title_override;
+		}
+		return $placeholder_values;
+	}
+
+	/**
+	 * Resolve optional URL title override for [tag-name] placeholder replacement.
+	 */
+	private static function get_media_library_gallery_title_query_override(): string {
+		$raw_value = self::get_raw_query_string_value('title');
+		if ($raw_value === null && isset($_GET['title'])) {
+			$raw_value = (string) wp_unslash($_GET['title']);
+		}
+		if ($raw_value === null) {
+			return '';
+		}
+		return trim(sanitize_text_field((string) $raw_value));
 	}
 
 	/**
