@@ -110,6 +110,10 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $editing_item['tagSlugs']))))
 			: [];
 		$form_tag_slugs_csv = implode(',', $form_tag_slugs);
+		$form_preview_video_id = '';
+		if ($form_id !== '' && $form_url !== '') {
+			$form_preview_video_id = self::get_media_library_tag_youtube_video_id_from_url($form_url);
+		}
 
 		?>
 		<div class="wrap">
@@ -135,6 +139,20 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 								<th scope="row"><label for="um-video-library-youtube-url"><?php esc_html_e('YouTube Link', 'user-manager'); ?></label></th>
 								<td>
 									<input type="url" class="regular-text" style="width:100%;max-width:680px;" id="um-video-library-youtube-url" name="um_video_library_youtube_url" value="<?php echo esc_attr($form_url); ?>" placeholder="https://www.youtube.com/watch?v=..." required />
+									<?php if ($form_preview_video_id !== '') : ?>
+										<div style="margin-top:10px; max-width:680px;">
+											<p class="description" style="margin:0 0 8px;"><?php esc_html_e('Current video preview:', 'user-manager'); ?></p>
+											<div style="position:relative; width:100%; padding-top:56.25%; background:#000; border-radius:4px; overflow:hidden;">
+												<iframe
+													src="<?php echo esc_url('https://www.youtube.com/embed/' . rawurlencode($form_preview_video_id)); ?>"
+													title="<?php esc_attr_e('YouTube video preview', 'user-manager'); ?>"
+													style="position:absolute; inset:0; width:100%; height:100%; border:0;"
+													allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+													allowfullscreen
+												></iframe>
+											</div>
+										</div>
+									<?php endif; ?>
 								</td>
 							</tr>
 							<tr>

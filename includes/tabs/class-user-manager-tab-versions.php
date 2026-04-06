@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.133 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Video Library Edit form now shows an embedded YouTube preview directly under the YouTube Link field when a valid link is present.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The preview uses the canonical saved YouTube URL and appears only after a valid video URL has been entered/saved.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.132 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a Delete button next to Edit in Media > Video Library saved video rows so entries can be removed directly from the table.', 'user-manager'); ?></li>
