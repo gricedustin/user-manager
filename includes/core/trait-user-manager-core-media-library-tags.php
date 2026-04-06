@@ -3911,7 +3911,7 @@ JS;
 		>
 			<?php if ($album_description_position === 'above' && $album_tag_description_html !== '') : ?>
 				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-above">
-					<?php echo wp_kses_post($album_tag_description_html); ?>
+					<?php echo $album_tag_description_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
 			<?php endif; ?>
 			<?php if ($lightbox_debug_enabled) : ?>
@@ -4109,7 +4109,7 @@ JS;
 			<?php endif; ?>
 			<?php if ($album_description_position === 'below' && $album_tag_description_html !== '') : ?>
 				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-below">
-					<?php echo wp_kses_post($album_tag_description_html); ?>
+					<?php echo $album_tag_description_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
 			<?php endif; ?>
 		</div>
