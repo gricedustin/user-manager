@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.136
+ * Version: 2.5.137
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.137 - March 16, 2026
+ * - Hardened front-end lightbox/deep-link URL parsing by replacing inline regex escape snippets with a dedicated escape helper in each gallery runtime block to prevent parser edge-case breakage.
+ * - Updated slideshow seconds JavaScript injection to use JSON-safe numeric output, reducing risk of malformed inline script output that can stop lightbox initialization.
+ *
  * 2.5.136 - March 16, 2026
  * - Fixed tag description Featured Image lightbox trigger behavior so the featured image still opens in lightbox when Link To is set to "Open Image in Lightbox", even when duplicate featured image tiles are hidden from the gallery grid.
  * - Preserved duplicate-hiding behavior for gallery tiles while keeping the description-area featured image in the lightbox collection for direct click-to-open.

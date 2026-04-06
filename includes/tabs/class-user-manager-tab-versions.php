@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.137 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Media Library Tag lightbox inline JavaScript query-param regex escaping in all deep-link and debug query readers to prevent parser edge cases from breaking runtime initialization.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Normalized inline slideshow-seconds injection to JSON numeric output for safer JavaScript literal rendering in gallery runtime scripts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.136 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Media Library Tag description featured-image lightbox trigger behavior so the featured image still opens in lightbox when Link To is set to "Open Image in Lightbox", even when duplicate featured-image tiles are hidden from the gallery grid.', 'user-manager'); ?></li>

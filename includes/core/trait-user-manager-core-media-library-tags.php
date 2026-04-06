@@ -2789,6 +2789,9 @@ JS;
 			var legacyDeepLinkParam = 'um_lightbox_image_id';
 			var api = {};
 			var tracker = window.umMediaLibraryLightboxViewTracker || null;
+			function escapeRegexParam(value) {
+				return String(value || '').replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+			}
 			function parseAttachmentIdValue(rawValue) {
 				var parsed = parseInt(String(rawValue || '0'), 10);
 				if (isNaN(parsed) || parsed < 1) {
@@ -2813,10 +2816,10 @@ JS;
 					raw = String(urlObj.searchParams.get(deepLinkParam) || urlObj.searchParams.get(legacyDeepLinkParam) || '');
 				} catch (err) {
 					var query = String(window.location.search || '');
-					var regex = new RegExp('(?:\\?|&)' + String(deepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+					var regex = new RegExp('(?:\\?|&)' + escapeRegexParam(deepLinkParam) + '=([^&#]*)', 'i');
 					var matches = query.match(regex);
 					if ((!matches || typeof matches[1] === 'undefined') && legacyDeepLinkParam) {
-						var legacyRegex = new RegExp('(?:\\?|&)' + String(legacyDeepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+						var legacyRegex = new RegExp('(?:\\?|&)' + escapeRegexParam(legacyDeepLinkParam) + '=([^&#]*)', 'i');
 						matches = query.match(legacyRegex);
 					}
 					if (matches && typeof matches[1] !== 'undefined') {
@@ -4346,7 +4349,10 @@ JS;
 					var urlObj = new URL(window.location.href);
 					value = String(urlObj.searchParams.get(paramName) || '');
 				} catch (err) {
-					var regex = new RegExp('(?:\\?|&)' + String(paramName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:=([^&]*))?(?:&|$)', 'i');
+					var escapeRegexParam = function(rawValue) {
+						return String(rawValue || '').replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+					};
+					var regex = new RegExp('(?:\\?|&)' + escapeRegexParam(paramName) + '(?:=([^&]*))?(?:&|$)', 'i');
 					var matches = String(window.location.search || '').match(regex);
 					if (matches && typeof matches[1] !== 'undefined') {
 						value = decodeURIComponent(String(matches[1] || '').replace(/\+/g, ' '));
@@ -4459,7 +4465,7 @@ JS;
 				enableSlideshowButton = false;
 				canManageLightboxTags = false;
 			}
-			var slideshowSecondsPerPhoto = <?php echo esc_js((string) $lightbox_slideshow_seconds); ?>;
+			var slideshowSecondsPerPhoto = <?php echo wp_json_encode((float) $lightbox_slideshow_seconds); ?>;
 			var slideshowTransition = <?php echo wp_json_encode((string) $lightbox_slideshow_transition); ?> || 'none';
 			var lightboxTriggerSelector = '.um-media-library-tag-gallery-lightbox-trigger,[data-um-modal-trigger],[data-um-lightbox]';
 			var lightboxDeepLinkParam = 'image';
@@ -4476,6 +4482,9 @@ JS;
 			var swipeStartY = 0;
 			var swipeTracking = false;
 			var swipeThresholdPx = 44;
+			function escapeRegexParam(value) {
+				return String(value || '').replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+			}
 			function refreshLightboxLinks() {
 				lightboxLinks = Array.prototype.slice.call(root.querySelectorAll(lightboxTriggerSelector));
 				return lightboxLinks;
@@ -4544,10 +4553,10 @@ JS;
 					raw = String(urlObj.searchParams.get(lightboxDeepLinkParam) || urlObj.searchParams.get(lightboxLegacyDeepLinkParam) || '');
 				} catch (err) {
 					var query = String(window.location.search || '');
-					var regex = new RegExp('(?:\\?|&)' + String(lightboxDeepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+					var regex = new RegExp('(?:\\?|&)' + escapeRegexParam(lightboxDeepLinkParam) + '=([^&#]*)', 'i');
 					var matches = query.match(regex);
 					if ((!matches || typeof matches[1] === 'undefined') && lightboxLegacyDeepLinkParam) {
-						var legacyRegex = new RegExp('(?:\\?|&)' + String(lightboxLegacyDeepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+						var legacyRegex = new RegExp('(?:\\?|&)' + escapeRegexParam(lightboxLegacyDeepLinkParam) + '=([^&#]*)', 'i');
 						matches = query.match(legacyRegex);
 					}
 					if (matches && typeof matches[1] !== 'undefined') {
@@ -5332,6 +5341,9 @@ JS;
 			var swipeStartY = 0;
 			var swipeTracking = false;
 			var swipeThresholdPx = 44;
+			function escapeRegexParam(value) {
+				return String(value || '').replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+			}
 			function parseAttachmentIdValue(rawValue) {
 				var parsed = parseInt(String(rawValue || '0'), 10);
 				if (isNaN(parsed) || parsed < 1) {
@@ -5356,10 +5368,10 @@ JS;
 					raw = String(urlObj.searchParams.get(lightboxDeepLinkParam) || urlObj.searchParams.get(lightboxLegacyDeepLinkParam) || '');
 				} catch (err) {
 					var query = String(window.location.search || '');
-					var regex = new RegExp('(?:\\?|&)' + String(lightboxDeepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+					var regex = new RegExp('(?:\\?|&)' + escapeRegexParam(lightboxDeepLinkParam) + '=([^&#]*)', 'i');
 					var matches = query.match(regex);
 					if ((!matches || typeof matches[1] === 'undefined') && lightboxLegacyDeepLinkParam) {
-						var legacyRegex = new RegExp('(?:\\?|&)' + String(lightboxLegacyDeepLinkParam).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)', 'i');
+						var legacyRegex = new RegExp('(?:\\?|&)' + escapeRegexParam(lightboxLegacyDeepLinkParam) + '=([^&#]*)', 'i');
 						matches = query.match(legacyRegex);
 					}
 					if (matches && typeof matches[1] !== 'undefined') {
