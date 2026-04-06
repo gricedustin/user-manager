@@ -238,20 +238,17 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				<table class="widefat fixed striped">
 					<thead>
 						<tr>
-							<th style="width: 22%;"><?php esc_html_e('Tag Title', 'user-manager'); ?></th>
-							<th style="width: 18%;"><?php esc_html_e('Slug', 'user-manager'); ?></th>
-							<th style="width: 22%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
-							<th style="width: 20%;"><?php esc_html_e('Featured Image', 'user-manager'); ?></th>
-							<th style="width: 18%;"><?php esc_html_e('Video Library', 'user-manager'); ?></th>
+							<th style="width: 40%;"><?php esc_html_e('Tag Details', 'user-manager'); ?></th>
+							<th style="width: 60%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php if (empty($terms)) : ?>
-							<tr><td colspan="5"><?php esc_html_e('No Library Tags found.', 'user-manager'); ?></td></tr>
+							<tr><td colspan="2"><?php esc_html_e('No Library Tags found.', 'user-manager'); ?></td></tr>
 						<?php else : ?>
 							<?php if (!empty($live_in_nav_terms)) : ?>
 								<tr class="um-bulk-editor-section-row">
-									<td colspan="5"><strong><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></strong></td>
+									<td colspan="2"><strong><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></strong></td>
 								</tr>
 								<?php foreach ($live_in_nav_terms as $term) : ?>
 									<?php if (!($term instanceof WP_Term)) { continue; } ?>
@@ -260,25 +257,33 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 									?>
 									<tr>
 										<td>
-											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
-										</td>
-										<td>
-											<?php $term_slug = sanitize_title((string) $term->slug); ?>
-											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
-											<?php if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) : ?>
-												<div style="margin-top:6px;">
-													<span class="um-menu-live-navigation-badge"><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></span>
+											<div class="um-bulk-editor-details-stack">
+												<div class="um-bulk-editor-details-field">
+													<label class="um-bulk-editor-details-label"><?php esc_html_e('Tag Title', 'user-manager'); ?></label>
+													<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
 												</div>
-											<?php endif; ?>
+												<div class="um-bulk-editor-details-field">
+													<?php $term_slug = sanitize_title((string) $term->slug); ?>
+													<label class="um-bulk-editor-details-label"><?php esc_html_e('Slug', 'user-manager'); ?></label>
+													<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
+													<?php if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) : ?>
+														<div style="margin-top:6px;">
+															<span class="um-menu-live-navigation-badge"><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></span>
+														</div>
+													<?php endif; ?>
+												</div>
+												<div class="um-bulk-editor-details-field">
+													<label class="um-bulk-editor-details-label"><?php esc_html_e('Featured Image', 'user-manager'); ?></label>
+													<?php echo self::render_media_library_tag_featured_image_bulk_editor_control_html((int) $term->term_id, $featured_image_id); ?>
+												</div>
+												<div class="um-bulk-editor-details-field">
+													<label class="um-bulk-editor-details-label"><?php esc_html_e('Video Library', 'user-manager'); ?></label>
+													<?php echo self::render_media_library_tag_video_library_summary_cell_html((string) $term->slug); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+												</div>
+											</div>
 										</td>
-										<td>
-											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
-										</td>
-										<td>
-											<?php echo self::render_media_library_tag_featured_image_bulk_editor_control_html((int) $term->term_id, $featured_image_id); ?>
-										</td>
-										<td>
-											<?php echo self::render_media_library_tag_video_library_summary_cell_html((string) $term->slug); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+										<td class="um-bulk-editor-description-cell">
+											<textarea rows="10" class="um-bulk-editor-description-textarea" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -286,7 +291,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 							<?php if (!empty($remaining_terms)) : ?>
 								<tr class="um-bulk-editor-section-row">
-									<td colspan="5"><strong><?php esc_html_e('All Other Tags', 'user-manager'); ?></strong></td>
+									<td colspan="2"><strong><?php esc_html_e('All Other Tags', 'user-manager'); ?></strong></td>
 								</tr>
 								<?php foreach ($remaining_terms as $term) : ?>
 									<?php if (!($term instanceof WP_Term)) { continue; } ?>
@@ -295,25 +300,33 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 									?>
 									<tr>
 										<td>
-											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
-										</td>
-										<td>
-											<?php $term_slug = sanitize_title((string) $term->slug); ?>
-											<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
-											<?php if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) : ?>
-												<div style="margin-top:6px;">
-													<span class="um-menu-live-navigation-badge"><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></span>
+											<div class="um-bulk-editor-details-stack">
+												<div class="um-bulk-editor-details-field">
+													<label class="um-bulk-editor-details-label"><?php esc_html_e('Tag Title', 'user-manager'); ?></label>
+													<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][name]" value="<?php echo esc_attr((string) $term->name); ?>" />
 												</div>
-											<?php endif; ?>
+												<div class="um-bulk-editor-details-field">
+													<?php $term_slug = sanitize_title((string) $term->slug); ?>
+													<label class="um-bulk-editor-details-label"><?php esc_html_e('Slug', 'user-manager'); ?></label>
+													<input type="text" class="regular-text" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][slug]" value="<?php echo esc_attr((string) $term->slug); ?>" />
+													<?php if ($term_slug !== '' && !empty($menu_slug_matches[$term_slug])) : ?>
+														<div style="margin-top:6px;">
+															<span class="um-menu-live-navigation-badge"><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></span>
+														</div>
+													<?php endif; ?>
+												</div>
+												<div class="um-bulk-editor-details-field">
+													<label class="um-bulk-editor-details-label"><?php esc_html_e('Featured Image', 'user-manager'); ?></label>
+													<?php echo self::render_media_library_tag_featured_image_bulk_editor_control_html((int) $term->term_id, $featured_image_id); ?>
+												</div>
+												<div class="um-bulk-editor-details-field">
+													<label class="um-bulk-editor-details-label"><?php esc_html_e('Video Library', 'user-manager'); ?></label>
+													<?php echo self::render_media_library_tag_video_library_summary_cell_html((string) $term->slug); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+												</div>
+											</div>
 										</td>
-										<td>
-											<textarea rows="3" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
-										</td>
-										<td>
-											<?php echo self::render_media_library_tag_featured_image_bulk_editor_control_html((int) $term->term_id, $featured_image_id); ?>
-										</td>
-										<td>
-											<?php echo self::render_media_library_tag_video_library_summary_cell_html((string) $term->slug); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+										<td class="um-bulk-editor-description-cell">
+											<textarea rows="10" class="um-bulk-editor-description-textarea" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -345,6 +358,26 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			color: #50575e;
 			padding-top: 8px;
 			padding-bottom: 8px;
+		}
+		.um-bulk-editor-details-stack {
+			display: grid;
+			gap: 10px;
+		}
+		.um-bulk-editor-details-field {
+			margin: 0;
+		}
+		.um-bulk-editor-details-label {
+			display: block;
+			font-weight: 600;
+			margin-bottom: 4px;
+		}
+		.um-bulk-editor-description-cell {
+			vertical-align: top;
+		}
+		.um-bulk-editor-description-textarea {
+			min-height: 220px;
+			resize: vertical;
+			line-height: 1.45;
 		}
 		</style>
 		<?php

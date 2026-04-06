@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.143 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Redesigned Library Tags Bulk Editor table into a two-column layout: consolidated Tag Title, Slug, Featured Image, and Video Library summary into one "Tag Details" column.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Expanded Description editing into a dedicated large textarea column to maximize writing space and improve long-form description editing.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.142 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed `[um_media_library_tag_videos]` shortcode column layout rendering by injecting shared front-end video grid CSS when shortcode output is used outside the gallery block context.', 'user-manager'); ?></li>
