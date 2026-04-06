@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.141
+ * Version: 2.5.142
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.142 - March 16, 2026
+ * - Added shared CSS injection for `[um_media_library_tag_videos]` shortcode output so video grid classes always render with correct multi-column layout even when no gallery block is present on the page.
+ * - Shortcode video wraps now consistently apply `.um-media-library-tag-videos-wrap-*` column rules (including `*-cols-2/3/4`) and mobile collapse behavior in standalone shortcode contexts.
+ *
  * 2.5.141 - March 16, 2026
  * - Fixed Media Library Tag featured description-image lightbox trigger output by preserving generated button markup attributes in album description wrappers (including the inline open handler), so featured images open in the same lightbox flow as gallery items.
  * - Removed over-sanitization on rendered description wrapper output that was stripping required lightbox trigger attributes from generated internal markup.

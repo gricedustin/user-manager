@@ -1011,7 +1011,10 @@ CSS;
 				$sections[] = '<div class="um-media-library-tag-pipe-section" style="margin-bottom:50px;">' . $header_html . $videos_html . '</div>';
 			}
 
-			return !empty($sections) ? implode('', $sections) : '';
+			if (empty($sections)) {
+				return '';
+			}
+			return self::get_media_library_tag_videos_shortcode_style_html() . implode('', $sections);
 		}
 
 		$tag_override = self::parse_media_library_gallery_tag_expression($raw_expression);
@@ -1019,7 +1022,34 @@ CSS;
 			return '';
 		}
 
-		return self::render_media_library_tag_youtube_videos_html($tag_override, '', $render_options);
+		$videos_html = self::render_media_library_tag_youtube_videos_html($tag_override, '', $render_options);
+		if ($videos_html === '') {
+			return '';
+		}
+		return self::get_media_library_tag_videos_shortcode_style_html() . $videos_html;
+	}
+
+	/**
+	 * Print shared Video Library shortcode CSS once per request.
+	 */
+	private static function get_media_library_tag_videos_shortcode_style_html(): string {
+		static $printed = false;
+		if ($printed) {
+			return '';
+		}
+		$printed = true;
+		return '<style>'
+			. '.um-media-library-tag-videos-wrap{margin:0 0 22px;display:grid;grid-template-columns:1fr;gap:20px;}'
+			. '.um-media-library-tag-videos-wrap-multi{grid-template-columns:repeat(2,minmax(0,1fr));}'
+			. '.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-3{grid-template-columns:repeat(3,minmax(0,1fr));}'
+			. '.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-4{grid-template-columns:repeat(4,minmax(0,1fr));}'
+			. '.um-media-library-tag-video-item{display:flex;flex-direction:column;min-width:0;}'
+			. '.um-media-library-tag-video-frame{position:relative;padding-top:56.25%;background:#000;border-radius:6px;overflow:hidden;}'
+			. '.um-media-library-tag-video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}'
+			. '.um-media-library-tag-video-title{margin:14px 0 8px;font-size:17px;line-height:1.35;}'
+			. '.um-media-library-tag-video-description{margin:0;font-size:14px;line-height:1.55;overflow-wrap:anywhere;}'
+			. '@media (max-width:782px){.um-media-library-tag-videos-wrap-multi{grid-template-columns:1fr;}}'
+			. '</style>';
 	}
 
 	/**

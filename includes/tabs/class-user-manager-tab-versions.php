@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.142 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed `[um_media_library_tag_videos]` shortcode column layout rendering by injecting shared front-end video grid CSS when shortcode output is used outside the gallery block context.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Shortcode video wrappers now consistently honor `um-media-library-tag-videos-wrap-cols-*` desktop column classes (2/3/4) while still collapsing to one column on mobile.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.141 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Media Library Tag description featured-image lightbox trigger rendering: description-area output now preserves the generated lightbox button attributes instead of re-sanitizing and stripping event attributes needed for click-to-open behavior.', 'user-manager'); ?></li>
