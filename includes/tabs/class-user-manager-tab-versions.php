@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.129 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting: "Featured Image Max Width (px)" so the front-end featured image width is configurable from add-on settings instead of hardcoded CSS.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end featured-image wrap CSS now uses the configured max width value (with viewport-aware cap) for Media Library Tag description featured images.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.128 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new optional "Activate Video Library" setting under the Media Library Tags add-on settings.', 'user-manager'); ?></li>

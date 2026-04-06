@@ -3523,6 +3523,9 @@ JS;
 		$show_description_in_lightbox = in_array($description_display, ['lightbox', 'both'], true);
 		$hidden_frontend_tag_slugs = self::get_hidden_frontend_tag_slugs($settings);
 		$hide_featured_image_duplicate_in_tagged_images = !empty($defaults['hideFeaturedImageDuplicateInTaggedImages']);
+		$featured_image_max_width_px = isset($defaults['featuredImageMaxWidthPx'])
+			? max(0, min(1600, absint((int) $defaults['featuredImageMaxWidthPx'])))
+			: 360;
 		$featured_description_attachment_id = isset($tag_description_data['featuredImageId']) ? absint($tag_description_data['featuredImageId']) : 0;
 		if ($featured_description_attachment_id <= 0 && !empty($tag_description_data['featuredImageIds']) && is_array($tag_description_data['featuredImageIds'])) {
 			$featured_description_attachment_id = absint((int) ($tag_description_data['featuredImageIds'][0] ?? 0));
@@ -3971,7 +3974,7 @@ JS;
 }
 .um-media-library-tag-description-featured .um-media-library-tag-description-featured-image {
 	display: block;
-	max-width: min(42vw, 360px);
+	max-width: min(42vw, <?php echo esc_html((string) $featured_image_max_width_px); ?>px);
 	height: auto;
 }
 .um-media-library-tag-description-text {
@@ -5595,6 +5598,7 @@ JS;
 			'lightboxModalTextColor' => '#ffffff',
 			'simpleLightboxThumbnailClick' => true,
 			'hideFeaturedImageDuplicateInTaggedImages' => true,
+			'featuredImageMaxWidthPx' => 360,
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -5698,6 +5702,9 @@ JS;
 		$defaults['hideFeaturedImageDuplicateInTaggedImages'] = isset($settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
 			? $settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === true || $settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === '1'
 			: (bool) ($defaults['hideFeaturedImageDuplicateInTaggedImages'] ?? true);
+		if (isset($settings['media_library_tag_gallery_featured_image_max_width_px'])) {
+			$defaults['featuredImageMaxWidthPx'] = max(120, min(1600, absint($settings['media_library_tag_gallery_featured_image_max_width_px'])));
+		}
 		$defaults['lightboxModalBackgroundColor'] = sanitize_hex_color((string) ($defaults['lightboxModalBackgroundColor'] ?? '#000000')) ?: '#000000';
 		$defaults['lightboxModalTextColor'] = sanitize_hex_color((string) ($defaults['lightboxModalTextColor'] ?? '#ffffff')) ?: '#ffffff';
 		$valid_lightbox_slideshow_transitions = ['none', 'crossfade', 'slide_left'];

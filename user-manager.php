@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.128
+ * Version: 2.5.129
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.129 - March 16, 2026
+ * - Added a new Media Library Tag Gallery setting: "Featured Image Max Width (px)" so the tag description featured image width is configurable from add-on settings instead of hardcoded CSS.
+ * - Featured image description CSS now uses that setting value in the `max-width: min(42vw, Xpx)` rule.
+ *
  * 2.5.128 - March 16, 2026
  * - Added new "Activate Video Library" setting under the Media Library Tag Gallery options.
  * - Added a new Media > Video Library admin page for centralized YouTube video management with Title, Description, Date, Library Tag assignment, save, and edit flows.
