@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.139 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Refactored Media Library Tag lightbox trigger onclick handler to a compact API-only call path, reducing inline attribute JavaScript size and preventing parser edge cases that could block lightbox opening.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preserved fallback event prevention behavior while relying on the shared `window.umMltgInline.open()` runtime for all lightbox open flow state updates.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.138 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Improved Media Library Tag video embed layout so title/description metadata has dedicated space below each iframe and no longer gets clipped by the video frame container.', 'user-manager'); ?></li>

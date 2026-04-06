@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.138
+ * Version: 2.5.139
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.139 - March 16, 2026
+ * - Replaced long inline lightbox trigger onclick payload with a short delegated call to the resilient `window.umMltgInline.open(...)` API to avoid browser parser edge cases from breaking click-to-open behavior.
+ * - Kept event-prevent/propagation guards in the inline handler while moving state updates/rendering logic fully into the shared lightbox runtime.
+ *
  * 2.5.138 - March 16, 2026
  * - Improved Media Library Tag video embed layout so video title/description metadata is rendered below a dedicated responsive frame wrapper, preventing metadata from being clipped by the iframe container.
  * - Added dynamic desktop video-grid columns for multi-video displays, automatically using up to 4 columns (2/3/4) based on the number of videos shown.
