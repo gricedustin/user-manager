@@ -17,6 +17,17 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 	}
 
 	/**
+	 * Build front-end tag URL in key-only format: /?[tag-slug]
+	 */
+	private static function build_media_library_tag_group_frontend_url(string $tag_slug): string {
+		$tag_slug = sanitize_title($tag_slug);
+		if ($tag_slug === '') {
+			return home_url('/');
+		}
+		return home_url('/?' . rawurlencode($tag_slug));
+	}
+
+	/**
 	 * Register "Tag Groups" submenu under Media.
 	 */
 	public static function register_media_library_tag_groups_submenu(): void {
@@ -437,7 +448,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			$related_name = isset($slug_name_map[$related_slug]) ? (string) $slug_name_map[$related_slug] : $related_slug;
 			$related_links[] = sprintf(
 				'<a href="%1$s">%2$s</a>',
-				esc_url(add_query_arg('tag', $related_slug)),
+				esc_url(self::build_media_library_tag_group_frontend_url($related_slug)),
 				esc_html($related_name)
 			);
 		}
@@ -447,7 +458,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			$parent_name = isset($slug_name_map[$parent_slug]) ? (string) $slug_name_map[$parent_slug] : $parent_slug;
 			$parent_link_html = sprintf(
 				'<a href="%1$s">%2$s</a>',
-				esc_url(add_query_arg('tag', $parent_slug)),
+				esc_url(self::build_media_library_tag_group_frontend_url($parent_slug)),
 				esc_html($parent_name)
 			);
 		}
@@ -456,15 +467,18 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			return '';
 		}
 
-		$html = '<div class="um-media-library-tag-group-links" style="margin:0 0 12px; display:flex; flex-direction:column; gap:4px;">';
-		if (!empty($related_links)) {
-			$html .= '<div class="um-media-library-tag-group-links-related"><strong>' . esc_html__('Related Tags:', 'user-manager') . '</strong> ' . implode(' &middot; ', $related_links) . '</div>';
-		}
+		$line_segments = [];
 		if ($parent_link_html !== '') {
-			$html .= '<div class="um-media-library-tag-group-links-parent"><strong>' . esc_html__('Parent Tag:', 'user-manager') . '</strong> ' . $parent_link_html . '</div>';
+			$line_segments[] = $parent_link_html;
 		}
-		$html .= '</div>';
-		return $html;
+		if (!empty($related_links)) {
+			$line_segments[] = implode(' &middot; ', $related_links);
+		}
+		if (empty($line_segments)) {
+			return '';
+		}
+
+		return '<div class="um-media-library-tag-group-links" style="margin:0 0 12px; white-space:normal;">' . implode(' &gt; ', $line_segments) . '</div>';
 	}
 
 	/**
