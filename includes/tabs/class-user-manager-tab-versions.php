@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.134 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Media Library Tag Gallery deep-link auto-open for `?image=<attachment_id>` by adding an early retry path in head bootstrap that repeatedly attempts opening until gallery triggers are available.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deep-link auto-open now routes through the resilient inline lightbox API even when unrelated later scripts throw front-end runtime errors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.133 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Video Library Edit form now shows an embedded YouTube preview directly under the YouTube Link field when a valid link is present.', 'user-manager'); ?></li>

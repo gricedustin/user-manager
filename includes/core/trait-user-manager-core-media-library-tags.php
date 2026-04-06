@@ -3284,6 +3284,77 @@ JS;
 				return true;
 			};
 			window.umMltgInline = api;
+			function findDeepLinkTriggerByAttachmentId(attachmentId) {
+				if (!attachmentId || !document || !document.querySelector) {
+					return null;
+				}
+				var idString = String(attachmentId);
+				var selectorModal = '[data-um-modal-attachment-id="' + idString + '"]';
+				var selectorLegacy = '[data-um-lightbox-attachment-id="' + idString + '"]';
+				var scopedSelector = '.um-media-library-tag-gallery ' + selectorModal + ', .um-media-library-tag-gallery ' + selectorLegacy;
+				var trigger = document.querySelector(scopedSelector);
+				if (trigger) {
+					return trigger;
+				}
+				return document.querySelector(selectorModal + ', ' + selectorLegacy);
+			}
+			function tryOpenDeepLinkTrigger(trigger) {
+				if (!trigger) {
+					return false;
+				}
+				var root = trigger.closest ? trigger.closest('.um-media-library-tag-gallery') : null;
+				if (root && root.id) {
+					var overlay = document.getElementById(root.id + '-lightbox');
+					if (overlay && window.umMltgInline && typeof window.umMltgInline.open === 'function') {
+						return !!window.umMltgInline.open(trigger, overlay.id, null);
+					}
+				}
+				try {
+					if (typeof trigger.click === 'function') {
+						trigger.click();
+						return true;
+					}
+				} catch (err) {
+				}
+				return false;
+			}
+			function scheduleDeepLinkAutoOpenFallback() {
+				var attachmentIdFromUrl = readAttachmentIdFromUrl();
+				if (!attachmentIdFromUrl || window.__umMltgDeepLinkConsumed === attachmentIdFromUrl) {
+					return;
+				}
+				var attempts = 0;
+				var maxAttempts = 40;
+				var step = function() {
+					attempts += 1;
+					if (window.__umMltgDeepLinkConsumed === attachmentIdFromUrl) {
+						return true;
+					}
+					var trigger = findDeepLinkTriggerByAttachmentId(attachmentIdFromUrl);
+					if (!trigger) {
+						return attempts >= maxAttempts;
+					}
+					if (tryOpenDeepLinkTrigger(trigger)) {
+						window.__umMltgDeepLinkConsumed = attachmentIdFromUrl;
+						return true;
+					}
+					return attempts >= maxAttempts;
+				};
+				if (step()) {
+					return;
+				}
+				var retryTimer = window.setInterval(function() {
+					if (step()) {
+						window.clearInterval(retryTimer);
+					}
+				}, 120);
+			}
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', scheduleDeepLinkAutoOpenFallback);
+			} else {
+				scheduleDeepLinkAutoOpenFallback();
+			}
+			window.addEventListener('load', scheduleDeepLinkAutoOpenFallback);
 		})();
 		</script>
 		<?php
