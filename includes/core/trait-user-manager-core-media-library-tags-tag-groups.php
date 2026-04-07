@@ -779,7 +779,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			return '';
 		}
 
-		return '<div class="um-media-library-tag-group-links" style="margin:0 0 12px; white-space:normal;">' . implode(' &gt; ', $line_segments) . '</div>';
+		return '<div class="um-media-library-tag-group-links" style="margin:0 0 30px; white-space:normal;">' . implode(' &gt; ', $line_segments) . '</div>';
 	}
 
 	/**

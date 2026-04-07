@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.153 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag Group front-end breadcrumb wrapper inline spacing to use a larger bottom margin (`margin: 0 0 30px`) for clearer separation from the description content below.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.152 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added per-tag "Tag Title Override" inputs in Media > Tag Groups for each selected group tag so admins can customize front-end breadcrumb labels without changing tag slugs or URLs.', 'user-manager'); ?></li>
