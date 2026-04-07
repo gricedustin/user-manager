@@ -464,6 +464,28 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Resolve approve button background color from settings.
+	 */
+	private static function get_order_approve_button_background_color(): string {
+		$settings = User_Manager_Core::get_settings();
+		$color = isset($settings['my_account_admin_order_approve_button_background_color'])
+			? sanitize_text_field((string) $settings['my_account_admin_order_approve_button_background_color'])
+			: '';
+		return $color;
+	}
+
+	/**
+	 * Resolve decline button background color from settings.
+	 */
+	private static function get_order_decline_button_background_color(): string {
+		$settings = User_Manager_Core::get_settings();
+		$color = isset($settings['my_account_admin_order_decline_button_background_color'])
+			? sanitize_text_field((string) $settings['my_account_admin_order_decline_button_background_color'])
+			: '';
+		return $color;
+	}
+
+	/**
 	 * Check whether the current user can approve pending orders.
 	 *
 	 * @return bool
@@ -2039,6 +2061,8 @@ final class User_Manager_My_Account_Site_Admin {
 			return;
 		}
 		self::$styles_rendered = true;
+		$approve_button_bg_color = self::get_order_approve_button_background_color();
+		$decline_button_bg_color = self::get_order_decline_button_background_color();
 		?>
 		<style>
 			.woocommerce-MyAccount-content .um-my-account-admin-search-form {
@@ -2088,6 +2112,20 @@ final class User_Manager_My_Account_Site_Admin {
 			.breathing_room {
 				margin: 5px 0 !important;
 			}
+			<?php if ($approve_button_bg_color !== '') : ?>
+			.woocommerce-MyAccount-content .um-my-account-order-button-approve,
+			.woocommerce-MyAccount-content .um-my-account-order-button-approve:hover,
+			.woocommerce-MyAccount-content .um-my-account-order-button-approve:focus {
+				background-color: <?php echo esc_html($approve_button_bg_color); ?> !important;
+			}
+			<?php endif; ?>
+			<?php if ($decline_button_bg_color !== '') : ?>
+			.woocommerce-MyAccount-content .um-my-account-order-button-decline,
+			.woocommerce-MyAccount-content .um-my-account-order-button-decline:hover,
+			.woocommerce-MyAccount-content .um-my-account-order-button-decline:focus {
+				background-color: <?php echo esc_html($decline_button_bg_color); ?> !important;
+			}
+			<?php endif; ?>
 			.um-my-account-admin-status {
 				display: inline-block;
 				margin-top: 2px;

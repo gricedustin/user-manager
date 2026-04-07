@@ -71,8 +71,12 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<?php self::render_role_checkboxes('my_account_admin_order_approval_roles', $settings['my_account_admin_order_approval_roles'] ?? [], $available_roles, __('Order approval allowed roles', 'user-manager')); ?>
 						<label for="um-my-account-admin-order-approve-button-label"><?php esc_html_e('Approve Button Label', 'user-manager'); ?></label>
 						<input type="text" name="my_account_admin_order_approve_button_label" id="um-my-account-admin-order-approve-button-label" class="regular-text" value="<?php echo esc_attr($settings['my_account_admin_order_approve_button_label'] ?? 'Move to Processing'); ?>" />
+						<label for="um-my-account-admin-order-approve-button-background-color" style="margin-top:8px;"><?php esc_html_e('Approve Button Background Color', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_order_approve_button_background_color" id="um-my-account-admin-order-approve-button-background-color" class="regular-text" value="<?php echo esc_attr($settings['my_account_admin_order_approve_button_background_color'] ?? ''); ?>" placeholder="#2271b1" />
 						<label for="um-my-account-admin-order-decline-button-label" style="margin-top:8px;"><?php esc_html_e('Decline Button Label', 'user-manager'); ?></label>
 						<input type="text" name="my_account_admin_order_decline_button_label" id="um-my-account-admin-order-decline-button-label" class="regular-text" value="<?php echo esc_attr($settings['my_account_admin_order_decline_button_label'] ?? 'Move to Canceled'); ?>" />
+						<label for="um-my-account-admin-order-decline-button-background-color" style="margin-top:8px;"><?php esc_html_e('Decline Button Background Color', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_order_decline_button_background_color" id="um-my-account-admin-order-decline-button-background-color" class="regular-text" value="<?php echo esc_attr($settings['my_account_admin_order_decline_button_background_color'] ?? ''); ?>" placeholder="#b32d2e" />
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-default-pending-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label>

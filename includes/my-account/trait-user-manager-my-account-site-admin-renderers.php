@@ -180,21 +180,21 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					echo '</td>';
 					echo '<td>' . wp_kses_post($address_html) . '</td>';
 					echo '<td class="center">';
-					echo '<a class="button breathing_room full_width" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
-					echo '<a class="button breathing_room full_width" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
+					echo '<a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-view" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
+					echo '<a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-print" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
 					if ($add_webtoffee_print_invoice_button && $webtoffee_invoice_urls['print'] !== '') {
-						echo ' <a class="button breathing_room full_width" href="' . esc_url($webtoffee_invoice_urls['print']) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Print Invoice', 'user-manager') . '</a>';
+						echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-print-invoice" href="' . esc_url($webtoffee_invoice_urls['print']) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Print Invoice', 'user-manager') . '</a>';
 					}
 					if ($add_webtoffee_download_invoice_button && $webtoffee_invoice_urls['download'] !== '') {
-						echo ' <a class="button breathing_room full_width" href="' . esc_url($webtoffee_invoice_urls['download']) . '">' . esc_html__('Download Invoice', 'user-manager') . '</a>';
+						echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-download-invoice" href="' . esc_url($webtoffee_invoice_urls['download']) . '">' . esc_html__('Download Invoice', 'user-manager') . '</a>';
 					}
 					if ($can_approve && !$order->has_status('completed')) {
 						if (!$order->has_status('processing')) {
 							$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());
-							echo ' <a class="button breathing_room full_width" href="' . esc_url($approve_url) . '">' . esc_html($approve_label) . '</a>';
+							echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-approve" href="' . esc_url($approve_url) . '">' . esc_html($approve_label) . '</a>';
 						}
 						$decline_url = self::get_decline_order_url($order_id, self::get_list_context_query_args());
-						echo ' <a class="button breathing_room full_width" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
+						echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-decline" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
 					}
 					echo '</td>';
 					echo '</tr>';
