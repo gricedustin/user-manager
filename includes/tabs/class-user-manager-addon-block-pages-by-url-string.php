@@ -14,7 +14,7 @@ class User_Manager_Addon_Block_Pages_By_URL_String {
 		$enabled = !empty($settings['block_pages_by_url_string_enabled']);
 		$match_urls = isset($settings['block_pages_by_url_string_match_urls']) ? (string) $settings['block_pages_by_url_string_match_urls'] : '';
 		$exception_urls = isset($settings['block_pages_by_url_string_exception_urls']) ? (string) $settings['block_pages_by_url_string_exception_urls'] : '';
-		$background_color = isset($settings['block_pages_by_url_string_background_color']) ? (string) $settings['block_pages_by_url_string_background_color'] : '#1C1A34';
+		$background_color = isset($settings['block_pages_by_url_string_background_color']) ? (string) $settings['block_pages_by_url_string_background_color'] : '#000000';
 		$background_url = isset($settings['block_pages_by_url_string_background_url']) ? (string) $settings['block_pages_by_url_string_background_url'] : '';
 		$logo_url = isset($settings['block_pages_by_url_string_logo_url']) ? (string) $settings['block_pages_by_url_string_logo_url'] : '';
 		$logo_width = isset($settings['block_pages_by_url_string_logo_width']) ? (string) $settings['block_pages_by_url_string_logo_width'] : '';
@@ -56,7 +56,7 @@ class User_Manager_Addon_Block_Pages_By_URL_String {
 
 					<div class="um-form-field">
 						<label for="um-block-pages-by-url-string-background-color"><strong><?php esc_html_e('Optional Background Color', 'user-manager'); ?></strong></label>
-						<input type="text" id="um-block-pages-by-url-string-background-color" name="block_pages_by_url_string_background_color" class="regular-text" value="<?php echo esc_attr($background_color); ?>" placeholder="#1C1A34"<?php echo $form_attr; ?> />
+						<input type="text" id="um-block-pages-by-url-string-background-color" name="block_pages_by_url_string_background_color" class="regular-text" value="<?php echo esc_attr($background_color); ?>" placeholder="#000000"<?php echo $form_attr; ?> />
 					</div>
 
 					<div class="um-form-field">

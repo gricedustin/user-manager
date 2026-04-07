@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.155 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated "Block Pages by URL String" default/placeholder background color to black (`#000000`) for new configurations and fallback rendering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.154 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Add-on: "Block Pages by URL String" with URL match list, exception list, optional redirect URL, and look/feel settings (background color/image, centered logo, logo width, message, and text color).', 'user-manager'); ?></li>

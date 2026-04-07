@@ -137,8 +137,8 @@ trait User_Manager_Core_Block_Pages_By_URL_String_Trait {
 		status_header(403);
 
 		$background_color = self::block_pages_by_url_string_safe_css_value(
-			isset($settings['block_pages_by_url_string_background_color']) ? (string) $settings['block_pages_by_url_string_background_color'] : '#1C1A34',
-			'#1C1A34'
+			isset($settings['block_pages_by_url_string_background_color']) ? (string) $settings['block_pages_by_url_string_background_color'] : '#000000',
+			'#000000'
 		);
 		$background_url = isset($settings['block_pages_by_url_string_background_url']) ? (string) $settings['block_pages_by_url_string_background_url'] : '';
 		$logo_url = isset($settings['block_pages_by_url_string_logo_url']) ? (string) $settings['block_pages_by_url_string_logo_url'] : '';

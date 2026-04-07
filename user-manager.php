@@ -2,15 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.154
+ * Version: 2.5.155
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
- * 2.5.154 - March 16, 2026
- * - Added new Add-ons card: "Block Pages by URL String" with settings for URL match rules, exception rules, optional redirect URL, and blocked-screen look/feel controls (background color/image, centered logo URL/width, message text, text color).
- * - Added front-end URL-string blocking runtime that matches line-by-line request substrings, supports exception overrides, performs optional redirect, and otherwise renders a minimal blocked page screen.
+ * 2.5.155 - March 16, 2026
+ * - Updated "Block Pages by URL String" default Optional Background Color and placeholder to black (`#000000`).
+ * - Updated background-color fallback handling for this add-on to default to black when unset/empty.
  *
  * 2.5.152 - March 16, 2026
  * - Added per-selected-tag "Tag Title Override" inputs on Media > Tag Groups to customize front-end tag labels while preserving original slugs/URLs.

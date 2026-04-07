@@ -2776,8 +2776,8 @@ class User_Manager_Actions {
 				$settings['block_pages_by_url_string_enabled'] = isset($_POST['block_pages_by_url_string_enabled']) && $_POST['block_pages_by_url_string_enabled'] === '1';
 				$settings['block_pages_by_url_string_match_urls'] = isset($_POST['block_pages_by_url_string_match_urls']) ? sanitize_textarea_field(wp_unslash($_POST['block_pages_by_url_string_match_urls'])) : '';
 				$settings['block_pages_by_url_string_exception_urls'] = isset($_POST['block_pages_by_url_string_exception_urls']) ? sanitize_textarea_field(wp_unslash($_POST['block_pages_by_url_string_exception_urls'])) : '';
-				$block_pages_bg_color = isset($_POST['block_pages_by_url_string_background_color']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_background_color'])) : '#1C1A34';
-				$settings['block_pages_by_url_string_background_color'] = $block_pages_bg_color !== '' ? $block_pages_bg_color : '#1C1A34';
+				$block_pages_bg_color = isset($_POST['block_pages_by_url_string_background_color']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_background_color'])) : '#000000';
+				$settings['block_pages_by_url_string_background_color'] = $block_pages_bg_color !== '' ? $block_pages_bg_color : '#000000';
 				$settings['block_pages_by_url_string_background_url'] = isset($_POST['block_pages_by_url_string_background_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_background_url'])) : '';
 				$settings['block_pages_by_url_string_logo_url'] = isset($_POST['block_pages_by_url_string_logo_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_logo_url'])) : '';
 				$settings['block_pages_by_url_string_logo_width'] = isset($_POST['block_pages_by_url_string_logo_width']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_logo_width'])) : '';
