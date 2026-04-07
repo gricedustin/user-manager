@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.151
+ * Version: 2.5.152
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.152 - March 16, 2026
+ * - Added per-selected-tag "Tag Title Override" inputs on Media > Tag Groups to customize front-end tag labels while preserving original slugs/URLs.
+ * - Tag Group breadcrumb/group link rendering now uses saved tag title overrides for group members only (parent label and link targets remain unchanged).
+ *
  * 2.5.151 - March 16, 2026
  * - Updated Tag Group link targets to use the current page as the base URL and append key-only tag query format (`?[tag-slug]`) instead of always linking from site root.
  * - Tag Group breadcrumb links now keep users on the same gallery/page context while switching tag expressions via key-only query keys.

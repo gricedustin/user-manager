@@ -97,6 +97,13 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $editing_group['memberSlugs']))))
 			: [];
 		$form_member_slugs_csv = implode(',', $form_member_slugs);
+		$form_member_title_overrides = isset($editing_group['memberTitleOverrides']) && is_array($editing_group['memberTitleOverrides'])
+			? self::sanitize_media_library_tag_group_member_title_overrides($editing_group['memberTitleOverrides'], $form_member_slugs)
+			: [];
+		$form_member_title_overrides_json = wp_json_encode($form_member_title_overrides);
+		if (!is_string($form_member_title_overrides_json) || $form_member_title_overrides_json === '') {
+			$form_member_title_overrides_json = '{}';
+		}
 
 		?>
 		<div class="wrap">
@@ -134,6 +141,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 								<th scope="row"><?php esc_html_e('Group Tags', 'user-manager'); ?></th>
 								<td>
 									<input type="hidden" id="um-tag-group-member-slugs" name="um_tag_group_member_slugs" value="<?php echo esc_attr($form_member_slugs_csv); ?>" />
+									<input type="hidden" id="um-tag-group-member-title-overrides" name="um_tag_group_member_title_overrides" value="<?php echo esc_attr($form_member_title_overrides_json); ?>" />
 									<div id="um-tag-group-picker" class="um-tag-group-picker" data-selected="<?php echo esc_attr($form_member_slugs_csv); ?>">
 										<?php if (!empty($slug_name_map)) : ?>
 											<?php foreach ($slug_name_map as $slug => $name) : ?>
@@ -148,6 +156,11 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 										<strong><?php esc_html_e('Display Order', 'user-manager'); ?></strong>
 										<p class="description" style="margin:6px 0 8px;"><?php esc_html_e('Drag selected tags to control the order shown on the front end.', 'user-manager'); ?></p>
 										<ul id="um-tag-group-order-list" class="um-tag-group-order-list"></ul>
+									</div>
+									<div id="um-tag-group-overrides-wrap" class="um-tag-group-overrides-wrap">
+										<strong><?php esc_html_e('Tag Title Overrides', 'user-manager'); ?></strong>
+										<p class="description" style="margin:6px 0 8px;"><?php esc_html_e('Optional: add a custom front-end title for each selected group tag. Slugs and URLs stay unchanged.', 'user-manager'); ?></p>
+										<div id="um-tag-group-overrides-list" class="um-tag-group-overrides-list"></div>
 									</div>
 								</td>
 							</tr>
@@ -180,10 +193,13 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 							$member_slugs = isset($group['memberSlugs']) && is_array($group['memberSlugs'])
 								? array_values(array_filter(array_map('sanitize_title', array_map('strval', $group['memberSlugs']))))
 								: [];
+							$member_title_overrides = isset($group['memberTitleOverrides']) && is_array($group['memberTitleOverrides'])
+								? self::sanitize_media_library_tag_group_member_title_overrides($group['memberTitleOverrides'], $member_slugs)
+								: [];
 							$parent_name = isset($slug_name_map[$parent_slug]) ? (string) $slug_name_map[$parent_slug] : $parent_slug;
 							$member_names = [];
 							foreach ($member_slugs as $member_slug) {
-								$member_names[] = isset($slug_name_map[$member_slug]) ? (string) $slug_name_map[$member_slug] : $member_slug;
+								$member_names[] = self::media_library_tag_group_display_name($member_slug, $slug_name_map, $member_title_overrides);
 							}
 							$edit_url = add_query_arg(
 								[
@@ -272,21 +288,45 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		.um-tag-group-order-item.is-dragging {
 			opacity: 0.55;
 		}
+		.um-tag-group-overrides-wrap {
+			margin-top: 14px;
+			max-width: 620px;
+		}
+		.um-tag-group-overrides-list {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+		.um-tag-group-override-row {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+		}
+		.um-tag-group-override-label {
+			font-weight: 600;
+		}
 		</style>
 		<script>
 		(function(){
 			var picker = document.getElementById('um-tag-group-picker');
 			var hiddenInput = document.getElementById('um-tag-group-member-slugs');
+			var overrideHiddenInput = document.getElementById('um-tag-group-member-title-overrides');
 			var parentSelect = document.getElementById('um-tag-group-parent-slug');
 			var orderList = document.getElementById('um-tag-group-order-list');
 			var orderWrap = document.getElementById('um-tag-group-order-wrap');
-			if (!picker || !hiddenInput || !parentSelect || !orderList || !orderWrap) {
+			var overridesWrap = document.getElementById('um-tag-group-overrides-wrap');
+			var overridesList = document.getElementById('um-tag-group-overrides-list');
+			if (!picker || !hiddenInput || !overrideHiddenInput || !parentSelect || !orderList || !orderWrap || !overridesWrap || !overridesList) {
 				return;
 			}
 			var selected = {};
 			var selectedOrder = [];
+			var titleOverrides = {};
 			function normalizeSlug(value) {
 				return String(value || '').toLowerCase().replace(/[^a-z0-9\-_]/g, '');
+			}
+			function normalizeTitle(value) {
+				return String(value || '').trim();
 			}
 			function readInitial() {
 				var raw = String(picker.getAttribute('data-selected') || hiddenInput.value || '');
@@ -301,8 +341,31 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					return list.indexOf(slug) === idx;
 				});
 			}
+			function readInitialTitleOverrides() {
+				var raw = String(overrideHiddenInput.value || '{}');
+				var parsed = {};
+				try {
+					parsed = JSON.parse(raw);
+				} catch (err) {
+					parsed = {};
+				}
+				if (!parsed || typeof parsed !== 'object') {
+					parsed = {};
+				}
+				Object.keys(parsed).forEach(function(slug) {
+					var normalizedSlug = normalizeSlug(slug);
+					var normalizedTitle = normalizeTitle(parsed[slug]);
+					if (!normalizedSlug || !normalizedTitle) {
+						return;
+					}
+					titleOverrides[normalizedSlug] = normalizedTitle;
+				});
+			}
 			function syncHiddenField() {
 				hiddenInput.value = selectedOrder.join(',');
+			}
+			function syncTitleOverridesField() {
+				overrideHiddenInput.value = JSON.stringify(titleOverrides);
 			}
 			function ensureSelectionOrderSync() {
 				selectedOrder = selectedOrder.filter(function(slug) {
@@ -313,15 +376,13 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 						selectedOrder.push(slug);
 					}
 				});
+				Object.keys(titleOverrides).forEach(function(slug) {
+					if (!selected[slug]) {
+						delete titleOverrides[slug];
+					}
+				});
 			}
-			function renderOrderList() {
-				ensureSelectionOrderSync();
-				orderList.innerHTML = '';
-				if (!selectedOrder.length) {
-					orderWrap.style.display = 'none';
-					return;
-				}
-				orderWrap.style.display = 'block';
+			function getNamesBySlug() {
 				var pills = picker.querySelectorAll('.um-tag-group-pill');
 				var namesBySlug = {};
 				for (var i = 0; i < pills.length; i++) {
@@ -332,6 +393,17 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					}
 					namesBySlug[slug] = String(pill.textContent || slug).trim();
 				}
+				return namesBySlug;
+			}
+			function renderOrderList() {
+				ensureSelectionOrderSync();
+				orderList.innerHTML = '';
+				if (!selectedOrder.length) {
+					orderWrap.style.display = 'none';
+					return;
+				}
+				orderWrap.style.display = 'block';
+				var namesBySlug = getNamesBySlug();
 				selectedOrder.forEach(function(slug) {
 					var li = document.createElement('li');
 					li.className = 'um-tag-group-order-item';
@@ -339,6 +411,50 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					li.setAttribute('data-tag-slug', slug);
 					li.innerHTML = '<span class="dashicons dashicons-menu"></span><span>' + String(namesBySlug[slug] || slug) + '</span>';
 					orderList.appendChild(li);
+				});
+			}
+			function renderTitleOverrideInputs() {
+				ensureSelectionOrderSync();
+				overridesList.innerHTML = '';
+				if (!selectedOrder.length) {
+					overridesWrap.style.display = 'none';
+					return;
+				}
+				overridesWrap.style.display = 'block';
+				var namesBySlug = getNamesBySlug();
+				selectedOrder.forEach(function(slug) {
+					var row = document.createElement('div');
+					row.className = 'um-tag-group-override-row';
+					var label = document.createElement('label');
+					label.className = 'um-tag-group-override-label';
+					var inputId = 'um-tag-group-override-' + slug;
+					label.setAttribute('for', inputId);
+					label.textContent = String(namesBySlug[slug] || slug) + ' (' + slug + ')';
+					var input = document.createElement('input');
+					input.type = 'text';
+					input.id = inputId;
+					input.className = 'regular-text um-tag-group-override-input';
+					input.setAttribute('data-tag-slug', slug);
+					input.setAttribute('placeholder', 'Optional front-end title override');
+					input.value = Object.prototype.hasOwnProperty.call(titleOverrides, slug)
+						? String(titleOverrides[slug])
+						: '';
+					input.addEventListener('input', function() {
+						var inputSlug = normalizeSlug(input.getAttribute('data-tag-slug'));
+						if (!inputSlug) {
+							return;
+						}
+						var nextValue = normalizeTitle(input.value);
+						if (nextValue) {
+							titleOverrides[inputSlug] = nextValue;
+						} else {
+							delete titleOverrides[inputSlug];
+						}
+						syncTitleOverridesField();
+					});
+					row.appendChild(label);
+					row.appendChild(input);
+					overridesList.appendChild(row);
 				});
 			}
 			function syncPills() {
@@ -367,13 +483,17 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					}
 				}
 				renderOrderList();
+				renderTitleOverrideInputs();
 			}
 			readInitial();
+			readInitialTitleOverrides();
 			syncPills();
 			syncHiddenField();
+			syncTitleOverridesField();
 			parentSelect.addEventListener('change', function() {
 				syncPills();
 				syncHiddenField();
+				syncTitleOverridesField();
 			});
 			picker.addEventListener('click', function(event){
 				var target = event.target;
@@ -392,6 +512,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 				}
 				syncPills();
 				syncHiddenField();
+				syncTitleOverridesField();
 			});
 			orderList.addEventListener('dragstart', function(event) {
 				var item = event.target && event.target.closest ? event.target.closest('.um-tag-group-order-item') : null;
@@ -434,6 +555,8 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					}
 				}
 				syncHiddenField();
+				renderTitleOverrideInputs();
+				syncTitleOverridesField();
 			});
 		})();
 		</script>
@@ -452,6 +575,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		$group_id = isset($_POST['um_tag_group_id']) ? sanitize_key((string) wp_unslash($_POST['um_tag_group_id'])) : '';
 		$parent_slug = isset($_POST['um_tag_group_parent_slug']) ? sanitize_title((string) wp_unslash($_POST['um_tag_group_parent_slug'])) : '';
 		$member_slugs_csv = isset($_POST['um_tag_group_member_slugs']) ? (string) wp_unslash($_POST['um_tag_group_member_slugs']) : '';
+		$member_title_overrides_json = isset($_POST['um_tag_group_member_title_overrides']) ? (string) wp_unslash($_POST['um_tag_group_member_title_overrides']) : '{}';
 
 		if ($parent_slug === '' || !term_exists($parent_slug, self::media_library_tags_taxonomy())) {
 			wp_safe_redirect(
@@ -467,11 +591,17 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		}
 
 		$member_slugs = self::sanitize_media_library_tag_group_member_slugs_csv($member_slugs_csv, $parent_slug);
+		$member_title_overrides_raw = json_decode($member_title_overrides_json, true);
+		if (!is_array($member_title_overrides_raw)) {
+			$member_title_overrides_raw = [];
+		}
+		$member_title_overrides = self::sanitize_media_library_tag_group_member_title_overrides($member_title_overrides_raw, $member_slugs);
 		$groups = self::get_media_library_tag_groups();
 		$upsert_group = [
 			'id' => $group_id !== '' ? $group_id : self::build_media_library_tag_group_id(),
 			'parentSlug' => $parent_slug,
 			'memberSlugs' => $member_slugs,
+			'memberTitleOverrides' => $member_title_overrides,
 		];
 
 		$updated = false;
@@ -565,11 +695,15 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			$member_slugs = isset($group['memberSlugs']) && is_array($group['memberSlugs'])
 				? array_values(array_filter(array_map('sanitize_title', array_map('strval', $group['memberSlugs']))))
 				: [];
+			$member_title_overrides = isset($group['memberTitleOverrides']) && is_array($group['memberTitleOverrides'])
+				? self::sanitize_media_library_tag_group_member_title_overrides($group['memberTitleOverrides'], $member_slugs)
+				: [];
 			$all_group_slugs = array_values(array_unique(array_filter(array_merge([$parent_slug], $member_slugs))));
 			if (in_array($current_tag_slug, $all_group_slugs, true)) {
 				$matched_group = [
 					'parentSlug' => $parent_slug,
 					'memberSlugs' => $member_slugs,
+					'memberTitleOverrides' => $member_title_overrides,
 				];
 				break;
 			}
@@ -581,6 +715,9 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		$parent_slug = sanitize_title((string) $matched_group['parentSlug']);
 		$member_slugs = isset($matched_group['memberSlugs']) && is_array($matched_group['memberSlugs'])
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $matched_group['memberSlugs']))))
+			: [];
+		$member_title_overrides = isset($matched_group['memberTitleOverrides']) && is_array($matched_group['memberTitleOverrides'])
+			? self::sanitize_media_library_tag_group_member_title_overrides($matched_group['memberTitleOverrides'], $member_slugs)
 			: [];
 		$slug_name_map = self::get_media_library_tag_slug_name_map();
 
@@ -595,7 +732,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 
 		$related_links = [];
 		foreach ($related_slugs as $related_slug) {
-			$related_name = isset($slug_name_map[$related_slug]) ? (string) $slug_name_map[$related_slug] : $related_slug;
+			$related_name = self::media_library_tag_group_display_name($related_slug, $slug_name_map, $member_title_overrides);
 			if ($related_slug === $current_tag_slug) {
 				$related_links[] = sprintf(
 					'<span class="um-media-library-tag-group-links-current"><strong>%1$s</strong></span>',
@@ -612,7 +749,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 
 		$parent_link_html = '';
 		if ($parent_slug !== '') {
-			$parent_name = isset($slug_name_map[$parent_slug]) ? (string) $slug_name_map[$parent_slug] : $parent_slug;
+			$parent_name = self::media_library_tag_group_display_name($parent_slug, $slug_name_map, []);
 			if ($parent_slug === $current_tag_slug) {
 				$parent_link_html = sprintf(
 					'<span class="um-media-library-tag-group-links-current"><strong>%1$s</strong></span>',
@@ -643,6 +780,29 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		}
 
 		return '<div class="um-media-library-tag-group-links" style="margin:0 0 12px; white-space:normal;">' . implode(' &gt; ', $line_segments) . '</div>';
+	}
+
+	/**
+	 * Resolve front-end display label for a tag slug.
+	 *
+	 * @param array<string,string> $slug_name_map
+	 * @param array<string,string> $member_title_overrides
+	 */
+	private static function media_library_tag_group_display_name(string $tag_slug, array $slug_name_map, array $member_title_overrides): string {
+		$tag_slug = sanitize_title($tag_slug);
+		if ($tag_slug === '') {
+			return '';
+		}
+		if (isset($member_title_overrides[$tag_slug])) {
+			$override_name = trim((string) $member_title_overrides[$tag_slug]);
+			if ($override_name !== '') {
+				return $override_name;
+			}
+		}
+		if (isset($slug_name_map[$tag_slug])) {
+			return (string) $slug_name_map[$tag_slug];
+		}
+		return $tag_slug;
 	}
 
 	/**
@@ -744,7 +904,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 	/**
 	 * Read and sanitize Tag Group rows.
 	 *
-	 * @return array<int,array{id:string,parentSlug:string,memberSlugs:array<int,string>}>
+	 * @return array<int,array{id:string,parentSlug:string,memberSlugs:array<int,string>,memberTitleOverrides:array<string,string>}>
 	 */
 	private static function get_media_library_tag_groups(): array {
 		$raw_groups = get_option(self::media_library_tag_groups_option_key(), []);
@@ -792,7 +952,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 
 	/**
 	 * @param array<string,mixed> $group
-	 * @return array{id:string,parentSlug:string,memberSlugs:array<int,string>}|null
+	 * @return array{id:string,parentSlug:string,memberSlugs:array<int,string>,memberTitleOverrides:array<string,string>}|null
 	 */
 	private static function sanitize_media_library_tag_group_record(array $group): ?array {
 		$group_id = isset($group['id']) ? sanitize_key((string) $group['id']) : '';
@@ -810,11 +970,15 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			$raw_member_slugs = array_map('strval', $group['memberSlugs']);
 		}
 		$member_slugs = self::sanitize_media_library_tag_group_member_slugs_csv(implode(',', $raw_member_slugs), $parent_slug);
+		$member_title_overrides = isset($group['memberTitleOverrides']) && is_array($group['memberTitleOverrides'])
+			? self::sanitize_media_library_tag_group_member_title_overrides($group['memberTitleOverrides'], $member_slugs)
+			: [];
 
 		return [
 			'id' => $group_id,
 			'parentSlug' => $parent_slug,
 			'memberSlugs' => $member_slugs,
+			'memberTitleOverrides' => $member_title_overrides,
 		];
 	}
 
@@ -839,6 +1003,32 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			$clean[] = $slug;
 		}
 		return array_values(array_unique($clean));
+	}
+
+	/**
+	 * @param array<mixed,mixed> $raw_overrides
+	 * @param array<int,string>  $member_slugs
+	 * @return array<string,string>
+	 */
+	private static function sanitize_media_library_tag_group_member_title_overrides(array $raw_overrides, array $member_slugs): array {
+		$member_slugs = array_values(array_unique(array_filter(array_map('sanitize_title', array_map('strval', $member_slugs)))));
+		if (empty($member_slugs)) {
+			return [];
+		}
+		$allowed_member_slugs = array_fill_keys($member_slugs, true);
+		$clean = [];
+		foreach ($raw_overrides as $raw_slug => $raw_title) {
+			$slug = sanitize_title((string) $raw_slug);
+			if ($slug === '' || !isset($allowed_member_slugs[$slug])) {
+				continue;
+			}
+			$title = trim(sanitize_text_field((string) $raw_title));
+			if ($title === '') {
+				continue;
+			}
+			$clean[$slug] = $title;
+		}
+		return $clean;
 	}
 
 	/**

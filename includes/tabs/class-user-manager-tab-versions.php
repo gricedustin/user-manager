@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.152 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added per-tag "Tag Title Override" inputs in Media > Tag Groups for each selected group tag so admins can customize front-end breadcrumb labels without changing tag slugs or URLs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Saved Tag Group records now persist member title-override mappings and apply them to related/member link labels on the front end while preserving key-only slug URL behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.151 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Tag Group link targets to use the current page URL as the base path, then append key-only tag query style (`?[tag-slug]`).', 'user-manager'); ?></li>
