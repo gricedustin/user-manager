@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.150 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Tag Group breadcrumb duplication in parent-tag views: parent tag now renders only once (left side) and is no longer repeated in the right-side related list.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preserved current-tag non-link bold rendering while keeping related/member links distinct and non-duplicated.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.149 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Tag Group breadcrumb rendering so the currently viewed tag is always displayed in the list as non-link text with a dedicated current-tag class and bold styling.', 'user-manager'); ?></li>

@@ -560,13 +560,10 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 
 		$related_slugs = [];
 		foreach ($member_slugs as $member_slug) {
-			if ($member_slug === '') {
+			if ($member_slug === '' || $member_slug === $parent_slug) {
 				continue;
 			}
 			$related_slugs[] = $member_slug;
-		}
-		if ($current_tag_slug === $parent_slug && $parent_slug !== '') {
-			array_unshift($related_slugs, $parent_slug);
 		}
 		$related_slugs = array_values(array_unique($related_slugs));
 
