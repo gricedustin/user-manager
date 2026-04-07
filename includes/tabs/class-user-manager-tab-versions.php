@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.151 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Tag Group link targets to use the current page URL as the base path, then append key-only tag query style (`?[tag-slug]`).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag Group breadcrumb links now stay on the active page context while switching tag filters, instead of always linking from site root.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.150 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Tag Group breadcrumb duplication in parent-tag views: parent tag now renders only once (left side) and is no longer repeated in the right-side related list.', 'user-manager'); ?></li>

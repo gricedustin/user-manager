@@ -22,9 +22,35 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 	private static function build_media_library_tag_group_frontend_url(string $tag_slug): string {
 		$tag_slug = sanitize_title($tag_slug);
 		if ($tag_slug === '') {
-			return home_url('/');
+			return self::get_media_library_tag_group_current_page_base_url();
 		}
-		return home_url('/?' . rawurlencode($tag_slug));
+		return rtrim(self::get_media_library_tag_group_current_page_base_url(), '?&') . '?' . rawurlencode($tag_slug);
+	}
+
+	/**
+	 * Resolve current front-end page URL without query args for Tag Group links.
+	 */
+	private static function get_media_library_tag_group_current_page_base_url(): string {
+		$base_url = '';
+		if (!is_admin()) {
+			$queried_id = get_queried_object_id();
+			if ($queried_id > 0) {
+				$permalink = get_permalink($queried_id);
+				if (is_string($permalink) && $permalink !== '') {
+					$base_url = $permalink;
+				}
+			}
+			if ($base_url === '' && !empty($_SERVER['REQUEST_URI'])) {
+				$request_uri = (string) wp_unslash($_SERVER['REQUEST_URI']);
+				$path = strtok($request_uri, '?');
+				$path = is_string($path) ? $path : '';
+				$base_url = home_url($path !== '' ? $path : '/');
+			}
+		}
+		if ($base_url === '') {
+			$base_url = home_url('/');
+		}
+		return remove_query_arg([], $base_url);
 	}
 
 	/**
