@@ -2773,6 +2773,18 @@ class User_Manager_Actions {
 				$settings['restricted_access_overlay_image_max_width'] = isset($_POST['restricted_access_overlay_image_max_width']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_overlay_image_max_width'])) : '';
 				$settings['restricted_access_overlay_image_display_as_normal_above_message'] = isset($_POST['restricted_access_overlay_image_display_as_normal_above_message']) && $_POST['restricted_access_overlay_image_display_as_normal_above_message'] === '1';
 				$settings['restricted_access_render_background_html_for_social_meta'] = isset($_POST['restricted_access_render_background_html_for_social_meta']) && $_POST['restricted_access_render_background_html_for_social_meta'] === '1';
+				$settings['block_pages_by_url_string_enabled'] = isset($_POST['block_pages_by_url_string_enabled']) && $_POST['block_pages_by_url_string_enabled'] === '1';
+				$settings['block_pages_by_url_string_match_urls'] = isset($_POST['block_pages_by_url_string_match_urls']) ? sanitize_textarea_field(wp_unslash($_POST['block_pages_by_url_string_match_urls'])) : '';
+				$settings['block_pages_by_url_string_exception_urls'] = isset($_POST['block_pages_by_url_string_exception_urls']) ? sanitize_textarea_field(wp_unslash($_POST['block_pages_by_url_string_exception_urls'])) : '';
+				$block_pages_bg_color = isset($_POST['block_pages_by_url_string_background_color']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_background_color'])) : '#1C1A34';
+				$settings['block_pages_by_url_string_background_color'] = $block_pages_bg_color !== '' ? $block_pages_bg_color : '#1C1A34';
+				$settings['block_pages_by_url_string_background_url'] = isset($_POST['block_pages_by_url_string_background_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_background_url'])) : '';
+				$settings['block_pages_by_url_string_logo_url'] = isset($_POST['block_pages_by_url_string_logo_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_logo_url'])) : '';
+				$settings['block_pages_by_url_string_logo_width'] = isset($_POST['block_pages_by_url_string_logo_width']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_logo_width'])) : '';
+				$settings['block_pages_by_url_string_message'] = isset($_POST['block_pages_by_url_string_message']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_message'])) : '';
+				$block_pages_text_color = isset($_POST['block_pages_by_url_string_text_color']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_text_color'])) : '';
+				$settings['block_pages_by_url_string_text_color'] = $block_pages_text_color !== '' ? $block_pages_text_color : '';
+				$settings['block_pages_by_url_string_redirect_url'] = isset($_POST['block_pages_by_url_string_redirect_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_redirect_url'])) : '';
 				// Keep Send Email permanently enabled because Login Tools depend on
 				// shared email templates from this add-on context.
 				$settings['send_email_users_enabled'] = true;

@@ -38,6 +38,7 @@ require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
 require_once __DIR__ . '/class-user-manager-addon-order-received-page-customizer.php';
 require_once __DIR__ . '/class-user-manager-addon-restricted-access.php';
+require_once __DIR__ . '/class-user-manager-addon-block-pages-by-url-string.php';
 require_once __DIR__ . '/class-user-manager-addon-send-email.php';
 require_once __DIR__ . '/class-user-manager-addon-send-sms-text.php';
 require_once __DIR__ . '/class-user-manager-addon-webhook-urls.php';
@@ -329,6 +330,9 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-addon-section" data-addon-section="restricted-access">
 				<?php User_Manager_Addon_Restricted_Access::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="block-pages-by-url-string">
+				<?php User_Manager_Addon_Block_Pages_By_URL_String::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="send-email-users">
 				<?php User_Manager_Addon_Send_Email::render($settings, $settings_form_id); ?>
@@ -979,6 +983,9 @@ class User_Manager_Tab_Addons {
 			function toggleRestrictedAccessFields() {
 				$('#um-restricted-access-fields').toggle($('#um-restricted-access-enabled').is(':checked'));
 			}
+			function toggleBlockPagesByUrlStringFields() {
+				$('#um-block-pages-by-url-string-fields').toggle($('#um-block-pages-by-url-string-enabled').is(':checked'));
+			}
 			function toggleSendSmsTextFields() {
 				$('#um-send-sms-text-fields').toggle($('#um-send-sms-text-enabled').is(':checked'));
 			}
@@ -1016,6 +1023,7 @@ class User_Manager_Tab_Addons {
 			toggleInvoiceApprovalFields();
 			toggleOrderReceivedPageCustomizerFields();
 			toggleRestrictedAccessFields();
+			toggleBlockPagesByUrlStringFields();
 			toggleSendEmailUsersFields();
 			toggleSendSmsTextFields();
 			toggleSecurityHardeningFields();
@@ -1227,6 +1235,10 @@ class User_Manager_Tab_Addons {
 				toggleRestrictedAccessFields();
 				refreshAddonCardAutoState($('#um-addon-card-restricted-access'));
 			});
+			$('#um-block-pages-by-url-string-enabled').on('change', function() {
+				toggleBlockPagesByUrlStringFields();
+				refreshAddonCardAutoState($('#um-addon-card-block-pages-by-url-string'));
+			});
 			$('#um-send-email-users-enabled').on('change', function() {
 				toggleSendEmailUsersFields();
 				refreshAddonCardAutoState($('#um-addon-card-send-email'));
@@ -1404,6 +1416,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('Restricted Access', 'user-manager'),
 				'description' => __('Security: gate site access with redirect/overlay behavior, shared password or URL token access, role exclusions, and configurable full-screen lock messaging.', 'user-manager'),
 				'active' => !empty($settings['restricted_access_enabled']),
+			],
+			'block-pages-by-url-string' => [
+				'label'  => __('Block Pages by URL String', 'user-manager'),
+				'description' => __('Security: hide page output by URL-string match rules with exception list, optional redirect, and branded blocked-screen look settings.', 'user-manager'),
+				'active' => !empty($settings['block_pages_by_url_string_enabled']),
 			],
 			'send-email-users' => [
 				'label'  => __('Send Email', 'user-manager'),

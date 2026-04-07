@@ -13,6 +13,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-min-max-quanti
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-price-per-piece.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-total-items.php';
+require_once __DIR__ . '/core/trait-user-manager-core-block-pages-by-url-string.php';
 require_once __DIR__ . '/core/trait-user-manager-core-emali-log.php';
 require_once __DIR__ . '/core/trait-user-manager-core-fatal-error-debugger.php';
 require_once __DIR__ . '/core/trait-user-manager-core-invoice-approval.php';
@@ -34,6 +35,7 @@ final class User_Manager_Core {
 	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
 	use User_Manager_Core_Cart_Price_Per_Piece_Trait;
 	use User_Manager_Core_Cart_Total_Items_Trait;
+	use User_Manager_Core_Block_Pages_By_URL_String_Trait;
 	use User_Manager_Core_Emali_Log_Trait;
 	use User_Manager_Core_Fatal_Error_Debugger_Trait;
 	use User_Manager_Core_Invoice_Approval_Trait;
@@ -55,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.153';
+	const VERSION = '2.5.154';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -198,6 +200,7 @@ final class User_Manager_Core {
 		}
 		self::maybe_boot_plugin_tags_notes($settings);
 		self::maybe_boot_restricted_access($settings);
+		self::maybe_boot_block_pages_by_url_string($settings);
 		self::maybe_apply_security_hardening($settings);
 		self::maybe_boot_seo_basics($settings);
 		self::maybe_boot_webhook_urls($settings);
@@ -9600,6 +9603,10 @@ html body .woocommerce-layout__header {
 			'restricted-access' => [
 				'label' => 'Restricted Access',
 				'settings_keys' => ['restricted_access_enabled'],
+			],
+			'block-pages-by-url-string' => [
+				'label' => 'Block Pages by URL String',
+				'settings_keys' => ['block_pages_by_url_string_enabled'],
 			],
 			'fatal-error-debugger' => [
 				'label' => 'Fatal Error Debugger',

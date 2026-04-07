@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.154 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Block Pages by URL String" with URL match list, exception list, optional redirect URL, and look/feel settings (background color/image, centered logo, logo width, message, and text color).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, matching front-end requests are blocked by URL substring rules (line-by-line), with exception rules taking priority; supports redirect mode or branded blocked-screen output.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.153 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Media Library Tag Group front-end breadcrumb wrapper inline spacing to use a larger bottom margin (`margin: 0 0 30px`) for clearer separation from the description content below.', 'user-manager'); ?></li>
