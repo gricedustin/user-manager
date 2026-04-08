@@ -756,6 +756,51 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Resolve display label for a WooCommerce order status.
+	 */
+	private static function get_order_status_display_label(string $status): string {
+		$status_key = self::normalize_wc_order_status_key($status);
+		$default_label = function_exists('wc_get_order_status_name')
+			? wc_get_order_status_name($status)
+			: ucwords(str_replace(['-', '_'], ' ', $status));
+		$default_label = wp_strip_all_tags((string) $default_label);
+
+		if ($status_key === '') {
+			return $default_label;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$overrides = isset($settings['my_account_admin_order_status_titles']) && is_array($settings['my_account_admin_order_status_titles'])
+			? $settings['my_account_admin_order_status_titles']
+			: [];
+		if (!isset($overrides[$status_key])) {
+			return $default_label;
+		}
+
+		$override_label = sanitize_text_field((string) $overrides[$status_key]);
+		return $override_label !== '' ? $override_label : $default_label;
+	}
+
+	/**
+	 * Normalize order status keys like pending / wc_pending / wc-pending to wc-pending.
+	 */
+	private static function normalize_wc_order_status_key(string $raw): string {
+		$raw = trim(strtolower($raw));
+		if ($raw === '') {
+			return '';
+		}
+		$raw = str_replace('_', '-', $raw);
+		$raw = sanitize_key($raw);
+		if ($raw === '') {
+			return '';
+		}
+		if (strpos($raw, 'wc-') !== 0) {
+			$raw = 'wc-' . ltrim($raw, '-');
+		}
+		return sanitize_key($raw);
+	}
+
+	/**
 	 * Resolve WebToffee invoice action URLs from My Account order actions.
 	 *
 	 * @param WC_Order $order Order object.

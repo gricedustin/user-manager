@@ -149,7 +149,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					$order_number  = $order->get_order_number();
 					$date_created  = $order->get_date_created();
 					$date_display  = $date_created ? $date_created->date_i18n('D M d, Y g:ia') : '';
-					$status_label  = wc_get_order_status_name($order->get_status());
+					$status_label  = self::get_order_status_display_label((string) $order->get_status());
 					$billing_email = $order->get_billing_email();
 					$address_html  = $order->get_formatted_shipping_address();
 					if ($address_html === '') {
@@ -238,7 +238,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			$date_created = $order->get_date_created();
 			$date_display = $date_created ? $date_created->date_i18n('D M d, Y g:ia') : '';
-			$status_label = wc_get_order_status_name($order->get_status());
+			$status_label = self::get_order_status_display_label((string) $order->get_status());
 	
 			echo '<p>';
 			echo esc_html__('Order #', 'user-manager');

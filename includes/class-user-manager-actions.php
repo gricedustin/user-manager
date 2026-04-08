@@ -2269,6 +2269,9 @@ class User_Manager_Actions {
 				$settings['rebrand_reset_password_copy'] = isset($_POST['rebrand_reset_password_copy']) && $_POST['rebrand_reset_password_copy'] === '1';
 				$settings['show_profile_user_manager_notice'] = isset($_POST['show_profile_user_manager_notice']) && $_POST['show_profile_user_manager_notice'] === '1';
 				$settings['show_user_manager_admin_bar_link'] = isset($_POST['show_user_manager_admin_bar_link']) && $_POST['show_user_manager_admin_bar_link'] === '1';
+				$settings['plugin_title_override'] = self::sanitize_plugin_title_override(
+					isset($_POST['plugin_title_override']) ? wp_unslash($_POST['plugin_title_override']) : ''
+				);
 				$settings['legacy_broken_shortcodes_noop_list'] = isset($_POST['legacy_broken_shortcodes_noop_list']) ? sanitize_text_field(wp_unslash($_POST['legacy_broken_shortcodes_noop_list'])) : '';
 				$settings['coupon_email_converter'] = isset($_POST['coupon_email_converter']) && $_POST['coupon_email_converter'] === '1';
 				$settings['coupon_show_email_column'] = isset($_POST['coupon_show_email_column']) && $_POST['coupon_show_email_column'] === '1';
@@ -2619,6 +2622,9 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_status_filters'] = isset($_POST['my_account_admin_order_status_filters'])
 					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_status_filters']))
 					: '';
+				$settings['my_account_admin_order_status_titles'] = self::sanitize_my_account_order_status_title_overrides(
+					isset($_POST['my_account_admin_order_status_titles']) ? wp_unslash($_POST['my_account_admin_order_status_titles']) : []
+				);
 				$settings['my_account_admin_order_hide_status'] = isset($_POST['my_account_admin_order_hide_status']) && $_POST['my_account_admin_order_hide_status'] === '1';
 				$settings['my_account_admin_order_add_webtoffee_download_invoice_button'] = isset($_POST['my_account_admin_order_add_webtoffee_download_invoice_button']) && $_POST['my_account_admin_order_add_webtoffee_download_invoice_button'] === '1';
 				$settings['my_account_admin_order_add_webtoffee_print_invoice_button'] = isset($_POST['my_account_admin_order_add_webtoffee_print_invoice_button']) && $_POST['my_account_admin_order_add_webtoffee_print_invoice_button'] === '1';
@@ -2780,15 +2786,27 @@ class User_Manager_Actions {
 				$settings['restricted_access_overlay_image_display_as_normal_above_message'] = isset($_POST['restricted_access_overlay_image_display_as_normal_above_message']) && $_POST['restricted_access_overlay_image_display_as_normal_above_message'] === '1';
 				$settings['restricted_access_render_background_html_for_social_meta'] = isset($_POST['restricted_access_render_background_html_for_social_meta']) && $_POST['restricted_access_render_background_html_for_social_meta'] === '1';
 				$settings['block_pages_by_url_string_enabled'] = isset($_POST['block_pages_by_url_string_enabled']) && $_POST['block_pages_by_url_string_enabled'] === '1';
-				$settings['block_pages_by_url_string_match_urls'] = isset($_POST['block_pages_by_url_string_match_urls']) ? sanitize_textarea_field(wp_unslash($_POST['block_pages_by_url_string_match_urls'])) : '';
-				$settings['block_pages_by_url_string_exception_urls'] = isset($_POST['block_pages_by_url_string_exception_urls']) ? sanitize_textarea_field(wp_unslash($_POST['block_pages_by_url_string_exception_urls'])) : '';
-				$block_pages_bg_color = isset($_POST['block_pages_by_url_string_background_color']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_background_color'])) : '#000000';
+				$block_pages_rules = [];
+				if (isset($_POST['block_pages_by_url_string_rules_json'])) {
+					$decoded_rules = json_decode((string) wp_unslash($_POST['block_pages_by_url_string_rules_json']), true);
+					$block_pages_rules = self::sanitize_block_pages_by_url_string_rules($decoded_rules);
+				}
+				if (empty($block_pages_rules)) {
+					$block_pages_rules = self::sanitize_block_pages_by_url_string_rules(
+						isset($_POST['block_pages_by_url_string_rules']) ? wp_unslash($_POST['block_pages_by_url_string_rules']) : []
+					);
+				}
+				$settings['block_pages_by_url_string_rules'] = $block_pages_rules;
+				$primary_block_pages_rule = isset($block_pages_rules[0]) && is_array($block_pages_rules[0]) ? $block_pages_rules[0] : [];
+				$settings['block_pages_by_url_string_match_urls'] = isset($primary_block_pages_rule['match_urls']) ? (string) $primary_block_pages_rule['match_urls'] : '';
+				$settings['block_pages_by_url_string_exception_urls'] = isset($primary_block_pages_rule['exception_urls']) ? (string) $primary_block_pages_rule['exception_urls'] : '';
+				$block_pages_bg_color = isset($_POST['block_pages_by_url_string_background_color']) ? sanitize_hex_color(wp_unslash($_POST['block_pages_by_url_string_background_color'])) : '#000000';
 				$settings['block_pages_by_url_string_background_color'] = $block_pages_bg_color !== '' ? $block_pages_bg_color : '#000000';
 				$settings['block_pages_by_url_string_background_url'] = isset($_POST['block_pages_by_url_string_background_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_background_url'])) : '';
 				$settings['block_pages_by_url_string_logo_url'] = isset($_POST['block_pages_by_url_string_logo_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_logo_url'])) : '';
 				$settings['block_pages_by_url_string_logo_width'] = isset($_POST['block_pages_by_url_string_logo_width']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_logo_width'])) : '';
 				$settings['block_pages_by_url_string_message'] = isset($_POST['block_pages_by_url_string_message']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_message'])) : '';
-				$block_pages_text_color = isset($_POST['block_pages_by_url_string_text_color']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_text_color'])) : '';
+				$block_pages_text_color = isset($_POST['block_pages_by_url_string_text_color']) ? sanitize_hex_color(wp_unslash($_POST['block_pages_by_url_string_text_color'])) : '';
 				$settings['block_pages_by_url_string_text_color'] = $block_pages_text_color !== '' ? $block_pages_text_color : '';
 				$settings['block_pages_by_url_string_redirect_url'] = isset($_POST['block_pages_by_url_string_redirect_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_redirect_url'])) : '';
 				// Keep Send Email permanently enabled because Login Tools depend on
@@ -5645,6 +5663,119 @@ class User_Manager_Actions {
 		}
 
 		return $roles;
+	}
+
+	/**
+	 * Sanitize posted My Account order status title overrides.
+	 *
+	 * @param mixed $raw Raw posted value.
+	 * @return array<string,string>
+	 */
+	private static function sanitize_my_account_order_status_title_overrides($raw): array {
+		if (!is_array($raw)) {
+			return [];
+		}
+
+		$clean = [];
+		foreach ($raw as $status_key => $label) {
+			$normalized_key = self::normalize_wc_order_status_key((string) $status_key);
+			if ($normalized_key === '') {
+				continue;
+			}
+			$label = sanitize_text_field((string) $label);
+			if ($label === '') {
+				continue;
+			}
+			$clean[$normalized_key] = $label;
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Normalize WooCommerce status keys like pending / wc_pending / wc-pending.
+	 */
+	private static function normalize_wc_order_status_key(string $raw): string {
+		$raw = trim(strtolower($raw));
+		if ($raw === '') {
+			return '';
+		}
+		$raw = str_replace('_', '-', $raw);
+		$raw = sanitize_key($raw);
+		if ($raw === '') {
+			return '';
+		}
+		if (strpos($raw, 'wc-') !== 0) {
+			$raw = 'wc-' . ltrim($raw, '-');
+		}
+		return sanitize_key($raw);
+	}
+
+	/**
+	 * Sanitize plugin title override text.
+	 */
+	private static function sanitize_plugin_title_override($raw): string {
+		$title = sanitize_text_field((string) $raw);
+		return trim($title);
+	}
+
+	/**
+	 * Normalize and sanitize Block Pages by URL String rule sets.
+	 *
+	 * @param mixed $raw_sets Raw posted value.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function sanitize_block_pages_by_url_string_rules($raw_sets): array {
+		if (!is_array($raw_sets)) {
+			return [];
+		}
+
+		$available_roles = [];
+		if (function_exists('wp_roles')) {
+			$wp_roles = wp_roles();
+			if ($wp_roles && isset($wp_roles->roles) && is_array($wp_roles->roles)) {
+				$available_roles = array_keys($wp_roles->roles);
+			}
+		}
+
+		$sanitized_sets = [];
+		foreach ($raw_sets as $raw_set) {
+			if (!is_array($raw_set)) {
+				continue;
+			}
+
+			$match_urls = isset($raw_set['match_urls']) ? sanitize_textarea_field((string) $raw_set['match_urls']) : '';
+			$exception_urls = isset($raw_set['exception_urls']) ? sanitize_textarea_field((string) $raw_set['exception_urls']) : '';
+			if (trim($match_urls) === '') {
+				continue;
+			}
+
+			$usernames = isset($raw_set['usernames']) ? self::sanitize_username_csv((string) $raw_set['usernames']) : '';
+			$roles = isset($raw_set['roles']) ? self::sanitize_role_keys_array($raw_set['roles']) : [];
+			if (!empty($available_roles)) {
+				$roles = array_values(array_intersect($roles, $available_roles));
+			}
+
+			$redirect_url = isset($raw_set['redirect_url']) ? esc_url_raw((string) $raw_set['redirect_url']) : '';
+			$background_color = isset($raw_set['background_color']) ? sanitize_hex_color((string) $raw_set['background_color']) : '';
+			$text_color = isset($raw_set['text_color']) ? sanitize_hex_color((string) $raw_set['text_color']) : '';
+
+			$sanitized_sets[] = [
+				'match_urls' => $match_urls,
+				'exception_urls' => $exception_urls,
+				'usernames' => $usernames,
+				'roles' => $roles,
+				'background_color' => $background_color ? $background_color : '#000000',
+				'background_url' => isset($raw_set['background_url']) ? esc_url_raw((string) $raw_set['background_url']) : '',
+				'logo_url' => isset($raw_set['logo_url']) ? esc_url_raw((string) $raw_set['logo_url']) : '',
+				'logo_width' => isset($raw_set['logo_width']) ? sanitize_text_field((string) $raw_set['logo_width']) : '',
+				'message' => isset($raw_set['message']) ? sanitize_text_field((string) $raw_set['message']) : '',
+				'text_color' => $text_color ? $text_color : '',
+				'redirect_url' => $redirect_url,
+			];
+		}
+
+		return $sanitized_sets;
 	}
 }
 

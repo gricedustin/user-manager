@@ -2,12 +2,19 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.158
+ * Version: 2.5.159
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.159 - March 16, 2026
+ * - My Account Admin access checks were hardened so area endpoints only render for explicitly allowed usernames/roles (plus admins), preventing accidental broad access when allow-lists are empty.
+ * - Added per-order-status front-end title overrides in My Account Admin Orders so each WooCommerce status label can be customized individually.
+ * - Block Pages by URL String now supports multiple scoped rule sets with per-rule match URLs, exception URLs, optional username list, optional role checkboxes, and per-rule look/feel + redirect settings.
+ * - Updated Block Pages by URL String color inputs to use WP color pickers for background/text colors.
+ * - Added Settings > User Experience > "Plugin Title Override" to retitle both the plugin page heading and the WP-Admin bar shortcut label.
+ *
  * 2.5.158 - March 16, 2026
  * - Add-ons tab now includes a new "Active Add-ons" card directly below Add-ons Filter that shows only active add-ons using the same tile layout and tag filtering.
  * - Blocks tab now includes a new "Active Blocks" card directly below Blocks Filter that shows only active blocks using the same tile layout and tag filtering.

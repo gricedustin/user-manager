@@ -232,6 +232,11 @@ if (!defined('ABSPATH')) {
 							</label>
 							<p class="description"><?php esc_html_e('Disabled by default. Enable to show the "User Experience Manager" shortcut in the admin bar.', 'user-manager'); ?></p>
 						</div>
+						<div class="um-form-field">
+							<label for="um-plugin-title-override"><?php esc_html_e('Plugin Title Override', 'user-manager'); ?></label>
+							<input type="text" name="plugin_title_override" id="um-plugin-title-override" class="regular-text" value="<?php echo esc_attr($settings['plugin_title_override'] ?? ''); ?>" placeholder="<?php esc_attr_e('User Experience Manager', 'user-manager'); ?>" />
+							<p class="description"><?php esc_html_e('Optional. Overrides the plugin title shown in the WP-Admin bar shortcut and the title at the top of all plugin pages.', 'user-manager'); ?></p>
+						</div>
 					<div class="um-form-field">
 						<label for="um-legacy-noop-shortcodes"><?php esc_html_e('Legacy/Broken Shortcodes (comma-separated)', 'user-manager'); ?></label>
 						<input type="text" name="legacy_noop_shortcodes_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($settings['legacy_noop_shortcodes_list'] ?? ''); ?>" placeholder="old_shortcode_one, old_shortcode_two" />

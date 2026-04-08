@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.158';
+	const VERSION = '2.5.159';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -2214,13 +2214,18 @@ html body .woocommerce-layout__header {
 		if (empty($settings['show_user_manager_admin_bar_link'])) {
 			return;
 		}
+		$plugin_title = self::get_plugin_title_display_text();
 		$wp_admin_bar->add_node([
 			'id'     => 'user-manager-settings',
-			'title'  => __('User Experience Manager', 'user-manager'),
+			'title'  => $plugin_title,
 			'href'   => self::get_page_url(self::TAB_ADDONS),
 			'parent' => 'top-secondary',
 			'meta'   => [
-				'title' => __('User Experience Manager Add-ons', 'user-manager'),
+				'title' => sprintf(
+					/* translators: %s: plugin title */
+					__('%s Add-ons', 'user-manager'),
+					$plugin_title
+				),
 			],
 		]);
 	}
@@ -8158,9 +8163,10 @@ html body .woocommerce-layout__header {
 			}
 		}
 		$message = isset($_GET['um_msg']) ? sanitize_key(wp_unslash($_GET['um_msg'])) : '';
+		$plugin_title = self::get_plugin_title_display_text();
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('User Experience Manager', 'user-manager'); ?></h1>
+			<h1><?php echo esc_html($plugin_title); ?></h1>
 			<p style="margin-top: -10px; color: #646970; font-size: 14px;"><?php echo esc_html(sprintf(__('Version %s', 'user-manager'), self::VERSION)); ?></p>
 			<h2 class="nav-tab-wrapper">
 				<a class="nav-tab <?php echo $active_tab === self::TAB_LOGIN_TOOLS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_LOGIN_TOOLS)); ?>">
@@ -8208,6 +8214,21 @@ html body .woocommerce-layout__header {
 			<?php User_Manager_Tabs::render_tab($active_tab); ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Resolve plugin title text, honoring optional settings override.
+	 */
+	public static function get_plugin_title_display_text(): string {
+		$settings = self::get_settings();
+		$override = isset($settings['plugin_title_override'])
+			? sanitize_text_field((string) $settings['plugin_title_override'])
+			: '';
+		$override = trim($override);
+		if ($override !== '') {
+			return $override;
+		}
+		return __('User Experience Manager', 'user-manager');
 	}
 
 	/**

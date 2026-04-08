@@ -39,6 +39,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.159 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin access hardening: each Admin area now requires explicit user and/or role allow-list matches; when both lists are empty, non-admin users no longer get implicit access.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('My Account Admin Orders now supports per-status front-end title override inputs so each WooCommerce status label can be customized in the endpoint list/detail views.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Block Pages by URL String now supports multiple scoped rule sets (match + exception + usernames + roles + look/feel + redirect) on one screen, plus WP color picker controls for color fields.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Settings > User Experience > "Plugin Title Override" to retitle both the plugin page heading and optional WP-Admin bar shortcut label.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.158 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tab now includes a new "Active Add-ons" card directly below Add-ons Filter, showing only active add-on tiles in the same clickable tile layout as "Choose an Add-on".', 'user-manager'); ?></li>
