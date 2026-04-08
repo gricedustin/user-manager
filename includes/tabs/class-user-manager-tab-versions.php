@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.158 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tab now includes a new "Active Add-ons" card directly below Add-ons Filter, showing only active add-on tiles in the same clickable tile layout as "Choose an Add-on".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Blocks tab now includes a new "Active Blocks" card directly below Blocks Filter, showing only active block tiles with the same tile behavior as "Choose a Block".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Users submenu label for this plugin from "User Experience Manager" to "UX Manager".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.157 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Tabbed Content Area block mobile tab layout now uses a two-column width override (`47%`) under 768px to support clearer two-column tab rows on smaller screens.', 'user-manager'); ?></li>

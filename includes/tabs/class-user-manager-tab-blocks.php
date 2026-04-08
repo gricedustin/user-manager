@@ -87,6 +87,57 @@ class User_Manager_Tab_Blocks {
 			</div>
 		<?php endif; ?>
 
+		<div class="um-blocks-active-state" style="<?php echo $current_block_section === '' ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card um-admin-card-full" style="margin-bottom: 16px;">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-yes-alt"></span>
+					<h2><?php esc_html_e('Active Blocks', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<?php if ($temporarily_disable_all) : ?>
+						<p class="description" style="margin-top:0; margin-bottom:10px;">
+							<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+						</p>
+					<?php endif; ?>
+					<div class="um-block-tile-grid">
+						<?php
+						$visible_active_tiles = 0;
+						foreach ($sorted_block_sections as $section_key => $section_meta) :
+							$section_tags = isset($section_meta['tags']) && is_array($section_meta['tags']) ? $section_meta['tags'] : [];
+							if ($current_block_tag !== '' && !isset($section_tags[$current_block_tag])) {
+								continue;
+							}
+							$is_active = !empty($section_meta['active']);
+							if (!$is_active) {
+								continue;
+							}
+							$visible_active_tiles++;
+							?>
+							<a
+								class="um-addon-tile um-addon-tile-active"
+								href="<?php echo esc_url(add_query_arg(['block_section' => $section_key, 'block_tag' => $current_block_tag], $blocks_base_url)); ?>"
+							>
+								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
+								<span class="um-addon-tile-status"><?php echo esc_html__('Active', 'user-manager'); ?></span>
+								<?php if (!empty($section_meta['description'])) : ?>
+									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
+								<?php endif; ?>
+								<?php if (!empty($section_tags)) : ?>
+									<span class="um-addon-tile-tags">
+										<?php foreach ($section_tags as $section_tag_key => $section_tag_label) : ?>
+											<span class="um-addon-tile-tag um-addon-tile-tag-<?php echo esc_attr($section_tag_key); ?>"><?php echo esc_html((string) $section_tag_label); ?></span>
+										<?php endforeach; ?>
+									</span>
+								<?php endif; ?>
+							</a>
+						<?php endforeach; ?>
+						<?php if ($visible_active_tiles === 0) : ?>
+							<p class="description"><?php esc_html_e('No active blocks match this tag.', 'user-manager'); ?></p>
+						<?php endif; ?>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div class="um-blocks-empty-state" style="<?php echo $current_block_section === '' ? '' : 'display:none;'; ?>">
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
@@ -335,6 +386,14 @@ class User_Manager_Tab_Blocks {
 							anyVisible = true;
 						}
 					});
+					$('.um-blocks-active-state .um-addon-tile').each(function() {
+						var $tile = $(this);
+						var matched = keyword === '' || filterHaystack($tile).indexOf(keyword) !== -1;
+						$tile.toggle(matched);
+						if (matched) {
+							anyVisible = true;
+						}
+					});
 					$('.um-block-temporary-disable-card').show();
 				} else {
 					$('.um-block-section[data-block-section="' + currentBlockSection + '"] .um-admin-card').each(function() {
@@ -438,12 +497,14 @@ class User_Manager_Tab_Blocks {
 
 			function applyBlockSectionFilter() {
 				if (!currentBlockSection) {
+					$('.um-blocks-active-state').show();
 					$('.um-blocks-empty-state').show();
 					$('.um-block-section').hide();
 					$('.um-block-save-card').hide();
 					$('.um-block-temporary-disable-card').show();
 					return;
 				}
+				$('.um-blocks-active-state').hide();
 				$('.um-blocks-empty-state').hide();
 				$('.um-block-section').hide();
 				$('.um-block-section[data-block-section="' + currentBlockSection + '"]').show();

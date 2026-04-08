@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.157
+ * Version: 2.5.158
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.158 - March 16, 2026
+ * - Add-ons tab now includes a new "Active Add-ons" card directly below Add-ons Filter that shows only active add-ons using the same tile layout and tag filtering.
+ * - Blocks tab now includes a new "Active Blocks" card directly below Blocks Filter that shows only active blocks using the same tile layout and tag filtering.
+ * - Renamed the Users submenu label from "User Experience Manager" to "UX Manager" while keeping the existing page slug and screen behavior.
+ *
  * 2.5.157 - March 16, 2026
  * - Updated Tabbed Content Area block front-end mobile CSS to enforce two-column tab layout at <=768px (`.tabs .tab { width: 47% !important; }`) while keeping wrapped tab rows.
  * - Added explicit mobile `.tabs` flex-wrap rule in the Tabbed Content Area block output style for consistent two-column tab rendering on smaller screens.

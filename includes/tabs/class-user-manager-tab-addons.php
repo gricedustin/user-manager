@@ -144,6 +144,57 @@ class User_Manager_Tab_Addons {
 			</div>
 		<?php endif; ?>
 
+		<div class="um-addons-active-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card um-admin-card-full" style="margin-bottom: 16px;">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-yes-alt"></span>
+					<h2><?php esc_html_e('Active Add-ons', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<?php if (!empty($settings['temporarily_disable_addons'])) : ?>
+						<p class="description" style="margin-top:0; margin-bottom:10px;">
+							<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+						</p>
+					<?php endif; ?>
+					<div class="um-addon-tile-grid">
+						<?php
+						$visible_active_tiles = 0;
+						foreach ($sorted_addon_sections as $section_key => $section_meta) :
+							$section_tags = self::get_addon_section_tags($section_meta);
+							if ($current_addon_tag !== '' && !isset($section_tags[$current_addon_tag])) {
+								continue;
+							}
+							$is_active = !empty($section_meta['active']);
+							if (!$is_active) {
+								continue;
+							}
+							$visible_active_tiles++;
+							?>
+							<a
+								class="um-addon-tile um-addon-tile-active"
+								href="<?php echo esc_url(add_query_arg(['addon_section' => $section_key, 'addon_tag' => $current_addon_tag], $addons_base_url)); ?>"
+							>
+								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
+								<span class="um-addon-tile-status"><?php echo esc_html__('Active', 'user-manager'); ?></span>
+								<?php if (!empty($section_meta['description'])) : ?>
+									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
+								<?php endif; ?>
+								<?php if (!empty($section_tags)) : ?>
+									<span class="um-addon-tile-tags">
+										<?php foreach ($section_tags as $section_tag_key => $section_tag_label) : ?>
+											<span class="um-addon-tile-tag um-addon-tile-tag-<?php echo esc_attr($section_tag_key); ?>"><?php echo esc_html($section_tag_label); ?></span>
+										<?php endforeach; ?>
+									</span>
+								<?php endif; ?>
+							</a>
+						<?php endforeach; ?>
+						<?php if ($visible_active_tiles === 0) : ?>
+							<p class="description"><?php esc_html_e('No active add-ons match this tag.', 'user-manager'); ?></p>
+						<?php endif; ?>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div class="um-addons-empty-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
@@ -651,6 +702,11 @@ class User_Manager_Tab_Addons {
 							anyVisible = true;
 						}
 					});
+					$('.um-addons-active-state .um-addon-tile').each(function() {
+						var $tile = $(this);
+						var matched = keyword === '' || addonFilterHaystack($tile).indexOf(keyword) !== -1;
+						$tile.toggle(matched);
+					});
 					$('.um-addon-temporary-disable-card').show();
 				} else {
 					$('.um-addon-section[data-addon-section="' + currentAddonSection + '"] .um-admin-card').each(function() {
@@ -671,12 +727,14 @@ class User_Manager_Tab_Addons {
 			function applyAddonSectionFilter() {
 				if (!currentAddonSection) {
 					$('.um-addons-empty-state').show();
+					$('.um-addons-active-state').show();
 					$('.um-addon-section').hide();
 					$('.um-addon-save-card').hide();
 					$('.um-addon-temporary-disable-card').show();
 					return;
 				}
 				$('.um-addons-empty-state').hide();
+				$('.um-addons-active-state').hide();
 				$('.um-addon-section').hide();
 				$('.um-addon-section[data-addon-section="' + currentAddonSection + '"]').show();
 				$('.um-addon-save-card').show();
