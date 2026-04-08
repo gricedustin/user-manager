@@ -305,11 +305,11 @@ class User_Manager_Addon_Media_Library_Tags {
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-lightbox-modal-bg-color"><?php esc_html_e('Lightbox Modal Background Color', 'user-manager'); ?></label>
-								<input type="color" id="um-media-library-tags-gallery-lightbox-modal-bg-color" name="media_library_tag_gallery_lightbox_modal_background_color" value="<?php echo esc_attr((string) $lightbox_modal_background_color); ?>"<?php echo $form_attr; ?> />
+								<input type="text" id="um-media-library-tags-gallery-lightbox-modal-bg-color" name="media_library_tag_gallery_lightbox_modal_background_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr((string) $lightbox_modal_background_color); ?>" data-default-color="#000000"<?php echo $form_attr; ?> />
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-lightbox-modal-text-color"><?php esc_html_e('Lightbox Modal Text Color', 'user-manager'); ?></label>
-								<input type="color" id="um-media-library-tags-gallery-lightbox-modal-text-color" name="media_library_tag_gallery_lightbox_modal_text_color" value="<?php echo esc_attr((string) $lightbox_modal_text_color); ?>"<?php echo $form_attr; ?> />
+								<input type="text" id="um-media-library-tags-gallery-lightbox-modal-text-color" name="media_library_tag_gallery_lightbox_modal_text_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr((string) $lightbox_modal_text_color); ?>" data-default-color="#ffffff"<?php echo $form_attr; ?> />
 							</div>
 							<div class="um-form-field">
 								<label>
@@ -337,7 +337,7 @@ class User_Manager_Addon_Media_Library_Tags {
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-accent-color"><?php esc_html_e('Accent Color (frames/backgrounds)', 'user-manager'); ?></label>
-								<input type="color" id="um-media-library-tags-gallery-accent-color" name="media_library_tag_gallery_accent_color" value="<?php echo esc_attr((string) $accent_color); ?>"<?php echo $form_attr; ?> />
+								<input type="text" id="um-media-library-tags-gallery-accent-color" name="media_library_tag_gallery_accent_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr((string) $accent_color); ?>" data-default-color="#ffffff"<?php echo $form_attr; ?> />
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Used by styles with frame/background surfaces (for example Polaroid cards, split-screen panels, and carousel/split controls) so white backgrounds can be replaced for dark-mode sites.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">

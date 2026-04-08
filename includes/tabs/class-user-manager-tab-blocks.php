@@ -16,6 +16,9 @@ require_once __DIR__ . '/class-user-manager-addon-media-library-tags.php';
 class User_Manager_Tab_Blocks {
 
 	public static function render(): void {
+		wp_enqueue_style('wp-color-picker');
+		wp_enqueue_script('wp-color-picker');
+
 		$settings = User_Manager_Core::get_raw_settings();
 		$settings_form_id = 'um-blocks-settings-form';
 		$temporarily_disable_all = !empty($settings['temporarily_disable_blocks']);

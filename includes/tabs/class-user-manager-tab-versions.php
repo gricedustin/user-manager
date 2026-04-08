@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.160 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Converted color-value settings across plugin admin screens to WordPress color pickers for easier visual selection (instead of plain text/manual hex-only entry).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons and Blocks tabs now enqueue wp-color-picker and initialize shared picker behavior for both static fields and dynamically-added settings rows.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated related color setting sanitization to use hex-color validation for My Account Admin button colors, Invoice & Approval colors, and WP-Admin notification background colors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.159 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin access hardening: each Admin area now requires explicit user and/or role allow-list matches; when both lists are empty, non-admin users no longer get implicit access.', 'user-manager'); ?></li>

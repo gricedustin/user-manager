@@ -469,9 +469,9 @@ final class User_Manager_My_Account_Site_Admin {
 	private static function get_order_approve_button_background_color(): string {
 		$settings = User_Manager_Core::get_settings();
 		$color = isset($settings['my_account_admin_order_approve_button_background_color'])
-			? sanitize_text_field((string) $settings['my_account_admin_order_approve_button_background_color'])
+			? sanitize_hex_color((string) $settings['my_account_admin_order_approve_button_background_color'])
 			: '';
-		return $color;
+		return $color ? $color : '';
 	}
 
 	/**
@@ -480,9 +480,9 @@ final class User_Manager_My_Account_Site_Admin {
 	private static function get_order_decline_button_background_color(): string {
 		$settings = User_Manager_Core::get_settings();
 		$color = isset($settings['my_account_admin_order_decline_button_background_color'])
-			? sanitize_text_field((string) $settings['my_account_admin_order_decline_button_background_color'])
+			? sanitize_hex_color((string) $settings['my_account_admin_order_decline_button_background_color'])
 			: '';
-		return $color;
+		return $color ? $color : '';
 	}
 
 	/**

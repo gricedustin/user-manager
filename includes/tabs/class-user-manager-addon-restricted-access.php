@@ -100,12 +100,12 @@ class User_Manager_Addon_Restricted_Access {
 
 					<div class="um-form-field">
 						<label for="um-restricted-access-overlay-bg"><strong><?php esc_html_e('Full Screen Overlay Background', 'user-manager'); ?></strong></label>
-						<input type="text" id="um-restricted-access-overlay-bg" name="restricted_access_overlay_background_color" class="regular-text" value="<?php echo esc_attr($overlay_bg); ?>" placeholder="#000000"<?php echo $form_attr; ?> />
+						<input type="text" id="um-restricted-access-overlay-bg" name="restricted_access_overlay_background_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($overlay_bg); ?>" data-default-color="#000000" placeholder="#000000"<?php echo $form_attr; ?> />
 					</div>
 
 					<div class="um-form-field">
 						<label for="um-restricted-access-overlay-text-color"><strong><?php esc_html_e('Full Screen Overlay Text Color', 'user-manager'); ?></strong></label>
-						<input type="text" id="um-restricted-access-overlay-text-color" name="restricted_access_overlay_text_color" class="regular-text" value="<?php echo esc_attr($overlay_text_color); ?>" placeholder="#ffffff"<?php echo $form_attr; ?> />
+						<input type="text" id="um-restricted-access-overlay-text-color" name="restricted_access_overlay_text_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($overlay_text_color); ?>" data-default-color="#ffffff" placeholder="#ffffff"<?php echo $form_attr; ?> />
 					</div>
 
 					<div class="um-form-field">

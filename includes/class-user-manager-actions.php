@@ -2637,15 +2637,17 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_approve_button_label'] = isset($_POST['my_account_admin_order_approve_button_label'])
 					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_approve_button_label']))
 					: 'Move to Processing';
-				$settings['my_account_admin_order_approve_button_background_color'] = isset($_POST['my_account_admin_order_approve_button_background_color'])
-					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_approve_button_background_color']))
+				$approve_button_bg = isset($_POST['my_account_admin_order_approve_button_background_color'])
+					? sanitize_hex_color(wp_unslash($_POST['my_account_admin_order_approve_button_background_color']))
 					: '';
+				$settings['my_account_admin_order_approve_button_background_color'] = $approve_button_bg ? $approve_button_bg : '';
 				$settings['my_account_admin_order_decline_button_label'] = isset($_POST['my_account_admin_order_decline_button_label'])
 					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_decline_button_label']))
 					: 'Move to Canceled';
-				$settings['my_account_admin_order_decline_button_background_color'] = isset($_POST['my_account_admin_order_decline_button_background_color'])
-					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_decline_button_background_color']))
+				$decline_button_bg = isset($_POST['my_account_admin_order_decline_button_background_color'])
+					? sanitize_hex_color(wp_unslash($_POST['my_account_admin_order_decline_button_background_color']))
 					: '';
+				$settings['my_account_admin_order_decline_button_background_color'] = $decline_button_bg ? $decline_button_bg : '';
 				$settings['my_account_admin_order_default_pending_enabled'] = isset($_POST['my_account_admin_order_default_pending_enabled']) && $_POST['my_account_admin_order_default_pending_enabled'] === '1';
 				$settings['my_account_admin_order_additional_meta_fields'] = isset($_POST['my_account_admin_order_additional_meta_fields'])
 					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_additional_meta_fields']))
@@ -2732,11 +2734,14 @@ class User_Manager_Actions {
 				$settings['webhook_urls_activate_user_password_reset_webhook'] = isset($_POST['webhook_urls_activate_user_password_reset_webhook']) && $_POST['webhook_urls_activate_user_password_reset_webhook'] === '1';
 				$settings['webhook_urls_activate_send_email_webhook'] = isset($_POST['webhook_urls_activate_send_email_webhook']) && $_POST['webhook_urls_activate_send_email_webhook'] === '1';
 				$settings['invoice_approval_enabled'] = isset($_POST['invoice_approval_enabled']) && $_POST['invoice_approval_enabled'] === '1';
-				$settings['invoice_primary_color'] = isset($_POST['invoice_primary_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_primary_color'])) : '#4B2E83';
+				$invoice_primary_color = isset($_POST['invoice_primary_color']) ? sanitize_hex_color(wp_unslash($_POST['invoice_primary_color'])) : '#4B2E83';
+				$settings['invoice_primary_color'] = $invoice_primary_color ? $invoice_primary_color : '#4B2E83';
 				$settings['invoice_hide_logo_in_pdf'] = isset($_POST['invoice_hide_logo_in_pdf']) && $_POST['invoice_hide_logo_in_pdf'] === '1';
 				$settings['invoice_hide_buttons_in_pdf'] = isset($_POST['invoice_hide_buttons_in_pdf']) && $_POST['invoice_hide_buttons_in_pdf'] === '1';
-				$settings['invoice_button_color'] = isset($_POST['invoice_button_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_button_color'])) : '#4B2E83';
-				$settings['invoice_button_text_color'] = isset($_POST['invoice_button_text_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_button_text_color'])) : '#ffffff';
+				$invoice_button_color = isset($_POST['invoice_button_color']) ? sanitize_hex_color(wp_unslash($_POST['invoice_button_color'])) : '#4B2E83';
+				$settings['invoice_button_color'] = $invoice_button_color ? $invoice_button_color : '#4B2E83';
+				$invoice_button_text_color = isset($_POST['invoice_button_text_color']) ? sanitize_hex_color(wp_unslash($_POST['invoice_button_text_color'])) : '#ffffff';
+				$settings['invoice_button_text_color'] = $invoice_button_text_color ? $invoice_button_text_color : '#ffffff';
 				$settings['invoice_font_family'] = isset($_POST['invoice_font_family']) ? sanitize_text_field(wp_unslash($_POST['invoice_font_family'])) : 'Poppins, sans-serif';
 				$settings['invoice_logo_url'] = isset($_POST['invoice_logo_url']) ? esc_url_raw(wp_unslash($_POST['invoice_logo_url'])) : '';
 				$settings['invoice_logo_max_width'] = isset($_POST['invoice_logo_max_width']) ? sanitize_text_field(wp_unslash($_POST['invoice_logo_max_width'])) : '160px';
@@ -2975,7 +2980,7 @@ class User_Manager_Actions {
 						}
 						$title = isset($row['title']) ? sanitize_text_field(wp_unslash($row['title'])) : '';
 						$body  = isset($row['body']) ? sanitize_textarea_field(wp_unslash($row['body'])) : '';
-						$color = isset($row['background_color']) ? sanitize_text_field(wp_unslash($row['background_color'])) : '';
+						$color = isset($row['background_color']) ? sanitize_hex_color(wp_unslash($row['background_color'])) : '';
 						$url   = isset($row['url_string_match']) ? sanitize_text_field(wp_unslash($row['url_string_match'])) : '';
 						$settings['custom_admin_notifications'][] = [
 							'title'             => $title,

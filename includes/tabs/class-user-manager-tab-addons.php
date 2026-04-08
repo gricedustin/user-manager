@@ -50,6 +50,9 @@ require_once __DIR__ . '/class-user-manager-addon-role-switching.php';
 class User_Manager_Tab_Addons {
 
 	public static function render(): void {
+		wp_enqueue_style('wp-color-picker');
+		wp_enqueue_script('wp-color-picker');
+
 		$settings      = User_Manager_Core::get_raw_settings();
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
 		$email_templates = User_Manager_Core::get_email_templates();
@@ -671,6 +674,28 @@ class User_Manager_Tab_Addons {
 			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
 			var addonInactiveText = '<?php echo esc_js(__('Inactive', 'user-manager')); ?>';
 			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
+			function initUmColorPickers($scope) {
+				if (!$.fn || !$.fn.wpColorPicker) {
+					return;
+				}
+				var $root = $scope && $scope.length ? $scope : $(document);
+				$root.find('.um-color-picker-field').each(function() {
+					var $field = $(this);
+					if ($field.data('wpColorPicker')) {
+						return;
+					}
+					var defaultColor = $field.attr('data-default-color');
+					$field.wpColorPicker({
+						defaultColor: defaultColor ? defaultColor : false,
+						change: function() {
+							$field.trigger('change');
+						},
+						clear: function() {
+							$field.trigger('change');
+						}
+					});
+				});
+			}
 			function normalizeAddonFilterText(str) {
 				return (str || '').toString().toLowerCase().trim();
 			}
@@ -1317,6 +1342,7 @@ class User_Manager_Tab_Addons {
 				toggleWpAdminCssFields();
 				refreshAddonCardAutoState($('#um-addon-card-admin-css'));
 			});
+			initUmColorPickers($(document));
 			toggleCustomAdminNotificationsFields();
 			toggleAdminBarMenuItemsFields();
 			toggleWpAdminCssFields();
@@ -1328,7 +1354,9 @@ class User_Manager_Tab_Addons {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;
 				var tpl = $('#um-admin-notification-template').html().replace(/__INDEX__/g, count);
 				$('#um-custom-admin-notifications-list').append(tpl);
-				$('#um-custom-admin-notifications-list .um-admin-notification-block').last().find('.um-admin-notification-number').text('<?php echo esc_js(__('Notification', 'user-manager')); ?> ' + (count + 1));
+				var $newNotification = $('#um-custom-admin-notifications-list .um-admin-notification-block').last();
+				$newNotification.find('.um-admin-notification-number').text('<?php echo esc_js(__('Notification', 'user-manager')); ?> ' + (count + 1));
+				initUmColorPickers($newNotification);
 				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
 			});
 			$('#um-custom-admin-notifications-list').on('click', '.um-remove-admin-notification', function() {
