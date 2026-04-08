@@ -416,8 +416,22 @@ JS;
 		.tab-panel { display: none; background-color: #222; padding: 5px; border: 0; }
 		.tab-panel.active { display: block; }
 		.tab-panel img { margin-bottom: 10px; }
+		/* Mobile: 2 columns */
 		@media (max-width: 768px) {
-			.tabbed-content-area .tabs .tab { width: 48%; margin-top: 5px; border-bottom: 2px solid #000; }
+			.tabs {
+				display: flex;
+				flex-wrap: wrap;
+			}
+
+			.tabs .tab {
+				width: 47% !important; /* override inline 19% */
+				box-sizing: border-box;
+			}
+
+			.tabbed-content-area .tabs .tab {
+				margin-top: 5px;
+				border-bottom: 2px solid #000;
+			}
 		}
 		</style>
 		<?php
