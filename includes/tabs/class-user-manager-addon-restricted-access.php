@@ -24,8 +24,8 @@ class User_Manager_Addon_Restricted_Access {
 			: [];
 		$no_access_message = isset($settings['restricted_access_no_access_message']) ? (string) $settings['restricted_access_no_access_message'] : 'This is a private page';
 		$password_submit_button_text = isset($settings['restricted_access_password_submit_button_text']) ? (string) $settings['restricted_access_password_submit_button_text'] : 'Access Website';
-		$overlay_bg = isset($settings['restricted_access_overlay_background_color']) ? (string) $settings['restricted_access_overlay_background_color'] : '#000000';
-		$overlay_text_color = isset($settings['restricted_access_overlay_text_color']) ? (string) $settings['restricted_access_overlay_text_color'] : '#ffffff';
+		$overlay_bg = isset($settings['restricted_access_overlay_background_color']) ? (string) $settings['restricted_access_overlay_background_color'] : '#ffffff';
+		$overlay_text_color = isset($settings['restricted_access_overlay_text_color']) ? (string) $settings['restricted_access_overlay_text_color'] : '#000000';
 		$overlay_image = isset($settings['restricted_access_overlay_image_url']) ? (string) $settings['restricted_access_overlay_image_url'] : '';
 		$overlay_image_max_width = isset($settings['restricted_access_overlay_image_max_width']) ? (string) $settings['restricted_access_overlay_image_max_width'] : '';
 		$overlay_image_display_above_message = !empty($settings['restricted_access_overlay_image_display_as_normal_above_message']);
@@ -103,12 +103,12 @@ class User_Manager_Addon_Restricted_Access {
 
 					<div class="um-form-field">
 						<label for="um-restricted-access-overlay-bg"><strong><?php esc_html_e('Full Screen Overlay Background', 'user-manager'); ?></strong></label>
-						<input type="text" id="um-restricted-access-overlay-bg" name="restricted_access_overlay_background_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($overlay_bg); ?>" data-default-color="#000000" placeholder="#000000"<?php echo $form_attr; ?> />
+						<input type="text" id="um-restricted-access-overlay-bg" name="restricted_access_overlay_background_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($overlay_bg); ?>" data-default-color="#ffffff" placeholder="#ffffff"<?php echo $form_attr; ?> />
 					</div>
 
 					<div class="um-form-field">
 						<label for="um-restricted-access-overlay-text-color"><strong><?php esc_html_e('Full Screen Overlay Text Color', 'user-manager'); ?></strong></label>
-						<input type="text" id="um-restricted-access-overlay-text-color" name="restricted_access_overlay_text_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($overlay_text_color); ?>" data-default-color="#ffffff" placeholder="#ffffff"<?php echo $form_attr; ?> />
+						<input type="text" id="um-restricted-access-overlay-text-color" name="restricted_access_overlay_text_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($overlay_text_color); ?>" data-default-color="#000000" placeholder="#000000"<?php echo $form_attr; ?> />
 					</div>
 
 					<div class="um-form-field">

@@ -2829,10 +2829,10 @@ class User_Manager_Actions {
 				$settings['restricted_access_no_access_message'] = $restricted_access_no_access_message !== '' ? $restricted_access_no_access_message : 'This is a private page';
 				$restricted_access_password_button_text = isset($_POST['restricted_access_password_submit_button_text']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_password_submit_button_text'])) : '';
 				$settings['restricted_access_password_submit_button_text'] = $restricted_access_password_button_text !== '' ? $restricted_access_password_button_text : 'Access Website';
-				$restricted_overlay_bg = isset($_POST['restricted_access_overlay_background_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_background_color'])) : '#000000';
-				$settings['restricted_access_overlay_background_color'] = $restricted_overlay_bg ? $restricted_overlay_bg : '#000000';
-				$restricted_overlay_text = isset($_POST['restricted_access_overlay_text_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_text_color'])) : '#ffffff';
-				$settings['restricted_access_overlay_text_color'] = $restricted_overlay_text ? $restricted_overlay_text : '#ffffff';
+				$restricted_overlay_bg = isset($_POST['restricted_access_overlay_background_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_background_color'])) : '#ffffff';
+				$settings['restricted_access_overlay_background_color'] = $restricted_overlay_bg ? $restricted_overlay_bg : '#ffffff';
+				$restricted_overlay_text = isset($_POST['restricted_access_overlay_text_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_text_color'])) : '#000000';
+				$settings['restricted_access_overlay_text_color'] = $restricted_overlay_text ? $restricted_overlay_text : '#000000';
 				$settings['restricted_access_overlay_image_url'] = isset($_POST['restricted_access_overlay_image_url']) ? esc_url_raw(wp_unslash($_POST['restricted_access_overlay_image_url'])) : '';
 				$settings['restricted_access_overlay_image_max_width'] = isset($_POST['restricted_access_overlay_image_max_width']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_overlay_image_max_width'])) : '';
 				$settings['restricted_access_overlay_image_display_as_normal_above_message'] = isset($_POST['restricted_access_overlay_image_display_as_normal_above_message']) && $_POST['restricted_access_overlay_image_display_as_normal_above_message'] === '1';

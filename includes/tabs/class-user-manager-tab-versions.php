@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.177 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on: swapped the default overlay color values so Full Screen Overlay Background now defaults to white and Full Screen Overlay Text Color now defaults to black.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated both settings UI defaults and save-time fallback defaults so new configurations use the swapped color pairing consistently.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.176 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Restricted Access add-on: added an "Insert Random URL Parameter String" button under "Allow an appended URL string to grant access".', 'user-manager'); ?></li>
