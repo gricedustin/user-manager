@@ -218,15 +218,18 @@ class User_Manager_Tab_Addons {
 							if ($current_addon_tag !== '' && !isset($section_tags[$current_addon_tag])) {
 								continue;
 							}
+							$is_active = !empty($section_meta['active']);
+							if ($is_active) {
+								continue;
+							}
 							$visible_tiles++;
 							?>
-							<?php $is_active = !empty($section_meta['active']); ?>
 							<a
-								class="um-addon-tile<?php echo $is_active ? ' um-addon-tile-active' : ''; ?>"
+								class="um-addon-tile"
 								href="<?php echo esc_url(add_query_arg(['addon_section' => $section_key, 'addon_tag' => $current_addon_tag], $addons_base_url)); ?>"
 							>
 								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
-								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
+								<span class="um-addon-tile-status"><?php echo esc_html__('Inactive', 'user-manager'); ?></span>
 								<?php if (!empty($section_meta['description'])) : ?>
 									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
 								<?php endif; ?>
@@ -240,7 +243,7 @@ class User_Manager_Tab_Addons {
 							</a>
 						<?php endforeach; ?>
 						<?php if ($visible_tiles === 0) : ?>
-							<p class="description"><?php esc_html_e('No add-ons match this tag.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('No inactive add-ons match this tag.', 'user-manager'); ?></p>
 						<?php endif; ?>
 					</div>
 				</div>

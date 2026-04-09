@@ -161,15 +161,18 @@ class User_Manager_Tab_Blocks {
 							if ($current_block_tag !== '' && !isset($section_tags[$current_block_tag])) {
 								continue;
 							}
-							$visible_tiles++;
 							$is_active = !empty($section_meta['active']);
+							if ($is_active) {
+								continue;
+							}
+							$visible_tiles++;
 							?>
 							<a
-								class="um-addon-tile<?php echo $is_active ? ' um-addon-tile-active' : ''; ?>"
+								class="um-addon-tile"
 								href="<?php echo esc_url(add_query_arg(['block_section' => $section_key, 'block_tag' => $current_block_tag], $blocks_base_url)); ?>"
 							>
 								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
-								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
+								<span class="um-addon-tile-status"><?php echo esc_html__('Inactive', 'user-manager'); ?></span>
 								<?php if (!empty($section_meta['description'])) : ?>
 									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
 								<?php endif; ?>
@@ -183,7 +186,7 @@ class User_Manager_Tab_Blocks {
 							</a>
 						<?php endforeach; ?>
 						<?php if ($visible_tiles === 0) : ?>
-							<p class="description"><?php esc_html_e('No blocks match this tag.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('No inactive blocks match this tag.', 'user-manager'); ?></p>
 						<?php endif; ?>
 					</div>
 				</div>

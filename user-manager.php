@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.174
+ * Version: 2.5.175
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.175 - March 16, 2026
+ * - Updated Add-ons tab "Inactive Addons" card to only show inactive add-ons; active add-ons remain visible only in the "Active Add-ons" card.
+ * - Updated Blocks tab "Inactive Blocks" card to only show inactive blocks; active blocks remain visible only in the "Active Blocks" card.
+ *
  * 2.5.174 - March 16, 2026
  * - Added a new "Reset Text-File Line Count Cache" button on the My Account Admin add-on settings screen to clear cached per-order line-count values and force fresh re-fetching.
  * - Updated flagged file line-count parsing so CSV/TSV style files count newline rows only (not commas, tabs, or cells), and spreadsheet-like payloads now prioritize row-based counting.
