@@ -2521,10 +2521,14 @@ final class User_Manager_My_Account_Site_Admin {
 				line-height: 1.45;
 			}
 			.um-my-account-order-list-meta-wrap {
-				margin-top: 10px;
-				padding-top: 8px;
-				border-top: 1px solid #dcdcde;
+				margin-top: 0;
+				padding-top: 0;
+				border-top: 0;
 				text-align: left;
+			}
+			.um-my-account-order-list-meta-column {
+				min-width: 220px;
+				max-width: 360px;
 			}
 			.um-my-account-order-list-meta-inline .um-my-account-order-list-meta-item {
 				font-size: 12px;

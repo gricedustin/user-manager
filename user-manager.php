@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.168
+ * Version: 2.5.169
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.169 - March 16, 2026
+ * - My Account Admin Orders list now renders configured custom order meta fields in a dedicated column placed before the actions/buttons column.
+ * - Kept the actions column focused on buttons by moving inline custom meta output into its own untitled column.
+ *
  * 2.5.168 - March 16, 2026
  * - Fixed prefixed file URL handling for "Additional Meta Fields to Display Under Order in All Orders Screen" so URL prefixes (for example `https://.../`) correctly preserve separators and generate clickable links.
  * - Text-file line-count flags now work with prefixed file URLs by normalizing and joining URL parts before fetch.

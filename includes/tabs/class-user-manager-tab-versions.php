@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.169 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders list now renders configured additional order-list meta fields in a dedicated column before the buttons/actions column.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Kept the actions header untitled while moving custom add-on/meta output out of the buttons column for improved readability.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.168 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Additional My Account Admin order-list meta URL handling now preserves and normalizes prefixed file URLs (for example `https://.../path/` + stored token) so flagged file fields render as links and can resolve line counts correctly.', 'user-manager'); ?></li>

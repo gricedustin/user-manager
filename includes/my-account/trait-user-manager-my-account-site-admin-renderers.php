@@ -133,11 +133,12 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			echo '<thead><tr>';
 			echo '<th>' . esc_html__('Order', 'user-manager') . '</th>';
 			echo '<th>' . esc_html__('Date', 'user-manager') . '</th>';
+			echo '<th></th>';
 			echo '<th class="center"></th>';
 			echo '</tr></thead><tbody>';
 	
 			if (empty($orders)) {
-				echo '<tr><td colspan="3" class="express_checkout_order_approvals_empty">' . esc_html__('No orders found.', 'user-manager') . '</td></tr>';
+				echo '<tr><td colspan="4" class="express_checkout_order_approvals_empty">' . esc_html__('No orders found.', 'user-manager') . '</td></tr>';
 			} else {
 				foreach ($orders as $order) {
 					if (!$order instanceof WC_Order) {
@@ -180,6 +181,14 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 						echo '<div class="um-my-account-admin-order-address-block">' . wp_kses_post($address_html) . '</div>';
 					}
 					echo '</td>';
+					echo '<td class="um-my-account-order-list-meta-column">';
+					$order_list_additional_meta_html = self::get_order_additional_meta_fields_for_orders_list_html($order);
+					if ($order_list_additional_meta_html !== '') {
+						echo '<div class="um-my-account-order-list-meta-wrap">' . wp_kses_post($order_list_additional_meta_html) . '</div>';
+					} else {
+						echo '&nbsp;';
+					}
+					echo '</td>';
 					echo '<td class="center">';
 					echo '<a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-view" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
 					echo '<a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-print" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
@@ -196,10 +205,6 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 						}
 						$decline_url = self::get_decline_order_url($order_id, self::get_list_context_query_args());
 						echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-decline" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
-					}
-					$order_list_additional_meta_html = self::get_order_additional_meta_fields_for_orders_list_html($order);
-					if ($order_list_additional_meta_html !== '') {
-						echo '<div class="um-my-account-order-list-meta-wrap">' . wp_kses_post($order_list_additional_meta_html) . '</div>';
 					}
 					echo '</td>';
 					echo '</tr>';
