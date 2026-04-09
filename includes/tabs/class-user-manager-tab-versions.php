@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.176 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on: added an "Insert Random URL Parameter String" button under "Allow an appended URL string to grant access".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new button generates a random 32-character alphanumeric token and inserts it into the field in `?token` format for quick secure URL-key setup.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.175 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tab: fixed the "Inactive Addons" card so it only lists inactive add-ons and no longer duplicates active add-ons already shown in the "Active Add-ons" card.', 'user-manager'); ?></li>

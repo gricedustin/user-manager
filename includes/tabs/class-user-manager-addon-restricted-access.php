@@ -68,6 +68,9 @@ class User_Manager_Addon_Restricted_Access {
 					<div class="um-form-field">
 						<label for="um-restricted-access-appended-url-key"><strong><?php esc_html_e('Allow an appended URL string to grant access', 'user-manager'); ?></strong></label>
 						<input type="text" id="um-restricted-access-appended-url-key" name="restricted_access_url_string" class="regular-text" value="<?php echo esc_attr($appended_url_key); ?>" placeholder="<?php esc_attr_e('preview-access', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<p style="margin-top:8px;">
+							<button type="button" class="button" id="um-restricted-access-generate-url-param"><?php esc_html_e('Insert Random URL Parameter String', 'user-manager'); ?></button>
+						</p>
 						<p class="description"><?php esc_html_e('If set to "example-key", visiting any URL with ?example-key grants temporary access.', 'user-manager'); ?></p>
 					</div>
 
@@ -187,29 +190,50 @@ class User_Manager_Addon_Restricted_Access {
 		jQuery(function($) {
 			var $input = $('#um-restricted-access-overlay-image');
 			var $button = $('#um-restricted-access-overlay-image-upload');
-			if (!$input.length || !$button.length || typeof wp === 'undefined' || !wp.media) {
-				return;
+			var $urlParamInput = $('#um-restricted-access-appended-url-key');
+			var $generateUrlParamButton = $('#um-restricted-access-generate-url-param');
+			if ($urlParamInput.length && $generateUrlParamButton.length) {
+				$generateUrlParamButton.on('click', function(e) {
+					e.preventDefault();
+					var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+					var token = '';
+					if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+						var bytes = new Uint8Array(32);
+						window.crypto.getRandomValues(bytes);
+						for (var i = 0; i < 32; i++) {
+							token += chars.charAt(bytes[i] % chars.length);
+						}
+					} else {
+						for (var j = 0; j < 32; j++) {
+							token += chars.charAt(Math.floor(Math.random() * chars.length));
+						}
+					}
+					$urlParamInput.val('?' + token).trigger('change');
+				});
 			}
-			$button.on('click', function(e) {
-				e.preventDefault();
-				var frame = wp.media({
-					title: <?php echo wp_json_encode(__('Select Overlay Image', 'user-manager')); ?>,
-					button: { text: <?php echo wp_json_encode(__('Use Image', 'user-manager')); ?> },
-					library: { type: 'image' },
-					multiple: false
+
+			if ($input.length && $button.length && typeof wp !== 'undefined' && wp.media) {
+				$button.on('click', function(e) {
+					e.preventDefault();
+					var frame = wp.media({
+						title: <?php echo wp_json_encode(__('Select Overlay Image', 'user-manager')); ?>,
+						button: { text: <?php echo wp_json_encode(__('Use Image', 'user-manager')); ?> },
+						library: { type: 'image' },
+						multiple: false
+					});
+					frame.on('select', function() {
+						var attachment = frame.state().get('selection').first();
+						if (!attachment) {
+							return;
+						}
+						var url = attachment.get('url') || '';
+						if (url) {
+							$input.val(url).trigger('change');
+						}
+					});
+					frame.open();
 				});
-				frame.on('select', function() {
-					var attachment = frame.state().get('selection').first();
-					if (!attachment) {
-						return;
-					}
-					var url = attachment.get('url') || '';
-					if (url) {
-						$input.val(url).trigger('change');
-					}
-				});
-				frame.open();
-			});
+			}
 		});
 		</script>
 		<?php

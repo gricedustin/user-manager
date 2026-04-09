@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.175
+ * Version: 2.5.176
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.176 - March 16, 2026
+ * - Restricted Access add-on now includes an "Insert Random URL Parameter String" button next to the appended URL access key setting.
+ * - The new button generates a random 32-character alphanumeric key and inserts it in `?key` format directly into the access field.
+ *
  * 2.5.175 - March 16, 2026
  * - Updated Add-ons tab "Inactive Addons" card to only show inactive add-ons; active add-ons remain visible only in the "Active Add-ons" card.
  * - Updated Blocks tab "Inactive Blocks" card to only show inactive blocks; active blocks remain visible only in the "Active Blocks" card.
