@@ -111,7 +111,9 @@ class User_Manager_Addon_My_Account_Site_Admin {
 					<div class="um-form-field" id="um-my-account-admin-order-additional-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label for="um-my-account-admin-order-additional-meta-fields"><?php esc_html_e('Additional Meta Fields to Display Under Order', 'user-manager'); ?></label>
 						<textarea name="my_account_admin_order_additional_meta_fields" id="um-my-account-admin-order-additional-meta-fields" class="large-text" rows="4" placeholder="_tracking_number:Tracking Number, _invoice_url:Invoice URL"><?php echo esc_textarea($settings['my_account_admin_order_additional_meta_fields'] ?? ''); ?></textarea>
-						<p class="description"><?php esc_html_e('Format: meta_field:Label:prefix_before_value. Separate values using commas and/or line breaks.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Format: meta_field:Label:prefix_before_value[:flags]. Renders under each Order detail view. Optional flags: text_line_count, text-file-line-count, line_count, count_lines. Separate values using commas and/or line breaks.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Optional flags support text-file line counts, for example: _volunteer_file:Volunteer File:https://example.com/uploads/::text_line_count', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Debug: append ?um_text_file_line_count_debug=1 to the Admin: Orders URL to output URL-build/fetch/cache diagnostics for flagged file fields.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-meta-list-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label for="um-my-account-admin-order-additional-meta-fields-list"><?php esc_html_e('Additional Meta Fields to Display Under Order in All Orders Screen', 'user-manager'); ?></label>
