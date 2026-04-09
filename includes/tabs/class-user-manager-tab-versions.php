@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.181 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin compare-flag rules now support optional grace-value format `meta_a:meta_b:are_they_equal:grace_value:FLAG TITLE:bgcolor:textcolor`.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When grace_value is provided, the flag displays only when both compared meta values are numeric and ABS(meta_a - meta_b) is greater than the configured grace threshold; legacy equality-only format remains supported.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.180 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin text-file line-count cache now also saves a companion order meta key `_um_text_file_line_count_cache_number_only` containing only the latest numeric row count value.', 'user-manager'); ?></li>

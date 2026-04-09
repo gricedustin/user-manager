@@ -1898,13 +1898,15 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Parse configured compare-flags for order-list additional meta rendering.
 	 *
 	 * Format per line:
-	 * meta_field_a:meta_field_b:are_they_equal:FLAG TITLE[:bgcolor[:textcolor]]
+	 * - meta_field_a:meta_field_b:are_they_equal:FLAG TITLE[:bgcolor[:textcolor]]
+	 * - meta_field_a:meta_field_b:are_they_equal:grace_value:FLAG TITLE[:bgcolor[:textcolor]]
 	 *
 	 * @param string $raw Raw setting value.
 	 * @return array<int,array{
 	 *   meta_key_a:string,
 	 *   meta_key_b:string,
 	 *   operator:string,
+	 *   grace_value:float|null,
 	 *   title:string,
 	 *   background_color:string,
 	 *   text_color:string
@@ -1928,7 +1930,7 @@ final class User_Manager_My_Account_Site_Admin {
 				continue;
 			}
 
-			$segments = explode(':', $part, 6);
+			$segments = explode(':', $part);
 			if (count($segments) < 4) {
 				continue;
 			}
@@ -1936,9 +1938,39 @@ final class User_Manager_My_Account_Site_Admin {
 			$meta_key_a = sanitize_key(trim((string) $segments[0]));
 			$meta_key_b = sanitize_key(trim((string) $segments[1]));
 			$operator_raw = strtolower(trim((string) $segments[2]));
-			$title = sanitize_text_field(trim((string) $segments[3]));
-			$bg = isset($segments[4]) ? sanitize_hex_color(trim((string) $segments[4])) : '';
-			$text = isset($segments[5]) ? sanitize_hex_color(trim((string) $segments[5])) : '';
+			$remaining = array_map('trim', array_slice($segments, 3));
+			if (empty($remaining)) {
+				continue;
+			}
+
+			$grace_value = null;
+			if (count($remaining) >= 2 && is_numeric((string) $remaining[0])) {
+				$grace_value = abs((float) $remaining[0]);
+				array_shift($remaining);
+			}
+
+			$bg = '';
+			$text = '';
+			$remaining_count = count($remaining);
+			if ($remaining_count >= 3) {
+				$maybe_bg = sanitize_hex_color((string) $remaining[$remaining_count - 2]);
+				$maybe_text = sanitize_hex_color((string) $remaining[$remaining_count - 1]);
+				if ($maybe_bg && $maybe_text) {
+					$bg = $maybe_bg;
+					$text = $maybe_text;
+					array_pop($remaining);
+					array_pop($remaining);
+				}
+			}
+			if ($bg === '' && $text === '' && count($remaining) >= 2) {
+				$maybe_bg = sanitize_hex_color((string) $remaining[count($remaining) - 1]);
+				if ($maybe_bg) {
+					$bg = $maybe_bg;
+					array_pop($remaining);
+				}
+			}
+
+			$title = sanitize_text_field(trim(implode(':', $remaining)));
 
 			if ($meta_key_a === '' || $meta_key_b === '' || $title === '') {
 				continue;
@@ -1951,6 +1983,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'meta_key_a' => $meta_key_a,
 				'meta_key_b' => $meta_key_b,
 				'operator' => 'are_they_equal',
+				'grace_value' => $grace_value,
 				'title' => $title,
 				'background_color' => $bg ? $bg : '#000000',
 				'text_color' => $text ? $text : '#ffffff',
@@ -1967,6 +2000,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 *   meta_key_a:string,
 	 *   meta_key_b:string,
 	 *   operator:string,
+	 *   grace_value:float|null,
 	 *   title:string,
 	 *   background_color:string,
 	 *   text_color:string
@@ -2018,6 +2052,23 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Parse normalized scalar value into a numeric float when possible.
+	 */
+	private static function maybe_parse_order_meta_scalar_as_float(string $value): ?float {
+		$value = trim($value);
+		if ($value === '') {
+			return null;
+		}
+
+		$normalized = str_replace([',', ' '], '', $value);
+		if ($normalized === '' || !is_numeric($normalized)) {
+			return null;
+		}
+
+		return (float) $normalized;
+	}
+
+	/**
 	 * Build badge HTML for configured compare-flags that match this order.
 	 */
 	private static function get_order_list_additional_meta_compare_flags_html($order): string {
@@ -2045,7 +2096,18 @@ final class User_Manager_My_Account_Site_Admin {
 
 			$matches = false;
 			if ((string) $flag['operator'] === 'are_they_equal') {
-				$matches = (strcasecmp($value_a, $value_b) === 0);
+				$grace_value = isset($flag['grace_value']) && is_numeric($flag['grace_value'])
+					? max(0, (float) $flag['grace_value'])
+					: null;
+				if ($grace_value !== null) {
+					$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
+					$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+					if ($numeric_a !== null && $numeric_b !== null) {
+						$matches = abs($numeric_a - $numeric_b) > $grace_value;
+					}
+				} else {
+					$matches = (strcasecmp($value_a, $value_b) === 0);
+				}
 			}
 			if (!$matches) {
 				continue;
