@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.179 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin add-on: added a new textarea setting "Additional Flag to Display Below Additional Fields in All Orders Screen" supporting line-by-line compare rules in format `meta_a:meta_b:are_they_equal:FLAG TITLE:bgcolor:textcolor`.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Admin: Orders list now evaluates configured compare flags per order and renders matching badge tags below the existing additional meta fields block, with optional per-flag background/text colors (default black background and white text).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.178 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Restricted Access add-on: "No access message" now supports and preserves a truly blank value instead of forcing the default fallback text.', 'user-manager'); ?></li>

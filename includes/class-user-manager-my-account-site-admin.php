@@ -1894,6 +1894,182 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Parse configured compare-flags for order-list additional meta rendering.
+	 *
+	 * Format per line:
+	 * meta_field_a:meta_field_b:are_they_equal:FLAG TITLE[:bgcolor[:textcolor]]
+	 *
+	 * @param string $raw Raw setting value.
+	 * @return array<int,array{
+	 *   meta_key_a:string,
+	 *   meta_key_b:string,
+	 *   operator:string,
+	 *   title:string,
+	 *   background_color:string,
+	 *   text_color:string
+	 * }>
+	 */
+	private static function parse_order_list_additional_meta_compare_flags(string $raw): array {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return [];
+		}
+
+		$parts = preg_split('/[\r\n]+/', $raw);
+		if (!is_array($parts)) {
+			return [];
+		}
+
+		$flags = [];
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+
+			$segments = explode(':', $part, 6);
+			if (count($segments) < 4) {
+				continue;
+			}
+
+			$meta_key_a = sanitize_key(trim((string) $segments[0]));
+			$meta_key_b = sanitize_key(trim((string) $segments[1]));
+			$operator_raw = strtolower(trim((string) $segments[2]));
+			$title = sanitize_text_field(trim((string) $segments[3]));
+			$bg = isset($segments[4]) ? sanitize_hex_color(trim((string) $segments[4])) : '';
+			$text = isset($segments[5]) ? sanitize_hex_color(trim((string) $segments[5])) : '';
+
+			if ($meta_key_a === '' || $meta_key_b === '' || $title === '') {
+				continue;
+			}
+			if ($operator_raw !== 'are_they_equal') {
+				continue;
+			}
+
+			$flags[] = [
+				'meta_key_a' => $meta_key_a,
+				'meta_key_b' => $meta_key_b,
+				'operator' => 'are_they_equal',
+				'title' => $title,
+				'background_color' => $bg ? $bg : '#000000',
+				'text_color' => $text ? $text : '#ffffff',
+			];
+		}
+
+		return $flags;
+	}
+
+	/**
+	 * Get configured compare-flags for order-list additional meta rendering.
+	 *
+	 * @return array<int,array{
+	 *   meta_key_a:string,
+	 *   meta_key_b:string,
+	 *   operator:string,
+	 *   title:string,
+	 *   background_color:string,
+	 *   text_color:string
+	 * }>
+	 */
+	private static function get_order_list_additional_meta_compare_flags(): array {
+		$settings = User_Manager_Core::get_settings();
+		$raw = isset($settings['my_account_admin_order_list_additional_flag_fields'])
+			? (string) $settings['my_account_admin_order_list_additional_flag_fields']
+			: '';
+		if ($raw === '' && isset($settings['my_account_admin_order_list_additional_meta_compare_flags'])) {
+			$raw = (string) $settings['my_account_admin_order_list_additional_meta_compare_flags'];
+		}
+
+		return self::parse_order_list_additional_meta_compare_flags($raw);
+	}
+
+	/**
+	 * Get the first normalized scalar meta value for a given order/meta key.
+	 */
+	private static function get_first_normalized_order_meta_scalar(int $order_id, string $meta_key): string {
+		if ($order_id <= 0 || $meta_key === '') {
+			return '';
+		}
+		$values = get_post_meta($order_id, $meta_key);
+		if (!is_array($values) || empty($values)) {
+			return '';
+		}
+
+		foreach ($values as $value) {
+			if (is_array($value) || is_object($value)) {
+				$json = wp_json_encode($value);
+				$display_value = is_string($json) ? $json : '';
+			} elseif (is_bool($value)) {
+				$display_value = $value ? '1' : '0';
+			} elseif ($value === null) {
+				$display_value = '';
+			} else {
+				$display_value = (string) $value;
+			}
+
+			$normalized = self::normalize_meta_scalar_for_prefixed_link($display_value);
+			if ($normalized !== '') {
+				return $normalized;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Build badge HTML for configured compare-flags that match this order.
+	 */
+	private static function get_order_list_additional_meta_compare_flags_html($order): string {
+		if (!$order instanceof WC_Order) {
+			return '';
+		}
+
+		$flags = self::get_order_list_additional_meta_compare_flags();
+		if (empty($flags)) {
+			return '';
+		}
+
+		$order_id = (int) $order->get_id();
+		if ($order_id <= 0) {
+			return '';
+		}
+
+		$badges = [];
+		foreach ($flags as $flag) {
+			$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
+			$value_b = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
+			if ($value_a === '' || $value_b === '') {
+				continue;
+			}
+
+			$matches = false;
+			if ((string) $flag['operator'] === 'are_they_equal') {
+				$matches = (strcasecmp($value_a, $value_b) === 0);
+			}
+			if (!$matches) {
+				continue;
+			}
+
+			$bg = sanitize_hex_color((string) $flag['background_color']);
+			$text = sanitize_hex_color((string) $flag['text_color']);
+			$bg = $bg ? $bg : '#000000';
+			$text = $text ? $text : '#ffffff';
+			$title = sanitize_text_field((string) $flag['title']);
+			if ($title === '') {
+				continue;
+			}
+
+			$badges[] = '<span class="um-my-account-order-list-flag-badge" style="background-color:' . esc_attr($bg) . ';color:' . esc_attr($text) . ';">' . esc_html($title) . '</span>';
+		}
+
+		if (empty($badges)) {
+			return '';
+		}
+
+		return '<div class="um-my-account-order-list-flag-badges-wrap">' . implode('', $badges) . '</div>';
+	}
+
+	/**
 	 * Render configured additional order meta fields.
 	 *
 	 * @param WC_Order $order Order object.
@@ -1986,8 +2162,13 @@ final class User_Manager_My_Account_Site_Admin {
 		if (empty($field_rows)) {
 			return '';
 		}
+		$html = '<div class="um-my-account-order-list-meta-inline">' . implode('', $field_rows) . '</div>';
+		$flags_html = self::get_order_list_additional_meta_compare_flags_html($order);
+		if ($flags_html !== '') {
+			$html .= $flags_html;
+		}
 
-		return '<div class="um-my-account-order-list-meta-inline">' . implode('', $field_rows) . '</div>';
+		return $html;
 	}
 
 	/**
@@ -2818,6 +2999,21 @@ final class User_Manager_My_Account_Site_Admin {
 			.um-my-account-order-list-meta-inline .um-my-account-order-list-meta-item {
 				font-size: 12px;
 				line-height: 1.4;
+			}
+			.um-my-account-order-list-flag-badges-wrap {
+				margin-top: 8px;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+			}
+			.um-my-account-order-list-flag-badge {
+				display: inline-block;
+				padding: 3px 8px;
+				border-radius: 999px;
+				font-size: 11px;
+				font-weight: 600;
+				line-height: 1.2;
+				white-space: nowrap;
 			}
 			<?php if ($approve_button_bg_color !== '') : ?>
 			.woocommerce-MyAccount-content .um-my-account-order-button-approve,

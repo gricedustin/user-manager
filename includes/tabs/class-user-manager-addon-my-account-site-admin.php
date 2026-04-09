@@ -134,6 +134,12 @@ class User_Manager_Addon_My_Account_Site_Admin {
 							</button>
 						</div>
 					</div>
+					<div class="um-form-field" id="um-my-account-admin-order-additional-flag-list-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label for="um-my-account-admin-order-additional-flag-fields-list"><?php esc_html_e('Additional Flag to Display Below Additional Fields in All Orders Screen', 'user-manager'); ?></label>
+						<textarea name="my_account_admin_order_list_additional_flag_fields" id="um-my-account-admin-order-additional-flag-fields-list" class="large-text" rows="5" placeholder="_meta_field_a:_meta_field_b:are_they_equal:FLAG TITLE:#000000:#ffffff"><?php echo esc_textarea($settings['my_account_admin_order_list_additional_flag_fields'] ?? ''); ?></textarea>
+						<p class="description"><?php esc_html_e('Format (one per line): meta_field_a:meta_field_b:are_they_equal:FLAG TITLE:bgcolor:textcolor', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('When the compared meta values match, the flag title renders below the additional fields in the Admin: Orders list. Default colors: black background and white text.', 'user-manager'); ?></p>
+					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label>
 							<input type="checkbox" name="my_account_admin_order_viewer_show_meta" id="um-my-account-admin-order-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_order_viewer_show_meta'] ?? false); ?> />

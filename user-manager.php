@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.178
+ * Version: 2.5.179
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.179 - March 16, 2026
+ * - Added new My Account Admin setting: "Additional Flag to Display Below Additional Fields in All Orders Screen" (textarea, one rule per line).
+ * - Added compare-flag rendering under All Orders additional meta fields using format `_meta_field_a:_meta_field_b:are_they_equal:FLAG TITLE[:bgcolor[:textcolor]]` with default badge colors black background / white text.
+ *
  * 2.5.178 - March 16, 2026
  * - Restricted Access "No access message" now allows an intentionally blank value to be saved instead of forcing a default message.
  * - Removed runtime fallback that reinserted default no-access text when the saved value is empty.
