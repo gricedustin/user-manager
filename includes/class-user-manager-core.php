@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.173';
+	const VERSION = '2.5.174';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8928,6 +8928,15 @@ html body .woocommerce-layout__header {
 				break;
 			case 'settings_saved':
 				$content = __('Settings saved successfully.', 'user-manager');
+				break;
+			case 'text_file_line_count_cache_reset':
+				$cache_reset_count = isset($_GET['cache_reset_count']) ? max(0, absint($_GET['cache_reset_count'])) : 0;
+				/* translators: %d: number of orders whose line-count cache was reset */
+				$content = sprintf(__('Text-file line-count cache reset for %d order(s). Fresh counts will be fetched again as needed.', 'user-manager'), $cache_reset_count);
+				break;
+			case 'text_file_line_count_cache_reset_error':
+				$content = __('Unable to reset text-file line-count cache. Please try again.', 'user-manager');
+				$type = 'error';
 				break;
 			case 'emali_log_resent':
 				$content = __('Email resent successfully from Email Log.', 'user-manager');

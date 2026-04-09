@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.174 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin add-on settings now include a "Reset Cached File Line Counts" button that clears stored per-order line-count cache values so flagged file fields can be re-fetched and recalculated.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Improved flagged file line counting for CSV/TSV/XLS/XLSX-style sources: counts now focus on rows/new lines instead of cell-like delimiters (commas/tabs), and spreadsheet-like payloads attempt row-tag/worksheet-row detection before fallback counting.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.173 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Extended "Additional Meta Fields to Display Under Order" helper guidance to match the All Orders Screen field, including optional flags support (`text_line_count`, `text-file-line-count`, `line_count`, `count_lines`).', 'user-manager'); ?></li>

@@ -9,8 +9,9 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Addon_My_Account_Site_Admin {
 
-	public static function render(array $settings): void {
+	public static function render(array $settings, string $settings_form_id = ''): void {
 		$available_roles = self::get_available_roles();
+		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$order_status_note = self::get_order_statuses_note();
 		$order_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses() : [];
 		$order_statuses = is_array($order_statuses) ? $order_statuses : [];
@@ -121,6 +122,17 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<p class="description"><?php esc_html_e('Format: meta_field:Label:prefix_before_value[:flags]. Renders in Admin: Orders list (inline under action buttons). Optional flags: text_line_count, text-file-line-count, line_count, count_lines. Separate values using commas and/or line breaks.', 'user-manager'); ?></p>
 						<p class="description"><?php esc_html_e('Optional flags support text-file line counts, for example: _volunteer_file:Volunteer File:https://example.com/uploads/::text_line_count', 'user-manager'); ?></p>
 						<p class="description"><?php esc_html_e('Debug: append ?um_text_file_line_count_debug=1 to the Admin: Orders URL to output URL-build/fetch/cache diagnostics for flagged file fields.', 'user-manager'); ?></p>
+						<div style="margin-top:8px;">
+							<button
+								type="submit"
+								class="button button-secondary um-addon-action-submit"
+								data-um-target-action="user_manager_reset_text_file_line_count_cache"
+								<?php echo $form_attr; ?>
+								onclick="return window.confirm('<?php echo esc_js(__('Reset all cached line-count values now? The next view will re-fetch and re-count rows for flagged files.', 'user-manager')); ?>');"
+							>
+								<?php esc_html_e('Reset Cached Line Counts', 'user-manager'); ?>
+							</button>
+						</div>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label>

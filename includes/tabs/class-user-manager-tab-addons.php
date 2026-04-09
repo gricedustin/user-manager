@@ -338,7 +338,7 @@ class User_Manager_Tab_Addons {
 					<?php User_Manager_Addon_My_Account_Menu_Tiles::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="my-account-site-admin">
-					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
+					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings, $settings_form_id); ?>
 				</div>
 			</div>
 		</form>

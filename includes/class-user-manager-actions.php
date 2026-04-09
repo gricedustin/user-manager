@@ -59,6 +59,7 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_migrate_store_credit_coupons', [__CLASS__, 'handle_migrate_store_credit_coupons']);
 		add_action('admin_post_user_manager_create_basic_coupon_template', [__CLASS__, 'handle_create_basic_coupon_template']);
 		add_action('admin_post_user_manager_reset_view_reports', [__CLASS__, 'handle_reset_view_reports']);
+		add_action('admin_post_user_manager_reset_text_file_line_count_cache', [__CLASS__, 'handle_reset_text_file_line_count_cache']);
 		add_action('admin_post_user_manager_blog_post_importer', [__CLASS__, 'handle_blog_post_importer']);
 		add_action('admin_post_user_manager_bulk_page_creator', [__CLASS__, 'handle_bulk_page_creator']);
 		add_action('admin_post_user_manager_run_data_anonymizer_orders', [__CLASS__, 'handle_run_data_anonymizer_orders']);
@@ -110,6 +111,45 @@ class User_Manager_Actions {
 		);
 
 		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'view_reports_reset'));
+		exit;
+	}
+
+	/**
+	 * Reset cached per-order text-file line counts used by My Account Admin meta fields.
+	 */
+	public static function handle_reset_text_file_line_count_cache(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_save_settings');
+
+		$deleted_count = 0;
+		$message_key = 'text_file_line_count_cache_reset';
+		if (!class_exists('User_Manager_My_Account_Site_Admin') || !method_exists('User_Manager_My_Account_Site_Admin', 'reset_all_cached_text_file_line_counts')) {
+			$message_key = 'text_file_line_count_cache_reset_error';
+		} else {
+			$deleted_count = max(0, (int) User_Manager_My_Account_Site_Admin::reset_all_cached_text_file_line_counts());
+		}
+
+		$redirect_extra = [
+			'addon_section' => 'my-account-site-admin',
+			'cache_reset_count' => $deleted_count,
+		];
+		if (isset($_POST['addon_tag'])) {
+			$addon_tag = sanitize_title(wp_unslash($_POST['addon_tag']));
+			if ($addon_tag !== '') {
+				$redirect_extra['addon_tag'] = $addon_tag;
+			}
+		}
+
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(
+				User_Manager_Core::TAB_ADDONS,
+				$message_key,
+				$redirect_extra
+			)
+		);
 		exit;
 	}
 

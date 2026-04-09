@@ -13,6 +13,7 @@ final class User_Manager_My_Account_Site_Admin {
 	use User_Manager_My_Account_Site_Admin_Renderers_Trait;
 	private const PER_PAGE = 20;
 	private const DEBUG_PARAM = 'um_my_account_admin_debug';
+	private const LINE_COUNT_CACHE_META_KEY = '_um_text_file_line_count_cache';
 
 	/**
 	 * Prevent duplicate style output when multiple endpoints render.
@@ -2202,18 +2203,7 @@ final class User_Manager_My_Account_Site_Admin {
 			return $debug;
 		}
 
-		$normalized = str_replace(["\r\n", "\r"], "\n", $body);
-		$normalized = rtrim($normalized, "\n");
-		if ($normalized === '') {
-			$debug['line_count'] = 0;
-			if ($order_id > 0) {
-				self::set_cached_text_file_line_count_on_order_meta($order_id, $sanitized_url, 0);
-			}
-			$cache[$cache_lookup_key] = $debug;
-			return $debug;
-		}
-
-		$debug['line_count'] = substr_count($normalized, "\n") + 1;
+		$debug['line_count'] = self::count_rows_from_remote_file_contents($body, $debug['content_type'], $sanitized_url);
 		if ($order_id > 0 && $debug['line_count'] !== null) {
 			self::set_cached_text_file_line_count_on_order_meta($order_id, $sanitized_url, (int) $debug['line_count']);
 		}
@@ -2230,7 +2220,7 @@ final class User_Manager_My_Account_Site_Admin {
 			return null;
 		}
 
-		$cache = get_post_meta($order_id, '_um_text_file_line_count_cache', true);
+		$cache = get_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY, true);
 		if (!is_array($cache)) {
 			return null;
 		}
@@ -2270,7 +2260,7 @@ final class User_Manager_My_Account_Site_Admin {
 			return;
 		}
 
-		$cache = get_post_meta($order_id, '_um_text_file_line_count_cache', true);
+		$cache = get_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY, true);
 		$cache = is_array($cache) ? $cache : [];
 		$cache_key = self::build_text_file_line_count_cache_key($url);
 		$cache[$cache_key] = [
@@ -2289,7 +2279,7 @@ final class User_Manager_My_Account_Site_Admin {
 			$cache = array_slice($cache, 0, 100, true);
 		}
 
-		update_post_meta($order_id, '_um_text_file_line_count_cache', $cache);
+		update_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY, $cache);
 	}
 
 	/**
@@ -2297,6 +2287,175 @@ final class User_Manager_My_Account_Site_Admin {
 	 */
 	private static function build_text_file_line_count_cache_key(string $url): string {
 		return md5(strtolower(trim((string) $url)));
+	}
+
+	/**
+	 * Reset all persisted text-file line-count cache entries.
+	 *
+	 * @return int Number of affected orders.
+	 */
+	public static function reset_all_cached_text_file_line_counts(): int {
+		global $wpdb;
+		if (!isset($wpdb) || !($wpdb instanceof wpdb)) {
+			return 0;
+		}
+
+		$post_meta_table = isset($wpdb->postmeta) ? (string) $wpdb->postmeta : '';
+		if ($post_meta_table === '') {
+			return 0;
+		}
+
+		$meta_key = self::LINE_COUNT_CACHE_META_KEY;
+		$affected_order_ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT post_id FROM {$post_meta_table} WHERE meta_key = %s",
+				$meta_key
+			)
+		);
+		if (!is_array($affected_order_ids) || empty($affected_order_ids)) {
+			return 0;
+		}
+
+		foreach ($affected_order_ids as $order_id) {
+			delete_post_meta((int) $order_id, $meta_key);
+		}
+
+		return count($affected_order_ids);
+	}
+
+	/**
+	 * Count row-like lines from remote file contents.
+	 *
+	 * CSV/TSV counts newline-delimited rows only (never commas/tabs).
+	 * Spreadsheet payloads attempt row-tag parsing before newline fallback.
+	 */
+	private static function count_rows_from_remote_file_contents(string $body, string $content_type, string $url): int {
+		$content = str_replace(["\r\n", "\r"], "\n", $body);
+		$content = trim($content);
+		if ($content === '') {
+			return 0;
+		}
+
+		$lower_type = strtolower(trim($content_type));
+		$lower_url  = strtolower(trim($url));
+		$is_delimited_text = (
+			strpos($lower_type, 'csv') !== false
+			|| strpos($lower_type, 'tab-separated-values') !== false
+			|| preg_match('/\.(csv|tsv|tab|txt)(\?|$)/', $lower_url)
+		);
+		if ($is_delimited_text) {
+			return self::count_non_empty_newline_rows($content);
+		}
+
+		$is_excel_like = (
+			strpos($lower_type, 'spreadsheetml') !== false
+			|| strpos($lower_type, 'ms-excel') !== false
+			|| preg_match('/\.(xlsx|xls|xlsm|xml|html?)(\?|$)/', $lower_url)
+		);
+		if ($is_excel_like) {
+			$xlsx_count = self::count_rows_from_xlsx_binary_contents($body);
+			if ($xlsx_count !== null) {
+				return $xlsx_count;
+			}
+
+			$xml_or_html_row_count = self::count_rows_in_xml_or_html_payload($content);
+			if ($xml_or_html_row_count !== null) {
+				return $xml_or_html_row_count;
+			}
+
+			// Last-resort fallback for spreadsheet-like payloads.
+			return self::count_non_empty_newline_rows($content);
+		}
+
+		return substr_count($content, "\n") + 1;
+	}
+
+	/**
+	 * Count non-empty rows from newline-delimited content.
+	 */
+	private static function count_non_empty_newline_rows(string $content): int {
+		$rows = preg_split('/\n+/', $content);
+		if (!is_array($rows)) {
+			return 0;
+		}
+
+		$rows = array_filter($rows, static function ($row): bool {
+			return trim((string) $row) !== '';
+		});
+
+		return count($rows);
+	}
+
+	/**
+	 * Count row tags in XML/HTML spreadsheet-like payloads.
+	 *
+	 * @return int|null Null when no recognizable row tags are present.
+	 */
+	private static function count_rows_in_xml_or_html_payload(string $content): ?int {
+		$xml_row_count = preg_match_all('/<\s*(?:\w+:)?row\b/i', $content);
+		if (is_int($xml_row_count) && $xml_row_count > 0) {
+			return $xml_row_count;
+		}
+
+		$html_row_count = preg_match_all('/<\s*tr\b/i', $content);
+		if (is_int($html_row_count) && $html_row_count > 0) {
+			return $html_row_count;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Count rows from XLSX binary payload by reading worksheet XML files.
+	 *
+	 * @return int|null Null when payload is not readable as XLSX.
+	 */
+	private static function count_rows_from_xlsx_binary_contents(string $body): ?int {
+		if (!class_exists('ZipArchive')) {
+			return null;
+		}
+		if (strlen($body) < 4 || substr($body, 0, 2) !== 'PK') {
+			return null;
+		}
+
+		$temp_file = wp_tempnam('um_xlsx_row_count');
+		if (!is_string($temp_file) || $temp_file === '') {
+			return null;
+		}
+
+		$written = file_put_contents($temp_file, $body);
+		if ($written === false) {
+			@unlink($temp_file);
+			return null;
+		}
+
+		$zip = new ZipArchive();
+		$open_result = $zip->open($temp_file);
+		if ($open_result !== true) {
+			@unlink($temp_file);
+			return null;
+		}
+
+		$row_count = 0;
+		for ($index = 0; $index < $zip->numFiles; $index++) {
+			$file_name = $zip->getNameIndex($index);
+			if (!is_string($file_name) || !preg_match('#^xl/worksheets/[^/]+\.xml$#i', $file_name)) {
+				continue;
+			}
+			$worksheet_xml = $zip->getFromIndex($index);
+			if (!is_string($worksheet_xml) || $worksheet_xml === '') {
+				continue;
+			}
+			$worksheet_row_count = preg_match_all('/<\s*(?:\w+:)?row\b/i', $worksheet_xml);
+			if (is_int($worksheet_row_count) && $worksheet_row_count > 0) {
+				$row_count += $worksheet_row_count;
+			}
+		}
+
+		$zip->close();
+		@unlink($temp_file);
+
+		return $row_count > 0 ? $row_count : null;
 	}
 
 	/**
