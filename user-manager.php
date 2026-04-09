@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.181
+ * Version: 2.5.182
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.182 - March 16, 2026
+ * - Fixed plugin admin asset enqueueing for the optional top-level WP-Admin menu shortcut (`toplevel_page_user-manager`) so the same styles/scripts load as the Users submenu route.
+ * - Updated Users submenu highlighting logic to recognize both submenu and top-level menu screen IDs, keeping navigation state consistent.
+ *
  * 2.5.181 - March 16, 2026
  * - Extended "Additional Flag to Display Below Additional Fields in All Orders Screen" to support an optional grace segment format: `_meta_field_a:_meta_field_b:are_they_equal:3:FLAG TITLE[:bgcolor[:textcolor]]`.
  * - When grace is provided, the flag now renders only when both compared meta values are numeric and `ABS(meta_a - meta_b)` is greater than the configured grace value.

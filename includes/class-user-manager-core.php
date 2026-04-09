@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.181';
+	const VERSION = '2.5.182';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -7458,10 +7458,21 @@ html body .woocommerce-layout__header {
 	 */
 	public static function keep_submenu_current($submenu_file) {
 		$screen = get_current_screen();
-		if ($screen && $screen->id === 'users_page_' . self::SETTINGS_PAGE_SLUG) {
+		$screen_id = ($screen && isset($screen->id)) ? (string) $screen->id : '';
+		if (self::is_user_manager_admin_screen_hook($screen_id)) {
 			return self::SETTINGS_PAGE_SLUG;
 		}
 		return $submenu_file;
+	}
+
+	/**
+	 * Determine whether a wp-admin hook/screen ID belongs to User Manager page.
+	 */
+	private static function is_user_manager_admin_screen_hook(string $hook): bool {
+		return in_array($hook, [
+			'users_page_' . self::SETTINGS_PAGE_SLUG,
+			'toplevel_page_' . self::SETTINGS_PAGE_SLUG,
+		], true);
 	}
 
 	/**
@@ -7478,7 +7489,7 @@ html body .woocommerce-layout__header {
 	 * Enqueue admin assets on plugin screen.
 	 */
 	public static function enqueue_admin_assets(string $hook): void {
-		if ('users_page_' . self::SETTINGS_PAGE_SLUG !== $hook) {
+		if (!self::is_user_manager_admin_screen_hook($hook)) {
 			return;
 		}
 
