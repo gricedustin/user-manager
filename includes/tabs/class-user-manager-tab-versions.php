@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.178 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on: "No access message" now supports and preserves a truly blank value instead of forcing the default fallback text.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated both settings save behavior and runtime message resolution so an intentionally empty no-access message remains empty on front-end overlay output.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.177 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Restricted Access add-on: swapped the default overlay color values so Full Screen Overlay Background now defaults to white and Full Screen Overlay Text Color now defaults to black.', 'user-manager'); ?></li>

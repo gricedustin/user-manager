@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.177
+ * Version: 2.5.178
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.178 - March 16, 2026
+ * - Restricted Access "No access message" now allows an intentionally blank value to be saved instead of forcing a default message.
+ * - Removed runtime fallback that reinserted default no-access text when the saved value is empty.
+ *
  * 2.5.177 - March 16, 2026
  * - Swapped Restricted Access default overlay colors so Full Screen Overlay Background defaults to white and Full Screen Overlay Text Color defaults to black.
  * - Updated both settings UI defaults and save-time fallback defaults to keep behavior consistent.

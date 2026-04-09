@@ -1032,10 +1032,9 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	 * @param array<string,mixed> $settings Plugin settings.
 	 */
 	private static function restricted_access_get_no_access_message(array $settings): string {
-		$text = isset($settings['restricted_access_no_access_message'])
+		return isset($settings['restricted_access_no_access_message'])
 			? sanitize_text_field((string) $settings['restricted_access_no_access_message'])
 			: '';
-		return $text !== '' ? $text : 'This is a private page';
 	}
 
 	/**

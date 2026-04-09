@@ -22,7 +22,7 @@ class User_Manager_Addon_Restricted_Access {
 		$excluded_roles = isset($settings['restricted_access_excluded_roles']) && is_array($settings['restricted_access_excluded_roles'])
 			? array_map('sanitize_key', $settings['restricted_access_excluded_roles'])
 			: [];
-		$no_access_message = isset($settings['restricted_access_no_access_message']) ? (string) $settings['restricted_access_no_access_message'] : 'This is a private page';
+		$no_access_message = isset($settings['restricted_access_no_access_message']) ? (string) $settings['restricted_access_no_access_message'] : '';
 		$password_submit_button_text = isset($settings['restricted_access_password_submit_button_text']) ? (string) $settings['restricted_access_password_submit_button_text'] : 'Access Website';
 		$overlay_bg = isset($settings['restricted_access_overlay_background_color']) ? (string) $settings['restricted_access_overlay_background_color'] : '#ffffff';
 		$overlay_text_color = isset($settings['restricted_access_overlay_text_color']) ? (string) $settings['restricted_access_overlay_text_color'] : '#000000';

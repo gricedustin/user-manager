@@ -2825,8 +2825,9 @@ class User_Manager_Actions {
 				$settings['restricted_access_excluded_roles'] = self::sanitize_role_keys_array(
 					isset($_POST['restricted_access_excluded_roles']) ? wp_unslash($_POST['restricted_access_excluded_roles']) : []
 				);
-				$restricted_access_no_access_message = isset($_POST['restricted_access_no_access_message']) ? sanitize_textarea_field(wp_unslash($_POST['restricted_access_no_access_message'])) : '';
-				$settings['restricted_access_no_access_message'] = $restricted_access_no_access_message !== '' ? $restricted_access_no_access_message : 'This is a private page';
+				$settings['restricted_access_no_access_message'] = isset($_POST['restricted_access_no_access_message'])
+					? sanitize_textarea_field(wp_unslash($_POST['restricted_access_no_access_message']))
+					: '';
 				$restricted_access_password_button_text = isset($_POST['restricted_access_password_submit_button_text']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_password_submit_button_text'])) : '';
 				$settings['restricted_access_password_submit_button_text'] = $restricted_access_password_button_text !== '' ? $restricted_access_password_button_text : 'Access Website';
 				$restricted_overlay_bg = isset($_POST['restricted_access_overlay_background_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_background_color'])) : '#ffffff';
