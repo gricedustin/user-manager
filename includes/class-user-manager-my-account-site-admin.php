@@ -1896,18 +1896,18 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
-	 * Render configured additional order-list meta fields as a full-width row in Admin: Orders table.
+	 * Build configured additional order-list meta fields HTML for Admin: Orders table.
 	 *
 	 * @param WC_Order $order Order object.
 	 */
-	private static function render_order_additional_meta_fields_for_orders_list($order): void {
+	private static function get_order_additional_meta_fields_for_orders_list_html($order): string {
 		if (!$order instanceof WC_Order) {
-			return;
+			return '';
 		}
 
 		$definitions = self::get_order_list_additional_meta_field_definitions();
 		if (empty($definitions)) {
-			return;
+			return '';
 		}
 
 		$field_rows = [];
@@ -1928,14 +1928,10 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		if (empty($field_rows)) {
-			return;
+			return '';
 		}
 
-		echo '<tr class="express_checkout_order_approvals_row express_checkout_order_approvals_row_meta">';
-		echo '<td colspan="4" class="express_checkout_order_approvals_row_meta_cell">';
-		echo wp_kses_post(implode('', $field_rows));
-		echo '</td>';
-		echo '</tr>';
+		return '<div class="um-my-account-order-list-meta-inline">' . implode('', $field_rows) . '</div>';
 	}
 
 	/**
@@ -2326,6 +2322,21 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 			.um-my-account-order-list-meta-item a {
 				word-break: break-all;
+			}
+			.um-my-account-admin-order-address-block {
+				margin-top: 8px;
+				font-size: 13px;
+				line-height: 1.45;
+			}
+			.um-my-account-order-list-meta-wrap {
+				margin-top: 10px;
+				padding-top: 8px;
+				border-top: 1px solid #dcdcde;
+				text-align: left;
+			}
+			.um-my-account-order-list-meta-inline .um-my-account-order-list-meta-item {
+				font-size: 12px;
+				line-height: 1.4;
 			}
 			<?php if ($approve_button_bg_color !== '') : ?>
 			.woocommerce-MyAccount-content .um-my-account-order-button-approve,

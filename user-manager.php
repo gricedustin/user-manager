@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.166
+ * Version: 2.5.167
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.167 - March 16, 2026
+ * - My Account Admin Orders list now merges the former Address column into the Date column, rendering address details beneath date/email/status.
+ * - Additional meta fields configured for "All Orders Screen" now render inside the untitled actions column (below action buttons) instead of a separate full-width row, keeping each order in a single table row.
+ *
  * 2.5.166 - March 16, 2026
  * - My Account Admin permissions now strictly follow configured usernames/roles for area access and order approval actions, including administrators.
  * - Removed implicit `manage_options` bypass in My Account Admin access checks so empty allow-lists correctly block access.

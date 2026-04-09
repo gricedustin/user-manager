@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.167 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders list layout now merges the Address column into the Date column so the table uses a cleaner single data column for order timing/contact/address context.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Additional meta configured for "Display Under Order in All Orders Screen" now renders inline inside the untitled actions column instead of a separate full-width meta row, reducing each order entry to one table row.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.166 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Site Admin access is now strictly controlled by configured usernames/roles for each area; administrator capability alone no longer bypasses empty access lists.', 'user-manager'); ?></li>
