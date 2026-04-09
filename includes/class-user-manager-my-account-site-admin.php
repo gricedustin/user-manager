@@ -498,11 +498,11 @@ final class User_Manager_My_Account_Site_Admin {
 		if (!self::is_addon_enabled($settings)) {
 			return false;
 		}
-		if (current_user_can('manage_options')) {
-			return true;
-		}
 		$allowed  = self::parse_username_list((string) ($settings['my_account_admin_order_approval_usernames'] ?? ''));
 		$role_allow = self::parse_role_list($settings['my_account_admin_order_approval_roles'] ?? []);
+		if (empty($allowed) && empty($role_allow)) {
+			return false;
+		}
 
 		$current = wp_get_current_user();
 		$login   = strtolower((string) ($current->user_login ?? ''));
@@ -1468,10 +1468,6 @@ final class User_Manager_My_Account_Site_Admin {
 
 		if (!is_user_logged_in()) {
 			return false;
-		}
-
-		if (current_user_can('manage_options')) {
-			return true;
 		}
 
 		$allowed_usernames = self::parse_username_list((string) ($settings[ $list_key ] ?? ''));

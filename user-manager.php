@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.165
+ * Version: 2.5.166
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.166 - March 16, 2026
+ * - My Account Admin permissions now strictly follow configured usernames/roles for area access and order approval actions, including administrators.
+ * - Removed implicit `manage_options` bypass in My Account Admin access checks so empty allow-lists correctly block access.
+ *
  * 2.5.165 - March 16, 2026
  * - Add-ons tab heading updated so the non-active tile card is now labeled "Inactive Addons" to match the new Active Add-ons card.
  * - Blocks tab heading updated so the non-active tile card is now labeled "Inactive Blocks" to match the new Active Blocks card.

@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.166 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Site Admin access is now strictly controlled by configured usernames/roles for each area; administrator capability alone no longer bypasses empty access lists.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Order approval button access in My Account Admin Orders now follows the same username/role gate rules and no longer auto-allows by manage_options.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.165 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Renamed Add-ons tab card title from "Choose an Add-on" to "Inactive Add-ons" so it clearly pairs with the existing "Active Add-ons" card.', 'user-manager'); ?></li>
