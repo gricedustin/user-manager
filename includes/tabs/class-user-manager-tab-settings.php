@@ -235,7 +235,14 @@ if (!defined('ABSPATH')) {
 						<div class="um-form-field">
 							<label for="um-plugin-title-override"><?php esc_html_e('Plugin Title Override', 'user-manager'); ?></label>
 							<input type="text" name="plugin_title_override" id="um-plugin-title-override" class="regular-text" value="<?php echo esc_attr($settings['plugin_title_override'] ?? ''); ?>" placeholder="<?php esc_attr_e('User Experience Manager', 'user-manager'); ?>" />
-							<p class="description"><?php esc_html_e('Optional. Overrides the plugin title shown in the WP-Admin bar shortcut and the title at the top of all plugin pages.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('Optional. Overrides the plugin title shown in the Users submenu item, WP-Admin bar shortcut, top-level menu item (if enabled below), and the title at the top of all plugin pages.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="show_top_level_admin_menu_item" value="1" <?php checked($settings['show_top_level_admin_menu_item'] ?? false); ?> />
+								<?php esc_html_e('Show top-level WP-Admin menu item', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('Disabled by default. Adds a new parent-level WP-Admin menu item below Users that opens this plugin screen and uses the Plugin Title Override when set.', 'user-manager'); ?></p>
 						</div>
 					<div class="um-form-field">
 						<label for="um-legacy-noop-shortcodes"><?php esc_html_e('Legacy/Broken Shortcodes (comma-separated)', 'user-manager'); ?></label>

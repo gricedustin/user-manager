@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.164 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Plugin Title Override now also controls the plugin entry label in the Users submenu.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new Settings checkbox to optionally register a top-level WP-Admin parent menu item below Users that opens this plugin page.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, the top-level menu item title also uses Plugin Title Override when provided.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.163 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Extended "Additional Meta Fields to Display Under Order in All Orders Screen" with optional field flags so specific fields can enable text-file line counting.', 'user-manager'); ?></li>

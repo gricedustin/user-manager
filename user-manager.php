@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.163
+ * Version: 2.5.164
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.164 - March 16, 2026
+ * - Plugin Title Override now also updates the plugin submenu label under Users in WP-Admin.
+ * - Added a new Settings checkbox to optionally show this plugin as a top-level WP-Admin parent menu item below Users.
+ * - New top-level WP-Admin parent menu item uses the Plugin Title Override value when provided.
+ *
  * 2.5.163 - March 16, 2026
  * - Extended "Additional Meta Fields to Display Under Order in All Orders Screen" with optional flags support so specific fields can be marked as text-file URLs that should also show fetched line counts.
  * - Added text-file line count flag handling for additional order meta definitions (`text_line_count`, `text-file-line-count`, `line_count`, `count_lines`) and appended `(X lines)` to linked file values when enabled.

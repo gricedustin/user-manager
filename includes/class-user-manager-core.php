@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.163';
+	const VERSION = '2.5.164';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -7254,14 +7254,29 @@ html body .woocommerce-layout__header {
 	 * Register top-level admin menu.
 	 */
 	public static function register_settings_page(): void {
+		$plugin_title = self::get_plugin_title_display_text();
 		add_submenu_page(
 			'users.php',
-			__('UX Manager', 'user-manager'),
-			__('UX Manager', 'user-manager'),
+			$plugin_title,
+			$plugin_title,
 			'manage_options',
 			self::SETTINGS_PAGE_SLUG,
 			[__CLASS__, 'render_settings_page']
 		);
+
+		$settings = self::get_settings();
+		$show_top_level_admin_menu_item = !empty($settings['show_top_level_admin_menu_item']);
+		if ($show_top_level_admin_menu_item) {
+			add_menu_page(
+				$plugin_title,
+				$plugin_title,
+				'manage_options',
+				self::SETTINGS_PAGE_SLUG,
+				[__CLASS__, 'render_settings_page'],
+				'dashicons-admin-users',
+				71
+			);
+		}
 		
 		// Keep submenu highlighted on all tabs
 		add_filter('submenu_file', [__CLASS__, 'keep_submenu_current']);

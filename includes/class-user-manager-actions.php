@@ -2269,6 +2269,7 @@ class User_Manager_Actions {
 				$settings['rebrand_reset_password_copy'] = isset($_POST['rebrand_reset_password_copy']) && $_POST['rebrand_reset_password_copy'] === '1';
 				$settings['show_profile_user_manager_notice'] = isset($_POST['show_profile_user_manager_notice']) && $_POST['show_profile_user_manager_notice'] === '1';
 				$settings['show_user_manager_admin_bar_link'] = isset($_POST['show_user_manager_admin_bar_link']) && $_POST['show_user_manager_admin_bar_link'] === '1';
+				$settings['show_top_level_admin_menu_item'] = isset($_POST['show_top_level_admin_menu_item']) && $_POST['show_top_level_admin_menu_item'] === '1';
 				$settings['plugin_title_override'] = self::sanitize_plugin_title_override(
 					isset($_POST['plugin_title_override']) ? wp_unslash($_POST['plugin_title_override']) : ''
 				);
