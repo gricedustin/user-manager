@@ -1754,11 +1754,11 @@ final class User_Manager_My_Account_Site_Admin {
 			$prefix_raw = '';
 			$flags_raw = '';
 			if (strpos($part, ':') !== false) {
-				$pair = explode(':', $part, 4);
+				$pair = explode(':', $part, 3);
 				$meta_key_raw = isset($pair[0]) ? (string) $pair[0] : '';
 				$label_raw    = isset($pair[1]) ? (string) $pair[1] : '';
-				$prefix_raw   = isset($pair[2]) ? (string) $pair[2] : '';
-				$flags_raw    = isset($pair[3]) ? (string) $pair[3] : '';
+				$prefix_and_flags_raw = isset($pair[2]) ? (string) $pair[2] : '';
+				[$prefix_raw, $flags_raw] = self::split_prefix_and_flags($prefix_and_flags_raw);
 			}
 
 			$meta_key = sanitize_key(trim($meta_key_raw));
@@ -1775,15 +1775,58 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 
 			$definitions[] = [
-				'key'                 => $meta_key,
-				'label'               => $label,
-				'prefix_before_value' => sanitize_text_field(trim($prefix_raw)),
+				'key'                   => $meta_key,
+				'label'                 => $label,
+				'prefix_before_value'   => self::sanitize_meta_prefix_before_value($prefix_raw),
 				'count_text_file_lines' => self::should_count_text_file_lines_for_meta_definition($flags_raw),
 			];
 			$seen_keys[$meta_key] = true;
 		}
 
 		return $definitions;
+	}
+
+	/**
+	 * Split the optional `prefix_before_value[:flags]` segment while preserving URL schemes.
+	 *
+	 * Supports explicit `prefix::flags` and legacy `prefix:flags` when the trailing
+	 * value looks like a supported flags string.
+	 *
+	 * @param string $prefix_and_flags_raw Raw segment after `meta_key:Label:`.
+	 * @return array{0:string,1:string}
+	 */
+	private static function split_prefix_and_flags(string $prefix_and_flags_raw): array {
+		$prefix_and_flags_raw = trim($prefix_and_flags_raw);
+		if ($prefix_and_flags_raw === '') {
+			return ['', ''];
+		}
+
+		$double_colon_pos = strrpos($prefix_and_flags_raw, '::');
+		if ($double_colon_pos !== false) {
+			$prefix_raw = trim(substr($prefix_and_flags_raw, 0, $double_colon_pos));
+			$flags_raw  = trim(substr($prefix_and_flags_raw, $double_colon_pos + 2));
+			return [$prefix_raw, $flags_raw];
+		}
+
+		$single_colon_pos = strrpos($prefix_and_flags_raw, ':');
+		if ($single_colon_pos !== false) {
+			$prefix_candidate = trim(substr($prefix_and_flags_raw, 0, $single_colon_pos));
+			$flags_candidate  = trim(substr($prefix_and_flags_raw, $single_colon_pos + 1));
+			if (self::should_count_text_file_lines_for_meta_definition($flags_candidate)) {
+				return [$prefix_candidate, $flags_candidate];
+			}
+		}
+
+		return [$prefix_and_flags_raw, ''];
+	}
+
+	/**
+	 * Sanitize prefix_before_value while preserving URL separators.
+	 */
+	private static function sanitize_meta_prefix_before_value(string $raw): string {
+		$raw = wp_strip_all_tags($raw);
+		$raw = preg_replace('/[\x00-\x1F\x7F]+/u', '', (string) $raw);
+		return trim((string) $raw);
 	}
 
 	/**
@@ -1945,6 +1988,7 @@ final class User_Manager_My_Account_Site_Admin {
 	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false): string {
 		$rendered = [];
 		$prefix_before_value = trim($prefix_before_value);
+		$debug_enabled = $count_text_file_lines && self::is_text_file_line_count_debug_enabled();
 		foreach ($values as $value) {
 			if (is_array($value) || is_object($value)) {
 				$json = wp_json_encode($value);
@@ -1957,21 +2001,35 @@ final class User_Manager_My_Account_Site_Admin {
 				$display_value = (string) $value;
 			}
 
+			$normalized_value = self::normalize_meta_scalar_for_prefixed_link($display_value);
 			$value_for_output = $display_value;
 			if ($prefix_before_value !== '') {
-				$normalized_value = self::normalize_meta_scalar_for_prefixed_link($display_value);
-				$value_for_output = $prefix_before_value . ltrim($normalized_value, '/');
+				$value_for_output = self::build_meta_prefixed_url_candidate($normalized_value, $prefix_before_value);
 			}
 
 			$trimmed = trim($value_for_output);
+			$debug_payload = [
+				'raw_meta_value' => $display_value,
+				'normalized_meta_value' => $normalized_value,
+				'prefix_before_value' => $prefix_before_value,
+				'combined_value' => $value_for_output,
+			];
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
-				$url = esc_url($trimmed);
+				$url = esc_url_raw($trimmed);
 				if ($url !== '') {
 					$link_html = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>';
 					if ($count_text_file_lines) {
-						$line_count = self::get_text_file_line_count_from_url($url);
+						$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url);
+						$line_count = isset($line_count_debug['line_count']) && is_int($line_count_debug['line_count'])
+							? (int) $line_count_debug['line_count']
+							: null;
 						if ($line_count !== null) {
 							$link_html .= ' <span class="um-my-account-order-list-meta-line-count">(' . esc_html((string) $line_count) . ' ' . esc_html__('lines', 'user-manager') . ')</span>';
+						}
+						if ($debug_enabled) {
+							$debug_payload['resolved_url'] = $url;
+							$debug_payload['line_count_debug'] = $line_count_debug;
+							$link_html .= self::render_text_file_line_count_debug_html($debug_payload);
 						}
 					}
 					$rendered[] = $link_html;
@@ -1979,10 +2037,52 @@ final class User_Manager_My_Account_Site_Admin {
 				}
 			}
 
-			$rendered[] = esc_html($value_for_output);
+			$fallback_html = esc_html($value_for_output);
+			if ($debug_enabled) {
+				$debug_payload['resolved_url'] = '';
+				$debug_payload['line_count_debug'] = [
+					'is_valid_url' => false,
+					'requested' => false,
+					'exists' => false,
+					'status_code' => null,
+					'line_count' => null,
+					'error' => 'combined_value_did_not_resolve_to_http_url',
+					'content_type' => '',
+					'body_size' => null,
+				];
+				$fallback_html .= self::render_text_file_line_count_debug_html($debug_payload);
+			}
+
+			$rendered[] = $fallback_html;
 		}
 
 		return implode(' | ', $rendered);
+	}
+
+	/**
+	 * Build candidate output value when prefix_before_value is configured.
+	 */
+	private static function build_meta_prefixed_url_candidate(string $normalized_value, string $prefix_before_value): string {
+		$normalized_value   = trim($normalized_value);
+		$prefix_before_value = trim($prefix_before_value);
+		if ($prefix_before_value === '') {
+			return $normalized_value;
+		}
+
+		if ($normalized_value === '') {
+			return $prefix_before_value;
+		}
+
+		if (preg_match('#^https?://#i', $normalized_value)) {
+			return $normalized_value;
+		}
+
+		if (preg_match('#^https?://#i', $prefix_before_value)) {
+			// Preserve legacy behavior: prefix is prepended as-is.
+			return $prefix_before_value . ltrim($normalized_value, '/');
+		}
+
+		return $prefix_before_value . ltrim($normalized_value, '/');
 	}
 
 	/**
@@ -1992,49 +2092,141 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @return int|null Null when unavailable/unreadable.
 	 */
 	private static function get_text_file_line_count_from_url(string $url): ?int {
+		$debug = self::get_text_file_line_count_debug_data_from_url($url);
+		return isset($debug['line_count']) && is_int($debug['line_count'])
+			? (int) $debug['line_count']
+			: null;
+	}
+
+	/**
+	 * Fetch debug diagnostics for text-file line counting.
+	 *
+	 * @param string $url Fully-qualified URL to a text-based file.
+	 * @return array{is_valid_url:bool,requested:bool,exists:bool,status_code:int|null,line_count:int|null,error:string,content_type:string,body_size:int|null}
+	 */
+	private static function get_text_file_line_count_debug_data_from_url(string $url): array {
 		static $cache = [];
 
-		$url = esc_url_raw($url);
-		if ($url === '' || !preg_match('#^https?://#i', $url)) {
-			return null;
-		}
+		$url = trim((string) $url);
 		if (isset($cache[$url])) {
 			return $cache[$url];
 		}
 
-		$response = wp_remote_get($url, [
+		$debug = [
+			'is_valid_url' => false,
+			'requested' => false,
+			'exists' => false,
+			'status_code' => null,
+			'line_count' => null,
+			'error' => '',
+			'content_type' => '',
+			'body_size' => null,
+		];
+
+		$sanitized_url = esc_url_raw($url);
+		if ($sanitized_url === '' || !preg_match('#^https?://#i', $sanitized_url)) {
+			$debug['error'] = 'invalid_or_unsupported_url';
+			$cache[$url] = $debug;
+			return $debug;
+		}
+
+		$debug['is_valid_url'] = true;
+		$debug['requested'] = true;
+		$response = wp_remote_get($sanitized_url, [
 			'timeout' => 6,
 			'redirection' => 3,
 			'limit_response_size' => 2 * 1024 * 1024,
 		]);
 		if (is_wp_error($response)) {
-			$cache[$url] = null;
-			return null;
+			$debug['error'] = $response->get_error_message();
+			$cache[$url] = $debug;
+			return $debug;
 		}
 
-		$status_code = (int) wp_remote_retrieve_response_code($response);
-		if ($status_code < 200 || $status_code >= 300) {
-			$cache[$url] = null;
-			return null;
+		$debug['status_code'] = (int) wp_remote_retrieve_response_code($response);
+		$content_type = wp_remote_retrieve_header($response, 'content-type');
+		$debug['content_type'] = is_string($content_type) ? $content_type : '';
+		if ($debug['status_code'] < 200 || $debug['status_code'] >= 300) {
+			$debug['error'] = 'http_status_' . (string) $debug['status_code'];
+			$cache[$url] = $debug;
+			return $debug;
 		}
 
+		$debug['exists'] = true;
 		$body = wp_remote_retrieve_body($response);
-		if (!is_string($body) || $body === '') {
-			$cache[$url] = 0;
-			return 0;
+		if (!is_string($body)) {
+			$debug['error'] = 'non_string_response_body';
+			$cache[$url] = $debug;
+			return $debug;
+		}
+
+		$debug['body_size'] = strlen($body);
+		if ($body === '') {
+			$debug['line_count'] = 0;
+			$cache[$url] = $debug;
+			return $debug;
 		}
 
 		$normalized = str_replace(["\r\n", "\r"], "\n", $body);
 		$normalized = rtrim($normalized, "\n");
 		if ($normalized === '') {
-			$cache[$url] = 0;
-			return 0;
+			$debug['line_count'] = 0;
+			$cache[$url] = $debug;
+			return $debug;
 		}
 
-		$line_count = substr_count($normalized, "\n") + 1;
-		$cache[$url] = $line_count;
+		$debug['line_count'] = substr_count($normalized, "\n") + 1;
+		$cache[$url] = $debug;
 
-		return $line_count;
+		return $debug;
+	}
+
+	/**
+	 * Whether URL-driven debug output for text file line counting is enabled.
+	 *
+	 * Enable with `?um_text_file_line_count_debug=1` on My Account admin endpoints.
+	 * Backward-compatible aliases are also supported.
+	 */
+	private static function is_text_file_line_count_debug_enabled(): bool {
+		$debug_param_keys = [
+			'um_text_file_line_count_debug',
+			'um_debug_text_file_count',
+			'um_debug_text_file_meta',
+			'um_order_meta_debug',
+		];
+		$raw = null;
+		foreach ($debug_param_keys as $debug_param_key) {
+			if (isset($_GET[$debug_param_key])) {
+				$raw = wp_unslash($_GET[$debug_param_key]);
+				break;
+			}
+		}
+		if ($raw === null) {
+			return false;
+		}
+		if (is_array($raw)) {
+			$raw = reset($raw);
+		}
+		$raw = strtolower(trim((string) $raw));
+		if ($raw === '') {
+			return true;
+		}
+
+		return in_array($raw, ['1', 'true', 'yes', 'y', 'on', 'debug'], true);
+	}
+
+	/**
+	 * Render compact debug details for flagged text-file meta values.
+	 *
+	 * @param array<string,mixed> $payload Debug payload.
+	 */
+	private static function render_text_file_line_count_debug_html(array $payload): string {
+		$json = wp_json_encode($payload, JSON_PRETTY_PRINT);
+		if (!is_string($json) || $json === '') {
+			return '';
+		}
+
+		return '<details class="um-my-account-order-list-meta-debug"><summary>' . esc_html__('Text file debug', 'user-manager') . '</summary><pre>' . esc_html($json) . '</pre></details>';
 	}
 
 	/**
