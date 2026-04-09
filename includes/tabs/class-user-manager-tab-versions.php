@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.172 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Changed "Additional Meta Fields to Display Under Order" to a textarea so definitions can be entered line-by-line in addition to comma-separated format.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Changed "Additional Meta Fields to Display Under Order in All Orders Screen" to a textarea with support for either line breaks or commas per definition.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.171 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Text-file line counts for My Account Admin order-list flagged file fields now use persistent per-order meta caching keyed by resolved file URL, avoiding repeat remote fetches after the first successful read.', 'user-manager'); ?></li>

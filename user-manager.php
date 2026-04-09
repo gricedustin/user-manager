@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.171
+ * Version: 2.5.172
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.172 - March 16, 2026
+ * - Changed "Additional Meta Fields to Display Under Order" to a textarea input so values can be entered line-by-line or comma-separated.
+ * - Changed "Additional Meta Fields to Display Under Order in All Orders Screen" to a textarea input with support for line-break or comma-separated entries.
+ * - Updated helper copy for both fields to clarify supported multi-value input formats.
+ *
  * 2.5.171 - March 16, 2026
  * - Added persistent per-order caching for text-file line counts used by flagged additional meta fields in Admin: Orders list.
  * - Line-count rendering now checks cached order meta first and only fetches remote files when a cache value is missing.
