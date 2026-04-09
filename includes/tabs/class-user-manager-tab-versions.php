@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.171 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Text-file line counts for My Account Admin order-list flagged file fields now use persistent per-order meta caching keyed by resolved file URL, avoiding repeat remote fetches after the first successful read.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Line-count debug output now includes cache status details so troubleshooting can confirm whether a value came from order-meta cache or from a fresh remote fetch.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.170 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Orders list column title changed from "Date" to "Shipping Address".', 'user-manager'); ?></li>

@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.170
+ * Version: 2.5.171
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.171 - March 16, 2026
+ * - Added persistent per-order caching for text-file line counts used by flagged additional meta fields in Admin: Orders list.
+ * - Line-count rendering now checks cached order meta first and only fetches remote files when a cache value is missing.
+ * - Successful line-count fetches are saved to order meta so subsequent loads avoid repeat remote requests and render faster.
+ *
  * 2.5.170 - March 16, 2026
  * - My Account Admin Orders list header now labels column two as "Shipping Address" (replacing "Date").
  * - Moved order timestamp, billing email, and order status under the Order Number in the first column.

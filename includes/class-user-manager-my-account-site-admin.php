@@ -1916,7 +1916,13 @@ final class User_Manager_My_Account_Site_Admin {
 
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
 			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
-			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value, $should_count_text_file_lines);
+			$value_html = self::format_meta_values_for_display_with_links(
+				$meta_values,
+				$prefix_before_value,
+				$should_count_text_file_lines,
+				(int) $order->get_id(),
+				(string) $definition['key']
+			);
 			if ($value_html === '') {
 				continue;
 			}
@@ -1962,7 +1968,13 @@ final class User_Manager_My_Account_Site_Admin {
 
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
 			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
-			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value, $should_count_text_file_lines);
+			$value_html = self::format_meta_values_for_display_with_links(
+				$meta_values,
+				$prefix_before_value,
+				$should_count_text_file_lines,
+				(int) $order->get_id(),
+				(string) $definition['key']
+			);
 			if ($value_html === '') {
 				continue;
 			}
@@ -1983,9 +1995,11 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @param array  $values Raw meta values.
 	 * @param string $prefix_before_value Optional prefix to prepend before URL detection.
 	 * @param bool   $count_text_file_lines Whether to include a fetched text-file line count for URL values.
+	 * @param int    $order_id Optional order ID for persistent line-count caching.
+	 * @param string $meta_key Optional source meta key for debug context.
 	 * @return string
 	 */
-	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false): string {
+	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false, int $order_id = 0, string $meta_key = ''): string {
 		$rendered = [];
 		$prefix_before_value = trim($prefix_before_value);
 		$debug_enabled = $count_text_file_lines && self::is_text_file_line_count_debug_enabled();
@@ -2013,13 +2027,15 @@ final class User_Manager_My_Account_Site_Admin {
 				'normalized_meta_value' => $normalized_value,
 				'prefix_before_value' => $prefix_before_value,
 				'combined_value' => $value_for_output,
+				'order_id' => $order_id,
+				'meta_key' => $meta_key,
 			];
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
 				$url = esc_url_raw($trimmed);
 				if ($url !== '') {
 					$link_html = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>';
 					if ($count_text_file_lines) {
-						$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url);
+						$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
 						$line_count = isset($line_count_debug['line_count']) && is_int($line_count_debug['line_count'])
 							? (int) $line_count_debug['line_count']
 							: null;
@@ -2089,10 +2105,11 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Fetch a text file and return line count.
 	 *
 	 * @param string $url Fully-qualified URL to a text-based file.
+	 * @param int    $order_id Optional order ID for persistent cache lookup/storage.
 	 * @return int|null Null when unavailable/unreadable.
 	 */
-	private static function get_text_file_line_count_from_url(string $url): ?int {
-		$debug = self::get_text_file_line_count_debug_data_from_url($url);
+	private static function get_text_file_line_count_from_url(string $url, int $order_id = 0): ?int {
+		$debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
 		return isset($debug['line_count']) && is_int($debug['line_count'])
 			? (int) $debug['line_count']
 			: null;
@@ -2102,14 +2119,16 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Fetch debug diagnostics for text-file line counting.
 	 *
 	 * @param string $url Fully-qualified URL to a text-based file.
-	 * @return array{is_valid_url:bool,requested:bool,exists:bool,status_code:int|null,line_count:int|null,error:string,content_type:string,body_size:int|null}
+	 * @param int    $order_id Optional order ID used for persistent cache lookup/storage.
+	 * @return array{is_valid_url:bool,requested:bool,exists:bool,status_code:int|null,line_count:int|null,error:string,content_type:string,body_size:int|null,cache_hit:bool}
 	 */
-	private static function get_text_file_line_count_debug_data_from_url(string $url): array {
+	private static function get_text_file_line_count_debug_data_from_url(string $url, int $order_id = 0): array {
 		static $cache = [];
 
 		$url = trim((string) $url);
-		if (isset($cache[$url])) {
-			return $cache[$url];
+		$cache_lookup_key = $order_id . '|' . $url;
+		if (isset($cache[$cache_lookup_key])) {
+			return $cache[$cache_lookup_key];
 		}
 
 		$debug = [
@@ -2121,16 +2140,29 @@ final class User_Manager_My_Account_Site_Admin {
 			'error' => '',
 			'content_type' => '',
 			'body_size' => null,
+			'cache_hit' => false,
 		];
 
 		$sanitized_url = esc_url_raw($url);
 		if ($sanitized_url === '' || !preg_match('#^https?://#i', $sanitized_url)) {
 			$debug['error'] = 'invalid_or_unsupported_url';
-			$cache[$url] = $debug;
+			$cache[$cache_lookup_key] = $debug;
 			return $debug;
 		}
 
 		$debug['is_valid_url'] = true;
+		if ($order_id > 0) {
+			$cached_line_count = self::get_cached_text_file_line_count_from_order_meta($order_id, $sanitized_url);
+			if ($cached_line_count !== null) {
+				$debug['cache_hit'] = true;
+				$debug['exists'] = true;
+				$debug['line_count'] = $cached_line_count;
+				$debug['error'] = '';
+				$cache[$cache_lookup_key] = $debug;
+				return $debug;
+			}
+		}
+
 		$debug['requested'] = true;
 		$response = wp_remote_get($sanitized_url, [
 			'timeout' => 6,
@@ -2139,7 +2171,7 @@ final class User_Manager_My_Account_Site_Admin {
 		]);
 		if (is_wp_error($response)) {
 			$debug['error'] = $response->get_error_message();
-			$cache[$url] = $debug;
+			$cache[$cache_lookup_key] = $debug;
 			return $debug;
 		}
 
@@ -2148,7 +2180,7 @@ final class User_Manager_My_Account_Site_Admin {
 		$debug['content_type'] = is_string($content_type) ? $content_type : '';
 		if ($debug['status_code'] < 200 || $debug['status_code'] >= 300) {
 			$debug['error'] = 'http_status_' . (string) $debug['status_code'];
-			$cache[$url] = $debug;
+			$cache[$cache_lookup_key] = $debug;
 			return $debug;
 		}
 
@@ -2156,14 +2188,17 @@ final class User_Manager_My_Account_Site_Admin {
 		$body = wp_remote_retrieve_body($response);
 		if (!is_string($body)) {
 			$debug['error'] = 'non_string_response_body';
-			$cache[$url] = $debug;
+			$cache[$cache_lookup_key] = $debug;
 			return $debug;
 		}
 
 		$debug['body_size'] = strlen($body);
 		if ($body === '') {
 			$debug['line_count'] = 0;
-			$cache[$url] = $debug;
+			if ($order_id > 0) {
+				self::set_cached_text_file_line_count_on_order_meta($order_id, $sanitized_url, 0);
+			}
+			$cache[$cache_lookup_key] = $debug;
 			return $debug;
 		}
 
@@ -2171,14 +2206,97 @@ final class User_Manager_My_Account_Site_Admin {
 		$normalized = rtrim($normalized, "\n");
 		if ($normalized === '') {
 			$debug['line_count'] = 0;
-			$cache[$url] = $debug;
+			if ($order_id > 0) {
+				self::set_cached_text_file_line_count_on_order_meta($order_id, $sanitized_url, 0);
+			}
+			$cache[$cache_lookup_key] = $debug;
 			return $debug;
 		}
 
 		$debug['line_count'] = substr_count($normalized, "\n") + 1;
-		$cache[$url] = $debug;
+		if ($order_id > 0 && $debug['line_count'] !== null) {
+			self::set_cached_text_file_line_count_on_order_meta($order_id, $sanitized_url, (int) $debug['line_count']);
+		}
+		$cache[$cache_lookup_key] = $debug;
 
 		return $debug;
+	}
+
+	/**
+	 * Read cached text-file line count for an order/URL combination.
+	 */
+	private static function get_cached_text_file_line_count_from_order_meta(int $order_id, string $url): ?int {
+		if ($order_id <= 0 || $url === '') {
+			return null;
+		}
+
+		$cache = get_post_meta($order_id, '_um_text_file_line_count_cache', true);
+		if (!is_array($cache)) {
+			return null;
+		}
+
+		$cache_key = self::build_text_file_line_count_cache_key($url);
+		if (!isset($cache[$cache_key]) || !is_array($cache[$cache_key])) {
+			return null;
+		}
+
+		$entry = $cache[$cache_key];
+		$entry_url = isset($entry['url']) ? esc_url_raw((string) $entry['url']) : '';
+		if ($entry_url === '' || $entry_url !== esc_url_raw($url)) {
+			return null;
+		}
+
+		if (!isset($entry['line_count']) || !is_numeric($entry['line_count'])) {
+			return null;
+		}
+
+		$line_count = (int) $entry['line_count'];
+		return $line_count >= 0 ? $line_count : null;
+	}
+
+	/**
+	 * Persist text-file line count cache on the order for future requests.
+	 */
+	private static function set_cached_text_file_line_count_on_order_meta(int $order_id, string $url, int $line_count): void {
+		if ($order_id <= 0 || $url === '') {
+			return;
+		}
+
+		$url = esc_url_raw($url);
+		if ($url === '' || !preg_match('#^https?://#i', $url)) {
+			return;
+		}
+		if ($line_count < 0) {
+			return;
+		}
+
+		$cache = get_post_meta($order_id, '_um_text_file_line_count_cache', true);
+		$cache = is_array($cache) ? $cache : [];
+		$cache_key = self::build_text_file_line_count_cache_key($url);
+		$cache[$cache_key] = [
+			'url'        => $url,
+			'line_count' => $line_count,
+			'updated_at' => time(),
+		];
+
+		// Prevent unbounded growth on heavily-edited orders.
+		if (count($cache) > 100) {
+			uasort($cache, static function ($left, $right): int {
+				$left_ts = (is_array($left) && isset($left['updated_at'])) ? (int) $left['updated_at'] : 0;
+				$right_ts = (is_array($right) && isset($right['updated_at'])) ? (int) $right['updated_at'] : 0;
+				return $right_ts <=> $left_ts;
+			});
+			$cache = array_slice($cache, 0, 100, true);
+		}
+
+		update_post_meta($order_id, '_um_text_file_line_count_cache', $cache);
+	}
+
+	/**
+	 * Build deterministic cache key for text-file URL line count cache.
+	 */
+	private static function build_text_file_line_count_cache_key(string $url): string {
+		return md5(strtolower(trim((string) $url)));
 	}
 
 	/**
