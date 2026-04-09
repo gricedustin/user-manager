@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.161
+ * Version: 2.5.162
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.162 - March 16, 2026
+ * - My Account Admin now includes a new setting: "Additional Meta Fields to Display Under Order in All Orders Screen" for rendering configured order meta directly in the Admin: Orders table view.
+ * - Admin: Orders list now renders configured row-level additional meta fields in a dedicated full-width row below each order, improving visibility for long values/links without squeezing the main columns.
+ *
  * 2.5.161 - March 16, 2026
  * - Product Notification add-on now includes a new "Notification Icon/Checkbox Color Override" setting (WordPress color picker) with a default of white (`#ffffff`).
  * - Product Notification front-end output now applies the configured icon color to `.woocommerce-message.um-product-notification-message::before` so the WooCommerce notice icon/checkmark color can be controlled independently.

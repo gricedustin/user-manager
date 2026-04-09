@@ -1802,6 +1802,20 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Get additional order-list meta field definitions from settings.
+	 *
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string}>
+	 */
+	private static function get_order_list_additional_meta_field_definitions(): array {
+		$settings = User_Manager_Core::get_settings();
+		$raw = isset($settings['my_account_admin_order_list_additional_meta_fields'])
+			? (string) $settings['my_account_admin_order_list_additional_meta_fields']
+			: '';
+
+		return self::parse_order_additional_meta_field_definitions($raw);
+	}
+
+	/**
 	 * Render configured additional order meta fields.
 	 *
 	 * @param WC_Order $order Order object.
@@ -1844,6 +1858,48 @@ final class User_Manager_My_Account_Site_Admin {
 		echo wp_kses_post($rows_html);
 		echo '</tbody></table>';
 		echo '</section>';
+	}
+
+	/**
+	 * Render configured additional order-list meta fields as a full-width row in Admin: Orders table.
+	 *
+	 * @param WC_Order $order Order object.
+	 */
+	private static function render_order_additional_meta_fields_for_orders_list($order): void {
+		if (!$order instanceof WC_Order) {
+			return;
+		}
+
+		$definitions = self::get_order_list_additional_meta_field_definitions();
+		if (empty($definitions)) {
+			return;
+		}
+
+		$field_rows = [];
+		foreach ($definitions as $definition) {
+			$meta_values = get_post_meta((int) $order->get_id(), $definition['key']);
+			if (empty($meta_values) || !is_array($meta_values)) {
+				continue;
+			}
+
+			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
+			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value);
+			if ($value_html === '') {
+				continue;
+			}
+
+			$field_rows[] = '<div class="um-my-account-order-list-meta-item"><strong>' . esc_html($definition['label']) . ':</strong> ' . $value_html . '</div>';
+		}
+
+		if (empty($field_rows)) {
+			return;
+		}
+
+		echo '<tr class="express_checkout_order_approvals_row express_checkout_order_approvals_row_meta">';
+		echo '<td colspan="4" class="express_checkout_order_approvals_row_meta_cell">';
+		echo wp_kses_post(implode('', $field_rows));
+		echo '</td>';
+		echo '</tr>';
 	}
 
 	/**
@@ -2156,6 +2212,24 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 			.breathing_room {
 				margin: 5px 0 !important;
+			}
+			table.express_checkout_order_approvals tr.express_checkout_order_approvals_row_meta td.express_checkout_order_approvals_row_meta_cell {
+				padding-top: 0;
+				padding-bottom: 12px;
+				white-space: normal;
+				word-break: break-word;
+				font-size: 13px;
+				line-height: 1.45;
+				background: rgba(0, 0, 0, 0.02);
+			}
+			.um-my-account-order-list-meta-item {
+				margin: 0 0 6px;
+			}
+			.um-my-account-order-list-meta-item:last-child {
+				margin-bottom: 0;
+			}
+			.um-my-account-order-list-meta-item a {
+				word-break: break-all;
 			}
 			<?php if ($approve_button_bg_color !== '') : ?>
 			.woocommerce-MyAccount-content .um-my-account-order-button-approve,

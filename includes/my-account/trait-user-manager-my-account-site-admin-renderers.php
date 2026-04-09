@@ -198,6 +198,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					}
 					echo '</td>';
 					echo '</tr>';
+					self::render_order_additional_meta_fields_for_orders_list($order);
 				}
 			}
 	

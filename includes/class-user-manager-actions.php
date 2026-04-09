@@ -2655,6 +2655,9 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_additional_meta_fields'] = isset($_POST['my_account_admin_order_additional_meta_fields'])
 					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_additional_meta_fields']))
 					: '';
+				$settings['my_account_admin_order_list_additional_meta_fields'] = isset($_POST['my_account_admin_order_list_additional_meta_fields'])
+					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_list_additional_meta_fields']))
+					: '';
 				$settings['my_account_admin_order_viewer_show_meta'] = isset($_POST['my_account_admin_order_viewer_show_meta']) && $_POST['my_account_admin_order_viewer_show_meta'] === '1';
 				$settings['my_account_admin_product_viewer_enabled'] = isset($_POST['my_account_admin_product_viewer_enabled']) && $_POST['my_account_admin_product_viewer_enabled'] === '1';
 				$settings['my_account_admin_product_viewer_usernames'] = self::sanitize_username_csv(
