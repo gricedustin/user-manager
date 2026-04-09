@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.161 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Product Notification add-on now includes a new "Notification Checkbox/Icon Color Override" setting (default `#ffffff`) to control the WooCommerce notice icon/checkmark color used by `.woocommerce-message::before`.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Product Notification front-end output now applies this setting specifically to `.woocommerce-message.um-product-notification-message::before` so the icon color can be tuned independently from text/background colors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.160 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Converted color-value settings across plugin admin screens to WordPress color pickers for easier visual selection (instead of plain text/manual hex-only entry).', 'user-manager'); ?></li>

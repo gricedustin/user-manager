@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.160
+ * Version: 2.5.161
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.161 - March 16, 2026
+ * - Product Notification add-on now includes a new "Notification Icon/Checkbox Color Override" setting (WordPress color picker) with a default of white (`#ffffff`).
+ * - Product Notification front-end output now applies the configured icon color to `.woocommerce-message.um-product-notification-message::before` so the WooCommerce notice icon/checkmark color can be controlled independently.
+ *
  * 2.5.160 - March 16, 2026
  * - Converted all plugin admin settings fields that store color values to use WordPress color picker controls across Add-ons and Blocks screens for easier color selection.
  * - Updated color-setting sanitization for My Account Admin button colors, Invoice & Approval colors, and WP-Admin Notification background colors to consistently enforce hex color values.

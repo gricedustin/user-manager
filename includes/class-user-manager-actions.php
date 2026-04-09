@@ -2445,6 +2445,9 @@ class User_Manager_Actions {
 				$settings['product_notification_button_hover_text_color'] = isset($_POST['product_notification_button_hover_text_color'])
 					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_hover_text_color']))
 					: '';
+				$settings['product_notification_icon_color'] = isset($_POST['product_notification_icon_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_icon_color']))
+					: '';
 				$settings['emali_log_enabled'] = isset($_POST['emali_log_enabled']) && $_POST['emali_log_enabled'] === '1';
 				$settings['emali_log_auto_delete_days'] = isset($_POST['emali_log_auto_delete_days'])
 					? max(0, absint($_POST['emali_log_auto_delete_days']))

@@ -14,6 +14,7 @@ class User_Manager_Addon_Product_Notification {
 		$enabled = !empty($settings['product_notification_enabled']);
 		$bg_color = (string) ($settings['product_notification_bg_color'] ?? '');
 		$text_color = (string) ($settings['product_notification_text_color'] ?? '');
+		$icon_color = (string) ($settings['product_notification_icon_color'] ?? '');
 		$button_bg_color = (string) ($settings['product_notification_button_bg_color'] ?? '');
 		$button_text_color = (string) ($settings['product_notification_button_text_color'] ?? '');
 		$button_hover_bg_color = (string) ($settings['product_notification_button_hover_bg_color'] ?? '');
@@ -40,6 +41,10 @@ class User_Manager_Addon_Product_Notification {
 					<div class="um-form-field">
 						<label for="um-product-notification-text-color"><strong><?php esc_html_e('Notification Text Color Override', 'user-manager'); ?></strong></label>
 						<input type="text" id="um-product-notification-text-color" name="product_notification_text_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($text_color !== '' ? $text_color : '#ffffff'); ?>" data-default-color="#ffffff"<?php echo $form_attr; ?> />
+					</div>
+					<div class="um-form-field">
+						<label for="um-product-notification-icon-color"><strong><?php esc_html_e('Notification Checkbox/Icon Color Override', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-product-notification-icon-color" name="product_notification_icon_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($icon_color !== '' ? $icon_color : '#ffffff'); ?>" data-default-color="#ffffff"<?php echo $form_attr; ?> />
 					</div>
 					<div class="um-form-field">
 						<label for="um-product-notification-button-bg-color"><strong><?php esc_html_e('Notification Button Background Color Override', 'user-manager'); ?></strong></label>

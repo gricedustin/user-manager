@@ -160,6 +160,9 @@ trait User_Manager_Core_Product_Notification_Trait {
 		);
 		?>
 		<style id="um-product-notification-hover-colors">
+			.woocommerce-message.um-product-notification-message::before {
+				color: <?php echo esc_html($colors['icon']); ?> !important;
+			}
 			.woocommerce-message.um-product-notification-message .um-product-notification-button:hover,
 			.woocommerce-message.um-product-notification-message .um-product-notification-button:focus {
 				background-color: <?php echo esc_html($colors['button_hover_background']); ?> !important;
@@ -180,12 +183,13 @@ trait User_Manager_Core_Product_Notification_Trait {
 	 * Resolve Product Notification colors from settings (with defaults).
 	 *
 	 * @param array<string,mixed> $settings Plugin settings.
-	 * @return array{background:string,text:string,button_background:string,button_text:string,button_hover_background:string,button_hover_text:string}
+	 * @return array{background:string,text:string,icon:string,button_background:string,button_text:string,button_hover_background:string,button_hover_text:string}
 	 */
 	private static function get_product_notification_color_settings(array $settings): array {
 		$defaults = [
 			'background' => '#1e73be',
 			'text' => '#ffffff',
+			'icon' => '#ffffff',
 			'button_background' => '#ffffff',
 			'button_text' => '#000000',
 			'button_hover_background' => '#f1f1f1',
@@ -194,6 +198,7 @@ trait User_Manager_Core_Product_Notification_Trait {
 
 		$background = sanitize_hex_color((string) ($settings['product_notification_bg_color'] ?? ''));
 		$text = sanitize_hex_color((string) ($settings['product_notification_text_color'] ?? ''));
+		$icon = sanitize_hex_color((string) ($settings['product_notification_icon_color'] ?? ''));
 		$button_background = sanitize_hex_color((string) ($settings['product_notification_button_bg_color'] ?? ''));
 		$button_text = sanitize_hex_color((string) ($settings['product_notification_button_text_color'] ?? ''));
 		$button_hover_background = sanitize_hex_color((string) ($settings['product_notification_button_hover_bg_color'] ?? ''));
@@ -202,6 +207,7 @@ trait User_Manager_Core_Product_Notification_Trait {
 		return [
 			'background' => $background ?: $defaults['background'],
 			'text' => $text ?: $defaults['text'],
+			'icon' => $icon ?: $defaults['icon'],
 			'button_background' => $button_background ?: $defaults['button_background'],
 			'button_text' => $button_text ?: $defaults['button_text'],
 			'button_hover_background' => $button_hover_background ?: $defaults['button_hover_background'],
