@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.162
+ * Version: 2.5.163
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.163 - March 16, 2026
+ * - Extended "Additional Meta Fields to Display Under Order in All Orders Screen" with optional flags support so specific fields can be marked as text-file URLs that should also show fetched line counts.
+ * - Added text-file line count flag handling for additional order meta definitions (`text_line_count`, `text-file-line-count`, `line_count`, `count_lines`) and appended `(X lines)` to linked file values when enabled.
+ * - Updated All Orders Screen additional-meta setting helper text with flag usage examples for text-based file line counting.
+ *
  * 2.5.162 - March 16, 2026
  * - My Account Admin now includes a new setting: "Additional Meta Fields to Display Under Order in All Orders Screen" for rendering configured order meta directly in the Admin: Orders table view.
  * - Admin: Orders list now renders configured row-level additional meta fields in a dedicated full-width row below each order, improving visibility for long values/links without squeezing the main columns.

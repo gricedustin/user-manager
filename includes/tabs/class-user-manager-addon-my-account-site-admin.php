@@ -115,8 +115,9 @@ class User_Manager_Addon_My_Account_Site_Admin {
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-meta-list-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label for="um-my-account-admin-order-additional-meta-fields-list"><?php esc_html_e('Additional Meta Fields to Display Under Order in All Orders Screen', 'user-manager'); ?></label>
-						<input type="text" name="my_account_admin_order_additional_meta_fields_all_orders_screen" id="um-my-account-admin-order-additional-meta-fields-list" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_order_additional_meta_fields_all_orders_screen'] ?? ''); ?>" placeholder="_tracking_number:Tracking Number, _invoice_url:Invoice URL" />
-						<p class="description"><?php esc_html_e('Format: meta_field:Label:prefix_before_value. Renders in a full-width row under each order in Admin: Orders list.', 'user-manager'); ?></p>
+						<input type="text" name="my_account_admin_order_list_additional_meta_fields" id="um-my-account-admin-order-additional-meta-fields-list" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_order_list_additional_meta_fields'] ?? ''); ?>" placeholder="_tracking_number:Tracking Number, _invoice_url:Invoice URL" />
+						<p class="description"><?php esc_html_e('Format: meta_field:Label:prefix_before_value[:flags]. Renders in a full-width row under each order in Admin: Orders list. Optional flags: text_line_count, text-file-line-count, line_count, count_lines.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Optional flags support text-file line counts, for example: _volunteer_file:Volunteer File::text_line_count', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label>

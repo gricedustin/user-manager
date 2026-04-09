@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.163 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Extended "Additional Meta Fields to Display Under Order in All Orders Screen" with optional field flags so specific fields can enable text-file line counting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Supported flags: `text_line_count`, `text-file-line-count`, `line_count`, and `count_lines` using format `meta_field:Label:prefix_before_value:flag` (for example `_volunteer_file:Volunteer File::text_line_count`).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When a flagged field resolves to a URL value, Admin: Orders output now appends a line-count indicator next to the Open File link when the remote text file can be read.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.162 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin now includes a new setting: "Additional Meta Fields to Display Under Order in All Orders Screen" (same field format as the existing detail-screen setting).', 'user-manager'); ?></li>

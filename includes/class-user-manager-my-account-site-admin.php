@@ -1732,7 +1732,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Parse configured additional order meta fields.
 	 *
 	 * @param string $raw Raw setting value.
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool}>
 	 */
 	private static function parse_order_additional_meta_field_definitions(string $raw): array {
 		$raw = trim($raw);
@@ -1756,11 +1756,13 @@ final class User_Manager_My_Account_Site_Admin {
 			$meta_key_raw = $part;
 			$label_raw = $part;
 			$prefix_raw = '';
+			$flags_raw = '';
 			if (strpos($part, ':') !== false) {
-				$pair = explode(':', $part, 3);
+				$pair = explode(':', $part, 4);
 				$meta_key_raw = isset($pair[0]) ? (string) $pair[0] : '';
 				$label_raw    = isset($pair[1]) ? (string) $pair[1] : '';
 				$prefix_raw   = isset($pair[2]) ? (string) $pair[2] : '';
+				$flags_raw    = isset($pair[3]) ? (string) $pair[3] : '';
 			}
 
 			$meta_key = sanitize_key(trim($meta_key_raw));
@@ -1780,6 +1782,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'key'                 => $meta_key,
 				'label'               => $label,
 				'prefix_before_value' => sanitize_text_field(trim($prefix_raw)),
+				'count_text_file_lines' => self::should_count_text_file_lines_for_meta_definition($flags_raw),
 			];
 			$seen_keys[$meta_key] = true;
 		}
@@ -1788,9 +1791,44 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Determine whether an additional-meta definition should count lines for text files.
+	 *
+	 * Supported flags include: text_line_count, text-file-line-count, line_count, count_lines.
+	 */
+	private static function should_count_text_file_lines_for_meta_definition(string $flags_raw): bool {
+		$flags_raw = trim(strtolower($flags_raw));
+		if ($flags_raw === '') {
+			return false;
+		}
+
+		$parts = preg_split('/[\s,|]+/', $flags_raw);
+		if (!is_array($parts)) {
+			return false;
+		}
+
+		$supported = [
+			'text_line_count',
+			'text-file-line-count',
+			'line_count',
+			'count_lines',
+		];
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+			if (in_array($part, $supported, true)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Get additional order meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool}>
 	 */
 	private static function get_order_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -1804,7 +1842,7 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Get additional order-list meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool}>
 	 */
 	private static function get_order_list_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -1838,7 +1876,8 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
-			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value);
+			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
+			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value, $should_count_text_file_lines);
 			if ($value_html === '') {
 				continue;
 			}
@@ -1883,7 +1922,8 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
-			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value);
+			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
+			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value, $should_count_text_file_lines);
 			if ($value_html === '') {
 				continue;
 			}
@@ -1907,9 +1947,10 @@ final class User_Manager_My_Account_Site_Admin {
 	 *
 	 * @param array  $values Raw meta values.
 	 * @param string $prefix_before_value Optional prefix to prepend before URL detection.
+	 * @param bool   $count_text_file_lines Whether to include a fetched text-file line count for URL values.
 	 * @return string
 	 */
-	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = ''): string {
+	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false): string {
 		$rendered = [];
 		$prefix_before_value = trim($prefix_before_value);
 		foreach ($values as $value) {
@@ -1934,7 +1975,14 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
 				$url = esc_url($trimmed);
 				if ($url !== '') {
-					$rendered[] = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>';
+					$link_html = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>';
+					if ($count_text_file_lines) {
+						$line_count = self::get_text_file_line_count_from_url($url);
+						if ($line_count !== null) {
+							$link_html .= ' <span class="um-my-account-order-list-meta-line-count">(' . esc_html((string) $line_count) . ' ' . esc_html__('lines', 'user-manager') . ')</span>';
+						}
+					}
+					$rendered[] = $link_html;
 					continue;
 				}
 			}
@@ -1943,6 +1991,58 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return implode(' | ', $rendered);
+	}
+
+	/**
+	 * Fetch a text file and return line count.
+	 *
+	 * @param string $url Fully-qualified URL to a text-based file.
+	 * @return int|null Null when unavailable/unreadable.
+	 */
+	private static function get_text_file_line_count_from_url(string $url): ?int {
+		static $cache = [];
+
+		$url = esc_url_raw($url);
+		if ($url === '' || !preg_match('#^https?://#i', $url)) {
+			return null;
+		}
+		if (isset($cache[$url])) {
+			return $cache[$url];
+		}
+
+		$response = wp_remote_get($url, [
+			'timeout' => 6,
+			'redirection' => 3,
+			'limit_response_size' => 2 * 1024 * 1024,
+		]);
+		if (is_wp_error($response)) {
+			$cache[$url] = null;
+			return null;
+		}
+
+		$status_code = (int) wp_remote_retrieve_response_code($response);
+		if ($status_code < 200 || $status_code >= 300) {
+			$cache[$url] = null;
+			return null;
+		}
+
+		$body = wp_remote_retrieve_body($response);
+		if (!is_string($body) || $body === '') {
+			$cache[$url] = 0;
+			return 0;
+		}
+
+		$normalized = str_replace(["\r\n", "\r"], "\n", $body);
+		$normalized = rtrim($normalized, "\n");
+		if ($normalized === '') {
+			$cache[$url] = 0;
+			return 0;
+		}
+
+		$line_count = substr_count($normalized, "\n") + 1;
+		$cache[$url] = $line_count;
+
+		return $line_count;
 	}
 
 	/**
