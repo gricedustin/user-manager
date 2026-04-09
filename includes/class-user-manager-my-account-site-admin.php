@@ -2515,8 +2515,16 @@ final class User_Manager_My_Account_Site_Admin {
 			.um-my-account-order-list-meta-item a {
 				word-break: break-all;
 			}
-			.um-my-account-admin-order-address-block {
+			.um-my-account-admin-order-meta-block {
 				margin-top: 8px;
+				font-size: 13px;
+				line-height: 1.45;
+			}
+			.um-my-account-admin-order-meta-block:first-child {
+				margin-top: 0;
+			}
+			.um-my-account-admin-order-address-block {
+				margin-top: 0;
 				font-size: 13px;
 				line-height: 1.45;
 			}

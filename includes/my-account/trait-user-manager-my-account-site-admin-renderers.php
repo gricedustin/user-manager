@@ -132,7 +132,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			echo '<table class="express_checkout_order_approvals woocommerce_my_account_admin_tools woocommerce_my_account_admin_tools_orders">';
 			echo '<thead><tr>';
 			echo '<th>' . esc_html__('Order', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('Date', 'user-manager') . '</th>';
+			echo '<th>' . esc_html__('Shipping Address', 'user-manager') . '</th>';
 			echo '<th></th>';
 			echo '<th class="center"></th>';
 			echo '</tr></thead><tbody>';
@@ -168,8 +168,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					$webtoffee_invoice_urls = self::get_webtoffee_invoice_action_urls($order);
 	
 					echo '<tr class="express_checkout_order_approvals_row">';
-					echo '<td><strong>' . esc_html($order_number) . '</strong></td>';
-					echo '<td>';
+					echo '<td><strong>' . esc_html($order_number) . '</strong>';
+					echo '<div class="um-my-account-admin-order-meta-block">';
 					echo esc_html($date_display);
 					if ($billing_email !== '') {
 						echo '<br />' . esc_html($billing_email);
@@ -177,6 +177,9 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					if (!$hide_order_status) {
 						echo '<br /><span class="um-my-account-admin-status">' . esc_html($status_label) . '</span>';
 					}
+					echo '</div>';
+					echo '</td>';
+					echo '<td>';
 					if ($address_html !== '') {
 						echo '<div class="um-my-account-admin-order-address-block">' . wp_kses_post($address_html) . '</div>';
 					}

@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.169
+ * Version: 2.5.170
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.170 - March 16, 2026
+ * - My Account Admin Orders list header now labels column two as "Shipping Address" (replacing "Date").
+ * - Moved order timestamp, billing email, and order status under the Order Number in the first column.
+ * - Shipping address now renders in the second column while keeping custom add-on/meta fields in their dedicated pre-actions column.
+ *
  * 2.5.169 - March 16, 2026
  * - My Account Admin Orders list now renders configured custom order meta fields in a dedicated column placed before the actions/buttons column.
  * - Kept the actions column focused on buttons by moving inline custom meta output into its own untitled column.

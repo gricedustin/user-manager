@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.170 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders list column title changed from "Date" to "Shipping Address".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved order timestamp, billing email, and status under the Order number column while keeping Shipping Address in its own column and retaining the dedicated custom-meta column before actions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.169 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Orders list now renders configured additional order-list meta fields in a dedicated column before the buttons/actions column.', 'user-manager'); ?></li>
