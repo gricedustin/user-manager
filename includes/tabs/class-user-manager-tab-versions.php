@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.180 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin text-file line-count cache now also saves a companion order meta key `_um_text_file_line_count_cache_number_only` containing only the latest numeric row count value.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reset Cached Line Counts now clears both cache meta keys so future views always recalculate and repopulate both values from fresh fetches.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.179 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin add-on: added a new textarea setting "Additional Flag to Display Below Additional Fields in All Orders Screen" supporting line-by-line compare rules in format `meta_a:meta_b:are_they_equal:FLAG TITLE:bgcolor:textcolor`.', 'user-manager'); ?></li>

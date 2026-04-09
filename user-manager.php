@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.179
+ * Version: 2.5.180
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.180 - March 16, 2026
+ * - My Account Admin text-file line-count cache now also writes a plain integer-only order meta value at `_um_text_file_line_count_cache_number_only` whenever `_um_text_file_line_count_cache` is saved.
+ * - The "Reset Cached Line Counts" action now clears both `_um_text_file_line_count_cache` and `_um_text_file_line_count_cache_number_only`.
+ *
  * 2.5.179 - March 16, 2026
  * - Added new My Account Admin setting: "Additional Flag to Display Below Additional Fields in All Orders Screen" (textarea, one rule per line).
  * - Added compare-flag rendering under All Orders additional meta fields using format `_meta_field_a:_meta_field_b:are_they_equal:FLAG TITLE[:bgcolor[:textcolor]]` with default badge colors black background / white text.

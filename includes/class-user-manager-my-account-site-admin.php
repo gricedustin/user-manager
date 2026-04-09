@@ -14,6 +14,7 @@ final class User_Manager_My_Account_Site_Admin {
 	private const PER_PAGE = 20;
 	private const DEBUG_PARAM = 'um_my_account_admin_debug';
 	private const LINE_COUNT_CACHE_META_KEY = '_um_text_file_line_count_cache';
+	private const LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY = '_um_text_file_line_count_cache_number_only';
 
 	/**
 	 * Prevent duplicate style output when multiple endpoints render.
@@ -2461,6 +2462,7 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		update_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY, $cache);
+		update_post_meta($order_id, self::LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY, $line_count);
 	}
 
 	/**
@@ -2486,11 +2488,15 @@ final class User_Manager_My_Account_Site_Admin {
 			return 0;
 		}
 
-		$meta_key = self::LINE_COUNT_CACHE_META_KEY;
+		$meta_keys = [
+			self::LINE_COUNT_CACHE_META_KEY,
+			self::LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY,
+		];
+		$meta_key_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
 		$affected_order_ids = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT DISTINCT post_id FROM {$post_meta_table} WHERE meta_key = %s",
-				$meta_key
+				"SELECT DISTINCT post_id FROM {$post_meta_table} WHERE meta_key IN ({$meta_key_placeholders})",
+				$meta_keys
 			)
 		);
 		if (!is_array($affected_order_ids) || empty($affected_order_ids)) {
@@ -2498,7 +2504,9 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		foreach ($affected_order_ids as $order_id) {
-			delete_post_meta((int) $order_id, $meta_key);
+			$order_id = (int) $order_id;
+			delete_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY);
+			delete_post_meta($order_id, self::LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY);
 		}
 
 		return count($affected_order_ids);
