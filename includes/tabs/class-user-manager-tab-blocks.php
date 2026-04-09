@@ -145,7 +145,7 @@ class User_Manager_Tab_Blocks {
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-screenoptions"></span>
-					<h2><?php esc_html_e('Choose a Block', 'user-manager'); ?></h2>
+					<h2><?php esc_html_e('Inactive Blocks', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
 					<?php if ($temporarily_disable_all) : ?>

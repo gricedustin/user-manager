@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.165 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Renamed Add-ons tab card title from "Choose an Add-on" to "Inactive Add-ons" so it clearly pairs with the existing "Active Add-ons" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Renamed Blocks tab card title from "Choose a Block" to "Inactive Blocks" so it clearly pairs with the existing "Active Blocks" card.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.164 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Plugin Title Override now also controls the plugin entry label in the Users submenu.', 'user-manager'); ?></li>

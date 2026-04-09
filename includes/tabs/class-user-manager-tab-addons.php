@@ -202,7 +202,7 @@ class User_Manager_Tab_Addons {
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-screenoptions"></span>
-					<h2><?php esc_html_e('Choose an Add-on', 'user-manager'); ?></h2>
+					<h2><?php esc_html_e('Inactive Addons', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
 					<?php if (!empty($settings['temporarily_disable_addons'])) : ?>
