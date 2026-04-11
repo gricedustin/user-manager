@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.183 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag front-end YouTube cards now show an administrator-only centered "Edit Video" link below each video item.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new link opens the matching Video Library edit screen for that saved video entry (`Media > Video Library`).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.182 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed top-level WP-Admin User Manager shortcut page asset loading by treating both `users_page_user-manager` and `toplevel_page_user-manager` hook IDs as valid plugin screens for enqueue and submenu highlight logic.', 'user-manager'); ?></li>

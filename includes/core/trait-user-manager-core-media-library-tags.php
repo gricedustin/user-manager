@@ -938,6 +938,7 @@ CSS;
 		$settings = User_Manager_Core::get_settings();
 		$display_video_title = !empty($settings['media_library_tag_video_library_display_title']);
 		$display_video_description = !empty($settings['media_library_tag_video_library_display_description']);
+		$can_edit_video_library = current_user_can('administrator');
 
 		$video_items = [];
 		foreach ($video_records as $video_record) {
@@ -958,6 +959,16 @@ CSS;
 			}
 			if ($display_video_description && $video_description !== '') {
 				$meta_html .= '<p class="um-media-library-tag-video-description">' . esc_html($video_description) . '</p>';
+			}
+			if ($can_edit_video_library && !empty($video_record['id'])) {
+				$edit_video_url = add_query_arg(
+					[
+						'page' => 'um-media-library-tag-video-library',
+						'video_id' => sanitize_text_field((string) $video_record['id']),
+					],
+					admin_url('upload.php')
+				);
+				$meta_html .= '<p class="um-media-library-tag-video-edit-link-wrap"><a class="um-media-library-tag-video-edit-link" href="' . esc_url($edit_video_url) . '">' . esc_html__('Edit Video', 'user-manager') . '</a></p>';
 			}
 			$video_items[] = sprintf(
 				'<div class="um-media-library-tag-video-item"><div class="um-media-library-tag-video-frame"><iframe src="%1$s" title="%2$s" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>%3$s</div>',
@@ -1084,6 +1095,8 @@ CSS;
 			. '.um-media-library-tag-video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}'
 			. '.um-media-library-tag-video-title{margin:14px 0 8px;font-size:17px;line-height:1.35;}'
 			. '.um-media-library-tag-video-description{margin:0;font-size:14px;line-height:1.55;overflow-wrap:anywhere;}'
+			. '.um-media-library-tag-video-edit-link-wrap{margin:12px 0 0;text-align:center;}'
+			. '.um-media-library-tag-video-edit-link{display:inline-block;font-size:13px;line-height:1.4;}'
 			. '@media (max-width:782px){.um-media-library-tag-videos-wrap-multi{grid-template-columns:1fr;}}'
 			. '</style>';
 	}

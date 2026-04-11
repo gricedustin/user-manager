@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.182
+ * Version: 2.5.183
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.183 - March 16, 2026
+ * - Media Library Tag front-end YouTube cards now show a centered "Edit Video" link for logged-in WP administrators.
+ * - The new link opens the Video Library edit screen directly for that specific video record (`upload.php?page=um-media-library-tag-video-library&video_id=...`).
+ *
  * 2.5.182 - March 16, 2026
  * - Fixed plugin admin asset enqueueing for the optional top-level WP-Admin menu shortcut (`toplevel_page_user-manager`) so the same styles/scripts load as the Users submenu route.
  * - Updated Users submenu highlighting logic to recognize both submenu and top-level menu screen IDs, keeping navigation state consistent.
