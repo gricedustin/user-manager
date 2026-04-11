@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.189 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('`[um_media_library_tag_videos]` shortcode now supports sort override attributes (`sort` or `order`) so output can be forced to oldest-first (`asc`, `oldest`, `date_asc`) or newest-first (`desc`, `newest`, `date_desc`) using video date+time values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When date/time sort override is provided, unknown date/time entries stay at the end while ties continue to fall back to title ordering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.188 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Video Library now includes a per-video Time field (single edit and Saved Videos bulk editor) stored in HH:MM format.', 'user-manager'); ?></li>

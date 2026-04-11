@@ -918,7 +918,7 @@ CSS;
 	 * Render YouTube video embeds for active URL tags (or the block tag fallback).
 	 *
 	 * @param array{mode?:string,slugs?:array<int,string>,primarySlug?:string} $tag_override
-	 * @param array{desktopColumns?:int}                                        $render_options
+	 * @param array{desktopColumns?:int,sortDirection?:string}                 $render_options
 	 */
 	private static function render_media_library_tag_youtube_videos_html(array $tag_override, string $fallback_tag_slug = '', array $render_options = []): string {
 		$tag_slugs = isset($tag_override['slugs']) && is_array($tag_override['slugs'])
@@ -935,6 +935,10 @@ CSS;
 		$video_records = self::get_media_library_tag_video_library_records_for_slugs($tag_slugs);
 		if (empty($video_records)) {
 			return '';
+		}
+		$sort_direction = self::normalize_media_library_tag_video_sort_direction($render_options['sortDirection'] ?? '');
+		if ($sort_direction !== '') {
+			self::sort_media_library_tag_video_records_by_datetime($video_records, $sort_direction);
 		}
 		$settings = User_Manager_Core::get_settings();
 		$display_video_title = !empty($settings['media_library_tag_video_library_display_title']);
@@ -1005,6 +1009,71 @@ CSS;
 	}
 
 	/**
+	 * Normalize supported shortcode sort directions.
+	 */
+	private static function normalize_media_library_tag_video_sort_direction($raw): string {
+		$raw = strtolower(trim((string) $raw));
+		if ($raw === '') {
+			return '';
+		}
+		if (in_array($raw, ['asc', 'oldest', 'oldest_first', 'date_asc', 'time_asc'], true)) {
+			return 'asc';
+		}
+		if (in_array($raw, ['desc', 'newest', 'newest_first', 'date_desc', 'time_desc'], true)) {
+			return 'desc';
+		}
+		return '';
+	}
+
+	/**
+	 * Sort video records by date+time, with title fallback.
+	 *
+	 * @param array<int,array<string,mixed>> $records
+	 */
+	private static function sort_media_library_tag_video_records_by_datetime(array &$records, string $direction = 'desc'): void {
+		if (count($records) < 2) {
+			return;
+		}
+		$direction = strtolower(trim($direction)) === 'asc' ? 'asc' : 'desc';
+		usort($records, static function (array $a, array $b) use ($direction): int {
+			$date_a = isset($a['videoDate']) ? (string) $a['videoDate'] : '';
+			$date_b = isset($b['videoDate']) ? (string) $b['videoDate'] : '';
+			$time_a = isset($a['videoTime']) ? (string) $a['videoTime'] : '';
+			$time_b = isset($b['videoTime']) ? (string) $b['videoTime'] : '';
+			$title_a = strtolower((string) ($a['title'] ?? ''));
+			$title_b = strtolower((string) ($b['title'] ?? ''));
+
+			// Keep unknown dates at the end regardless of direction.
+			if ($date_a === '' && $date_b !== '') {
+				return 1;
+			}
+			if ($date_b === '' && $date_a !== '') {
+				return -1;
+			}
+			if ($date_a !== $date_b) {
+				return $direction === 'asc'
+					? strcmp($date_a, $date_b)
+					: strcmp($date_b, $date_a);
+			}
+
+			// Same date: keep unknown times at the end.
+			if ($time_a === '' && $time_b !== '') {
+				return 1;
+			}
+			if ($time_b === '' && $time_a !== '') {
+				return -1;
+			}
+			if ($time_a !== $time_b) {
+				return $direction === 'asc'
+					? strcmp($time_a, $time_b)
+					: strcmp($time_b, $time_a);
+			}
+
+			return $title_a <=> $title_b;
+		});
+	}
+
+	/**
 	 * Shortcode renderer for Video Library rows.
 	 *
 	 * Supported tag expression formats:
@@ -1022,6 +1091,8 @@ CSS;
 				'tag' => '',
 				'desktop_columns' => '',
 				'columns' => '',
+				'sort' => '',
+				'order' => '',
 			],
 			is_array($atts) ? $atts : [],
 			'um_media_library_tag_videos'
@@ -1035,6 +1106,11 @@ CSS;
 		$desktop_columns_raw = $atts['desktop_columns'] !== '' ? $atts['desktop_columns'] : $atts['columns'];
 		$desktop_columns = max(0, min(4, absint((int) $desktop_columns_raw)));
 		$render_options = $desktop_columns > 0 ? ['desktopColumns' => $desktop_columns] : [];
+		$sort_raw = $atts['sort'] !== '' ? $atts['sort'] : $atts['order'];
+		$sort_direction = self::normalize_media_library_tag_video_sort_direction($sort_raw);
+		if ($sort_direction !== '') {
+			$render_options['sortDirection'] = $sort_direction;
+		}
 
 		$pipe_expressions = self::split_media_library_gallery_pipe_expressions($raw_expression);
 		if (!empty($pipe_expressions)) {
