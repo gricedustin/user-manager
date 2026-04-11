@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.185 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access runtime now always bypasses front-end overlay enforcement for logged-in administrators (`manage_options`) before role-based exclusion checks.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This prevents administrators from being blocked on pages like the homepage even when Administrator remains checked in the restricted role list.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.184 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Video Library "Saved Videos" table is now fully bulk-editable with inline inputs for title, YouTube link, date, tags, and description on every row.', 'user-manager'); ?></li>

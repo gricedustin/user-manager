@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.184
+ * Version: 2.5.185
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.185 - March 16, 2026
+ * - Restricted Access runtime now always allows logged-in administrators (`manage_options`) to bypass the front-end overlay/redirect gate.
+ * - This prevents administrators from being blocked on pages like the home page even when role exclusion selections include Administrator.
+ *
  * 2.5.184 - March 16, 2026
  * - Video Library "Saved Videos" is now an inline bulk editor table: Title, YouTube Link, Date, Tags, and Description are all editable inputs on every row.
  * - Added a "Save All Videos" action that saves all row edits in one request; invalid YouTube URLs are skipped and keep their previous values.

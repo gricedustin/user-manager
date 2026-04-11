@@ -82,6 +82,11 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			return;
 		}
 
+		// Always allow site administrators through restricted-access gates.
+		if (is_user_logged_in() && current_user_can('manage_options')) {
+			return;
+		}
+
 		// Logged-in users can view by default unless their role is excluded.
 		if (is_user_logged_in()) {
 			if (self::restricted_access_current_user_has_excluded_role($settings)) {
