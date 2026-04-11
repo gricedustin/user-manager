@@ -55,6 +55,9 @@ class User_Manager_Addon_Media_Library_Tags {
 		if (!isset($album_description_position_options[$album_description_position])) {
 			$album_description_position = 'none';
 		}
+		$description_two_column_layout = isset($settings['media_library_tag_gallery_featured_image_separate_column'])
+			? !empty($settings['media_library_tag_gallery_featured_image_separate_column'])
+			: !empty($defaults['featuredImageSeparateColumn']);
 		$description_value = isset($settings['media_library_tag_gallery_description_value']) && is_string($settings['media_library_tag_gallery_description_value']) && $settings['media_library_tag_gallery_description_value'] !== ''
 			? $settings['media_library_tag_gallery_description_value']
 			: (string) $defaults['descriptionValue'];
@@ -257,6 +260,13 @@ class User_Manager_Addon_Media_Library_Tags {
 									<?php endforeach; ?>
 								</select>
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Shows URL-selected Library Tag description paragraph(s) above or below the gallery, including per-tag Edit Tag Description links for admins. Multiple URL tags render multiple description paragraphs in URL order.', 'user-manager'); ?></p>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tag_gallery_featured_image_separate_column" value="1" <?php checked($description_two_column_layout); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Display Featured Image in separate column on left, then description and bullets in separate column on right', 'user-manager'); ?>
+								</label>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('When enabled, album descriptions render as a two-column layout (featured image natural width on the left, remaining space for description + bullets on the right). Automatically stacks on mobile.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-description-value"><?php esc_html_e('Description Value', 'user-manager'); ?></label>

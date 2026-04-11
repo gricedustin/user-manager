@@ -4113,6 +4113,7 @@ JS;
 		$show_featured_description_image_in_lightbox_collection = $allow_lightbox_click_open
 			&& $featured_description_attachment_id > 0;
 		$featured_lightbox_index_offset = $show_featured_description_image_in_lightbox_collection ? 1 : 0;
+		$use_separate_featured_image_column = !empty($defaults['featuredImageSeparateColumn']);
 		if ($album_description_position !== 'none') {
 			$album_tag_description_html = self::render_media_library_tag_description_paragraphs_html(
 				$tag_description_data,
@@ -4124,6 +4125,7 @@ JS;
 					'inlineLightboxOpenOnclick' => $inline_lightbox_open_onclick,
 					'featuredLightboxEnabled' => $show_featured_description_image_in_lightbox_collection,
 					'featuredLightboxIndex' => $show_featured_description_image_in_lightbox_collection ? 0 : -1,
+					'useSeparateFeaturedImageColumn' => $use_separate_featured_image_column,
 				]
 			);
 			$group_links_html = self::render_media_library_tag_group_links_html_for_expression($url_tag_override);
@@ -4426,8 +4428,32 @@ JS;
 	display: table;
 	clear: both;
 }
+.um-media-library-tag-description-layout-split-columns {
+	display: grid;
+	grid-template-columns: max-content minmax(0,1fr);
+	column-gap: 18px;
+	align-items: start;
+}
+.um-media-library-tag-description-layout-split-columns .um-media-library-tag-description-column-image .um-media-library-tag-description-featured {
+	float: none;
+	margin: 0;
+}
+.um-media-library-tag-description-layout-split-columns .um-media-library-tag-description-column-content {
+	min-width: 0;
+}
+.um-media-library-tag-description-layout-split-columns .um-media-library-tag-description-column-image {
+	width: fit-content;
+	max-width: min(42vw, <?php echo esc_html((string) $featured_image_max_width_px); ?>px);
+}
+.um-media-library-tag-description-layout-split-columns .um-media-library-tag-description-column-image .um-media-library-tag-description-featured-image {
+	width: auto;
+	max-width: min(42vw, <?php echo esc_html((string) $featured_image_max_width_px); ?>px);
+}
 @media (max-width: 782px) {
 	.um-media-library-tag-description-layout {
+		display: block;
+	}
+	.um-media-library-tag-description-layout-split-columns {
 		display: block;
 	}
 	.um-media-library-tag-description-featured {
@@ -6072,6 +6098,7 @@ JS;
 			'pageLimit' => 0,
 			'linkTo' => 'lightbox',
 			'albumDescriptionPosition' => 'none',
+			'featuredImageSeparateColumn' => false,
 			'descriptionDisplay' => 'none',
 			'descriptionValue' => 'caption',
 			'lightboxPrevNextKeyboard' => true,
@@ -6145,6 +6172,9 @@ JS;
 		if (!empty($settings['media_library_tag_gallery_album_description_position'])) {
 			$defaults['albumDescriptionPosition'] = sanitize_key((string) $settings['media_library_tag_gallery_album_description_position']);
 		}
+		$defaults['featuredImageSeparateColumn'] = isset($settings['media_library_tag_gallery_featured_image_separate_column'])
+			? ($settings['media_library_tag_gallery_featured_image_separate_column'] === true || $settings['media_library_tag_gallery_featured_image_separate_column'] === '1')
+			: (bool) ($defaults['featuredImageSeparateColumn'] ?? false);
 		if (!empty($settings['media_library_tag_gallery_description_display'])) {
 			$defaults['descriptionDisplay'] = sanitize_key((string) $settings['media_library_tag_gallery_description_display']);
 		}
@@ -7288,6 +7318,10 @@ JS;
 		}
 		if ($description_html === '') {
 			return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-with-floating-image">' . $featured_image_html . '</div>';
+		}
+		$use_separate_column = !empty($layout_options['useSeparateFeaturedImageColumn']);
+		if ($use_separate_column) {
+			return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-split-columns"><div class="um-media-library-tag-description-column um-media-library-tag-description-column-image">' . $featured_image_html . '</div><div class="um-media-library-tag-description-column um-media-library-tag-description-column-content">' . $description_html . '</div></div>';
 		}
 		return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-with-floating-image">' . $featured_image_html . $description_html . '</div>';
 	}

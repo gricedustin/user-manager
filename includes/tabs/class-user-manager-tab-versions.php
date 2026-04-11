@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.192 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting under "Display Album Tag Description(s)": "Display Featured Image in separate column on left, then description and bullets in separate column on right".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, album description output now uses a true two-column layout (image-width left column + remaining-space content column) and automatically stacks on mobile screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.191 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tags Bulk Editor (`upload.php?page=um-media-library-tags-bulk-editor`) now includes a third column for Bullets so bullets can be edited in bulk alongside tag details and descriptions.', 'user-manager'); ?></li>
