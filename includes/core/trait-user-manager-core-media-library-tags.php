@@ -4456,6 +4456,14 @@ JS;
 	.um-media-library-tag-description-layout-split-columns {
 		display: block;
 	}
+	.um-media-library-tag-description-layout-split-columns .um-media-library-tag-description-column-image {
+		width: 100%;
+		max-width: 100%;
+	}
+	.um-media-library-tag-description-layout-split-columns .um-media-library-tag-description-column-image .um-media-library-tag-description-featured-image {
+		width: 100%;
+		max-width: 100%;
+	}
 	.um-media-library-tag-description-featured {
 		float: none;
 		margin: 0 0 12px;
