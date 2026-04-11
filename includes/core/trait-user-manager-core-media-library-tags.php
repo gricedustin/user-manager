@@ -4114,6 +4114,7 @@ JS;
 			&& $featured_description_attachment_id > 0;
 		$featured_lightbox_index_offset = $show_featured_description_image_in_lightbox_collection ? 1 : 0;
 		$use_separate_featured_image_column = !empty($defaults['featuredImageSeparateColumn']);
+		$hide_featured_image_if_no_description_or_bullets = !empty($defaults['hideFeaturedImageIfNoDescriptionOrBullets']);
 		if ($album_description_position !== 'none') {
 			$album_tag_description_html = self::render_media_library_tag_description_paragraphs_html(
 				$tag_description_data,
@@ -4126,6 +4127,7 @@ JS;
 					'featuredLightboxEnabled' => $show_featured_description_image_in_lightbox_collection,
 					'featuredLightboxIndex' => $show_featured_description_image_in_lightbox_collection ? 0 : -1,
 					'useSeparateFeaturedImageColumn' => $use_separate_featured_image_column,
+					'hideFeaturedImageIfNoDescriptionOrBullets' => $hide_featured_image_if_no_description_or_bullets,
 				]
 			);
 			$group_links_html = self::render_media_library_tag_group_links_html_for_expression($url_tag_override);
@@ -6107,6 +6109,7 @@ JS;
 			'linkTo' => 'lightbox',
 			'albumDescriptionPosition' => 'none',
 			'featuredImageSeparateColumn' => false,
+			'hideFeaturedImageIfNoDescriptionOrBullets' => false,
 			'descriptionDisplay' => 'none',
 			'descriptionValue' => 'caption',
 			'lightboxPrevNextKeyboard' => true,
@@ -6183,6 +6186,9 @@ JS;
 		$defaults['featuredImageSeparateColumn'] = isset($settings['media_library_tag_gallery_featured_image_separate_column'])
 			? ($settings['media_library_tag_gallery_featured_image_separate_column'] === true || $settings['media_library_tag_gallery_featured_image_separate_column'] === '1')
 			: (bool) ($defaults['featuredImageSeparateColumn'] ?? false);
+		$defaults['hideFeaturedImageIfNoDescriptionOrBullets'] = isset($settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'])
+			? ($settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] === true || $settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] === '1')
+			: (bool) ($defaults['hideFeaturedImageIfNoDescriptionOrBullets'] ?? false);
 		if (!empty($settings['media_library_tag_gallery_description_display'])) {
 			$defaults['descriptionDisplay'] = sanitize_key((string) $settings['media_library_tag_gallery_description_display']);
 		}
@@ -7241,7 +7247,8 @@ JS;
 	 *   showLightboxAdminEditLink?:bool,
 	 *   inlineLightboxOpenOnclick?:string,
 	 *   featuredLightboxEnabled?:bool,
-	 *   featuredLightboxIndex?:int
+	 *   featuredLightboxIndex?:int,
+	 *   hideFeaturedImageIfNoDescriptionOrBullets?:bool
 	 * } $layout_options
 	 */
 	private static function render_media_library_tag_description_paragraphs_html(array $tag_description_data, array $layout_options = []): string {
@@ -7320,6 +7327,13 @@ JS;
 				}
 			}
 		}
+		$hide_featured_image_if_no_content = !empty($layout_options['hideFeaturedImageIfNoDescriptionOrBullets']);
+		if (
+			$hide_featured_image_if_no_content
+			&& !self::media_library_tag_description_data_has_non_empty_description_or_bullets($tag_description_data)
+		) {
+			return $description_html;
+		}
 		$featured_image_html = self::render_media_library_tag_featured_image_html($tag_description_data, $layout_options);
 		if ($featured_image_html === '') {
 			return $description_html;
@@ -7332,6 +7346,48 @@ JS;
 			return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-split-columns"><div class="um-media-library-tag-description-column um-media-library-tag-description-column-image">' . $featured_image_html . '</div><div class="um-media-library-tag-description-column um-media-library-tag-description-column-content">' . $description_html . '</div></div>';
 		}
 		return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-with-floating-image">' . $featured_image_html . $description_html . '</div>';
+	}
+
+	/**
+	 * Determine whether tag description payload includes any non-empty description or bullets.
+	 *
+	 * @param array<string,mixed> $tag_description_data
+	 */
+	private static function media_library_tag_description_data_has_non_empty_description_or_bullets(array $tag_description_data): bool {
+		$description = trim((string) ($tag_description_data['description'] ?? ''));
+		if ($description !== '') {
+			return true;
+		}
+		$descriptions = isset($tag_description_data['descriptions']) && is_array($tag_description_data['descriptions'])
+			? $tag_description_data['descriptions']
+			: [];
+		foreach ($descriptions as $description_value) {
+			if (trim((string) $description_value) !== '') {
+				return true;
+			}
+		}
+		$single_bullet_lines = isset($tag_description_data['bulletLines']) && is_array($tag_description_data['bulletLines'])
+			? $tag_description_data['bulletLines']
+			: [];
+		foreach ($single_bullet_lines as $bullet_line) {
+			if (trim(sanitize_text_field((string) $bullet_line)) !== '') {
+				return true;
+			}
+		}
+		$bullets_lines = isset($tag_description_data['bulletsLines']) && is_array($tag_description_data['bulletsLines'])
+			? $tag_description_data['bulletsLines']
+			: [];
+		foreach ($bullets_lines as $bullet_group) {
+			if (!is_array($bullet_group)) {
+				continue;
+			}
+			foreach ($bullet_group as $bullet_line) {
+				if (trim(sanitize_text_field((string) $bullet_line)) !== '') {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
