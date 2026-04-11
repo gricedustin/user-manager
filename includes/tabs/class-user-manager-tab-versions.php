@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.191 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags Bulk Editor (`upload.php?page=um-media-library-tags-bulk-editor`) now includes a third column for Bullets so bullets can be edited in bulk alongside tag details and descriptions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk save now persists each row\'s bullet textarea into tag bullet term meta (`um_media_library_tag_bullets`) using the same line-by-line sanitization as single tag edit.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.190 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new "Bullets" textarea to Media Library Tag add/edit screens so each tag can store optional front-end bullet points (one item per line).', 'user-manager'); ?></li>

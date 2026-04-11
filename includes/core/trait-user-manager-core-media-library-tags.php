@@ -235,29 +235,31 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e('Library Tags Bulk Editor', 'user-manager'); ?></h1>
-			<p><?php esc_html_e('Edit all Library Tag titles, slugs, descriptions, and featured images in one screen, then save all changes at once. Video links are now managed in Media > Video Library.', 'user-manager'); ?></p>
+			<p><?php esc_html_e('Edit all Library Tag titles, slugs, descriptions, bullets, and featured images in one screen, then save all changes at once. Video links are now managed in Media > Video Library.', 'user-manager'); ?></p>
 			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 				<input type="hidden" name="action" value="user_manager_media_library_tags_bulk_editor_save" />
 				<?php wp_nonce_field('user_manager_media_library_tags_bulk_editor_save', 'user_manager_media_library_tags_bulk_editor_nonce'); ?>
 				<table class="widefat fixed striped">
 					<thead>
 						<tr>
-							<th style="width: 40%;"><?php esc_html_e('Tag Details', 'user-manager'); ?></th>
-							<th style="width: 60%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
+							<th style="width: 34%;"><?php esc_html_e('Tag Details', 'user-manager'); ?></th>
+							<th style="width: 33%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
+							<th style="width: 33%;"><?php esc_html_e('Bullets', 'user-manager'); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php if (empty($terms)) : ?>
-							<tr><td colspan="2"><?php esc_html_e('No Library Tags found.', 'user-manager'); ?></td></tr>
+							<tr><td colspan="3"><?php esc_html_e('No Library Tags found.', 'user-manager'); ?></td></tr>
 						<?php else : ?>
 							<?php if (!empty($live_in_nav_terms)) : ?>
 								<tr class="um-bulk-editor-section-row">
-									<td colspan="2"><strong><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></strong></td>
+									<td colspan="3"><strong><?php esc_html_e('Live in Menu Navigation', 'user-manager'); ?></strong></td>
 								</tr>
 								<?php foreach ($live_in_nav_terms as $term) : ?>
 									<?php if (!($term instanceof WP_Term)) { continue; } ?>
 									<?php
 									$featured_image_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
+									$term_bullets = implode("\n", self::get_media_library_tag_bullets_lines((int) $term->term_id));
 									?>
 									<tr>
 										<td>
@@ -288,6 +290,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 										</td>
 										<td class="um-bulk-editor-description-cell">
 											<textarea rows="10" class="um-bulk-editor-description-textarea" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
+										</td>
+										<td class="um-bulk-editor-description-cell">
+											<textarea rows="10" class="um-bulk-editor-description-textarea" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][bullets]" placeholder="<?php esc_attr_e('One bullet per line', 'user-manager'); ?>"><?php echo esc_textarea((string) $term_bullets); ?></textarea>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -295,12 +300,13 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 
 							<?php if (!empty($remaining_terms)) : ?>
 								<tr class="um-bulk-editor-section-row">
-									<td colspan="2"><strong><?php esc_html_e('All Other Tags', 'user-manager'); ?></strong></td>
+									<td colspan="3"><strong><?php esc_html_e('All Other Tags', 'user-manager'); ?></strong></td>
 								</tr>
 								<?php foreach ($remaining_terms as $term) : ?>
 									<?php if (!($term instanceof WP_Term)) { continue; } ?>
 									<?php
 									$featured_image_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
+									$term_bullets = implode("\n", self::get_media_library_tag_bullets_lines((int) $term->term_id));
 									?>
 									<tr>
 										<td>
@@ -331,6 +337,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 										</td>
 										<td class="um-bulk-editor-description-cell">
 											<textarea rows="10" class="um-bulk-editor-description-textarea" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][description]"><?php echo esc_textarea((string) $term->description); ?></textarea>
+										</td>
+										<td class="um-bulk-editor-description-cell">
+											<textarea rows="10" class="um-bulk-editor-description-textarea" style="width:100%;" name="um_bulk_terms[<?php echo esc_attr((string) $term->term_id); ?>][bullets]" placeholder="<?php esc_attr_e('One bullet per line', 'user-manager'); ?>"><?php echo esc_textarea((string) $term_bullets); ?></textarea>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -514,6 +523,9 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			$description = isset($raw_term_data['description'])
 				? self::sanitize_media_library_tag_description_input((string) $raw_term_data['description'])
 				: (string) $current_term->description;
+			$bullets = isset($raw_term_data['bullets'])
+				? self::sanitize_media_library_tag_bullets_input((string) $raw_term_data['bullets'])
+				: implode("\n", self::get_media_library_tag_bullets_lines($term_id));
 			$featured_image_id = isset($raw_term_data['featured_image_id'])
 				? self::sanitize_media_library_tag_featured_image_id($raw_term_data['featured_image_id'])
 				: self::get_media_library_tag_featured_image_id($term_id);
@@ -546,6 +558,11 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				delete_term_meta($term_id, self::media_library_tag_featured_image_meta_key());
 			} else {
 				update_term_meta($term_id, self::media_library_tag_featured_image_meta_key(), $featured_image_id);
+			}
+			if ($bullets === '') {
+				delete_term_meta($term_id, self::media_library_tag_bullets_meta_key());
+			} else {
+				update_term_meta($term_id, self::media_library_tag_bullets_meta_key(), $bullets);
 			}
 			$updated++;
 		}

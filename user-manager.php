@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.190
+ * Version: 2.5.191
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.191 - March 16, 2026
+ * - Added a dedicated Bullets column to the Media Library Tags Bulk Editor (`upload.php?page=um-media-library-tags-bulk-editor`) for per-tag multi-line bullet editing.
+ * - Bulk save now persists each tag's Bullets value to `um_media_library_tag_bullets` using the same line-by-line sanitization used on single-tag edit screens.
+ *
  * 2.5.190 - March 16, 2026
  * - Added a new "Bullets" textarea on Media Library Tag add/edit screens so each line can be saved as a front-end bullet item.
  * - Tag description output now renders saved bullet lines as a `<ul><li>` list beneath the description paragraph content.
