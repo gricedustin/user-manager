@@ -954,6 +954,7 @@ CSS;
 			$embed_url = 'https://www.youtube.com/embed/' . rawurlencode($video_id);
 			$video_title = isset($video_record['title']) ? trim((string) $video_record['title']) : '';
 			$video_description = isset($video_record['description']) ? trim((string) $video_record['description']) : '';
+			$is_vertical = !empty($video_record['isVertical']);
 			$meta_html = '';
 			if ($display_video_title && $video_title !== '') {
 				$meta_html .= '<h4 class="um-media-library-tag-video-title">' . esc_html($video_title) . '</h4>';
@@ -972,10 +973,11 @@ CSS;
 				$meta_html .= '<p class="um-media-library-tag-video-edit-link-wrap"><a class="um-media-library-tag-video-edit-link" href="' . esc_url($edit_video_url) . '">' . esc_html__('Edit Video', 'user-manager') . '</a></p>';
 			}
 			$video_items[] = sprintf(
-				'<div class="um-media-library-tag-video-item"><div class="um-media-library-tag-video-frame"><iframe src="%1$s" title="%2$s" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>%3$s</div>',
+				'<div class="um-media-library-tag-video-item%4$s"><div class="um-media-library-tag-video-frame"><iframe src="%1$s" title="%2$s" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>%3$s</div>',
 				esc_url($embed_url),
 				esc_attr__('YouTube video', 'user-manager'),
-				$meta_html
+				$meta_html,
+				$is_vertical ? ' um-media-library-tag-video-item-vertical' : ''
 			);
 		}
 		if (empty($video_items)) {
@@ -1093,6 +1095,7 @@ CSS;
 			. '.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-4{grid-template-columns:repeat(4,minmax(0,1fr));}'
 			. '.um-media-library-tag-video-item{display:flex;flex-direction:column;min-width:0;}'
 			. '.um-media-library-tag-video-frame{position:relative;padding-top:56.25%;background:#000;border-radius:6px;overflow:hidden;}'
+			. '.um-media-library-tag-video-item-vertical .um-media-library-tag-video-frame{padding-top:177.7778%;}'
 			. '.um-media-library-tag-video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}'
 			. '.um-media-library-tag-video-title{margin:14px 0 8px;font-size:17px;line-height:1.35;}'
 			. '.um-media-library-tag-video-description{margin:0;font-size:14px;line-height:1.55;overflow-wrap:anywhere;}'
@@ -4275,6 +4278,9 @@ JS;
 			background: #000;
 			border-radius: 6px;
 			overflow: hidden;
+		}
+		.um-media-library-tag-video-item-vertical .um-media-library-tag-video-frame {
+			padding-top: 177.7778%;
 		}
 		.um-media-library-tag-video-frame iframe {
 			position: absolute;

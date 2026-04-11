@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.185
+ * Version: 2.5.186
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.186 - March 16, 2026
+ * - Added per-video "Vertical (Short)" support in Video Library create/edit and Saved Videos bulk editor rows.
+ * - Front-end Media Library Tag video embeds now render vertical-marked videos using a 9:16 frame while default videos remain 16:9.
+ *
  * 2.5.185 - March 16, 2026
  * - Restricted Access runtime now always allows logged-in administrators (`manage_options`) to bypass the front-end overlay/redirect gate.
  * - This prevents administrators from being blocked on pages like the home page even when role exclusion selections include Administrator.

@@ -106,6 +106,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 		$form_title = isset($editing_item['title']) ? (string) $editing_item['title'] : '';
 		$form_description = isset($editing_item['description']) ? (string) $editing_item['description'] : '';
 		$form_date = isset($editing_item['videoDate']) ? (string) $editing_item['videoDate'] : '';
+		$form_is_vertical = !empty($editing_item['isVertical']);
 		$form_tag_slugs = isset($editing_item['tagSlugs']) && is_array($editing_item['tagSlugs'])
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $editing_item['tagSlugs']))))
 			: [];
@@ -192,6 +193,15 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 								</td>
 							</tr>
 							<tr>
+								<th scope="row"><?php esc_html_e('Display Mode', 'user-manager'); ?></th>
+								<td>
+									<label for="um-video-library-is-vertical">
+										<input type="checkbox" id="um-video-library-is-vertical" name="um_video_library_is_vertical" value="1" <?php checked($form_is_vertical); ?> />
+										<?php esc_html_e('Vertical (Short / 9:16)', 'user-manager'); ?>
+									</label>
+								</td>
+							</tr>
+							<tr>
 								<th scope="row"><?php esc_html_e('Library Tags', 'user-manager'); ?></th>
 								<td>
 									<input type="hidden" id="um-video-library-tag-slugs" name="um_video_library_tag_slugs" value="<?php echo esc_attr($form_tag_slugs_csv); ?>" />
@@ -223,6 +233,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 							<th style="width:20%;"><?php esc_html_e('Title', 'user-manager'); ?></th>
 							<th style="width:26%;"><?php esc_html_e('YouTube Link', 'user-manager'); ?></th>
 							<th style="width:11%;"><?php esc_html_e('Date', 'user-manager'); ?></th>
+							<th style="width:8%;"><?php esc_html_e('Vertical', 'user-manager'); ?></th>
 							<th style="width:22%;"><?php esc_html_e('Tags', 'user-manager'); ?></th>
 							<th style="width:15%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
 							<th style="width:6%;"><?php esc_html_e('Actions', 'user-manager'); ?></th>
@@ -231,7 +242,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 					<tbody>
 						<?php if (empty($items)) : ?>
 							<tr>
-								<td colspan="6"><?php esc_html_e('No videos saved yet.', 'user-manager'); ?></td>
+								<td colspan="7"><?php esc_html_e('No videos saved yet.', 'user-manager'); ?></td>
 							</tr>
 						<?php else : ?>
 							<?php foreach ($items as $item) : ?>
@@ -240,6 +251,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 								$row_title = isset($item['title']) ? (string) $item['title'] : '';
 								$row_description = isset($item['description']) ? (string) $item['description'] : '';
 								$row_date = isset($item['videoDate']) ? (string) $item['videoDate'] : '';
+								$row_is_vertical = !empty($item['isVertical']);
 								$row_tag_slugs = isset($item['tagSlugs']) && is_array($item['tagSlugs']) ? $item['tagSlugs'] : [];
 								$row_tag_slugs_csv = implode(', ', array_values(array_filter(array_map('sanitize_title', array_map('strval', $row_tag_slugs)))));
 								$delete_url = wp_nonce_url(
@@ -263,6 +275,9 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 									</td>
 									<td>
 										<input type="date" style="width:100%;" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][videoDate]" value="<?php echo esc_attr($row_date); ?>" />
+									</td>
+									<td style="text-align:center;">
+										<input type="checkbox" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][isVertical]" value="1" <?php checked($row_is_vertical); ?> />
 									</td>
 									<td>
 										<input type="text" class="regular-text" style="width:100%;" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][tagSlugs]" value="<?php echo esc_attr($row_tag_slugs_csv); ?>" placeholder="tag-one, tag-two" />
@@ -383,6 +398,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 		$raw_description = isset($_POST['um_video_library_description']) ? (string) wp_unslash($_POST['um_video_library_description']) : '';
 		$raw_date = isset($_POST['um_video_library_date']) ? (string) wp_unslash($_POST['um_video_library_date']) : '';
 		$raw_tag_slugs_csv = isset($_POST['um_video_library_tag_slugs']) ? (string) wp_unslash($_POST['um_video_library_tag_slugs']) : '';
+		$is_vertical = isset($_POST['um_video_library_is_vertical']) && (string) wp_unslash($_POST['um_video_library_is_vertical']) === '1';
 
 		$video_url = self::sanitize_media_library_tag_video_library_youtube_url($raw_url);
 		if ($video_url === '') {
@@ -410,6 +426,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			'title' => $sanitized_title,
 			'description' => $sanitized_description,
 			'videoDate' => $sanitized_date,
+			'isVertical' => $is_vertical,
 			'tagSlugs' => $sanitized_tag_slugs,
 		];
 
@@ -501,12 +518,14 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			$raw_description = isset($row['description']) ? (string) $row['description'] : '';
 			$raw_date = isset($row['videoDate']) ? (string) $row['videoDate'] : '';
 			$raw_tag_slugs_csv = isset($row['tagSlugs']) ? (string) $row['tagSlugs'] : '';
+			$row_is_vertical = isset($row['isVertical']) && (string) $row['isVertical'] === '1';
 			$sanitized_items[] = [
 				'id' => $row_id,
 				'youtubeUrl' => $video_url,
 				'title' => sanitize_text_field($raw_title),
 				'description' => sanitize_textarea_field($raw_description),
 				'videoDate' => self::sanitize_media_library_tag_video_library_date($raw_date),
+				'isVertical' => $row_is_vertical,
 				'tagSlugs' => self::sanitize_media_library_tag_video_library_tag_slugs($raw_tag_slugs_csv),
 			];
 		}
@@ -765,6 +784,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 		$title = sanitize_text_field((string) ($item['title'] ?? ''));
 		$description = sanitize_textarea_field((string) ($item['description'] ?? ''));
 		$video_date = self::sanitize_media_library_tag_video_library_date((string) ($item['videoDate'] ?? ''));
+		$is_vertical = !empty($item['isVertical']);
 		$tag_slugs = isset($item['tagSlugs']) && is_array($item['tagSlugs']) ? $item['tagSlugs'] : [];
 		$tag_slugs_csv = implode(',', array_map('strval', $tag_slugs));
 		$tag_slugs = self::sanitize_media_library_tag_video_library_tag_slugs($tag_slugs_csv);
@@ -775,6 +795,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			'title' => $title,
 			'description' => $description,
 			'videoDate' => $video_date,
+			'isVertical' => $is_vertical,
 			'tagSlugs' => $tag_slugs,
 		];
 	}
@@ -934,6 +955,7 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 					'title' => '',
 					'description' => '',
 					'videoDate' => '',
+					'isVertical' => false,
 					'tagSlugs' => [$term_slug],
 				];
 				$items_by_url[$legacy_url] = count($items) - 1;
