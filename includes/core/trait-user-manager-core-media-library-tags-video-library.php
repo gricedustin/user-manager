@@ -135,10 +135,14 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			</div>
 			<?php if ($notice === 'saved') : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e('Video saved successfully.', 'user-manager'); ?></p></div>
+			<?php elseif ($notice === 'bulk_saved') : ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e('Videos saved successfully.', 'user-manager'); ?></p></div>
 			<?php elseif ($notice === 'deleted') : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e('Video deleted successfully.', 'user-manager'); ?></p></div>
 			<?php elseif ($notice === 'invalid_youtube') : ?>
 				<div class="notice notice-error is-dismissible"><p><?php esc_html_e('Please enter a valid YouTube URL.', 'user-manager'); ?></p></div>
+			<?php elseif ($notice === 'bulk_invalid_youtube') : ?>
+				<div class="notice notice-error is-dismissible"><p><?php esc_html_e('One or more rows had invalid YouTube URLs and were skipped.', 'user-manager'); ?></p></div>
 			<?php endif; ?>
 
 			<div class="um-video-library-form-wrap">
@@ -210,77 +214,76 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			</div>
 
 			<h2 style="margin-top:28px;"><?php esc_html_e('Saved Videos', 'user-manager'); ?></h2>
-			<table class="widefat fixed striped">
-				<thead>
-					<tr>
-						<th style="width:20%;"><?php esc_html_e('Title', 'user-manager'); ?></th>
-						<th style="width:26%;"><?php esc_html_e('YouTube Link', 'user-manager'); ?></th>
-						<th style="width:11%;"><?php esc_html_e('Date', 'user-manager'); ?></th>
-						<th style="width:22%;"><?php esc_html_e('Tags', 'user-manager'); ?></th>
-						<th style="width:15%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
-						<th style="width:6%;"><?php esc_html_e('Actions', 'user-manager'); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php if (empty($items)) : ?>
+			<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+				<input type="hidden" name="action" value="user_manager_media_library_tag_video_library_bulk_save" />
+				<?php wp_nonce_field('user_manager_media_library_tag_video_library_bulk_save', 'user_manager_media_library_tag_video_library_bulk_save_nonce'); ?>
+				<table class="widefat fixed striped">
+					<thead>
 						<tr>
-							<td colspan="6"><?php esc_html_e('No videos saved yet.', 'user-manager'); ?></td>
+							<th style="width:20%;"><?php esc_html_e('Title', 'user-manager'); ?></th>
+							<th style="width:26%;"><?php esc_html_e('YouTube Link', 'user-manager'); ?></th>
+							<th style="width:11%;"><?php esc_html_e('Date', 'user-manager'); ?></th>
+							<th style="width:22%;"><?php esc_html_e('Tags', 'user-manager'); ?></th>
+							<th style="width:15%;"><?php esc_html_e('Description', 'user-manager'); ?></th>
+							<th style="width:6%;"><?php esc_html_e('Actions', 'user-manager'); ?></th>
 						</tr>
-					<?php else : ?>
-						<?php foreach ($items as $item) : ?>
-							<?php if (!is_array($item) || empty($item['id']) || empty($item['youtubeUrl'])) { continue; } ?>
-							<?php
-							$row_title = isset($item['title']) && trim((string) $item['title']) !== ''
-								? (string) $item['title']
-								: (string) $item['youtubeUrl'];
-							$row_description = isset($item['description']) ? (string) $item['description'] : '';
-							$row_date = isset($item['videoDate']) ? (string) $item['videoDate'] : '';
-							$row_tag_slugs = isset($item['tagSlugs']) && is_array($item['tagSlugs']) ? $item['tagSlugs'] : [];
-							$row_tag_names = [];
-							foreach ($row_tag_slugs as $row_tag_slug) {
-								$row_tag_slug = sanitize_title((string) $row_tag_slug);
-								if ($row_tag_slug === '') {
-									continue;
-								}
-								$row_tag_names[] = isset($tag_options[$row_tag_slug]) ? (string) $tag_options[$row_tag_slug] : $row_tag_slug;
-							}
-							$edit_url = add_query_arg(
-								[
-									'page' => 'um-media-library-tag-video-library',
-									'video_id' => (string) $item['id'],
-								],
-								admin_url('upload.php')
-							);
-							$delete_url = wp_nonce_url(
-								add_query_arg(
-									[
-										'action' => 'user_manager_media_library_tag_video_library_delete',
-										'video_id' => (string) $item['id'],
-									],
-									admin_url('admin-post.php')
-								),
-								'user_manager_media_library_tag_video_library_delete_' . (string) $item['id']
-							);
-							?>
+					</thead>
+					<tbody>
+						<?php if (empty($items)) : ?>
 							<tr>
-								<td>
-									<strong><?php echo esc_html($row_title); ?></strong>
-								</td>
-								<td>
-									<a href="<?php echo esc_url((string) $item['youtubeUrl']); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html((string) $item['youtubeUrl']); ?></a>
-								</td>
-								<td><?php echo $row_date !== '' ? esc_html($row_date) : '—'; ?></td>
-								<td><?php echo !empty($row_tag_names) ? esc_html(implode(', ', $row_tag_names)) : '—'; ?></td>
-								<td><?php echo $row_description !== '' ? esc_html(wp_trim_words($row_description, 16)) : '—'; ?></td>
-								<td>
-									<a class="button button-small" href="<?php echo esc_url($edit_url); ?>"><?php esc_html_e('Edit', 'user-manager'); ?></a>
-									<a class="button button-small" style="margin-top:6px;" href="<?php echo esc_url($delete_url); ?>" onclick="return window.confirm(<?php echo wp_json_encode(__('Delete this video?', 'user-manager')); ?>);"><?php esc_html_e('Delete', 'user-manager'); ?></a>
-								</td>
+								<td colspan="6"><?php esc_html_e('No videos saved yet.', 'user-manager'); ?></td>
 							</tr>
-						<?php endforeach; ?>
-					<?php endif; ?>
-				</tbody>
-			</table>
+						<?php else : ?>
+							<?php foreach ($items as $item) : ?>
+								<?php if (!is_array($item) || empty($item['id']) || empty($item['youtubeUrl'])) { continue; } ?>
+								<?php
+								$row_title = isset($item['title']) ? (string) $item['title'] : '';
+								$row_description = isset($item['description']) ? (string) $item['description'] : '';
+								$row_date = isset($item['videoDate']) ? (string) $item['videoDate'] : '';
+								$row_tag_slugs = isset($item['tagSlugs']) && is_array($item['tagSlugs']) ? $item['tagSlugs'] : [];
+								$row_tag_slugs_csv = implode(', ', array_values(array_filter(array_map('sanitize_title', array_map('strval', $row_tag_slugs)))));
+								$delete_url = wp_nonce_url(
+									add_query_arg(
+										[
+											'action' => 'user_manager_media_library_tag_video_library_delete',
+											'video_id' => (string) $item['id'],
+										],
+										admin_url('admin-post.php')
+									),
+									'user_manager_media_library_tag_video_library_delete_' . (string) $item['id']
+								);
+								?>
+								<tr>
+									<td>
+										<input type="hidden" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][id]" value="<?php echo esc_attr((string) $item['id']); ?>" />
+										<input type="text" class="regular-text" style="width:100%;" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][title]" value="<?php echo esc_attr($row_title); ?>" />
+									</td>
+									<td>
+										<input type="url" class="regular-text code" style="width:100%;" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][youtubeUrl]" value="<?php echo esc_attr((string) $item['youtubeUrl']); ?>" placeholder="https://www.youtube.com/watch?v=..." />
+									</td>
+									<td>
+										<input type="date" style="width:100%;" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][videoDate]" value="<?php echo esc_attr($row_date); ?>" />
+									</td>
+									<td>
+										<input type="text" class="regular-text" style="width:100%;" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][tagSlugs]" value="<?php echo esc_attr($row_tag_slugs_csv); ?>" placeholder="tag-one, tag-two" />
+									</td>
+									<td>
+										<textarea rows="2" style="width:100%;" name="um_video_library_rows[<?php echo esc_attr((string) $item['id']); ?>][description]"><?php echo esc_textarea($row_description); ?></textarea>
+									</td>
+									<td>
+										<a class="button button-small" style="margin-top:6px;" href="<?php echo esc_url($delete_url); ?>" onclick="return window.confirm(<?php echo wp_json_encode(__('Delete this video?', 'user-manager')); ?>);"><?php esc_html_e('Delete', 'user-manager'); ?></a>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</tbody>
+				</table>
+				<?php if (!empty($items)) : ?>
+					<p style="margin-top:12px;">
+						<button type="submit" class="button button-primary"><?php esc_html_e('Save All Videos', 'user-manager'); ?></button>
+					</p>
+				<?php endif; ?>
+			</form>
 		</div>
 		<style>
 		.um-video-library-form-wrap {
@@ -437,6 +440,84 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			admin_url('upload.php')
 		);
 		wp_safe_redirect($redirect_url);
+		exit;
+	}
+
+	/**
+	 * Handle Video Library bulk save from table rows.
+	 */
+	public static function handle_media_library_tag_video_library_bulk_save(): void {
+		if (!current_user_can('upload_files')) {
+			wp_die(esc_html__('You do not have permission to manage the Video Library.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_media_library_tag_video_library_bulk_save', 'user_manager_media_library_tag_video_library_bulk_save_nonce');
+
+		$rows = isset($_POST['um_video_library_rows']) ? wp_unslash($_POST['um_video_library_rows']) : [];
+		if (!is_array($rows) || empty($rows)) {
+			wp_safe_redirect(
+				add_query_arg(
+					[
+						'page' => 'um-media-library-tag-video-library',
+					],
+					admin_url('upload.php')
+				)
+			);
+			exit;
+		}
+
+		$existing_items = self::get_media_library_tag_video_library_items();
+		$existing_by_id = [];
+		foreach ($existing_items as $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+			$item_id = isset($item['id']) ? sanitize_key((string) $item['id']) : '';
+			if ($item_id === '') {
+				continue;
+			}
+			$existing_by_id[$item_id] = $item;
+		}
+
+		$sanitized_items = [];
+		$has_invalid_url = false;
+		foreach ($rows as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+			$row_id = isset($row['id']) ? sanitize_key((string) $row['id']) : '';
+			if ($row_id === '' || !isset($existing_by_id[$row_id])) {
+				continue;
+			}
+
+			$raw_url = isset($row['youtubeUrl']) ? (string) $row['youtubeUrl'] : '';
+			$video_url = self::sanitize_media_library_tag_video_library_youtube_url($raw_url);
+			if ($video_url === '') {
+				$has_invalid_url = true;
+				$sanitized_items[] = $existing_by_id[$row_id];
+				continue;
+			}
+
+			$raw_title = isset($row['title']) ? (string) $row['title'] : '';
+			$raw_description = isset($row['description']) ? (string) $row['description'] : '';
+			$raw_date = isset($row['videoDate']) ? (string) $row['videoDate'] : '';
+			$raw_tag_slugs_csv = isset($row['tagSlugs']) ? (string) $row['tagSlugs'] : '';
+			$sanitized_items[] = [
+				'id' => $row_id,
+				'youtubeUrl' => $video_url,
+				'title' => sanitize_text_field($raw_title),
+				'description' => sanitize_textarea_field($raw_description),
+				'videoDate' => self::sanitize_media_library_tag_video_library_date($raw_date),
+				'tagSlugs' => self::sanitize_media_library_tag_video_library_tag_slugs($raw_tag_slugs_csv),
+			];
+		}
+
+		self::update_media_library_tag_video_library_items($sanitized_items);
+
+		$redirect_args = [
+			'page' => 'um-media-library-tag-video-library',
+			'um_video_library_notice' => $has_invalid_url ? 'bulk_invalid_youtube' : 'bulk_saved',
+		];
+		wp_safe_redirect(add_query_arg($redirect_args, admin_url('upload.php')));
 		exit;
 	}
 

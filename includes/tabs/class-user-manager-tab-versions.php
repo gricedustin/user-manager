@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.184 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Video Library "Saved Videos" table is now fully bulk-editable with inline inputs for title, YouTube link, date, tags, and description on every row.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new "Save All Videos" bulk action that persists all edited rows in one submission while preserving rows whose links are invalid and showing an error notice.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.183 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Media Library Tag front-end YouTube cards now show an administrator-only centered "Edit Video" link below each video item.', 'user-manager'); ?></li>

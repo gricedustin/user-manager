@@ -52,6 +52,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		if (!empty($settings['media_library_tag_video_library_enabled'])) {
 			add_action('admin_menu', [__CLASS__, 'register_media_library_tag_video_library_submenu']);
 			add_action('admin_post_user_manager_media_library_tag_video_library_save', [__CLASS__, 'handle_media_library_tag_video_library_save']);
+			add_action('admin_post_user_manager_media_library_tag_video_library_bulk_save', [__CLASS__, 'handle_media_library_tag_video_library_bulk_save']);
 			add_action('admin_post_user_manager_media_library_tag_video_library_delete', [__CLASS__, 'handle_media_library_tag_video_library_delete']);
 		}
 		add_action('admin_post_user_manager_media_library_tags_bulk_editor_save', [__CLASS__, 'handle_media_library_tags_bulk_editor_save']);
