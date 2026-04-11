@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.193 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated `.um-media-library-tag-description-wrap` spacing to use `margin: 0 0 50px;` for larger bottom separation above gallery content.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.192 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting under "Display Album Tag Description(s)": "Display Featured Image in separate column on left, then description and bullets in separate column on right".', 'user-manager'); ?></li>

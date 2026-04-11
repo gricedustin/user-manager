@@ -4382,7 +4382,7 @@ JS;
 	margin-bottom: 25px;
 }
 .um-media-library-tag-description-wrap {
-	margin: 0 0 12px;
+	margin: 0 0 50px;
 }
 .um-media-library-tag-description-wrap.um-media-library-tag-description-wrap-below {
 	margin-top: 12px;
