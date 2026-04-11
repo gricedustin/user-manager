@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.189
+ * Version: 2.5.190
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.190 - March 16, 2026
+ * - Added a new "Bullets" textarea on Media Library Tag add/edit screens so each line can be saved as a front-end bullet item.
+ * - Tag description output now renders saved bullet lines as a `<ul><li>` list beneath the description paragraph content.
+ *
  * 2.5.189 - March 16, 2026
  * - Added shortcode sorting controls for `[um_media_library_tag_videos]` via `sort`/`order` attributes to support oldest-first rendering (date ASC + time ASC).
  * - Supported values now include `asc|oldest|date_asc` and `desc|newest|date_desc`; default behavior remains unchanged when unset.

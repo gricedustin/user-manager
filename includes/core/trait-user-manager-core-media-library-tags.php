@@ -575,6 +575,41 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	}
 
 	/**
+	 * Sanitize Library Tag bullet textarea input.
+	 */
+	private static function sanitize_media_library_tag_bullets_input(string $raw_bullets): string {
+		$lines = self::parse_media_library_tag_bullets_lines($raw_bullets);
+		if (empty($lines)) {
+			return '';
+		}
+		return implode("\n", $lines);
+	}
+
+	/**
+	 * Parse a newline-separated bullets value into sanitized lines.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function parse_media_library_tag_bullets_lines(string $raw_bullets): array {
+		$normalized = str_replace(["\r\n", "\r"], "\n", $raw_bullets);
+		$parts = preg_split('/\n+/', $normalized);
+		if (!is_array($parts) || empty($parts)) {
+			return [];
+		}
+
+		$lines = [];
+		foreach ($parts as $part) {
+			$line = trim(sanitize_text_field((string) $part));
+			if ($line === '') {
+				continue;
+			}
+			$lines[] = $line;
+		}
+
+		return $lines;
+	}
+
+	/**
 	 * Allowed HTML tags for front-end tag descriptions.
 	 *
 	 * @return array<string,array<string,bool>>
@@ -613,6 +648,13 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	}
 
 	/**
+	 * Meta key for Library Tag front-end bullet list.
+	 */
+	private static function media_library_tag_bullets_meta_key(): string {
+		return 'um_media_library_tag_bullets';
+	}
+
+	/**
 	 * Resolve one Library Tag featured image attachment ID.
 	 */
 	private static function get_media_library_tag_featured_image_id(int $term_id): int {
@@ -620,6 +662,22 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			return 0;
 		}
 		return absint(get_term_meta($term_id, self::media_library_tag_featured_image_meta_key(), true));
+	}
+
+	/**
+	 * Resolve one Library Tag bullet list as an array of line items.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_media_library_tag_bullets_lines(int $term_id): array {
+		if ($term_id <= 0) {
+			return [];
+		}
+		$raw = (string) get_term_meta($term_id, self::media_library_tag_bullets_meta_key(), true);
+		if ($raw === '') {
+			return [];
+		}
+		return self::parse_media_library_tag_bullets_lines($raw);
 	}
 
 	/**
@@ -659,6 +717,11 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			</p>
 			<p><?php esc_html_e('Shows on the front-end next to the tag description when this tag is active in the gallery.', 'user-manager'); ?></p>
 		</div>
+		<div class="form-field term-um-media-library-tag-bullets-wrap">
+			<label for="um-media-library-tag-bullets"><?php esc_html_e('Bullets', 'user-manager'); ?></label>
+			<textarea id="um-media-library-tag-bullets" name="um_media_library_tag_bullets" rows="5" class="large-text"></textarea>
+			<p><?php esc_html_e('Optional. Add one bullet per line to show below this tag description on the front end.', 'user-manager'); ?></p>
+		</div>
 		<?php
 	}
 
@@ -668,6 +731,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 	public static function render_media_library_tag_featured_image_edit_form_fields(WP_Term $term, string $taxonomy = ''): void {
 		self::enqueue_media_library_tags_featured_image_picker_assets();
 		$attachment_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
+		$bullet_lines = self::get_media_library_tag_bullets_lines((int) $term->term_id);
 		$preview_html = $attachment_id > 0
 			? wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'um-media-library-tag-featured-image-preview-image'])
 			: '';
@@ -686,6 +750,15 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				<p class="description"><?php esc_html_e('Shows on the front-end next to the tag description when this tag is active in the gallery.', 'user-manager'); ?></p>
 			</td>
 		</tr>
+		<tr class="form-field term-um-media-library-tag-bullets-wrap">
+			<th scope="row">
+				<label for="um-media-library-tag-bullets"><?php esc_html_e('Bullets', 'user-manager'); ?></label>
+			</th>
+			<td>
+				<textarea id="um-media-library-tag-bullets" name="um_media_library_tag_bullets" rows="6" class="large-text"><?php echo esc_textarea(implode("\n", $bullet_lines)); ?></textarea>
+				<p class="description"><?php esc_html_e('Optional. Add one bullet per line to show below this tag description on the front end.', 'user-manager'); ?></p>
+			</td>
+		</tr>
 		<?php
 	}
 
@@ -696,15 +769,24 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		if ($term_id <= 0 || !current_user_can('upload_files')) {
 			return;
 		}
-		$raw_value = isset($_POST['um_media_library_tag_featured_image_id'])
-			? wp_unslash($_POST['um_media_library_tag_featured_image_id'])
-			: '';
-		$attachment_id = self::sanitize_media_library_tag_featured_image_id($raw_value);
-		if ($attachment_id <= 0) {
-			delete_term_meta($term_id, self::media_library_tag_featured_image_meta_key());
-			return;
+		if (array_key_exists('um_media_library_tag_featured_image_id', $_POST)) {
+			$raw_value = wp_unslash($_POST['um_media_library_tag_featured_image_id']);
+			$attachment_id = self::sanitize_media_library_tag_featured_image_id($raw_value);
+			if ($attachment_id <= 0) {
+				delete_term_meta($term_id, self::media_library_tag_featured_image_meta_key());
+			} else {
+				update_term_meta($term_id, self::media_library_tag_featured_image_meta_key(), $attachment_id);
+			}
 		}
-		update_term_meta($term_id, self::media_library_tag_featured_image_meta_key(), $attachment_id);
+		if (array_key_exists('um_media_library_tag_bullets', $_POST)) {
+			$raw_bullets = wp_unslash($_POST['um_media_library_tag_bullets']);
+			$bullets = self::sanitize_media_library_tag_bullets_input((string) $raw_bullets);
+			if ($bullets === '') {
+				delete_term_meta($term_id, self::media_library_tag_bullets_meta_key());
+			} else {
+				update_term_meta($term_id, self::media_library_tag_bullets_meta_key(), $bullets);
+			}
+		}
 	}
 
 	/**
@@ -4293,6 +4375,20 @@ JS;
 .um-media-library-tag-description-wrap .um-media-library-tag-edit-description-link {
 	margin-left: 4px;
 }
+.um-media-library-tag-description-wrap .um-media-library-tag-description-block {
+	margin: 0 0 50px;
+}
+.um-media-library-tag-description-wrap .um-media-library-tag-description-block .um-media-library-tag-description-paragraph {
+	margin: 0 0 12px;
+}
+.um-media-library-tag-description-wrap .um-media-library-tag-description-bullets {
+	margin: 0 0 0 22px;
+	padding: 0;
+	list-style: disc;
+}
+.um-media-library-tag-description-wrap .um-media-library-tag-description-bullet {
+	margin: 0 0 8px;
+}
 .um-media-library-tag-description-layout {
 	display: block;
 }
@@ -6997,7 +7093,9 @@ JS;
 	 *   editDescriptionUrl:string,
 	 *   names:array<int,string>,
 	 *   descriptions:array<int,string>,
-	 *   editDescriptionUrls:array<int,string>
+	 *   editDescriptionUrls:array<int,string>,
+	 *   bulletLines:array<int,string>,
+	 *   bulletsLines:array<int,array<int,string>>
 	 * }
 	 */
 	private static function get_media_library_tag_description_data_for_tag_expression(array $tag_override): array {
@@ -7008,6 +7106,8 @@ JS;
 			'names' => [],
 			'descriptions' => [],
 			'editDescriptionUrls' => [],
+			'bulletLines' => [],
+			'bulletsLines' => [],
 		];
 		$slugs = isset($tag_override['slugs']) && is_array($tag_override['slugs'])
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $tag_override['slugs']))))
@@ -7025,6 +7125,7 @@ JS;
 		$descriptions = [];
 		$edit_urls = [];
 		$featured_image_ids = [];
+		$bullets_lines = [];
 		foreach ($slugs as $slug) {
 			$term = get_term_by('slug', $slug, $taxonomy);
 			if (!$term instanceof WP_Term) {
@@ -7045,6 +7146,7 @@ JS;
 			}
 			$edit_urls[] = $edit_url;
 			$featured_image_ids[] = self::get_media_library_tag_featured_image_id((int) $term->term_id);
+			$bullets_lines[] = self::get_media_library_tag_bullets_lines((int) $term->term_id);
 		}
 		if (empty($names)) {
 			return $empty;
@@ -7059,6 +7161,8 @@ JS;
 			'editDescriptionUrls' => $edit_urls,
 			'featuredImageId' => (int) ($featured_image_ids[0] ?? 0),
 			'featuredImageIds' => $featured_image_ids,
+			'bulletLines' => (isset($bullets_lines[0]) && is_array($bullets_lines[0])) ? $bullets_lines[0] : [],
+			'bulletsLines' => $bullets_lines,
 		];
 	}
 
@@ -7070,6 +7174,8 @@ JS;
 	 *   editDescriptionUrl?:string,
 	 *   descriptions?:array<int,string>,
 	 *   editDescriptionUrls?:array<int,string>,
+	 *   bulletLines?:array<int,string>,
+	 *   bulletsLines?:array<int,array<int,string>>,
 	 *   featuredImageId?:int,
 	 *   featuredImageIds?:array<int,int>
 	 * } $tag_description_data
@@ -7092,11 +7198,28 @@ JS;
 		$edit_description_urls = isset($tag_description_data['editDescriptionUrls']) && is_array($tag_description_data['editDescriptionUrls'])
 			? $tag_description_data['editDescriptionUrls']
 			: [];
+		$single_bullet_lines = isset($tag_description_data['bulletLines']) && is_array($tag_description_data['bulletLines'])
+			? array_values(array_filter(array_map(static function ($line): string {
+				return trim(sanitize_text_field((string) $line));
+			}, $tag_description_data['bulletLines'])))
+			: [];
+		$bullets_lines = isset($tag_description_data['bulletsLines']) && is_array($tag_description_data['bulletsLines'])
+			? $tag_description_data['bulletsLines']
+			: [];
 		$description_paragraphs = [];
 		foreach ($descriptions as $index => $tag_description) {
 			$tag_description = trim((string) $tag_description);
 			$tag_edit_url = isset($edit_description_urls[$index]) ? (string) $edit_description_urls[$index] : '';
-			if ($tag_description === '' && $tag_edit_url === '') {
+			$tag_bullet_lines = [];
+			if (isset($bullets_lines[$index]) && is_array($bullets_lines[$index])) {
+				$tag_bullet_lines = array_values(array_filter(array_map(static function ($line): string {
+					return trim(sanitize_text_field((string) $line));
+				}, $bullets_lines[$index])));
+			}
+			if (empty($tag_bullet_lines) && $index === 0 && !empty($single_bullet_lines)) {
+				$tag_bullet_lines = $single_bullet_lines;
+			}
+			if ($tag_description === '' && $tag_edit_url === '' && empty($tag_bullet_lines)) {
 				continue;
 			}
 			$tag_description_html = self::format_media_library_tag_description_html($tag_description);
@@ -7108,11 +7231,17 @@ JS;
 					esc_html__('Edit Tag Description', 'user-manager')
 				);
 			}
-			$description_paragraphs[] = sprintf(
+			$paragraph_html = sprintf(
 				'<p class="um-media-library-tag-description-paragraph">%1$s%2$s</p>',
 				$tag_description_html,
 				$edit_link
 			);
+			$bullets_html = self::render_media_library_tag_description_bullets_html($tag_bullet_lines);
+			if ($bullets_html !== '') {
+				$description_paragraphs[] = '<div class="um-media-library-tag-description-block">' . $paragraph_html . $bullets_html . '</div>';
+			} else {
+				$description_paragraphs[] = $paragraph_html;
+			}
 		}
 		$description_html = '';
 		if (!empty($description_paragraphs)) {
@@ -7126,6 +7255,16 @@ JS;
 		} else {
 			$description_html = self::format_media_library_tag_description_html($description);
 		}
+		if (empty($description_paragraphs)) {
+			$fallback_bullets_html = self::render_media_library_tag_description_bullets_html($single_bullet_lines);
+			if ($fallback_bullets_html !== '') {
+				if ($description_html !== '') {
+					$description_html = '<div class="um-media-library-tag-description-block">' . $description_html . $fallback_bullets_html . '</div>';
+				} else {
+					$description_html = $fallback_bullets_html;
+				}
+			}
+		}
 		$featured_image_html = self::render_media_library_tag_featured_image_html($tag_description_data, $layout_options);
 		if ($featured_image_html === '') {
 			return $description_html;
@@ -7134,6 +7273,26 @@ JS;
 			return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-with-floating-image">' . $featured_image_html . '</div>';
 		}
 		return '<div class="um-media-library-tag-description-layout um-media-library-tag-description-layout-with-floating-image">' . $featured_image_html . $description_html . '</div>';
+	}
+
+	/**
+	 * Render a UL list for Library Tag description bullets.
+	 *
+	 * @param array<int,string> $bullet_lines
+	 */
+	private static function render_media_library_tag_description_bullets_html(array $bullet_lines): string {
+		$items = [];
+		foreach ($bullet_lines as $line) {
+			$line = trim(sanitize_text_field((string) $line));
+			if ($line === '') {
+				continue;
+			}
+			$items[] = '<li class="um-media-library-tag-description-bullet">' . esc_html($line) . '</li>';
+		}
+		if (empty($items)) {
+			return '';
+		}
+		return '<ul class="um-media-library-tag-description-bullets">' . implode('', $items) . '</ul>';
 	}
 
 	/**
