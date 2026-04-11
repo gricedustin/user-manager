@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.195 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag video grids on mobile to display two columns instead of one for multi-video layouts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.194 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Adjusted mobile split-description layout so the left image column expands to full width and featured images render at full column width on small screens.', 'user-manager'); ?></li>

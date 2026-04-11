@@ -1276,7 +1276,7 @@ CSS;
 			. '.um-media-library-tag-video-description{margin:0;font-size:14px;line-height:1.55;overflow-wrap:anywhere;}'
 			. '.um-media-library-tag-video-edit-link-wrap{margin:12px 0 0;text-align:center;}'
 			. '.um-media-library-tag-video-edit-link{display:inline-block;font-size:13px;line-height:1.4;}'
-			. '@media (max-width:782px){.um-media-library-tag-videos-wrap-multi{grid-template-columns:1fr;}}'
+			. '@media (max-width:782px){.um-media-library-tag-videos-wrap-multi{grid-template-columns:repeat(2,minmax(0,1fr));}}'
 			. '</style>';
 	}
 
@@ -4522,7 +4522,7 @@ JS;
 		}
 		@media (max-width: 782px) {
 			.um-media-library-tag-videos-wrap-multi {
-				grid-template-columns: 1fr;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
 			}
 		}
 		.um-media-library-tag-gallery-grid {
