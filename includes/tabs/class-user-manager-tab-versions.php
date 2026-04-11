@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.187 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag description paragraph spacing increased: `.um-media-library-tag-description-paragraph` now uses a 50px bottom margin for clearer separation before following content/links.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.186 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Video Library now supports a per-video "Vertical (Short)" toggle in both single edit form and Saved Videos bulk editor.', 'user-manager'); ?></li>

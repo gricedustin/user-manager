@@ -4212,10 +4212,7 @@ JS;
 	margin-bottom: 0;
 }
 .um-media-library-tag-description-wrap .um-media-library-tag-description-paragraph {
-	margin: 0 0 8px;
-}
-.um-media-library-tag-description-wrap .um-media-library-tag-description-paragraph:last-child {
-	margin-bottom: 0;
+	margin: 0 0 50px;
 }
 .um-media-library-tag-description-wrap .um-media-library-tag-edit-description-link {
 	margin-left: 4px;
