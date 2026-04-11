@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.197 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag video wrapper class logic so single-video output can retain desktop column-constrained width instead of always stretching to a full-width single column.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.196 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Media Library Tag Gallery checkbox: "Hide tag featured image if no description and no bullets exist".', 'user-manager'); ?></li>

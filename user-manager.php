@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.196
+ * Version: 2.5.197
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.197 - March 16, 2026
+ * - Updated Media Library Tag video layout sizing so single-video output can still use configured desktop column widths instead of forcing full-width cards.
+ * - Single-video wrappers now keep multi-column sizing classes (capped to configured columns), preventing oversized desktop embeds.
+ *
  * 2.5.196 - March 16, 2026
  * - Added new Media Library Tag Gallery checkbox setting: "Hide tag featured image if no description and no bullets exist".
  * - Front-end gallery description rendering now suppresses tag featured image output when that setting is enabled and both description and bullets are empty for the active tag context.

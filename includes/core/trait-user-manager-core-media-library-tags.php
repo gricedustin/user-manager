@@ -1095,10 +1095,8 @@ CSS;
 			$desktop_video_columns = max(1, min(4, $video_count));
 		}
 		$wrap_classes = ['um-media-library-tag-videos-wrap'];
-		if ($video_count > 1) {
-			$wrap_classes[] = 'um-media-library-tag-videos-wrap-multi';
-			$wrap_classes[] = 'um-media-library-tag-videos-wrap-cols-' . $desktop_video_columns;
-		}
+		$wrap_classes[] = 'um-media-library-tag-videos-wrap-multi';
+		$wrap_classes[] = 'um-media-library-tag-videos-wrap-cols-' . $desktop_video_columns;
 
 		return sprintf(
 			'<div class="%1$s">%2$s</div>',
