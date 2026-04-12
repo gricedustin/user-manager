@@ -942,13 +942,13 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 			return;
 		}
 
-		$items = self::get_media_library_tag_video_library_items();
-		if (empty($items)) {
+		$raw_items = get_option(self::media_library_tag_video_library_option_key(), []);
+		if (!is_array($raw_items) || empty($raw_items)) {
 			return;
 		}
 
 		$updated = false;
-		foreach ($items as $index => $item) {
+		foreach ($raw_items as $index => $item) {
 			if (!is_array($item)) {
 				continue;
 			}
@@ -968,12 +968,12 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 				continue;
 			}
 
-			$items[$index]['tagSlugs'] = $next_tag_slugs;
+			$raw_items[$index]['tagSlugs'] = $next_tag_slugs;
 			$updated = true;
 		}
 
 		if ($updated) {
-			self::update_media_library_tag_video_library_items($items);
+			self::update_media_library_tag_video_library_items($raw_items);
 		}
 	}
 
@@ -1008,9 +1008,14 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 	 * If a Library Tag slug changed, replace the old slug in Video Library
 	 * item tag assignments so records remain connected to the renamed tag.
 	 */
-	public static function maybe_sync_media_library_tag_slug_after_update($term_id, $tt_id = 0, $taxonomy = ''): void {
+	public static function maybe_sync_media_library_tag_slug_after_update($term_id, $arg2 = '', $arg3 = null): void {
 		$term_id = absint($term_id);
-		$taxonomy = is_string($taxonomy) ? sanitize_key($taxonomy) : '';
+		$taxonomy = '';
+		if (is_string($arg2) && $arg2 !== '') {
+			$taxonomy = sanitize_key($arg2);
+		} elseif (is_string($arg3) && $arg3 !== '') {
+			$taxonomy = sanitize_key($arg3);
+		}
 		if ($term_id <= 0 || $taxonomy !== self::media_library_tags_taxonomy()) {
 			return;
 		}

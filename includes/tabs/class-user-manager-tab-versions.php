@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.209 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tag slug-rename sync hook argument handling so Video Library `tagSlugs` now reliably update during standard term edit saves.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Adjusted slug-replacement writes to update raw saved Video Library item rows directly before sanitization, preventing old slugs from being dropped before replacement.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.208 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed a fatal error on environments where trait constants are unsupported by replacing the Restricted Access trusted-IP cookie trait constant with a trait static property.', 'user-manager'); ?></li>
