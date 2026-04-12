@@ -7823,7 +7823,11 @@ JS;
 		if (empty($items)) {
 			return '';
 		}
-		return '<ul class="um-media-library-tag-description-bullets">' . implode('', $items) . '</ul>';
+		$bullets_classes = ['um-media-library-tag-description-bullets'];
+		if (count($items) > 10) {
+			$bullets_classes[] = '10plusbullets';
+		}
+		return '<ul class="' . esc_attr(implode(' ', $bullets_classes)) . '">' . implode('', $items) . '</ul>';
 	}
 
 	/**
