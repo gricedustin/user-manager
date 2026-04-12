@@ -1037,7 +1037,7 @@ CSS;
 		}
 		$sort_direction = self::normalize_media_library_tag_video_sort_direction($render_options['sortDirection'] ?? '');
 		if ($sort_direction === '') {
-			$sort_direction = 'desc';
+			$sort_direction = 'asc';
 		}
 		self::sort_media_library_tag_video_records_by_datetime($video_records, $sort_direction);
 		$settings = User_Manager_Core::get_settings();

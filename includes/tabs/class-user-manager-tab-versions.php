@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.204 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated default Media Library Tag front-end video ordering to date/time ascending (oldest-first) when no explicit sort override is provided, while keeping shortcode `sort`/`order` overrides supported.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.203 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Strengthened mobile video grid overrides so Media Library Tag video wrappers with `um-media-library-tag-videos-wrap-cols-3` or `um-media-library-tag-videos-wrap-cols-4` now still render exactly 2 columns on mobile breakpoints.', 'user-manager'); ?></li>
