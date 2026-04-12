@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.215 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Improved Media > Tag Groups editing so missing/legacy member tag slugs are visible and removable, allowing cleanup of stale tags that no longer exist in Library Tags.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.214 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Album description bullet-list rendering now adds a `10plusbullets` CSS class when more than 10 bullet lines are present, enabling targeted styling for large lists.', 'user-manager'); ?></li>

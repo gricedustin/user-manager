@@ -90,12 +90,17 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		$editing_group = ($editing_id !== '' && isset($groups_by_id[$editing_id]) && is_array($groups_by_id[$editing_id]))
 			? $groups_by_id[$editing_id]
 			: [];
+		$editing_group_raw = $editing_id !== ''
+			? self::get_media_library_tag_group_raw_record_by_id($editing_id)
+			: [];
 
 		$form_id = isset($editing_group['id']) ? (string) $editing_group['id'] : '';
 		$form_parent_slug = isset($editing_group['parentSlug']) ? sanitize_title((string) $editing_group['parentSlug']) : '';
 		$form_member_slugs = isset($editing_group['memberSlugs']) && is_array($editing_group['memberSlugs'])
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $editing_group['memberSlugs']))))
 			: [];
+		$form_member_slugs = self::expand_media_library_tag_group_member_slugs_with_raw_unavailable($form_member_slugs, $editing_group_raw);
+		$form_unavailable_member_slugs = self::resolve_media_library_tag_group_unavailable_member_slugs($form_member_slugs, $slug_name_map);
 		$form_member_slugs_csv = implode(',', $form_member_slugs);
 		$form_member_title_overrides = isset($editing_group['memberTitleOverrides']) && is_array($editing_group['memberTitleOverrides'])
 			? self::sanitize_media_library_tag_group_member_title_overrides($editing_group['memberTitleOverrides'], $form_member_slugs)
@@ -152,10 +157,34 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 										<?php endif; ?>
 									</div>
 									<p class="description" style="margin-top:8px;"><?php esc_html_e('Select the related tags that belong to this group. The parent tag is automatically excluded from this list.', 'user-manager'); ?></p>
+									<?php if (!empty($form_unavailable_member_slugs)) : ?>
+										<div class="um-tag-group-unavailable-wrap">
+											<strong><?php esc_html_e('Unavailable Tags', 'user-manager'); ?></strong>
+											<p class="description" style="margin:6px 0 8px;"><?php esc_html_e('These saved group tags no longer exist in Library Tags. Remove them here and save to clean up this group.', 'user-manager'); ?></p>
+											<div class="um-tag-group-unavailable-list">
+												<?php foreach ($form_unavailable_member_slugs as $unavailable_slug) : ?>
+													<button type="button" class="button button-secondary um-tag-group-pill um-tag-group-pill-unavailable is-selected" data-tag-slug="<?php echo esc_attr((string) $unavailable_slug); ?>">
+														<?php
+														printf(
+															/* translators: %s: missing tag slug */
+															esc_html__('Missing: %s', 'user-manager'),
+															esc_html((string) $unavailable_slug)
+														);
+														?>
+													</button>
+												<?php endforeach; ?>
+											</div>
+										</div>
+									<?php endif; ?>
 									<div id="um-tag-group-order-wrap" class="um-tag-group-order-wrap">
 										<strong><?php esc_html_e('Display Order', 'user-manager'); ?></strong>
 										<p class="description" style="margin:6px 0 8px;"><?php esc_html_e('Drag selected tags to control the order shown on the front end.', 'user-manager'); ?></p>
 										<ul id="um-tag-group-order-list" class="um-tag-group-order-list"></ul>
+									</div>
+									<div id="um-tag-group-legacy-wrap" class="um-tag-group-legacy-wrap">
+										<strong><?php esc_html_e('Legacy / Missing Group Tags', 'user-manager'); ?></strong>
+										<p class="description" style="margin:6px 0 8px;"><?php esc_html_e('These slugs are still saved in this group but no longer exist as Library Tags. Remove any you do not want to keep.', 'user-manager'); ?></p>
+										<ul id="um-tag-group-legacy-list" class="um-tag-group-legacy-list"></ul>
 									</div>
 									<div id="um-tag-group-overrides-wrap" class="um-tag-group-overrides-wrap">
 										<strong><?php esc_html_e('Tag Title Overrides', 'user-manager'); ?></strong>
@@ -246,9 +275,27 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			gap: 8px;
 			max-width: 980px;
 		}
+		.um-tag-group-unavailable-wrap {
+			margin-top: 12px;
+			max-width: 980px;
+		}
+		.um-tag-group-unavailable-list {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
 		.um-tag-group-pill.is-selected {
 			background: #135e96;
 			border-color: #135e96;
+			color: #fff;
+		}
+		.um-tag-group-pill-unavailable {
+			border-color: #d63638;
+			color: #d63638;
+		}
+		.um-tag-group-pill-unavailable.is-selected {
+			background: #d63638;
+			border-color: #d63638;
 			color: #fff;
 		}
 		.um-tag-group-pill.is-parent-tag {
@@ -292,6 +339,35 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			margin-top: 14px;
 			max-width: 620px;
 		}
+		.um-tag-group-legacy-wrap {
+			margin-top: 14px;
+			max-width: 620px;
+		}
+		.um-tag-group-legacy-list {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+		.um-tag-group-legacy-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			padding: 8px 10px;
+			border: 1px solid #dcdcde;
+			border-radius: 4px;
+			background: #fff;
+		}
+		.um-tag-group-legacy-slug {
+			font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+		}
+		.um-tag-group-legacy-remove {
+			color: #b32d2e;
+			border-color: #b32d2e;
+		}
 		.um-tag-group-overrides-list {
 			display: flex;
 			flex-direction: column;
@@ -314,13 +390,17 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			var parentSelect = document.getElementById('um-tag-group-parent-slug');
 			var orderList = document.getElementById('um-tag-group-order-list');
 			var orderWrap = document.getElementById('um-tag-group-order-wrap');
+			var legacyWrap = document.getElementById('um-tag-group-legacy-wrap');
+			var legacyList = document.getElementById('um-tag-group-legacy-list');
 			var overridesWrap = document.getElementById('um-tag-group-overrides-wrap');
 			var overridesList = document.getElementById('um-tag-group-overrides-list');
-			if (!picker || !hiddenInput || !overrideHiddenInput || !parentSelect || !orderList || !orderWrap || !overridesWrap || !overridesList) {
+			if (!picker || !hiddenInput || !overrideHiddenInput || !parentSelect || !orderList || !orderWrap || !legacyWrap || !legacyList || !overridesWrap || !overridesList) {
 				return;
 			}
 			var selected = {};
 			var selectedOrder = [];
+			var unknownSelected = {};
+			var unknownOrder = [];
 			var titleOverrides = {};
 			function normalizeSlug(value) {
 				return String(value || '').toLowerCase().replace(/[^a-z0-9\-_]/g, '');
@@ -330,14 +410,23 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			}
 			function readInitial() {
 				var raw = String(picker.getAttribute('data-selected') || hiddenInput.value || '');
+				var knownSlugs = getNamesBySlug();
 				raw.split(',').forEach(function(slug){
 					var normalized = normalizeSlug(slug.trim());
 					if (normalized) {
-						selected[normalized] = true;
-						selectedOrder.push(normalized);
+						if (Object.prototype.hasOwnProperty.call(knownSlugs, normalized)) {
+							selected[normalized] = true;
+							selectedOrder.push(normalized);
+						} else {
+							unknownSelected[normalized] = true;
+							unknownOrder.push(normalized);
+						}
 					}
 				});
 				selectedOrder = selectedOrder.filter(function(slug, idx, list){
+					return list.indexOf(slug) === idx;
+				});
+				unknownOrder = unknownOrder.filter(function(slug, idx, list){
 					return list.indexOf(slug) === idx;
 				});
 			}
@@ -362,7 +451,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 				});
 			}
 			function syncHiddenField() {
-				hiddenInput.value = selectedOrder.join(',');
+				hiddenInput.value = selectedOrder.concat(unknownOrder).join(',');
 			}
 			function syncTitleOverridesField() {
 				overrideHiddenInput.value = JSON.stringify(titleOverrides);
@@ -374,6 +463,14 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 				Object.keys(selected).forEach(function(slug) {
 					if (selectedOrder.indexOf(slug) === -1) {
 						selectedOrder.push(slug);
+					}
+				});
+				unknownOrder = unknownOrder.filter(function(slug) {
+					return !!unknownSelected[slug];
+				});
+				Object.keys(unknownSelected).forEach(function(slug) {
+					if (unknownOrder.indexOf(slug) === -1) {
+						unknownOrder.push(slug);
 					}
 				});
 				Object.keys(titleOverrides).forEach(function(slug) {
@@ -457,6 +554,31 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					overridesList.appendChild(row);
 				});
 			}
+			function renderLegacyList() {
+				ensureSelectionOrderSync();
+				legacyList.innerHTML = '';
+				if (!unknownOrder.length) {
+					legacyWrap.style.display = 'none';
+					return;
+				}
+				legacyWrap.style.display = 'block';
+				unknownOrder.forEach(function(slug) {
+					var li = document.createElement('li');
+					li.className = 'um-tag-group-legacy-item';
+					li.setAttribute('data-tag-slug', slug);
+					var label = document.createElement('span');
+					label.className = 'um-tag-group-legacy-slug';
+					label.textContent = slug;
+					var remove = document.createElement('button');
+					remove.type = 'button';
+					remove.className = 'button button-small um-tag-group-legacy-remove';
+					remove.textContent = 'Remove';
+					remove.setAttribute('data-remove-legacy-slug', slug);
+					li.appendChild(label);
+					li.appendChild(remove);
+					legacyList.appendChild(li);
+				});
+			}
 			function syncPills() {
 				var parentSlug = normalizeSlug(parentSelect.value);
 				var pills = picker.querySelectorAll('.um-tag-group-pill');
@@ -483,6 +605,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 					}
 				}
 				renderOrderList();
+				renderLegacyList();
 				renderTitleOverrideInputs();
 			}
 			readInitial();
@@ -510,6 +633,24 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 				} else {
 					selected[slug] = true;
 				}
+				syncPills();
+				syncHiddenField();
+				syncTitleOverridesField();
+			});
+			legacyList.addEventListener('click', function(event){
+				var target = event.target;
+				if (!target || !target.getAttribute) {
+					return;
+				}
+				var slug = normalizeSlug(target.getAttribute('data-remove-legacy-slug'));
+				if (!slug || !unknownSelected[slug]) {
+					return;
+				}
+				event.preventDefault();
+				delete unknownSelected[slug];
+				unknownOrder = unknownOrder.filter(function(itemSlug) {
+					return itemSlug !== slug;
+				});
 				syncPills();
 				syncHiddenField();
 				syncTitleOverridesField();
@@ -909,6 +1050,88 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			$rows[] = ['currentSlug' => $slug];
 		}
 		return $rows;
+	}
+
+	/**
+	 * Read one raw group row by ID from option storage.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function get_media_library_tag_group_raw_record_by_id(string $group_id): array {
+		$group_id = sanitize_key($group_id);
+		if ($group_id === '') {
+			return [];
+		}
+		$raw_groups = get_option(self::media_library_tag_groups_option_key(), []);
+		if (!is_array($raw_groups)) {
+			return [];
+		}
+		foreach ($raw_groups as $raw_group) {
+			if (!is_array($raw_group)) {
+				continue;
+			}
+			$raw_id = isset($raw_group['id']) ? sanitize_key((string) $raw_group['id']) : '';
+			if ($raw_id !== $group_id) {
+				continue;
+			}
+			return $raw_group;
+		}
+		return [];
+	}
+
+	/**
+	 * Merge sanitized member slugs with any raw unavailable slugs from storage.
+	 *
+	 * @param array<int,string>  $member_slugs
+	 * @param array<string,mixed> $raw_group
+	 * @return array<int,string>
+	 */
+	private static function expand_media_library_tag_group_member_slugs_with_raw_unavailable(array $member_slugs, array $raw_group): array {
+		$parent_slug = isset($raw_group['parentSlug']) ? sanitize_title((string) $raw_group['parentSlug']) : '';
+		$normalized = [];
+		$seen = [];
+		$raw_member_slugs = isset($raw_group['memberSlugs']) && is_array($raw_group['memberSlugs'])
+			? array_map('strval', $raw_group['memberSlugs'])
+			: [];
+		foreach ($raw_member_slugs as $raw_member_slug) {
+			$slug = sanitize_title($raw_member_slug);
+			if ($slug === '' || $slug === $parent_slug || isset($seen[$slug])) {
+				continue;
+			}
+			$normalized[] = $slug;
+			$seen[$slug] = true;
+		}
+		foreach ($member_slugs as $member_slug) {
+			$slug = sanitize_title((string) $member_slug);
+			if ($slug === '' || $slug === $parent_slug || isset($seen[$slug])) {
+				continue;
+			}
+			$normalized[] = $slug;
+			$seen[$slug] = true;
+		}
+		return $normalized;
+	}
+
+	/**
+	 * Resolve member slugs that no longer exist in Library Tags.
+	 *
+	 * @param array<int,string>   $member_slugs
+	 * @param array<string,string> $slug_name_map
+	 * @return array<int,string>
+	 */
+	private static function resolve_media_library_tag_group_unavailable_member_slugs(array $member_slugs, array $slug_name_map): array {
+		$unavailable = [];
+		foreach ($member_slugs as $member_slug) {
+			$slug = sanitize_title((string) $member_slug);
+			if ($slug === '') {
+				continue;
+			}
+			if (isset($slug_name_map[$slug])) {
+				continue;
+			}
+			$unavailable[] = $slug;
+		}
+		return array_values(array_unique($unavailable));
 	}
 
 	/**
