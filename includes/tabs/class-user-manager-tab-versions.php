@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.212 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Restricted Access shared-password reliability for cached front-end overlays by removing nonce dependency from password submit validation, preventing first-submit failures that caused visitors to enter passwords twice.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.211 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Media Library Tag description rendering for multi-tag contexts to output only the final (last) tag description/bullets block instead of rendering all matched tag description blocks.', 'user-manager'); ?></li>
