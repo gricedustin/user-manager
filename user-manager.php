@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.199
+ * Version: 2.5.200
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.200 - March 16, 2026
+ * - Updated `.um-media-library-tag-description-wrap .um-media-library-tag-description-block` spacing to use 25px top and 25px bottom margins.
+ *
  * 2.5.199 - March 16, 2026
  * - Updated Media Library Tag gallery video rendering to always apply explicit date+time sorting, using newest-first by default when no sort override is provided.
  * - Ensures same-date videos in gallery output are ordered by saved time consistently instead of relying on incidental source ordering.

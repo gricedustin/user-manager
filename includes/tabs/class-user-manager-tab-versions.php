@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.200 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag description block spacing so `.um-media-library-tag-description-wrap .um-media-library-tag-description-block` now uses 25px top and 25px bottom margins (`margin: 25px 0`).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.199 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Media Library Tag gallery video rendering to always apply date+time sorting (default newest-first) so same-day videos are consistently ordered by time even when no shortcode sort attribute is passed.', 'user-manager'); ?></li>

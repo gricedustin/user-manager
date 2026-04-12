@@ -4396,7 +4396,7 @@ JS;
 	margin-left: 4px;
 }
 .um-media-library-tag-description-wrap .um-media-library-tag-description-block {
-	margin: 0 0 50px;
+	margin: 25px 0;
 }
 .um-media-library-tag-description-wrap .um-media-library-tag-description-block .um-media-library-tag-description-paragraph {
 	margin: 0 0 12px;
