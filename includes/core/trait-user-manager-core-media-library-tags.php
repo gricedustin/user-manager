@@ -45,6 +45,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_filter('pre_get_document_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title'], 20);
 		add_action('admin_bar_menu', [__CLASS__, 'add_media_library_tag_admin_bar_shortcut'], 101);
 		add_action('admin_menu', [__CLASS__, 'register_media_library_tags_bulk_editor_submenu']);
+		add_action('admin_menu', [__CLASS__, 'register_media_library_tag_reports_submenu']);
 		add_action('admin_menu', [__CLASS__, 'register_media_library_tag_groups_submenu']);
 		add_action('admin_post_user_manager_media_library_tag_groups_save', [__CLASS__, 'handle_media_library_tag_groups_save']);
 		add_action('admin_post_user_manager_media_library_tag_groups_delete', [__CLASS__, 'handle_media_library_tag_groups_delete']);
@@ -164,6 +165,119 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			'um-media-library-tags-bulk-editor',
 			[__CLASS__, 'render_media_library_tags_bulk_editor_page']
 		);
+	}
+
+	/**
+	 * Register "Tag Reports" submenu under Media.
+	 */
+	public static function register_media_library_tag_reports_submenu(): void {
+		add_submenu_page(
+			'upload.php',
+			__('Tag Reports', 'user-manager'),
+			__('Tag Reports', 'user-manager'),
+			'upload_files',
+			'um-media-library-tag-reports',
+			[__CLASS__, 'render_media_library_tag_reports_page']
+		);
+	}
+
+	/**
+	 * Render Media > Tag Reports screen.
+	 */
+	public static function render_media_library_tag_reports_page(): void {
+		if (!current_user_can('upload_files')) {
+			wp_die(esc_html__('You do not have permission to view Tag Reports.', 'user-manager'));
+		}
+		$active_tab = isset($_GET['report_tab']) ? sanitize_key((string) wp_unslash($_GET['report_tab'])) : 'images';
+		if (!in_array($active_tab, ['images', 'tags'], true)) {
+			$active_tab = 'images';
+		}
+		$base_url = add_query_arg(['page' => 'um-media-library-tag-reports'], admin_url('upload.php'));
+		$image_rows = self::get_media_library_most_viewed_images_for_report(200);
+		$tag_rows = self::get_media_library_most_viewed_album_tags_for_report(200);
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e('Tag Reports', 'user-manager'); ?></h1>
+			<h2 class="nav-tab-wrapper">
+				<a href="<?php echo esc_url(add_query_arg(['report_tab' => 'images'], $base_url)); ?>" class="nav-tab <?php echo $active_tab === 'images' ? 'nav-tab-active' : ''; ?>"><?php esc_html_e('Most Viewed Images', 'user-manager'); ?></a>
+				<a href="<?php echo esc_url(add_query_arg(['report_tab' => 'tags'], $base_url)); ?>" class="nav-tab <?php echo $active_tab === 'tags' ? 'nav-tab-active' : ''; ?>"><?php esc_html_e('Most Viewed Album Tags', 'user-manager'); ?></a>
+			</h2>
+
+			<?php if ($active_tab === 'images') : ?>
+				<table class="widefat striped" style="margin-top:14px;">
+					<thead>
+						<tr>
+							<th style="width:72px;"><?php esc_html_e('Image', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Title', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Lightbox Views', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Year', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Month', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Week', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Day', 'user-manager'); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php if (empty($image_rows)) : ?>
+							<tr><td colspan="7"><?php esc_html_e('No image view data yet.', 'user-manager'); ?></td></tr>
+						<?php else : ?>
+							<?php foreach ($image_rows as $row) : ?>
+								<tr>
+									<td><?php echo wp_kses_post((string) ($row['thumbHtml'] ?? '')); ?></td>
+									<td>
+										<strong><?php echo esc_html((string) ($row['title'] ?? '')); ?></strong>
+										<?php if (!empty($row['editUrl'])) : ?>
+											<div><a href="<?php echo esc_url((string) $row['editUrl']); ?>"><?php esc_html_e('Edit', 'user-manager'); ?></a></div>
+										<?php endif; ?>
+									</td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['total'] ?? 0))); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['year'] ?? 0))); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['month'] ?? 0))); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['week'] ?? 0))); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['day'] ?? 0))); ?></td>
+								</tr>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</tbody>
+				</table>
+			<?php else : ?>
+				<table class="widefat striped" style="margin-top:14px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e('Album Tag', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Slug', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Album Tag Views', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Year', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Month', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Week', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Day', 'user-manager'); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php if (empty($tag_rows)) : ?>
+							<tr><td colspan="7"><?php esc_html_e('No album tag view data yet.', 'user-manager'); ?></td></tr>
+						<?php else : ?>
+							<?php foreach ($tag_rows as $row) : ?>
+								<tr>
+									<td>
+										<strong><?php echo esc_html((string) ($row['name'] ?? '')); ?></strong>
+										<?php if (!empty($row['editUrl'])) : ?>
+											<div><a href="<?php echo esc_url((string) $row['editUrl']); ?>"><?php esc_html_e('Edit', 'user-manager'); ?></a></div>
+										<?php endif; ?>
+									</td>
+									<td><?php echo esc_html((string) ($row['slug'] ?? '')); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['total'] ?? 0))); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['year'] ?? 0))); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['month'] ?? 0))); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['week'] ?? 0))); ?></td>
+									<td><?php echo esc_html(number_format_i18n((int) ($row['day'] ?? 0))); ?></td>
+								</tr>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		</div>
+		<?php
 	}
 
 	/**
@@ -757,6 +871,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		self::enqueue_media_library_tags_featured_image_picker_assets();
 		$attachment_id = self::get_media_library_tag_featured_image_id((int) $term->term_id);
 		$bullet_lines = self::get_media_library_tag_bullets_lines((int) $term->term_id);
+		$album_tag_views = self::get_media_library_album_tag_view_count((int) $term->term_id);
+		$album_tag_period_views = self::get_media_library_album_tag_period_view_counts((int) $term->term_id);
 		$preview_html = $attachment_id > 0
 			? wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'um-media-library-tag-featured-image-preview-image'])
 			: '';
@@ -782,6 +898,18 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 			<td>
 				<textarea id="um-media-library-tag-bullets" name="um_media_library_tag_bullets" rows="6" class="large-text"><?php echo esc_textarea(implode("\n", $bullet_lines)); ?></textarea>
 				<p class="description"><?php esc_html_e('Optional. Add one bullet per line to show below this tag description on the front end.', 'user-manager'); ?></p>
+			</td>
+		</tr>
+		<tr class="form-field term-um-media-library-tag-views-wrap">
+			<th scope="row">
+				<label><?php esc_html_e('Album Tag View Reports', 'user-manager'); ?></label>
+			</th>
+			<td>
+				<div style="margin-bottom:4px;"><strong><?php esc_html_e('Album Tag Views:', 'user-manager'); ?></strong> <?php echo esc_html(number_format_i18n($album_tag_views)); ?></div>
+				<div style="margin-bottom:4px;"><strong><?php esc_html_e('Album Tag Views (Year):', 'user-manager'); ?></strong> <?php echo esc_html(number_format_i18n((int) ($album_tag_period_views['year'] ?? 0))); ?></div>
+				<div style="margin-bottom:4px;"><strong><?php esc_html_e('Album Tag Views (Month):', 'user-manager'); ?></strong> <?php echo esc_html(number_format_i18n((int) ($album_tag_period_views['month'] ?? 0))); ?></div>
+				<div style="margin-bottom:4px;"><strong><?php esc_html_e('Album Tag Views (Week):', 'user-manager'); ?></strong> <?php echo esc_html(number_format_i18n((int) ($album_tag_period_views['week'] ?? 0))); ?></div>
+				<div style="margin-bottom:0;"><strong><?php esc_html_e('Album Tag Views (Day):', 'user-manager'); ?></strong> <?php echo esc_html(number_format_i18n((int) ($album_tag_period_views['day'] ?? 0))); ?></div>
 			</td>
 		</tr>
 		<?php
@@ -3980,6 +4108,7 @@ JS;
 		];
 
 		$tax_query = [];
+		$active_view_tag_slugs = [];
 		if (!empty($url_tag_override['slugs']) && in_array($url_tag_override['mode'], ['and', 'or', 'single'], true)) {
 			$tag_override_tax_query = self::build_media_library_gallery_multi_tag_tax_query(
 				array_values(array_map('strval', $url_tag_override['slugs'])),
@@ -3990,6 +4119,10 @@ JS;
 					$tax_query[] = $tag_clause;
 				}
 			}
+			$active_view_tag_slugs = array_values(array_unique(array_filter(array_map(
+				'sanitize_title',
+				array_map('strval', $url_tag_override['slugs'])
+			))));
 		} elseif ($tag_slug !== '' && self::is_valid_media_library_tag_filter_slug($tag_slug)) {
 			$filter_slugs = self::get_media_library_filter_slugs_for_requested_slug($tag_slug);
 			if (empty($filter_slugs)) {
@@ -4000,6 +4133,7 @@ JS;
 				'field' => 'slug',
 				'terms' => $filter_slugs,
 			];
+			$active_view_tag_slugs = array_values(array_unique(array_filter(array_map('sanitize_title', $filter_slugs))));
 		}
 		if (!empty($hidden_frontend_tag_slugs)) {
 			$tax_query[] = [
@@ -4014,6 +4148,9 @@ JS;
 				$tax_query['relation'] = 'AND';
 			}
 			$query_args['tax_query'] = $tax_query;
+		}
+		if (!empty($active_view_tag_slugs)) {
+			self::increment_media_library_album_tag_view_counts_for_slugs($active_view_tag_slugs);
 		}
 
 		switch ($sort_order) {
@@ -6490,6 +6627,274 @@ JS;
 			];
 		}
 		return $rows;
+	}
+
+	/**
+	 * Term meta key used to store album tag view totals.
+	 */
+	private static function media_library_album_tag_views_meta_key(): string {
+		return 'um_media_album_tag_views';
+	}
+
+	/**
+	 * Resolve base term-meta key for one album-tag period counter.
+	 */
+	private static function media_library_album_tag_views_period_meta_key(string $period): string {
+		$period = sanitize_key($period);
+		if (!in_array($period, ['year', 'month', 'week', 'day'], true)) {
+			return '';
+		}
+		return 'um_media_album_tag_views_' . $period;
+	}
+
+	/**
+	 * Resolve storage key for the current album-tag period bucket.
+	 */
+	private static function media_library_album_tag_period_current_key(string $period): string {
+		switch ($period) {
+			case 'year':
+				return gmdate('Y');
+			case 'month':
+				return gmdate('Y-m');
+			case 'week':
+				$iso_year = (string) gmdate('o');
+				$iso_week = str_pad((string) gmdate('W'), 2, '0', STR_PAD_LEFT);
+				return $iso_year . '-W' . $iso_week;
+			case 'day':
+				return gmdate('Y-m-d');
+			default:
+				return '';
+		}
+	}
+
+	/**
+	 * Read normalized album-tag view count for one term.
+	 */
+	private static function get_media_library_album_tag_view_count(int $term_id): int {
+		if ($term_id <= 0) {
+			return 0;
+		}
+		$value = get_term_meta($term_id, self::media_library_album_tag_views_meta_key(), true);
+		return max(0, absint($value));
+	}
+
+	/**
+	 * Read current period counters for album tag views (year/month/week/day).
+	 *
+	 * @return array{year:int,month:int,week:int,day:int}
+	 */
+	private static function get_media_library_album_tag_period_view_counts(int $term_id): array {
+		$counts = [];
+		foreach (['year', 'month', 'week', 'day'] as $period) {
+			$current_key = self::media_library_album_tag_period_current_key($period);
+			$meta_key = self::media_library_album_tag_views_period_meta_key($period);
+			if ($current_key === '' || $meta_key === '') {
+				continue;
+			}
+			$stored_key = (string) get_term_meta($term_id, $meta_key . '_key', true);
+			$stored_count = max(0, absint(get_term_meta($term_id, $meta_key . '_count', true)));
+			$counts[$period] = ($stored_key === $current_key) ? $stored_count : 0;
+		}
+		return [
+			'year' => (int) ($counts['year'] ?? 0),
+			'month' => (int) ($counts['month'] ?? 0),
+			'week' => (int) ($counts['week'] ?? 0),
+			'day' => (int) ($counts['day'] ?? 0),
+		];
+	}
+
+	/**
+	 * Increment album tag views for one or more slugs.
+	 *
+	 * @param array<int,string> $tag_slugs
+	 */
+	private static function increment_media_library_album_tag_view_counts_for_slugs(array $tag_slugs): void {
+		$tag_slugs = array_values(array_unique(array_filter(array_map('sanitize_title', $tag_slugs))));
+		if (empty($tag_slugs)) {
+			return;
+		}
+		$terms = get_terms([
+			'taxonomy' => self::media_library_tags_taxonomy(),
+			'hide_empty' => false,
+			'slug' => $tag_slugs,
+		]);
+		if (!is_array($terms) || is_wp_error($terms)) {
+			return;
+		}
+		foreach ($terms as $term) {
+			if (!($term instanceof WP_Term)) {
+				continue;
+			}
+			self::increment_media_library_album_tag_view_counts((int) $term->term_id);
+		}
+	}
+
+	/**
+	 * Increment total + period album-tag view counters for one term.
+	 *
+	 * @return array{total:int,year:int,month:int,week:int,day:int}
+	 */
+	private static function increment_media_library_album_tag_view_counts(int $term_id): array {
+		$total = self::get_media_library_album_tag_view_count($term_id) + 1;
+		update_term_meta($term_id, self::media_library_album_tag_views_meta_key(), $total);
+		$period_counts = self::increment_media_library_album_tag_view_period_counts($term_id);
+		return [
+			'total' => $total,
+			'year' => (int) ($period_counts['year'] ?? 0),
+			'month' => (int) ($period_counts['month'] ?? 0),
+			'week' => (int) ($period_counts['week'] ?? 0),
+			'day' => (int) ($period_counts['day'] ?? 0),
+		];
+	}
+
+	/**
+	 * Increment period counters for album-tag views (year/month/week/day).
+	 *
+	 * @return array{year:int,month:int,week:int,day:int}
+	 */
+	private static function increment_media_library_album_tag_view_period_counts(int $term_id): array {
+		$counts = [];
+		foreach (['year', 'month', 'week', 'day'] as $period) {
+			$current_key = self::media_library_album_tag_period_current_key($period);
+			$meta_key = self::media_library_album_tag_views_period_meta_key($period);
+			if ($current_key === '' || $meta_key === '') {
+				continue;
+			}
+			$stored_key = (string) get_term_meta($term_id, $meta_key . '_key', true);
+			$stored_count = max(0, absint(get_term_meta($term_id, $meta_key . '_count', true)));
+			$next_count = ($stored_key === $current_key) ? ($stored_count + 1) : 1;
+			update_term_meta($term_id, $meta_key . '_key', $current_key);
+			update_term_meta($term_id, $meta_key . '_count', $next_count);
+			$counts[$period] = $next_count;
+		}
+		return [
+			'year' => (int) ($counts['year'] ?? 0),
+			'month' => (int) ($counts['month'] ?? 0),
+			'week' => (int) ($counts['week'] ?? 0),
+			'day' => (int) ($counts['day'] ?? 0),
+		];
+	}
+
+	/**
+	 * Build rows for Tag Reports > Most Viewed Images.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function get_media_library_most_viewed_images_for_report(int $limit = 200): array {
+		$limit = max(1, min(1000, $limit));
+		$attachments = get_posts([
+			'post_type' => 'attachment',
+			'post_status' => 'inherit',
+			'post_mime_type' => 'image',
+			'posts_per_page' => $limit,
+			'orderby' => 'meta_value_num',
+			'order' => 'DESC',
+			'meta_key' => self::media_library_lightbox_views_meta_key(),
+			'meta_query' => [
+				[
+					'key' => self::media_library_lightbox_views_meta_key(),
+					'value' => 0,
+					'compare' => '>',
+					'type' => 'NUMERIC',
+				],
+			],
+			'no_found_rows' => true,
+		]);
+		if (!is_array($attachments) || empty($attachments)) {
+			return [];
+		}
+		$rows = [];
+		foreach ($attachments as $attachment) {
+			if (!($attachment instanceof WP_Post)) {
+				continue;
+			}
+			$attachment_id = (int) $attachment->ID;
+			$total = self::get_media_library_lightbox_view_count($attachment_id);
+			if ($total <= 0) {
+				continue;
+			}
+			$period_counts = self::get_media_library_lightbox_period_view_counts($attachment_id);
+			$rows[] = [
+				'thumbHtml' => (string) wp_get_attachment_image($attachment_id, [60, 60], true),
+				'title' => (string) get_the_title($attachment_id),
+				'editUrl' => (string) get_edit_post_link($attachment_id, ''),
+				'total' => $total,
+				'year' => (int) ($period_counts['year'] ?? 0),
+				'month' => (int) ($period_counts['month'] ?? 0),
+				'week' => (int) ($period_counts['week'] ?? 0),
+				'day' => (int) ($period_counts['day'] ?? 0),
+			];
+		}
+		return $rows;
+	}
+
+	/**
+	 * Build rows for Tag Reports > Most Viewed Album Tags.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function get_media_library_most_viewed_album_tags_for_report(int $limit = 200): array {
+		$limit = max(1, min(1000, $limit));
+		$terms = get_terms([
+			'taxonomy' => self::media_library_tags_taxonomy(),
+			'hide_empty' => false,
+		]);
+		if (!is_array($terms) || is_wp_error($terms)) {
+			return [];
+		}
+		$rows = [];
+		foreach ($terms as $term) {
+			if (!($term instanceof WP_Term)) {
+				continue;
+			}
+			$term_id = (int) $term->term_id;
+			$total = self::get_media_library_album_tag_view_count($term_id);
+			if ($total <= 0) {
+				continue;
+			}
+			$period_counts = self::get_media_library_album_tag_period_view_counts($term_id);
+			$rows[] = [
+				'name' => (string) $term->name,
+				'slug' => (string) $term->slug,
+				'editUrl' => (string) add_query_arg(
+					[
+						'taxonomy' => self::media_library_tags_taxonomy(),
+						'tag_ID' => $term_id,
+						'post_type' => 'attachment',
+					],
+					admin_url('term.php')
+				),
+				'total' => $total,
+				'year' => (int) ($period_counts['year'] ?? 0),
+				'month' => (int) ($period_counts['month'] ?? 0),
+				'week' => (int) ($period_counts['week'] ?? 0),
+				'day' => (int) ($period_counts['day'] ?? 0),
+			];
+		}
+		usort($rows, static function (array $a, array $b): int {
+			$total_compare = ((int) ($b['total'] ?? 0)) <=> ((int) ($a['total'] ?? 0));
+			if ($total_compare !== 0) {
+				return $total_compare;
+			}
+			$year_compare = ((int) ($b['year'] ?? 0)) <=> ((int) ($a['year'] ?? 0));
+			if ($year_compare !== 0) {
+				return $year_compare;
+			}
+			$month_compare = ((int) ($b['month'] ?? 0)) <=> ((int) ($a['month'] ?? 0));
+			if ($month_compare !== 0) {
+				return $month_compare;
+			}
+			$week_compare = ((int) ($b['week'] ?? 0)) <=> ((int) ($a['week'] ?? 0));
+			if ($week_compare !== 0) {
+				return $week_compare;
+			}
+			$day_compare = ((int) ($b['day'] ?? 0)) <=> ((int) ($a['day'] ?? 0));
+			if ($day_compare !== 0) {
+				return $day_compare;
+			}
+			return strcmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+		});
+		return array_slice($rows, 0, $limit);
 	}
 
 	/**

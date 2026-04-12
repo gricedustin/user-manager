@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.212
+ * Version: 2.5.213
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.213 - March 16, 2026
+ * - Added album tag view tracking (total/year/month/week/day) whenever one or more Library Tags are resolved into a front-end album gallery query, including URL-parameter-driven tag queries.
+ * - Added "Album Tag Views" metrics to the Library Tag edit screen with totals and year/month/week/day counters.
+ * - Added new Media submenu screen "Tag Reports" with tabbed reports for "Most Viewed Images" and "Most Viewed Album Tags".
+ *
  * 2.5.212 - March 16, 2026
  * - Stabilized Restricted Access shared-password submissions by removing front-end nonce enforcement for the password gate form, avoiding first-submit failures caused by stale cached nonce markup.
  *
