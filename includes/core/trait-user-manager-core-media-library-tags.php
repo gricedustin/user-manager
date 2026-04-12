@@ -7280,40 +7280,40 @@ JS;
 			? $tag_description_data['bulletsLines']
 			: [];
 		$description_paragraphs = [];
-		foreach ($descriptions as $index => $tag_description) {
-			$tag_description = trim((string) $tag_description);
-			$tag_edit_url = isset($edit_description_urls[$index]) ? (string) $edit_description_urls[$index] : '';
+		$last_index = !empty($descriptions) ? array_key_last($descriptions) : null;
+		if ($last_index !== null) {
+			$tag_description = trim((string) ($descriptions[$last_index] ?? ''));
+			$tag_edit_url = isset($edit_description_urls[$last_index]) ? (string) $edit_description_urls[$last_index] : '';
 			$tag_bullet_lines = [];
-			if (isset($bullets_lines[$index]) && is_array($bullets_lines[$index])) {
+			if (isset($bullets_lines[$last_index]) && is_array($bullets_lines[$last_index])) {
 				$tag_bullet_lines = array_values(array_filter(array_map(static function ($line): string {
 					return trim(sanitize_text_field((string) $line));
-				}, $bullets_lines[$index])));
+				}, $bullets_lines[$last_index])));
 			}
-			if (empty($tag_bullet_lines) && $index === 0 && !empty($single_bullet_lines)) {
+			if (empty($tag_bullet_lines) && !empty($single_bullet_lines)) {
 				$tag_bullet_lines = $single_bullet_lines;
 			}
-			if ($tag_description === '' && $tag_edit_url === '' && empty($tag_bullet_lines)) {
-				continue;
-			}
-			$tag_description_html = self::format_media_library_tag_description_html($tag_description);
-			$edit_link = '';
-			if ($tag_edit_url !== '') {
-				$edit_link = sprintf(
-					' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
-					esc_url($tag_edit_url),
-					esc_html__('Edit Tag Description', 'user-manager')
+			if ($tag_description !== '' || $tag_edit_url !== '' || !empty($tag_bullet_lines)) {
+				$tag_description_html = self::format_media_library_tag_description_html($tag_description);
+				$edit_link = '';
+				if ($tag_edit_url !== '') {
+					$edit_link = sprintf(
+						' <a class="um-media-library-tag-edit-description-link" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+						esc_url($tag_edit_url),
+						esc_html__('Edit Tag Description', 'user-manager')
+					);
+				}
+				$paragraph_html = sprintf(
+					'<p class="um-media-library-tag-description-paragraph">%1$s%2$s</p>',
+					$tag_description_html,
+					$edit_link
 				);
-			}
-			$paragraph_html = sprintf(
-				'<p class="um-media-library-tag-description-paragraph">%1$s%2$s</p>',
-				$tag_description_html,
-				$edit_link
-			);
-			$bullets_html = self::render_media_library_tag_description_bullets_html($tag_bullet_lines);
-			if ($bullets_html !== '') {
-				$description_paragraphs[] = '<div class="um-media-library-tag-description-block">' . $paragraph_html . $bullets_html . '</div>';
-			} else {
-				$description_paragraphs[] = $paragraph_html;
+				$bullets_html = self::render_media_library_tag_description_bullets_html($tag_bullet_lines);
+				if ($bullets_html !== '') {
+					$description_paragraphs[] = '<div class="um-media-library-tag-description-block">' . $paragraph_html . $bullets_html . '</div>';
+				} else {
+					$description_paragraphs[] = $paragraph_html;
+				}
 			}
 		}
 		$description_html = '';

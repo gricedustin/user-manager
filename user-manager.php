@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.210
+ * Version: 2.5.211
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.211 - March 16, 2026
+ * - Updated multi-tag album description rendering so only the LAST selected tag's description/bullets block is shown (instead of rendering blocks for every matched tag).
+ *
  * 2.5.210 - March 16, 2026
  * - Improved Restricted Access password-gate UX for cached/stale overlay forms: correct shared passwords are now accepted even if the nonce is stale, while invalid nonce + wrong password attempts still show a validation retry message.
  *
