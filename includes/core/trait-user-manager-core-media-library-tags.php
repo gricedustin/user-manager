@@ -7820,10 +7820,10 @@ JS;
 			}
 			$sanitized_lines[] = $line;
 		}
-		$items = [];
-		if (empty($items)) {
+		if (empty($sanitized_lines)) {
 			return '';
 		}
+		$items = [];
 		$has_10_plus_bullets = count($sanitized_lines) > 10;
 		$bullet_classes = ['um-media-library-tag-description-bullet'];
 		if ($has_10_plus_bullets) {
