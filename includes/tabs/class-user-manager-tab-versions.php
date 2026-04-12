@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.202 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag group-links rendering to deduplicate groups when multiple active tags belong to the same group, preventing duplicate group-link rows in a single output block.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.201 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Removed the custom margin rule for `.um-media-library-tag-description-wrap .um-media-library-tag-description-block`, allowing description block spacing to inherit from surrounding layout styles.', 'user-manager'); ?></li>

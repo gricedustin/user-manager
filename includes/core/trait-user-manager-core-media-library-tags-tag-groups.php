@@ -817,6 +817,7 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 		}
 
 		$chunks = [];
+		$rendered_group_keys = [];
 		foreach ($group_rows as $row) {
 			if (!is_array($row)) {
 				continue;
@@ -825,9 +826,16 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			if ($current_slug === '') {
 				continue;
 			}
+			$group_key = self::media_library_tag_group_identity_for_slug($current_slug);
+			if ($group_key !== '' && isset($rendered_group_keys[$group_key])) {
+				continue;
+			}
 			$row_html = self::render_media_library_tag_group_links_html($current_slug);
 			if ($row_html === '') {
 				continue;
+			}
+			if ($group_key !== '') {
+				$rendered_group_keys[$group_key] = true;
 			}
 			$chunks[] = $row_html;
 		}
@@ -836,6 +844,42 @@ trait User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait {
 			return '';
 		}
 		return '<div class="um-media-library-tag-group-links-wrap">' . implode('', $chunks) . '</div>';
+	}
+
+	/**
+	 * Resolve a stable group identity key for one tag slug.
+	 */
+	private static function media_library_tag_group_identity_for_slug(string $current_tag_slug): string {
+		$current_tag_slug = sanitize_title($current_tag_slug);
+		if ($current_tag_slug === '') {
+			return '';
+		}
+
+		$groups = self::get_media_library_tag_groups();
+		if (empty($groups)) {
+			return '';
+		}
+
+		foreach ($groups as $group) {
+			if (!is_array($group)) {
+				continue;
+			}
+			$parent_slug = isset($group['parentSlug']) ? sanitize_title((string) $group['parentSlug']) : '';
+			$member_slugs = isset($group['memberSlugs']) && is_array($group['memberSlugs'])
+				? array_values(array_filter(array_map('sanitize_title', array_map('strval', $group['memberSlugs']))))
+				: [];
+			$all_group_slugs = array_values(array_unique(array_filter(array_merge([$parent_slug], $member_slugs))));
+			if (!in_array($current_tag_slug, $all_group_slugs, true)) {
+				continue;
+			}
+			if (!empty($group['id'])) {
+				return 'id:' . sanitize_key((string) $group['id']);
+			}
+			sort($all_group_slugs, SORT_STRING);
+			return 'fallback:' . implode('|', $all_group_slugs);
+		}
+
+		return '';
 	}
 
 	/**
