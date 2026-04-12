@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) {
 }
 
 trait User_Manager_Core_Restricted_Access_Trait {
+	private const RESTRICTED_ACCESS_TRUSTED_IP_COOKIE = 'um_restricted_access_ip_trust';
 
 	/**
 	 * Runtime password error for the current request.
@@ -107,6 +108,11 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			// Refresh the cookie so expiry slides forward and normalize
 			// path/domain scope for cross-page navigation consistency.
 			self::restricted_access_set_access_cookie($settings);
+			return;
+		}
+
+		// Optional IP trust bypass after successful password submission.
+		if (self::restricted_access_should_trust_ip_after_password_success($settings) && self::restricted_access_has_valid_trusted_ip_cookie()) {
 			return;
 		}
 
@@ -403,6 +409,9 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		if ($saved_password !== '' && hash_equals($saved_password, $submitted_password)) {
 			self::restricted_access_log_access_attempt($submitted_password, true, '');
 			self::restricted_access_set_access_cookie($settings);
+			if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
+				self::restricted_access_set_trusted_ip_cookie();
+			}
 			wp_safe_redirect(self::restricted_access_get_current_url());
 			exit;
 		}
@@ -799,6 +808,70 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			}
 		}
 		$_COOKIE['um_restricted_access'] = $value;
+	}
+
+	/**
+	 * Whether trusted-IP bypass is enabled in settings.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function restricted_access_should_trust_ip_after_password_success(array $settings): bool {
+		return !empty($settings['restricted_access_remember_ip_for_30_days']);
+	}
+
+	/**
+	 * Set signed trusted-IP cookie for 30 days.
+	 */
+	private static function restricted_access_set_trusted_ip_cookie(): void {
+		$ip = self::restricted_access_get_request_ip_address();
+		if ($ip === '') {
+			return;
+		}
+		$expires = time() + (30 * DAY_IN_SECONDS);
+		$sig = hash_hmac('sha256', $ip . '|' . (string) $expires, wp_salt('auth'));
+		$value = $expires . '.' . $sig;
+		$paths = self::restricted_access_get_cookie_paths();
+		$domains = self::restricted_access_get_cookie_domains();
+		$options_base = [
+			'expires' => $expires,
+			'secure' => is_ssl(),
+			'httponly' => true,
+			'samesite' => 'Lax',
+		];
+		foreach ($paths as $path) {
+			foreach ($domains as $domain) {
+				$options = $options_base;
+				$options['path'] = $path;
+				if ($domain !== '') {
+					$options['domain'] = $domain;
+				}
+				setcookie(self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE, $value, $options);
+			}
+		}
+		$_COOKIE[self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE] = $value;
+	}
+
+	/**
+	 * Validate trusted-IP cookie against current visitor IP.
+	 */
+	private static function restricted_access_has_valid_trusted_ip_cookie(): bool {
+		$ip = self::restricted_access_get_request_ip_address();
+		if ($ip === '') {
+			return false;
+		}
+		$raw = isset($_COOKIE[self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE]) && is_string($_COOKIE[self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE])
+			? (string) $_COOKIE[self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE]
+			: '';
+		if ($raw === '' || strpos($raw, '.') === false) {
+			return false;
+		}
+		[$expires_raw, $sig] = array_pad(explode('.', $raw, 2), 2, '');
+		$expires = absint($expires_raw);
+		if ($expires <= 0 || $expires < time() || $sig === '') {
+			return false;
+		}
+		$expected = hash_hmac('sha256', $ip . '|' . (string) $expires, wp_salt('auth'));
+		return hash_equals($expected, $sig);
 	}
 
 	/**

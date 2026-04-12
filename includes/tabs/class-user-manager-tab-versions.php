@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.206 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Restricted Access checkbox setting: "Upon Successful Password, Save IP Address and Do Not Ask Again for Next 30 Days".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, successful shared-password submissions now store a signed 30-day IP trust cookie and bypass future password prompts from that same IP until expiry.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.205 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated mobile Media Library Tag video-grid rules so wrappers marked with `um-media-library-tag-videos-wrap-cols-1` render as a single full-width column on mobile, while multi-video wrappers continue rendering as 2 columns.', 'user-manager'); ?></li>
