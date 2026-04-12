@@ -39,9 +39,10 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.5.218 <span>(March 16, 2026)</span></h4>
+						<h4>2.5.219 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Added front-end body class `10plusbullets` when the active Media Library Tag description context resolves to more than 10 bullet lines.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new Media Library Tag gallery setting input: "Inline styles for li tags if 10 plus bullets being displayed".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When configured, the value is applied as inline styles on each album-description bullet `<li>` only when the active bullet list contains more than 10 items.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

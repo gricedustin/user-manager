@@ -2401,6 +2401,9 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_album_description_position'] = $gallery_album_description_position;
 				$settings['media_library_tag_gallery_featured_image_separate_column'] = isset($_POST['media_library_tag_gallery_featured_image_separate_column']) && $_POST['media_library_tag_gallery_featured_image_separate_column'] === '1';
 				$settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] = isset($_POST['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets']) && $_POST['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] === '1';
+				$settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'] = isset($_POST['media_library_tag_gallery_10plus_bullets_li_inline_styles'])
+					? sanitize_text_field(wp_unslash($_POST['media_library_tag_gallery_10plus_bullets_li_inline_styles']))
+					: '';
 				$gallery_description_display = isset($_POST['media_library_tag_gallery_description_display']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_description_display'])) : 'none';
 				$allowed_description_display = array_keys(User_Manager_Core::get_media_library_gallery_description_display_options());
 				if (!in_array($gallery_description_display, $allowed_description_display, true)) {

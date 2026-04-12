@@ -61,6 +61,9 @@ class User_Manager_Addon_Media_Library_Tags {
 		$hide_featured_image_if_no_description_or_bullets = isset($settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'])
 			? !empty($settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'])
 			: !empty($defaults['hideFeaturedImageIfNoDescriptionOrBullets']);
+		$inline_styles_for_li_tags_if_10_plus_bullets_displayed = isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']) && is_string($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])
+			? (string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']
+			: (string) ($defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] ?? '');
 		$description_value = isset($settings['media_library_tag_gallery_description_value']) && is_string($settings['media_library_tag_gallery_description_value']) && $settings['media_library_tag_gallery_description_value'] !== ''
 			? $settings['media_library_tag_gallery_description_value']
 			: (string) $defaults['descriptionValue'];
@@ -276,6 +279,11 @@ class User_Manager_Addon_Media_Library_Tags {
 									<input type="checkbox" name="media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets" value="1" <?php checked($hide_featured_image_if_no_description_or_bullets); ?><?php echo $form_attr; ?> />
 									<?php esc_html_e('Hide tag featured image if no description and no bullets exist', 'user-manager'); ?>
 								</label>
+							</div>
+							<div class="um-form-field">
+								<label for="um-media-library-tags-gallery-10plus-bullets-li-inline-styles"><?php esc_html_e('Inline styles for li tags if 10 plus bullets being displayed', 'user-manager'); ?></label>
+								<input type="text" id="um-media-library-tags-gallery-10plus-bullets-li-inline-styles" name="media_library_tag_gallery_10plus_bullets_li_inline_styles" class="regular-text" value="<?php echo esc_attr($inline_styles_for_li_tags_if_10_plus_bullets_displayed); ?>"<?php echo $form_attr; ?> />
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Optional. Applied as inline style on each bullet <li> only when 10+ bullets are rendered.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-description-value"><?php esc_html_e('Description Value', 'user-manager'); ?></label>

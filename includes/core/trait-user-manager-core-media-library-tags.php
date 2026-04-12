@@ -6271,6 +6271,7 @@ JS;
 			'simpleLightboxThumbnailClick' => true,
 			'hideFeaturedImageDuplicateInTaggedImages' => true,
 			'featuredImageMaxWidthPx' => 360,
+			'inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed' => '',
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -6380,6 +6381,9 @@ JS;
 		$defaults['hideFeaturedImageDuplicateInTaggedImages'] = isset($settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
 			? $settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === true || $settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === '1'
 			: (bool) ($defaults['hideFeaturedImageDuplicateInTaggedImages'] ?? true);
+		if (isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])) {
+			$defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] = sanitize_text_field((string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']);
+		}
 		if (isset($settings['media_library_tag_gallery_featured_image_max_width_px'])) {
 			$defaults['featuredImageMaxWidthPx'] = max(120, min(1600, absint($settings['media_library_tag_gallery_featured_image_max_width_px'])));
 		}
@@ -7813,6 +7817,8 @@ JS;
 	 * @param array<int,string> $bullet_lines
 	 */
 	private static function render_media_library_tag_description_bullets_html(array $bullet_lines): string {
+		$settings = User_Manager_Core::get_settings();
+		$defaults = self::get_media_library_tag_gallery_defaults($settings);
 		$sanitized_lines = [];
 		foreach ($bullet_lines as $line) {
 			$line = trim(sanitize_text_field((string) $line));
@@ -7830,8 +7836,15 @@ JS;
 		if ($has_10_plus_bullets) {
 			$bullet_classes[] = '10plusbullets';
 		}
+		$li_inline_style = '';
+		if ($has_10_plus_bullets) {
+			$li_inline_style = isset($defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'])
+				? trim(sanitize_text_field((string) $defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed']))
+				: '';
+		}
+		$li_inline_style_attr = $li_inline_style !== '' ? ' style="' . esc_attr($li_inline_style) . '"' : '';
 		foreach ($sanitized_lines as $sanitized_line) {
-			$items[] = '<li class="' . esc_attr(implode(' ', $bullet_classes)) . '">' . esc_html($sanitized_line) . '</li>';
+			$items[] = '<li class="' . esc_attr(implode(' ', $bullet_classes)) . '"' . $li_inline_style_attr . '>' . esc_html($sanitized_line) . '</li>';
 		}
 		$bullets_classes = ['um-media-library-tag-description-bullets'];
 		if ($has_10_plus_bullets) {
