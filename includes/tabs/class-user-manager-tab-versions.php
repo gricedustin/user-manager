@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.210 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Improved Restricted Access shared-password UX for cached/stale overlay forms: valid passwords now continue to grant access even when the nonce has expired, preventing first-attempt failures followed by second-attempt success.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Invalid nonce submissions now return a clearer message prompting visitors to refresh and try again.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.209 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Media Library Tag slug-rename sync hook argument handling so Video Library `tagSlugs` now reliably update during standard term edit saves.', 'user-manager'); ?></li>

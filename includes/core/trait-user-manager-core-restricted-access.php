@@ -397,15 +397,19 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		if (!isset($_POST['um_restricted_access_submit'])) {
 			return;
 		}
-		$nonce = isset($_POST['um_restricted_access_nonce']) ? sanitize_text_field(wp_unslash($_POST['um_restricted_access_nonce'])) : '';
-		if ($nonce === '' || !wp_verify_nonce($nonce, 'um_restricted_access_submit')) {
-			self::$restricted_access_password_error = (string) __('Unable to validate request. Please try again.', 'user-manager');
-			self::restricted_access_log_access_attempt('', false, 'invalid_nonce');
-			return;
-		}
-
 		$submitted_password = isset($_POST['um_restricted_access_password']) ? sanitize_text_field(wp_unslash($_POST['um_restricted_access_password'])) : '';
 		$saved_password     = self::restricted_access_get_shared_password($settings);
+		$is_correct_password = ($saved_password !== '' && hash_equals($saved_password, $submitted_password));
+		$nonce = isset($_POST['um_restricted_access_nonce']) ? sanitize_text_field(wp_unslash($_POST['um_restricted_access_nonce'])) : '';
+		if ($nonce === '' || !wp_verify_nonce($nonce, 'um_restricted_access_submit')) {
+			// Cached or stale overlay markup can cause nonce mismatches. When the
+			// shared password is correct, allow access instead of forcing a retry.
+			if (!$is_correct_password) {
+				self::$restricted_access_password_error = (string) __('Unable to validate request. Please try again.', 'user-manager');
+				self::restricted_access_log_access_attempt('', false, 'invalid_nonce');
+				return;
+			}
+		}
 		if ($saved_password !== '' && hash_equals($saved_password, $submitted_password)) {
 			self::restricted_access_log_access_attempt($submitted_password, true, '');
 			self::restricted_access_set_access_cookie($settings);
