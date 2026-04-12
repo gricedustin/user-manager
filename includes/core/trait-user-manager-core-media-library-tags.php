@@ -7812,19 +7812,28 @@ JS;
 	 * @param array<int,string> $bullet_lines
 	 */
 	private static function render_media_library_tag_description_bullets_html(array $bullet_lines): string {
-		$items = [];
+		$sanitized_lines = [];
 		foreach ($bullet_lines as $line) {
 			$line = trim(sanitize_text_field((string) $line));
 			if ($line === '') {
 				continue;
 			}
-			$items[] = '<li class="um-media-library-tag-description-bullet">' . esc_html($line) . '</li>';
+			$sanitized_lines[] = $line;
 		}
+		$items = [];
 		if (empty($items)) {
 			return '';
 		}
+		$has_10_plus_bullets = count($sanitized_lines) > 10;
+		$bullet_classes = ['um-media-library-tag-description-bullet'];
+		if ($has_10_plus_bullets) {
+			$bullet_classes[] = '10plusbullets';
+		}
+		foreach ($sanitized_lines as $sanitized_line) {
+			$items[] = '<li class="' . esc_attr(implode(' ', $bullet_classes)) . '">' . esc_html($sanitized_line) . '</li>';
+		}
 		$bullets_classes = ['um-media-library-tag-description-bullets'];
-		if (count($items) > 10) {
+		if ($has_10_plus_bullets) {
 			$bullets_classes[] = '10plusbullets';
 		}
 		return '<ul class="' . esc_attr(implode(' ', $bullets_classes)) . '">' . implode('', $items) . '</ul>';

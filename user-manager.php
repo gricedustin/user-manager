@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.215
+ * Version: 2.5.216
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.216 - March 16, 2026
+ * - Added `10plusbullets` class on each individual album-description bullet `<li>` item (next to `um-media-library-tag-description-bullet`) whenever the rendered bullet list contains more than 10 bullets.
+ *
  * 2.5.215 - March 16, 2026
  * - Tag Groups editor now surfaces missing/unavailable member tag slugs for existing groups and lets admins remove those stale slugs before saving.
  * - Added a dedicated Legacy/Missing Group Tags removal list so orphaned tag slugs that no longer exist in Library Tags can be cleaned up from group records.
