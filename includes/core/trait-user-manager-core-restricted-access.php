@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
 }
 
 trait User_Manager_Core_Restricted_Access_Trait {
-	private const RESTRICTED_ACCESS_TRUSTED_IP_COOKIE = 'um_restricted_access_ip_trust';
+	private static string $restricted_access_trusted_ip_cookie_name = 'um_restricted_access_ip_trust';
 
 	/**
 	 * Runtime password error for the current request.
@@ -845,10 +845,10 @@ trait User_Manager_Core_Restricted_Access_Trait {
 				if ($domain !== '') {
 					$options['domain'] = $domain;
 				}
-				setcookie(self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE, $value, $options);
+				setcookie(self::$restricted_access_trusted_ip_cookie_name, $value, $options);
 			}
 		}
-		$_COOKIE[self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE] = $value;
+		$_COOKIE[self::$restricted_access_trusted_ip_cookie_name] = $value;
 	}
 
 	/**
@@ -859,8 +859,8 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		if ($ip === '') {
 			return false;
 		}
-		$raw = isset($_COOKIE[self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE]) && is_string($_COOKIE[self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE])
-			? (string) $_COOKIE[self::RESTRICTED_ACCESS_TRUSTED_IP_COOKIE]
+		$raw = isset($_COOKIE[self::$restricted_access_trusted_ip_cookie_name]) && is_string($_COOKIE[self::$restricted_access_trusted_ip_cookie_name])
+			? (string) $_COOKIE[self::$restricted_access_trusted_ip_cookie_name]
 			: '';
 		if ($raw === '' || strpos($raw, '.') === false) {
 			return false;

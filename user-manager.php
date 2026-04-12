@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.207
+ * Version: 2.5.208
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.208 - March 16, 2026
+ * - Hotfix: replaced Restricted Access trait constant usage with trait static-property usage for broader PHP compatibility, preventing fatal errors on environments where trait constants are unsupported.
+ *
  * 2.5.207 - March 16, 2026
  * - Fixed Media Library Tag slug rename syncing so Video Library tag assignments update from old slug to new slug instead of being dropped.
  * - Applies to both standard Library Tag edit flow and the Media Library Tags bulk editor update flow.
