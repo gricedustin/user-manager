@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.200
+ * Version: 2.5.201
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.201 - March 16, 2026
+ * - Removed the custom margin override from `.um-media-library-tag-description-wrap .um-media-library-tag-description-block`.
+ *
  * 2.5.200 - March 16, 2026
  * - Updated `.um-media-library-tag-description-wrap .um-media-library-tag-description-block` spacing to use 25px top and 25px bottom margins.
  *
