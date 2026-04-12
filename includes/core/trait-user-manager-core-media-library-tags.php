@@ -43,6 +43,7 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_filter('the_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_title'], 20, 2);
 		add_filter('document_title_parts', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title_parts'], 20);
 		add_filter('pre_get_document_title', [__CLASS__, 'replace_media_library_tag_placeholders_in_document_title'], 20);
+		add_filter('body_class', [__CLASS__, 'add_media_library_tag_body_classes_for_bullets'], 20, 1);
 		add_action('admin_bar_menu', [__CLASS__, 'add_media_library_tag_admin_bar_shortcut'], 101);
 		add_action('admin_menu', [__CLASS__, 'register_media_library_tags_bulk_editor_submenu']);
 		add_action('admin_menu', [__CLASS__, 'register_media_library_tag_reports_submenu']);
@@ -7972,6 +7973,60 @@ JS;
 		}
 		$primed = true;
 		self::get_current_post_media_library_tag_placeholder_config();
+	}
+
+	/**
+	 * Add front-end body class when active tag-description context has >10 bullets.
+	 *
+	 * @param array<int,string> $classes
+	 * @return array<int,string>
+	 */
+	public static function add_media_library_tag_body_classes_for_bullets(array $classes): array {
+		if (is_admin()) {
+			return $classes;
+		}
+		if (!self::media_library_tag_description_context_has_more_than_ten_bullets()) {
+			return $classes;
+		}
+		$classes[] = '10plusbullets';
+		return array_values(array_unique(array_filter(array_map('sanitize_html_class', $classes))));
+	}
+
+	/**
+	 * Determine whether current active tag-description context has >10 bullets.
+	 */
+	private static function media_library_tag_description_context_has_more_than_ten_bullets(): bool {
+		if (!is_singular()) {
+			return false;
+		}
+		$config = self::get_current_post_media_library_tag_placeholder_config();
+		if (empty($config['enabled'])) {
+			return false;
+		}
+		$allow_any = !empty($config['allowAny']);
+		$tag_override = self::resolve_media_library_gallery_url_tag_override($allow_any);
+		$tag_description_data = self::get_media_library_tag_description_data_for_tag_expression($tag_override);
+		$descriptions = isset($tag_description_data['descriptions']) && is_array($tag_description_data['descriptions'])
+			? $tag_description_data['descriptions']
+			: [];
+		$last_index = !empty($descriptions) ? array_key_last($descriptions) : null;
+		$bullets_lines = isset($tag_description_data['bulletsLines']) && is_array($tag_description_data['bulletsLines'])
+			? $tag_description_data['bulletsLines']
+			: [];
+		$single_bullet_lines = isset($tag_description_data['bulletLines']) && is_array($tag_description_data['bulletLines'])
+			? $tag_description_data['bulletLines']
+			: [];
+		$effective_lines = [];
+		if ($last_index !== null && isset($bullets_lines[$last_index]) && is_array($bullets_lines[$last_index])) {
+			$effective_lines = $bullets_lines[$last_index];
+		}
+		if (empty($effective_lines)) {
+			$effective_lines = $single_bullet_lines;
+		}
+		$normalized_lines = array_values(array_filter(array_map(static function ($line): string {
+			return trim(sanitize_text_field((string) $line));
+		}, $effective_lines)));
+		return count($normalized_lines) > 10;
 	}
 
 	/**

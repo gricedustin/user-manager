@@ -39,9 +39,9 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.5.217 <span>(March 16, 2026)</span></h4>
+						<h4>2.5.218 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Fixed Media Library Tag bullet-list rendering regression so bullets display correctly again after the `10plusbullets` list-item class update.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added front-end body class `10plusbullets` when the active Media Library Tag description context resolves to more than 10 bullet lines.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
