@@ -8,6 +8,12 @@ if (!defined('ABSPATH')) {
 }
 
 trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
+	/**
+	 * Track previous term slug values during term-edit lifecycle.
+	 *
+	 * @var array<int,string>
+	 */
+	private static array $media_library_tag_slug_before_update = [];
 
 	/**
 	 * Option key for centralized Video Library items.
@@ -924,6 +930,108 @@ trait User_Manager_Core_Media_Library_Tags_Video_Library_Trait {
 		}
 
 		return array_values($valid_slugs);
+	}
+
+	/**
+	 * Replace one Library Tag slug across saved Video Library item tag slugs.
+	 */
+	private static function maybe_replace_media_library_video_tag_slug(string $old_slug, string $new_slug): void {
+		$old_slug = sanitize_title($old_slug);
+		$new_slug = sanitize_title($new_slug);
+		if ($old_slug === '' || $new_slug === '' || $old_slug === $new_slug) {
+			return;
+		}
+
+		$items = self::get_media_library_tag_video_library_items();
+		if (empty($items)) {
+			return;
+		}
+
+		$updated = false;
+		foreach ($items as $index => $item) {
+			if (!is_array($item)) {
+				continue;
+			}
+			$tag_slugs = isset($item['tagSlugs']) && is_array($item['tagSlugs'])
+				? array_values(array_filter(array_map('sanitize_title', array_map('strval', $item['tagSlugs']))))
+				: [];
+			if (empty($tag_slugs) || !in_array($old_slug, $tag_slugs, true)) {
+				continue;
+			}
+
+			$next_tag_slugs = [];
+			foreach ($tag_slugs as $tag_slug) {
+				$next_tag_slugs[] = ($tag_slug === $old_slug) ? $new_slug : $tag_slug;
+			}
+			$next_tag_slugs = array_values(array_unique(array_filter(array_map('sanitize_title', $next_tag_slugs))));
+			if ($next_tag_slugs === $tag_slugs) {
+				continue;
+			}
+
+			$items[$index]['tagSlugs'] = $next_tag_slugs;
+			$updated = true;
+		}
+
+		if ($updated) {
+			self::update_media_library_tag_video_library_items($items);
+		}
+	}
+
+	/**
+	 * Capture current tag slug before term update so related video tag slugs
+	 * can be migrated if the term slug changes.
+	 *
+	 * Supports both:
+	 * - edit_terms(term_id, taxonomy, args)
+	 * - edit_{$taxonomy}(term_id, tt_id, args)
+	 */
+	public static function capture_media_library_tag_slug_before_update($term_id, $arg2 = '', $arg3 = null): void {
+		$term_id = absint($term_id);
+		$taxonomy = '';
+		if (is_string($arg2) && $arg2 !== '') {
+			$taxonomy = sanitize_key($arg2);
+		} elseif (is_string($arg3) && $arg3 !== '') {
+			$taxonomy = sanitize_key($arg3);
+		}
+		if ($term_id <= 0 || $taxonomy !== self::media_library_tags_taxonomy()) {
+			return;
+		}
+
+		$term = get_term($term_id, $taxonomy);
+		if (!($term instanceof WP_Term)) {
+			return;
+		}
+		self::$media_library_tag_slug_before_update[$term_id] = sanitize_title((string) $term->slug);
+	}
+
+	/**
+	 * If a Library Tag slug changed, replace the old slug in Video Library
+	 * item tag assignments so records remain connected to the renamed tag.
+	 */
+	public static function maybe_sync_media_library_tag_slug_after_update($term_id, $tt_id = 0, $taxonomy = ''): void {
+		$term_id = absint($term_id);
+		$taxonomy = is_string($taxonomy) ? sanitize_key($taxonomy) : '';
+		if ($term_id <= 0 || $taxonomy !== self::media_library_tags_taxonomy()) {
+			return;
+		}
+
+		$term = get_term($term_id, $taxonomy);
+		if (!($term instanceof WP_Term)) {
+			unset(self::$media_library_tag_slug_before_update[$term_id]);
+			return;
+		}
+
+		$old_slug = isset(self::$media_library_tag_slug_before_update[$term_id])
+			? sanitize_title((string) self::$media_library_tag_slug_before_update[$term_id])
+			: '';
+		unset(self::$media_library_tag_slug_before_update[$term_id]);
+
+		$new_slug = sanitize_title((string) $term->slug);
+		if ($old_slug === '' || $new_slug === '' || $old_slug === $new_slug) {
+			return;
+		}
+
+		self::maybe_replace_media_library_video_tag_slug($old_slug, $new_slug);
 	}
 
 	/**

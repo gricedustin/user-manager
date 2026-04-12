@@ -60,6 +60,8 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 		add_action($taxonomy . '_edit_form_fields', [__CLASS__, 'render_media_library_tag_featured_image_edit_form_fields']);
 		add_action('created_' . $taxonomy, [__CLASS__, 'save_media_library_tag_featured_image_term_meta']);
 		add_action('edited_' . $taxonomy, [__CLASS__, 'save_media_library_tag_featured_image_term_meta']);
+		add_action('edit_terms', [__CLASS__, 'capture_media_library_tag_slug_before_update'], 10, 3);
+		add_action('edited_terms', [__CLASS__, 'maybe_sync_media_library_tag_slug_after_update'], 10, 3);
 		add_action('wp_head', [__CLASS__, 'print_media_library_tags_inline_lightbox_bootstrap'], 1);
 		add_shortcode('um_media_library_tag_videos', [__CLASS__, 'render_media_library_tag_videos_shortcode']);
 	}
@@ -554,6 +556,12 @@ trait User_Manager_Core_Media_Library_Tags_Trait {
 				);
 				continue;
 			}
+			$old_slug = sanitize_title((string) $current_term->slug);
+			$new_slug = isset($result['slug']) ? sanitize_title((string) $result['slug']) : $slug;
+			if ($new_slug === '') {
+				$new_slug = $old_slug;
+			}
+			self::maybe_replace_media_library_video_tag_slug($old_slug, $new_slug);
 			if ($featured_image_id <= 0) {
 				delete_term_meta($term_id, self::media_library_tag_featured_image_meta_key());
 			} else {

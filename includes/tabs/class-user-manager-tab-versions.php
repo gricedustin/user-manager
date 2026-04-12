@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.207 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('When Library Tag slugs are renamed, Video Library records now update their saved `tagSlugs` references instead of dropping that association.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied slug-sync handling for both single term edits and the Library Tags bulk editor update flow.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.206 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Restricted Access checkbox setting: "Upon Successful Password, Save IP Address and Do Not Ask Again for Next 30 Days".', 'user-manager'); ?></li>

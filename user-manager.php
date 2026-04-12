@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.206
+ * Version: 2.5.207
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.207 - March 16, 2026
+ * - Fixed Media Library Tag slug rename syncing so Video Library tag assignments update from old slug to new slug instead of being dropped.
+ * - Applies to both standard Library Tag edit flow and the Media Library Tags bulk editor update flow.
+ *
  * 2.5.206 - March 16, 2026
  * - Added new Restricted Access checkbox setting: "Upon Successful Password, Save IP Address and Do Not Ask Again for Next 30 Days".
  * - When enabled, successful shared-password submission now stores a signed per-IP trust cookie for 30 days and bypasses the shared-password prompt for that same visitor IP while valid.
