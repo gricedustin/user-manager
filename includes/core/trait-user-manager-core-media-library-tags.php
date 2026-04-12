@@ -1167,6 +1167,14 @@ CSS;
 		if (empty($tag_slugs)) {
 			return '';
 		}
+		// When multiple tags are active, only use videos from the LAST tag.
+		if (count($tag_slugs) > 1) {
+			$last_tag_slug = (string) ($tag_slugs[array_key_last($tag_slugs)] ?? '');
+			$tag_slugs = $last_tag_slug !== '' ? [$last_tag_slug] : [];
+		}
+		if (empty($tag_slugs)) {
+			return '';
+		}
 
 		$video_records = self::get_media_library_tag_video_library_records_for_slugs($tag_slugs);
 		if (empty($video_records)) {
@@ -4086,7 +4094,19 @@ JS;
 		$featured_image_max_width_px = isset($defaults['featuredImageMaxWidthPx'])
 			? max(0, min(1600, absint((int) $defaults['featuredImageMaxWidthPx'])))
 			: 360;
-		$featured_description_attachment_id = isset($tag_description_data['featuredImageId']) ? absint($tag_description_data['featuredImageId']) : 0;
+		$featured_description_attachment_id = 0;
+		$last_tag_index_for_description = isset($tag_description_data['lastIndex']) ? (int) $tag_description_data['lastIndex'] : -1;
+		if (
+			$last_tag_index_for_description >= 0
+			&& !empty($tag_description_data['featuredImageIds'])
+			&& is_array($tag_description_data['featuredImageIds'])
+			&& isset($tag_description_data['featuredImageIds'][$last_tag_index_for_description])
+		) {
+			$featured_description_attachment_id = absint((int) $tag_description_data['featuredImageIds'][$last_tag_index_for_description]);
+		}
+		if ($featured_description_attachment_id <= 0) {
+			$featured_description_attachment_id = isset($tag_description_data['featuredImageId']) ? absint($tag_description_data['featuredImageId']) : 0;
+		}
 		if ($featured_description_attachment_id <= 0 && !empty($tag_description_data['featuredImageIds']) && is_array($tag_description_data['featuredImageIds'])) {
 			$featured_description_attachment_id = absint((int) ($tag_description_data['featuredImageIds'][0] ?? 0));
 		}
@@ -7590,6 +7610,7 @@ JS;
 			'editDescriptionUrls' => [],
 			'bulletLines' => [],
 			'bulletsLines' => [],
+			'lastIndex' => -1,
 		];
 		$slugs = isset($tag_override['slugs']) && is_array($tag_override['slugs'])
 			? array_values(array_filter(array_map('sanitize_title', array_map('strval', $tag_override['slugs']))))
@@ -7645,6 +7666,7 @@ JS;
 			'featuredImageIds' => $featured_image_ids,
 			'bulletLines' => (isset($bullets_lines[0]) && is_array($bullets_lines[0])) ? $bullets_lines[0] : [],
 			'bulletsLines' => $bullets_lines,
+			'lastIndex' => !empty($names) ? (int) array_key_last($names) : -1,
 		];
 	}
 
@@ -7874,6 +7896,13 @@ JS;
 		$featured_image_ids = isset($tag_description_data['featuredImageIds']) && is_array($tag_description_data['featuredImageIds'])
 			? array_values(array_filter(array_map('absint', $tag_description_data['featuredImageIds'])))
 			: [];
+		$last_index = isset($tag_description_data['lastIndex']) ? (int) $tag_description_data['lastIndex'] : -1;
+		if ($last_index >= 0 && isset($featured_image_ids[$last_index])) {
+			$last_featured_image_id = absint((int) $featured_image_ids[$last_index]);
+			if ($last_featured_image_id > 0) {
+				$featured_image_ids = [$last_featured_image_id];
+			}
+		}
 		if (empty($featured_image_ids)) {
 			$single_featured_image_id = isset($tag_description_data['featuredImageId']) ? absint($tag_description_data['featuredImageId']) : 0;
 			if ($single_featured_image_id > 0) {

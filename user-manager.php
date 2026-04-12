@@ -2,15 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.219
+ * Version: 2.5.220
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
- * 2.5.219 - March 16, 2026
- * - Added new Media Library Tags setting input: "Inline styles for li tags if 10 plus bullets being displayed".
- * - When set, the style string is applied inline on each album-description bullet `<li>` only when 10+ bullets are rendered.
+ * 2.5.220 - March 16, 2026
+ * - For multi-tag gallery URL queries, album description featured image now uses the LAST matched tag's featured image to align with last-tag description/bullet rendering.
+ * - For multi-tag gallery URL queries, album videos now only render videos assigned to the LAST matched tag.
  *
  * 2.5.217 - March 16, 2026
  * - Fixed album-description bullet rendering regression where bullet lists could disappear after adding per-`<li>` class logic.
