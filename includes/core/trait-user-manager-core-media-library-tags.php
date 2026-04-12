@@ -1036,9 +1036,10 @@ CSS;
 			return '';
 		}
 		$sort_direction = self::normalize_media_library_tag_video_sort_direction($render_options['sortDirection'] ?? '');
-		if ($sort_direction !== '') {
-			self::sort_media_library_tag_video_records_by_datetime($video_records, $sort_direction);
+		if ($sort_direction === '') {
+			$sort_direction = 'desc';
 		}
+		self::sort_media_library_tag_video_records_by_datetime($video_records, $sort_direction);
 		$settings = User_Manager_Core::get_settings();
 		$display_video_title = !empty($settings['media_library_tag_video_library_display_title']);
 		$display_video_description = !empty($settings['media_library_tag_video_library_display_description']);
