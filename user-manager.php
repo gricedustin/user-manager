@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.197
+ * Version: 2.5.198
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.198 - March 16, 2026
+ * - Updated split-column album description layout to vertically center description/bullets content against the featured image column on desktop.
+ *
  * 2.5.197 - March 16, 2026
  * - Updated Media Library Tag video layout sizing so single-video output can still use configured desktop column widths instead of forcing full-width cards.
  * - Single-video wrappers now keep multi-column sizing classes (capped to configured columns), preventing oversized desktop embeds.

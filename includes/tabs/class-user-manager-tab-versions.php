@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.198 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated split-column Media Library Tag description layout so columns are vertically centered against each other on desktop, improving alignment between featured image and description/bullets.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.197 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated Media Library Tag video wrapper class logic so single-video output can retain desktop column-constrained width instead of always stretching to a full-width single column.', 'user-manager'); ?></li>

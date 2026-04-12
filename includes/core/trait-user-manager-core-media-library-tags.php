@@ -4432,7 +4432,7 @@ JS;
 	display: grid;
 	grid-template-columns: max-content minmax(0,1fr);
 	column-gap: 18px;
-	align-items: start;
+	align-items: center;
 }
 .um-media-library-tag-description-layout-split-columns .um-media-library-tag-description-column-image .um-media-library-tag-description-featured {
 	float: none;
