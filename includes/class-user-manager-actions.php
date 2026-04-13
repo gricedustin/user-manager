@@ -2401,6 +2401,7 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_album_description_position'] = $gallery_album_description_position;
 				$settings['media_library_tag_gallery_featured_image_separate_column'] = isset($_POST['media_library_tag_gallery_featured_image_separate_column']) && $_POST['media_library_tag_gallery_featured_image_separate_column'] === '1';
 				$settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] = isset($_POST['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets']) && $_POST['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] === '1';
+				$settings['media_library_tag_gallery_single_video_three_column_combined_row'] = isset($_POST['media_library_tag_gallery_single_video_three_column_combined_row']) && $_POST['media_library_tag_gallery_single_video_three_column_combined_row'] === '1';
 				$settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'] = isset($_POST['media_library_tag_gallery_10plus_bullets_li_inline_styles'])
 					? sanitize_text_field(wp_unslash($_POST['media_library_tag_gallery_10plus_bullets_li_inline_styles']))
 					: '';

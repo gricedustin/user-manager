@@ -39,10 +39,10 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.5.223 <span>(March 16, 2026)</span></h4>
+						<h4>2.5.224 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Fixed single-video mobile layout so `...videos-wrap-cols-1` no longer stays pinned in a right-side column; it now spans full width in a single column on mobile.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Preserved desktop single-video 25% / 50% / 25% layout with centered video column.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new Media Library Tag gallery checkbox setting: "If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled and exactly one video is rendered, gallery output switches to a single-row 3-column layout (featured image | description/bullets | video) with responsive stacking on mobile.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">

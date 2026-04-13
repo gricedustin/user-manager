@@ -2,15 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.223
+ * Version: 2.5.224
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
- * 2.5.223 - March 16, 2026
- * - Fixed single-video mobile layout for `...videos-wrap-cols-1` so the video item spans the full single column (`grid-column: 1 / -1`) and no longer appears narrow/right-shifted on mobile.
- * - Desktop single-video layout remains centered in a wider 25% / 50% / 25% structure.
+ * 2.5.224 - March 16, 2026
+ * - Added new Media Library Tag gallery checkbox setting: "If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row".
+ * - When enabled, and only when a single video result is present, gallery output now renders an alternate 3-column row (featured image, description/bullets, video) on desktop; mobile stacks to one column.
  *
  * 2.5.217 - March 16, 2026
  * - Fixed album-description bullet rendering regression where bullet lists could disappear after adding per-`<li>` class logic.

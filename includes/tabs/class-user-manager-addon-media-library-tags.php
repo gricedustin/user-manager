@@ -61,6 +61,9 @@ class User_Manager_Addon_Media_Library_Tags {
 		$hide_featured_image_if_no_description_or_bullets = isset($settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'])
 			? !empty($settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'])
 			: !empty($defaults['hideFeaturedImageIfNoDescriptionOrBullets']);
+		$single_video_three_column_combined_row = isset($settings['media_library_tag_gallery_single_video_three_column_alternative_layout'])
+			? !empty($settings['media_library_tag_gallery_single_video_three_column_alternative_layout'])
+			: !empty($defaults['singleVideoThreeColumnCompactLayout']);
 		$inline_styles_for_li_tags_if_10_plus_bullets_displayed = isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']) && is_string($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])
 			? (string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']
 			: (string) ($defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] ?? '');
@@ -278,6 +281,12 @@ class User_Manager_Addon_Media_Library_Tags {
 								<label>
 									<input type="checkbox" name="media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets" value="1" <?php checked($hide_featured_image_if_no_description_or_bullets); ?><?php echo $form_attr; ?> />
 									<?php esc_html_e('Hide tag featured image if no description and no bullets exist', 'user-manager'); ?>
+								</label>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tag_gallery_single_video_three_column_alternative_layout" value="1" <?php checked($single_video_three_column_combined_row); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row', 'user-manager'); ?>
 								</label>
 							</div>
 							<div class="um-form-field">

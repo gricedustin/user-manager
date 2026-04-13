@@ -4282,6 +4282,11 @@ JS;
 		$featured_lightbox_index_offset = $show_featured_description_image_in_lightbox_collection ? 1 : 0;
 		$use_separate_featured_image_column = !empty($defaults['featuredImageSeparateColumn']);
 		$hide_featured_image_if_no_description_or_bullets = !empty($defaults['hideFeaturedImageIfNoDescriptionOrBullets']);
+		$single_video_three_column_compact_enabled = !empty($defaults['singleVideoThreeColumnCompactLayout']);
+		$has_single_video_result = (
+			$single_video_three_column_compact_enabled
+			&& strpos($album_tag_youtube_videos_html, 'um-media-library-tag-videos-wrap-cols-1') !== false
+		);
 		if ($album_description_position !== 'none') {
 			$album_tag_description_html = self::render_media_library_tag_description_paragraphs_html(
 				$tag_description_data,
@@ -4323,6 +4328,36 @@ JS;
 			$timeline_date_format = 'F j, Y';
 		}
 		ob_start();
+		$single_video_compact_description_html = '';
+		$single_video_compact_featured_image_html = '';
+		if ($has_single_video_result) {
+			$single_video_compact_description_html = self::render_media_library_tag_description_paragraphs_html(
+				$tag_description_data,
+				[
+					'linkTo' => '',
+					'descriptionValue' => $description_value,
+					'showDescriptionInLightbox' => false,
+					'showLightboxAdminEditLink' => false,
+					'inlineLightboxOpenOnclick' => '',
+					'featuredLightboxEnabled' => false,
+					'featuredLightboxIndex' => -1,
+					'useSeparateFeaturedImageColumn' => false,
+					'hideFeaturedImageIfNoDescriptionOrBullets' => false,
+				]
+			);
+			$single_video_compact_featured_image_html = self::render_media_library_tag_featured_image_html(
+				$tag_description_data,
+				[
+					'linkTo' => $effective_link_to,
+					'descriptionValue' => $description_value,
+					'showDescriptionInLightbox' => $show_description_in_lightbox,
+					'showLightboxAdminEditLink' => $show_lightbox_admin_edit_link,
+					'inlineLightboxOpenOnclick' => $inline_lightbox_open_onclick,
+					'featuredLightboxEnabled' => $show_featured_description_image_in_lightbox_collection,
+					'featuredLightboxIndex' => $show_featured_description_image_in_lightbox_collection ? 0 : -1,
+				]
+			);
+		}
 		?>
 		<div
 			id="<?php echo esc_attr($uid); ?>"
@@ -4358,7 +4393,19 @@ JS;
 					?>
 				</div>
 			<?php endif; ?>
-			<?php if ($album_tag_youtube_videos_html !== '') : ?>
+			<?php if ($has_single_video_result) : ?>
+				<div class="um-media-library-tag-single-video-three-column-layout">
+					<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-image">
+						<?php echo $single_video_compact_featured_image_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</div>
+					<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-description">
+						<?php echo $single_video_compact_description_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</div>
+					<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-video">
+						<?php echo $album_tag_youtube_videos_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</div>
+				</div>
+			<?php elseif ($album_tag_youtube_videos_html !== '') : ?>
 				<?php echo $album_tag_youtube_videos_html; ?>
 			<?php endif; ?>
 			<?php if (empty($attachments)) : ?>
@@ -4615,6 +4662,41 @@ JS;
 	width: auto;
 	max-width: min(42vw, <?php echo esc_html((string) $featured_image_max_width_px); ?>px);
 }
+.um-media-library-tag-single-video-three-column-layout {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 18px;
+	align-items: start;
+	margin: 0 0 22px;
+}
+.um-media-library-tag-single-video-three-column {
+	min-width: 0;
+}
+.um-media-library-tag-single-video-three-column .um-media-library-tag-description-layout-with-floating-image::after {
+	display: none;
+}
+.um-media-library-tag-single-video-three-column .um-media-library-tag-description-featured {
+	float: none;
+	margin: 0;
+}
+.um-media-library-tag-single-video-three-column .um-media-library-tag-description-wrap {
+	margin: 0;
+}
+.um-media-library-tag-single-video-three-column .um-media-library-tag-description-paragraph {
+	margin: 0 0 12px;
+}
+.um-media-library-tag-single-video-three-column .um-media-library-tag-description-block .um-media-library-tag-description-paragraph {
+	margin: 0 0 12px;
+}
+.um-media-library-tag-single-video-three-column-video .um-media-library-tag-videos-wrap {
+	margin: 0;
+}
+.um-media-library-tag-single-video-three-column-video .um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-1 {
+	grid-template-columns: 1fr;
+}
+.um-media-library-tag-single-video-three-column-video .um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-1 > .um-media-library-tag-video-item {
+	grid-column: 1 / -1;
+}
 @media (max-width: 782px) {
 	.um-media-library-tag-description-layout {
 		display: block;
@@ -4636,6 +4718,9 @@ JS;
 	}
 	.um-media-library-tag-description-featured .um-media-library-tag-description-featured-image {
 		max-width: 100%;
+	}
+	.um-media-library-tag-single-video-three-column-layout {
+		grid-template-columns: 1fr;
 	}
 }
 		.um-media-library-tag-videos-wrap {
@@ -6303,6 +6388,7 @@ JS;
 			'hideFeaturedImageDuplicateInTaggedImages' => true,
 			'featuredImageMaxWidthPx' => 360,
 			'inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed' => '',
+			'singleVideoThreeColumnCompactLayout' => false,
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -6415,6 +6501,9 @@ JS;
 		if (isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])) {
 			$defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] = sanitize_text_field((string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']);
 		}
+		$defaults['singleVideoThreeColumnCompactLayout'] = isset($settings['media_library_tag_gallery_single_video_three_column_combined_row'])
+			? ($settings['media_library_tag_gallery_single_video_three_column_combined_row'] === true || $settings['media_library_tag_gallery_single_video_three_column_combined_row'] === '1')
+			: (bool) ($defaults['singleVideoThreeColumnCompactLayout'] ?? false);
 		if (isset($settings['media_library_tag_gallery_featured_image_max_width_px'])) {
 			$defaults['featuredImageMaxWidthPx'] = max(120, min(1600, absint($settings['media_library_tag_gallery_featured_image_max_width_px'])));
 		}
