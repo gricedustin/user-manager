@@ -2,15 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.222
+ * Version: 2.5.223
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
- * 2.5.222 - March 16, 2026
- * - Updated single-video desktop layout width for `...videos-wrap-cols-1` to a 25% / 50% / 25% grid so the centered video column is larger while side columns remain empty.
- * - Mobile behavior remains unchanged: single-video output still collapses to one full-width column.
+ * 2.5.223 - March 16, 2026
+ * - Fixed single-video mobile layout for `...videos-wrap-cols-1` so the video item spans the full single column (`grid-column: 1 / -1`) and no longer appears narrow/right-shifted on mobile.
+ * - Desktop single-video layout remains centered in a wider 25% / 50% / 25% structure.
  *
  * 2.5.217 - March 16, 2026
  * - Fixed album-description bullet rendering regression where bullet lists could disappear after adding per-`<li>` class logic.

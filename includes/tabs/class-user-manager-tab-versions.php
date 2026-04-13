@@ -39,10 +39,10 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.5.222 <span>(March 16, 2026)</span></h4>
+						<h4>2.5.223 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Adjusted single-video desktop layout width to a 25% / 50% / 25% grid so the centered video column is larger and easier to view while side columns remain empty.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Single-video mobile behavior remains stacked/full-width (`cols-1` still renders one column on mobile).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixed single-video mobile layout so `...videos-wrap-cols-1` no longer stays pinned in a right-side column; it now spans full width in a single column on mobile.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preserved desktop single-video 25% / 50% / 25% layout with centered video column.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
