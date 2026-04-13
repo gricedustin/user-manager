@@ -1410,7 +1410,7 @@ CSS;
 		return '<style>'
 			. '.um-media-library-tag-videos-wrap{margin:0 0 22px;display:grid;grid-template-columns:1fr;gap:20px;}'
 			. '.um-media-library-tag-videos-wrap-multi{grid-template-columns:repeat(2,minmax(0,1fr));}'
-			. '.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-1{grid-template-columns:repeat(3,minmax(0,1fr));}'
+			. '.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-1{grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);}'
 			. '.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-1 .um-media-library-tag-video-item{grid-column:2;}'
 			. '.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-3{grid-template-columns:repeat(3,minmax(0,1fr));}'
 			. '.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-4{grid-template-columns:repeat(4,minmax(0,1fr));}'
@@ -4648,7 +4648,7 @@ JS;
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 		.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-1 {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
+			grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
 		}
 		.um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-1 > .um-media-library-tag-video-item {
 			grid-column: 2;
