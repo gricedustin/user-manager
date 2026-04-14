@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.225 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new optional additional-order-meta flag support for file preview modals (`preview`, `preview_file`, `file_preview`, `preview-modal`, `preview_modal`) in both Order detail and All Orders configured meta fields.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Flagged file URL values now render a "Preview File" action that opens an in-page modal so admins can review uploads without downloading first.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preview modal includes inline delimited table previews for CSV/TSV/TXT and Excel-file preview support via embedded Office web viewer for supported public files.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.224 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Media Library Tag gallery checkbox setting: "If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row".', 'user-manager'); ?></li>

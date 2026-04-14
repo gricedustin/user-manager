@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.224
+ * Version: 2.5.225
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.225 - March 16, 2026
+ * - Added new optional preview flags for My Account Admin "Additional Meta Fields to Display Under Order" definitions: `preview`, `preview_file`, `file_preview`, `preview-modal`, and `preview_modal`.
+ * - Flagged file-upload meta values now render an in-page "Preview File" modal so admins can review uploads without downloading first, including CSV/text table previews and Excel viewer support.
+ *
  * 2.5.224 - March 16, 2026
  * - Added new Media Library Tag gallery checkbox setting: "If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row".
  * - When enabled, and only when a single video result is present, gallery output now renders an alternate 3-column row (featured image, description/bullets, video) on desktop; mobile stacks to one column.

@@ -1730,7 +1730,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Parse configured additional order meta fields.
 	 *
 	 * @param string $raw Raw setting value.
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool}>
 	 */
 	private static function parse_order_additional_meta_field_definitions(string $raw): array {
 		$raw = trim($raw);
@@ -1776,11 +1776,13 @@ final class User_Manager_My_Account_Site_Admin {
 				$label = $meta_key;
 			}
 
+			$parsed_flags = self::parse_order_additional_meta_flags($flags_raw);
 			$definitions[] = [
 				'key'                   => $meta_key,
 				'label'                 => $label,
 				'prefix_before_value'   => self::sanitize_meta_prefix_before_value($prefix_raw),
-				'count_text_file_lines' => self::should_count_text_file_lines_for_meta_definition($flags_raw),
+				'count_text_file_lines' => $parsed_flags['count_text_file_lines'],
+				'enable_file_preview'   => $parsed_flags['enable_file_preview'],
 			];
 			$seen_keys[$meta_key] = true;
 		}
@@ -1812,10 +1814,14 @@ final class User_Manager_My_Account_Site_Admin {
 
 		$single_colon_pos = strrpos($prefix_and_flags_raw, ':');
 		if ($single_colon_pos !== false) {
-			$prefix_candidate = trim(substr($prefix_and_flags_raw, 0, $single_colon_pos));
-			$flags_candidate  = trim(substr($prefix_and_flags_raw, $single_colon_pos + 1));
-			if (self::should_count_text_file_lines_for_meta_definition($flags_candidate)) {
-				return [$prefix_candidate, $flags_candidate];
+			$segments = explode(':', $prefix_and_flags_raw);
+			$segment_count = count($segments);
+			for ($split_index = $segment_count - 1; $split_index >= 1; $split_index--) {
+				$prefix_candidate = trim(implode(':', array_slice($segments, 0, $split_index)));
+				$flags_candidate  = trim(implode(':', array_slice($segments, $split_index)));
+				if (self::is_supported_meta_definition_flags_segment($flags_candidate)) {
+					return [$prefix_candidate, $flags_candidate];
+				}
 			}
 		}
 
@@ -1832,17 +1838,104 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
-	 * Determine whether an additional-meta definition should count lines for text files.
+	 * Parse optional flags from additional-meta definitions.
 	 *
-	 * Supported flags include: text_line_count, text-file-line-count, line_count, count_lines.
+	 * Supported line-count flags:
+	 * - text_line_count, text-file-line-count, line_count, count_lines
+	 *
+	 * Supported preview flags:
+	 * - preview, preview_file, file_preview, preview-modal, preview_modal
+	 *
+	 * @return array{count_text_file_lines:bool,enable_file_preview:bool}
+	 */
+	private static function parse_order_additional_meta_flags(string $flags_raw): array {
+		$flags_raw = trim(strtolower($flags_raw));
+		if ($flags_raw === '') {
+			return [
+				'count_text_file_lines' => false,
+				'enable_file_preview' => false,
+			];
+		}
+
+		$parts = preg_split('/[\s,|:]+/', $flags_raw);
+		if (!is_array($parts)) {
+			return [
+				'count_text_file_lines' => false,
+				'enable_file_preview' => false,
+			];
+		}
+
+		$line_count_supported = [
+			'text_line_count',
+			'text-file-line-count',
+			'line_count',
+			'count_lines',
+		];
+		$preview_supported = [
+			'preview',
+			'preview_file',
+			'file_preview',
+			'preview-modal',
+			'preview_modal',
+		];
+		$count_text_file_lines = false;
+		$enable_file_preview = false;
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+			if (!$count_text_file_lines && in_array($part, $line_count_supported, true)) {
+				$count_text_file_lines = true;
+			}
+			if (!$enable_file_preview && in_array($part, $preview_supported, true)) {
+				$enable_file_preview = true;
+			}
+			if ($count_text_file_lines && $enable_file_preview) {
+				break;
+			}
+		}
+
+		return [
+			'count_text_file_lines' => $count_text_file_lines,
+			'enable_file_preview' => $enable_file_preview,
+		];
+	}
+
+	/**
+	 * Determine whether an additional-meta definition should count lines for text files.
 	 */
 	private static function should_count_text_file_lines_for_meta_definition(string $flags_raw): bool {
+		$flags = self::parse_order_additional_meta_flags($flags_raw);
+		return !empty($flags['count_text_file_lines']);
+	}
+
+	/**
+	 * Determine whether an additional-meta definition should render the preview modal trigger.
+	 */
+	private static function should_enable_file_preview_for_meta_definition(string $flags_raw): bool {
+		$flags = self::parse_order_additional_meta_flags($flags_raw);
+		return !empty($flags['enable_file_preview']);
+	}
+
+	/**
+	 * Determine whether the provided flag string contains any recognized optional flags.
+	 */
+	private static function contains_supported_meta_definition_flags(string $flags_raw): bool {
+		return self::should_count_text_file_lines_for_meta_definition($flags_raw)
+			|| self::should_enable_file_preview_for_meta_definition($flags_raw);
+	}
+
+	/**
+	 * Determine whether a flags segment consists solely of supported tokens.
+	 */
+	private static function is_supported_meta_definition_flags_segment(string $flags_raw): bool {
 		$flags_raw = trim(strtolower($flags_raw));
 		if ($flags_raw === '') {
 			return false;
 		}
 
-		$parts = preg_split('/[\s,|]+/', $flags_raw);
+		$parts = preg_split('/[\s,|:]+/', $flags_raw);
 		if (!is_array($parts)) {
 			return false;
 		}
@@ -1852,24 +1945,31 @@ final class User_Manager_My_Account_Site_Admin {
 			'text-file-line-count',
 			'line_count',
 			'count_lines',
+			'preview',
+			'preview_file',
+			'file_preview',
+			'preview-modal',
+			'preview_modal',
 		];
+		$has_supported = false;
 		foreach ($parts as $part) {
 			$part = trim((string) $part);
 			if ($part === '') {
 				continue;
 			}
-			if (in_array($part, $supported, true)) {
-				return true;
+			if (!in_array($part, $supported, true)) {
+				return false;
 			}
+			$has_supported = true;
 		}
 
-		return false;
+		return $has_supported;
 	}
 
 	/**
 	 * Get additional order meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool}>
 	 */
 	private static function get_order_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -1883,7 +1983,7 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Get additional order-list meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool}>
 	 */
 	private static function get_order_list_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -2156,10 +2256,12 @@ final class User_Manager_My_Account_Site_Admin {
 
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
 			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
+			$enable_file_preview = !empty($definition['enable_file_preview']);
 			$value_html = self::format_meta_values_for_display_with_links(
 				$meta_values,
 				$prefix_before_value,
 				$should_count_text_file_lines,
+				$enable_file_preview,
 				(int) $order->get_id(),
 				(string) $definition['key']
 			);
@@ -2208,10 +2310,12 @@ final class User_Manager_My_Account_Site_Admin {
 
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
 			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
+			$enable_file_preview = !empty($definition['enable_file_preview']);
 			$value_html = self::format_meta_values_for_display_with_links(
 				$meta_values,
 				$prefix_before_value,
 				$should_count_text_file_lines,
+				$enable_file_preview,
 				(int) $order->get_id(),
 				(string) $definition['key']
 			);
@@ -2240,11 +2344,12 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @param array  $values Raw meta values.
 	 * @param string $prefix_before_value Optional prefix to prepend before URL detection.
 	 * @param bool   $count_text_file_lines Whether to include a fetched text-file line count for URL values.
+	 * @param bool   $enable_file_preview Whether to render a modal preview trigger for URL values.
 	 * @param int    $order_id Optional order ID for persistent line-count caching.
 	 * @param string $meta_key Optional source meta key for debug context.
 	 * @return string
 	 */
-	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false, int $order_id = 0, string $meta_key = ''): string {
+	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false, bool $enable_file_preview = false, int $order_id = 0, string $meta_key = ''): string {
 		$rendered = [];
 		$prefix_before_value = trim($prefix_before_value);
 		$debug_enabled = $count_text_file_lines && self::is_text_file_line_count_debug_enabled();
@@ -2278,7 +2383,13 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
 				$url = esc_url_raw($trimmed);
 				if ($url !== '') {
-					$link_html = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>';
+					$link_actions = [
+						'<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>',
+					];
+					if ($enable_file_preview) {
+						$link_actions[] = '<a href="' . esc_url($url) . '" class="um-my-account-file-preview-trigger">' . esc_html__('Preview File', 'user-manager') . '</a>';
+					}
+					$link_html = implode(' <span class="um-my-account-meta-file-link-sep">|</span> ', $link_actions);
 					if ($count_text_file_lines) {
 						$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
 						$line_count = isset($line_count_debug['line_count']) && is_int($line_count_debug['line_count'])
@@ -3043,6 +3154,14 @@ final class User_Manager_My_Account_Site_Admin {
 			.um-my-account-order-list-meta-item a {
 				word-break: break-all;
 			}
+			.um-my-account-meta-file-link-sep {
+				margin: 0 4px;
+				color: #646970;
+			}
+			.um-my-account-file-preview-trigger {
+				display: inline-block;
+				margin-left: 6px;
+			}
 			.um-my-account-admin-order-meta-block {
 				margin-top: 8px;
 				font-size: 13px;
@@ -3118,7 +3237,430 @@ final class User_Manager_My_Account_Site_Admin {
 			.um-my-account-admin-pagination-status {
 				font-weight: 600;
 			}
+			.um-my-account-file-preview-modal[hidden] {
+				display: none !important;
+			}
+			.um-my-account-file-preview-modal {
+				position: fixed;
+				inset: 0;
+				z-index: 999999;
+			}
+			.um-my-account-file-preview-modal-backdrop {
+				position: absolute;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.6);
+			}
+			.um-my-account-file-preview-modal-dialog {
+				position: relative;
+				z-index: 2;
+				max-width: min(1100px, calc(100% - 32px));
+				height: min(85vh, 820px);
+				margin: 4vh auto 0;
+				background: #fff;
+				border-radius: 8px;
+				box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+				display: flex;
+				flex-direction: column;
+				overflow: hidden;
+			}
+			.um-my-account-file-preview-modal-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 12px 16px;
+				border-bottom: 1px solid #dcdcde;
+				background: #f6f7f7;
+			}
+			.um-my-account-file-preview-modal-title {
+				margin: 0;
+				font-size: 16px;
+			}
+			.um-my-account-file-preview-modal-close {
+				border: 0;
+				background: transparent;
+				font-size: 22px;
+				line-height: 1;
+				cursor: pointer;
+				padding: 2px 6px;
+			}
+			.um-my-account-file-preview-meta {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 10px 16px 8px;
+				font-size: 13px;
+				flex-wrap: wrap;
+				border-bottom: 1px solid #f0f0f1;
+			}
+			.um-my-account-file-preview-filename {
+				font-weight: 600;
+				word-break: break-all;
+			}
+			.um-my-account-file-preview-status {
+				padding: 8px 16px;
+				font-size: 12px;
+				color: #50575e;
+				border-bottom: 1px solid #f0f0f1;
+			}
+			.um-my-account-file-preview-status.um-my-account-file-preview-status-error {
+				color: #b32d2e;
+			}
+			.um-my-account-file-preview-content {
+				flex: 1;
+				padding: 0;
+				overflow: auto;
+				background: #fff;
+			}
+			.um-my-account-file-preview-iframe {
+				display: block;
+				width: 100%;
+				height: 100%;
+				min-height: 420px;
+				border: 0;
+				background: #fff;
+			}
+			.um-my-account-file-preview-table-wrap {
+				padding: 12px 16px 16px;
+				overflow: auto;
+			}
+			.um-my-account-file-preview-table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 12px;
+			}
+			.um-my-account-file-preview-table th,
+			.um-my-account-file-preview-table td {
+				border: 1px solid #dcdcde;
+				padding: 5px 7px;
+				vertical-align: top;
+				text-align: left;
+				word-break: break-word;
+				min-width: 80px;
+			}
+			.um-my-account-file-preview-table th {
+				background: #f6f7f7;
+				font-weight: 600;
+			}
+			@media (max-width: 782px) {
+				.um-my-account-file-preview-modal-dialog {
+					max-width: calc(100% - 12px);
+					height: 90vh;
+					margin-top: 2vh;
+				}
+				.um-my-account-file-preview-modal-header {
+					padding: 10px 12px;
+				}
+				.um-my-account-file-preview-meta,
+				.um-my-account-file-preview-status {
+					padding-left: 12px;
+					padding-right: 12px;
+				}
+			}
 		</style>
+		<div id="um-my-account-file-preview-modal" class="um-my-account-file-preview-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="um-my-account-file-preview-modal-title">
+			<div class="um-my-account-file-preview-modal-backdrop" data-um-close-preview="1"></div>
+			<div class="um-my-account-file-preview-modal-dialog">
+				<div class="um-my-account-file-preview-modal-header">
+					<h3 id="um-my-account-file-preview-modal-title" class="um-my-account-file-preview-modal-title"><?php esc_html_e('File Preview', 'user-manager'); ?></h3>
+					<button type="button" class="um-my-account-file-preview-modal-close" data-um-close-preview="1" aria-label="<?php esc_attr_e('Close preview', 'user-manager'); ?>">&times;</button>
+				</div>
+				<div class="um-my-account-file-preview-meta">
+					<span class="um-my-account-file-preview-filename"></span>
+					<a class="um-my-account-file-preview-open-link" href="#" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Open in new tab', 'user-manager'); ?></a>
+				</div>
+				<div class="um-my-account-file-preview-status" aria-live="polite"></div>
+				<div class="um-my-account-file-preview-content"></div>
+			</div>
+		</div>
+		<script>
+			(function () {
+				if (window.umMyAccountFilePreviewModalInit) {
+					return;
+				}
+				window.umMyAccountFilePreviewModalInit = true;
+
+				var modal = document.getElementById('um-my-account-file-preview-modal');
+				if (!modal) {
+					return;
+				}
+
+				var statusEl = modal.querySelector('.um-my-account-file-preview-status');
+				var contentEl = modal.querySelector('.um-my-account-file-preview-content');
+				var filenameEl = modal.querySelector('.um-my-account-file-preview-filename');
+				var openLinkEl = modal.querySelector('.um-my-account-file-preview-open-link');
+				var lastActiveElement = null;
+				var currentUrl = '';
+				var i18n = {
+					loading: <?php echo wp_json_encode(__('Loading file preview...', 'user-manager')); ?>,
+					noRows: <?php echo wp_json_encode(__('No rows found in this file.', 'user-manager')); ?>,
+					csvFetchFailed: <?php echo wp_json_encode(__('Could not fetch a text preview. Showing an embedded preview instead.', 'user-manager')); ?>,
+					excelHint: <?php echo wp_json_encode(__('Excel preview uses Microsoft Office Web Viewer for supported public files.', 'user-manager')); ?>,
+					unsupported: <?php echo wp_json_encode(__('Preview unavailable for this value.', 'user-manager')); ?>,
+					truncatedRows: <?php echo wp_json_encode(__('Preview limited to first 120 rows.', 'user-manager')); ?>,
+					truncatedCols: <?php echo wp_json_encode(__('Preview limited to first 30 columns.', 'user-manager')); ?>,
+					fetchFailedPrefix: <?php echo wp_json_encode(__('Request failed with status', 'user-manager')); ?>
+				};
+
+				function setStatus(message, isError) {
+					if (!statusEl) {
+						return;
+					}
+					statusEl.textContent = message || '';
+					if (isError) {
+						statusEl.classList.add('um-my-account-file-preview-status-error');
+					} else {
+						statusEl.classList.remove('um-my-account-file-preview-status-error');
+					}
+				}
+
+				function clearContent() {
+					if (contentEl) {
+						contentEl.innerHTML = '';
+					}
+				}
+
+				function getFileExtension(url) {
+					var stripped = (url || '').split('#')[0].split('?')[0];
+					var dotIndex = stripped.lastIndexOf('.');
+					if (dotIndex < 0) {
+						return '';
+					}
+					return stripped.substring(dotIndex + 1).toLowerCase();
+				}
+
+				function getFilename(url) {
+					var stripped = (url || '').split('#')[0];
+					var pathOnly = stripped.split('?')[0];
+					var slashIndex = pathOnly.lastIndexOf('/');
+					var rawName = slashIndex >= 0 ? pathOnly.substring(slashIndex + 1) : pathOnly;
+					if (!rawName) {
+						return 'file';
+					}
+					try {
+						return decodeURIComponent(rawName);
+					} catch (error) {
+						return rawName;
+					}
+				}
+
+				function renderIframePreview(src) {
+					clearContent();
+					if (!contentEl) {
+						return;
+					}
+					var iframe = document.createElement('iframe');
+					iframe.className = 'um-my-account-file-preview-iframe';
+					iframe.src = src;
+					iframe.setAttribute('loading', 'lazy');
+					contentEl.appendChild(iframe);
+				}
+
+				function parseDelimitedRows(content, delimiter) {
+					var rows = [];
+					var row = [];
+					var value = '';
+					var inQuotes = false;
+					for (var index = 0; index < content.length; index++) {
+						var character = content.charAt(index);
+						var nextCharacter = content.charAt(index + 1);
+						if (character === '"') {
+							if (inQuotes && nextCharacter === '"') {
+								value += '"';
+								index++;
+								continue;
+							}
+							inQuotes = !inQuotes;
+							continue;
+						}
+						if (!inQuotes && character === delimiter) {
+							row.push(value);
+							value = '';
+							continue;
+						}
+						if (!inQuotes && (character === '\n' || character === '\r')) {
+							row.push(value);
+							value = '';
+							if (character === '\r' && nextCharacter === '\n') {
+								index++;
+							}
+							rows.push(row);
+							row = [];
+							continue;
+						}
+						value += character;
+					}
+					row.push(value);
+					if (row.length > 1 || (row[0] && row[0].trim() !== '')) {
+						rows.push(row);
+					}
+
+					return rows.filter(function (item) {
+						if (!Array.isArray(item)) {
+							return false;
+						}
+						return item.some(function (cell) {
+							return String(cell || '').trim() !== '';
+						});
+					});
+				}
+
+				function renderDelimitedTable(rows) {
+					clearContent();
+					if (!contentEl) {
+						return;
+					}
+
+					if (!rows.length) {
+						setStatus(i18n.noRows, false);
+						return;
+					}
+
+					var maxRows = 120;
+					var maxCols = 30;
+					var rowOverflow = rows.length > maxRows;
+					var hasColOverflow = false;
+					var limitedRows = rows.slice(0, maxRows).map(function (cells) {
+						if (cells.length > maxCols) {
+							hasColOverflow = true;
+						}
+						return cells.slice(0, maxCols);
+					});
+
+					var wrap = document.createElement('div');
+					wrap.className = 'um-my-account-file-preview-table-wrap';
+					var table = document.createElement('table');
+					table.className = 'um-my-account-file-preview-table';
+					var thead = document.createElement('thead');
+					var tbody = document.createElement('tbody');
+					var headerRow = document.createElement('tr');
+					limitedRows[0].forEach(function (headerCell) {
+						var th = document.createElement('th');
+						th.textContent = String(headerCell || '');
+						headerRow.appendChild(th);
+					});
+					thead.appendChild(headerRow);
+
+					for (var rowIndex = 1; rowIndex < limitedRows.length; rowIndex++) {
+						var tr = document.createElement('tr');
+						limitedRows[rowIndex].forEach(function (cellValue) {
+							var td = document.createElement('td');
+							td.textContent = String(cellValue || '');
+							tr.appendChild(td);
+						});
+						tbody.appendChild(tr);
+					}
+
+					table.appendChild(thead);
+					table.appendChild(tbody);
+					wrap.appendChild(table);
+					contentEl.appendChild(wrap);
+
+					var notices = [];
+					if (rowOverflow) {
+						notices.push(i18n.truncatedRows);
+					}
+					if (hasColOverflow) {
+						notices.push(i18n.truncatedCols);
+					}
+					setStatus(notices.join(' '), false);
+				}
+
+				function renderTextPreview(url, extension) {
+					var delimiter = extension === 'tsv' ? '\t' : ',';
+					setStatus(i18n.loading, false);
+					fetch(url, { credentials: 'same-origin' })
+						.then(function (response) {
+							if (!response.ok) {
+								throw new Error(i18n.fetchFailedPrefix + ' ' + response.status);
+							}
+							return response.text();
+						})
+						.then(function (text) {
+							var rows = parseDelimitedRows(text || '', delimiter);
+							renderDelimitedTable(rows);
+						})
+						.catch(function () {
+							setStatus(i18n.csvFetchFailed, true);
+							renderIframePreview(url);
+						});
+				}
+
+				function renderExcelPreview(url) {
+					setStatus(i18n.excelHint, false);
+					var officeEmbedUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(url);
+					renderIframePreview(officeEmbedUrl);
+				}
+
+				function renderPreview(url) {
+					var extension = getFileExtension(url);
+					if (extension === 'csv' || extension === 'tsv' || extension === 'txt') {
+						renderTextPreview(url, extension);
+						return;
+					}
+					if (extension === 'xls' || extension === 'xlsx' || extension === 'xlsm' || extension === 'xlsb') {
+						renderExcelPreview(url);
+						return;
+					}
+					setStatus('', false);
+					renderIframePreview(url);
+				}
+
+				function closeModal() {
+					modal.setAttribute('aria-hidden', 'true');
+					modal.setAttribute('hidden', 'hidden');
+					document.body.style.overflow = '';
+					clearContent();
+					setStatus('', false);
+					currentUrl = '';
+					if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
+						lastActiveElement.focus();
+					}
+				}
+
+				function openModal(url, trigger) {
+					if (!url) {
+						setStatus(i18n.unsupported, true);
+						return;
+					}
+					currentUrl = url;
+					lastActiveElement = trigger || null;
+					if (filenameEl) {
+						filenameEl.textContent = getFilename(url);
+					}
+					if (openLinkEl) {
+						openLinkEl.href = url;
+					}
+					setStatus(i18n.loading, false);
+					modal.removeAttribute('hidden');
+					modal.setAttribute('aria-hidden', 'false');
+					document.body.style.overflow = 'hidden';
+					renderPreview(url);
+				}
+
+				document.addEventListener('click', function (event) {
+					var previewTrigger = event.target.closest('.um-my-account-file-preview-trigger');
+					if (previewTrigger) {
+						event.preventDefault();
+						var previewUrl = previewTrigger.getAttribute('href') || '';
+						openModal(previewUrl, previewTrigger);
+						return;
+					}
+					var closeTrigger = event.target.closest('[data-um-close-preview="1"]');
+					if (closeTrigger) {
+						event.preventDefault();
+						closeModal();
+					}
+				});
+
+				document.addEventListener('keydown', function (event) {
+					if (event.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
+						event.preventDefault();
+						closeModal();
+					}
+				});
+			})();
+		</script>
 		<?php
 	}
 
