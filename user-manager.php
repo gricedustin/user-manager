@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.225
+ * Version: 2.5.226
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.226 - March 16, 2026
+ * - Invoice pages rendered via `?invoice=` now treat product and meta-description images as clickable lightbox items, opening a full-size modal preview instead of requiring right-click/open in new tab.
+ * - Added accessible invoice-image modal behavior (click, keyboard Enter/Space, Escape to close, backdrop/close button support) scoped to invoice line-item tables.
+ *
  * 2.5.225 - March 16, 2026
  * - Added new optional preview flags for My Account Admin "Additional Meta Fields to Display Under Order" definitions: `preview`, `preview_file`, `file_preview`, `preview-modal`, and `preview_modal`.
  * - Flagged file-upload meta values now render an in-page "Preview File" modal so admins can review uploads without downloading first, including CSV/text table previews and Excel viewer support.

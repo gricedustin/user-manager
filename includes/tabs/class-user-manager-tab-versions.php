@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.226 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Order Invoice & Approval (`?invoice=`) product and meta images in the Products & Services table are now clickable and open in an in-page lightbox/modal preview.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox support now covers both the main product thumbnail and image tags rendered inside item meta (for example custom Product Image fields), with keyboard support (Enter/Space to open, Esc to close).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.225 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new optional additional-order-meta flag support for file preview modals (`preview`, `preview_file`, `file_preview`, `preview-modal`, `preview_modal`) in both Order detail and All Orders configured meta fields.', 'user-manager'); ?></li>

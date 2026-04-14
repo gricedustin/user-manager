@@ -564,6 +564,14 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		.invoice-address-edit__column{flex:1 1 320px;}
 		.invoice-address-edit__field{margin-bottom:8px;}
 		.invoice-address-edit__field input{width:100%;padding:7px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;}
+		.invoice-items-table img.um-invoice-lightboxable{cursor:zoom-in;}
+		.um-invoice-lightbox[hidden]{display:none !important;}
+		.um-invoice-lightbox{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;}
+		.um-invoice-lightbox__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.8);}
+		.um-invoice-lightbox__dialog{position:relative;z-index:2;max-width:min(1200px,95vw);max-height:90vh;display:flex;align-items:center;justify-content:center;}
+		.um-invoice-lightbox__image{max-width:100%;max-height:88vh;display:block;background:#fff;border-radius:6px;box-shadow:0 12px 30px rgba(0,0,0,.35);}
+		.um-invoice-lightbox__close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border:0;border-radius:999px;background:#fff;color:#111;font-size:24px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+		@media print{.um-invoice-lightbox{display:none !important;}}
 		@media (max-width:700px){.content,.header{padding:18px;}.info-grid{display:block;}}
 		</style>
 		</head>
@@ -637,7 +645,7 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 					?>
 				</p>
 				<?php if ($scroll_threshold > 0 && $item_count > $scroll_threshold) : ?><div class="invoice-items-scrollable"><?php endif; ?>
-				<table>
+				<table class="invoice-items-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e('Item & Description', 'user-manager'); ?></th>
@@ -663,10 +671,12 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 						}
 						$thumb = $product ? wp_get_attachment_image_src($product->get_image_id(), 'thumbnail') : [];
 						$thumb_url = !empty($thumb[0]) ? $thumb[0] : '';
+						$thumb_full = $product ? wp_get_attachment_image_src($product->get_image_id(), 'full') : [];
+						$thumb_full_url = !empty($thumb_full[0]) ? (string) $thumb_full[0] : $thumb_url;
 						?>
 						<tr>
 							<td>
-								<?php if ($thumb_url !== '') : ?><img src="<?php echo esc_url($thumb_url); ?>" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #ddd;float:left;margin-right:10px;" alt=""><?php endif; ?>
+								<?php if ($thumb_url !== '') : ?><img src="<?php echo esc_url($thumb_url); ?>" data-full-src="<?php echo esc_url($thumb_full_url); ?>" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #ddd;float:left;margin-right:10px;" alt="<?php echo esc_attr($name); ?>"><?php endif; ?>
 								<div style="overflow:hidden;"><?php echo esc_html($name); ?></div>
 								<?php if (!empty($formatted_meta)) : ?>
 									<div style="font-size:0.86em;color:#555;margin-top:4px;">
@@ -742,12 +752,83 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 				<?php endif; ?>
 			</div>
 		</div>
+		<div id="um-invoice-lightbox" class="um-invoice-lightbox" hidden aria-hidden="true">
+			<div class="um-invoice-lightbox__backdrop" data-um-invoice-lightbox-close="1"></div>
+			<div class="um-invoice-lightbox__dialog" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e('Product image preview', 'user-manager'); ?>">
+				<button type="button" class="um-invoice-lightbox__close" data-um-invoice-lightbox-close="1" aria-label="<?php esc_attr_e('Close image preview', 'user-manager'); ?>">&times;</button>
+				<img id="um-invoice-lightbox-image" class="um-invoice-lightbox__image" src="" alt="">
+			</div>
+		</div>
 		<script>
 		document.addEventListener('DOMContentLoaded', function() {
 			var toggle = document.getElementById('um-invoice-edit-toggle');
 			var panel = document.getElementById('um-invoice-edit-panel');
 			var shipSame = document.querySelector('input[name="shipping_same_as_billing"]');
 			var shippingFields = document.getElementById('um-shipping-fields');
+			var lightbox = document.getElementById('um-invoice-lightbox');
+			var lightboxImage = document.getElementById('um-invoice-lightbox-image');
+			var lastActiveImage = null;
+
+			function openImageLightbox(src, altText, sourceEl) {
+				if (!lightbox || !lightboxImage || !src) {
+					return;
+				}
+				lastActiveImage = sourceEl || null;
+				lightboxImage.setAttribute('src', src);
+				lightboxImage.setAttribute('alt', altText || '');
+				lightbox.removeAttribute('hidden');
+				lightbox.setAttribute('aria-hidden', 'false');
+				document.body.style.overflow = 'hidden';
+			}
+
+			function closeImageLightbox() {
+				if (!lightbox || !lightboxImage) {
+					return;
+				}
+				lightbox.setAttribute('hidden', 'hidden');
+				lightbox.setAttribute('aria-hidden', 'true');
+				lightboxImage.setAttribute('src', '');
+				lightboxImage.setAttribute('alt', '');
+				document.body.style.overflow = '';
+				if (lastActiveImage && typeof lastActiveImage.focus === 'function') {
+					lastActiveImage.focus();
+				}
+			}
+
+			function resolveImageSource(imgEl) {
+				if (!imgEl) {
+					return '';
+				}
+				var fullSrc = imgEl.getAttribute('data-full-src') || '';
+				if (fullSrc) {
+					return fullSrc;
+				}
+				return imgEl.getAttribute('src') || '';
+			}
+
+			var invoiceImages = document.querySelectorAll('.invoice-items-table img');
+			invoiceImages.forEach(function(imgEl) {
+				if (!imgEl || !imgEl.getAttribute('src')) {
+					return;
+				}
+				imgEl.classList.add('um-invoice-lightboxable');
+				imgEl.setAttribute('tabindex', '0');
+				imgEl.setAttribute('role', 'button');
+				imgEl.addEventListener('click', function(event) {
+					event.preventDefault();
+					var src = resolveImageSource(imgEl);
+					openImageLightbox(src, imgEl.getAttribute('alt') || '', imgEl);
+				});
+				imgEl.addEventListener('keydown', function(event) {
+					if (event.key !== 'Enter' && event.key !== ' ') {
+						return;
+					}
+					event.preventDefault();
+					var src = resolveImageSource(imgEl);
+					openImageLightbox(src, imgEl.getAttribute('alt') || '', imgEl);
+				});
+			});
+
 			if (toggle && panel) {
 				toggle.addEventListener('click', function(e) {
 					e.preventDefault();
@@ -759,6 +840,24 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 					shippingFields.style.display = this.checked ? 'none' : 'block';
 				});
 			}
+
+			if (lightbox) {
+				lightbox.addEventListener('click', function(event) {
+					var closeTarget = event.target.closest('[data-um-invoice-lightbox-close="1"]');
+					if (!closeTarget) {
+						return;
+					}
+					event.preventDefault();
+					closeImageLightbox();
+				});
+			}
+
+			document.addEventListener('keydown', function(event) {
+				if (event.key === 'Escape' && lightbox && lightbox.getAttribute('aria-hidden') === 'false') {
+					event.preventDefault();
+					closeImageLightbox();
+				}
+			});
 		});
 		</script>
 		</body>
