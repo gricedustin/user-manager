@@ -105,12 +105,21 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		}
 
 		$title = (string) get_post_meta($post->ID, '_um_invoice_title', true);
+		$downpayment = (string) get_post_meta($post->ID, '_um_invoice_downpayment', true);
+		$remaining_amount = (string) get_post_meta($post->ID, '_um_invoice_remaining', true);
+		$remaining_due = (string) get_post_meta($post->ID, '_um_invoice_remaining_due', true);
 		$order_header_note = (string) get_post_meta($post->ID, '_um_invoice_header_note', true);
 		$order_footer_note = (string) get_post_meta($post->ID, '_um_invoice_footer_note', true);
 
 		echo '<p><label for="um_invoice_title"><strong>' . esc_html__('Invoice Title', 'user-manager') . '</strong></label>';
 		echo '<input type="text" style="width:100%;" id="um_invoice_title" name="um_invoice_title" value="' . esc_attr($title) . '" /></p>';
 		echo '<p class="description">' . esc_html__('Optional title shown on the invoice page.', 'user-manager') . '</p>';
+		echo '<p><label for="um_invoice_downpayment"><strong>' . esc_html__('Deposit Amount', 'user-manager') . '</strong></label>';
+		echo '<input type="text" style="width:100%;" id="um_invoice_downpayment" name="um_invoice_downpayment" value="' . esc_attr($downpayment) . '" /></p>';
+		echo '<p><label for="um_invoice_remaining"><strong>' . esc_html__('Remaining Amount', 'user-manager') . '</strong></label>';
+		echo '<input type="text" style="width:100%;" id="um_invoice_remaining" name="um_invoice_remaining" value="' . esc_attr($remaining_amount) . '" /></p>';
+		echo '<p><label for="um_invoice_remaining_due"><strong>' . esc_html__('Remaining Amount Due Date', 'user-manager') . '</strong></label>';
+		echo '<input type="text" style="width:100%;" id="um_invoice_remaining_due" name="um_invoice_remaining_due" value="' . esc_attr($remaining_due) . '" /></p>';
 
 		echo '<p><label for="um_invoice_header_note"><strong>' . esc_html__('Order Header Note', 'user-manager') . '</strong></label><br />';
 		echo '<textarea id="um_invoice_header_note" name="um_invoice_header_note" rows="3" style="width:100%;">' . esc_textarea($order_header_note) . '</textarea></p>';
@@ -146,10 +155,16 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		}
 
 		$title = isset($_POST['um_invoice_title']) ? sanitize_text_field(wp_unslash($_POST['um_invoice_title'])) : '';
+		$downpayment = isset($_POST['um_invoice_downpayment']) ? sanitize_text_field(wp_unslash($_POST['um_invoice_downpayment'])) : '';
+		$remaining_amount = isset($_POST['um_invoice_remaining']) ? sanitize_text_field(wp_unslash($_POST['um_invoice_remaining'])) : '';
+		$remaining_due = isset($_POST['um_invoice_remaining_due']) ? sanitize_text_field(wp_unslash($_POST['um_invoice_remaining_due'])) : '';
 		$header_note = isset($_POST['um_invoice_header_note']) ? wp_kses_post(wp_unslash($_POST['um_invoice_header_note'])) : '';
 		$footer_note = isset($_POST['um_invoice_footer_note']) ? wp_kses_post(wp_unslash($_POST['um_invoice_footer_note'])) : '';
 
 		update_post_meta($post_id, '_um_invoice_title', $title);
+		update_post_meta($post_id, '_um_invoice_downpayment', $downpayment);
+		update_post_meta($post_id, '_um_invoice_remaining', $remaining_amount);
+		update_post_meta($post_id, '_um_invoice_remaining_due', $remaining_due);
 		update_post_meta($post_id, '_um_invoice_header_note', $header_note);
 		update_post_meta($post_id, '_um_invoice_footer_note', $footer_note);
 	}
@@ -474,6 +489,9 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		$invoice_title = (string) get_post_meta($order->get_id(), '_um_invoice_title', true);
 		$order_header_note = (string) get_post_meta($order->get_id(), '_um_invoice_header_note', true);
 		$order_footer_note = (string) get_post_meta($order->get_id(), '_um_invoice_footer_note', true);
+		$invoice_downpayment = (string) get_post_meta($order->get_id(), '_um_invoice_downpayment', true);
+		$invoice_remaining = (string) get_post_meta($order->get_id(), '_um_invoice_remaining', true);
+		$invoice_remaining_due = (string) get_post_meta($order->get_id(), '_um_invoice_remaining_due', true);
 		$approval_data = $order->get_meta('_um_invoice_approval');
 		$has_approval = is_array($approval_data) && !empty($approval_data);
 
@@ -709,6 +727,9 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 						<?php $shipping_total = (float) $order->get_shipping_total(); ?>
 						<?php if ($shipping_total > 0) : ?><tr><td colspan="3" class="text-right"><?php esc_html_e('Shipping', 'user-manager'); ?></td><td class="text-right"><?php echo wp_kses_post(wc_price($shipping_total, ['currency' => $currency])); ?></td></tr><?php endif; ?>
 						<tr><td colspan="3" class="text-right total"><?php esc_html_e('Total', 'user-manager'); ?></td><td class="text-right total"><?php echo wp_kses_post(wc_price($order->get_total(), ['currency' => $currency])); ?></td></tr>
+						<?php if ($invoice_downpayment !== '') : ?><tr><td colspan="3" class="text-right"><?php esc_html_e('Down Payment', 'user-manager'); ?></td><td class="text-right"><?php echo esc_html($invoice_downpayment); ?></td></tr><?php endif; ?>
+						<?php if ($invoice_remaining !== '') : ?><tr><td colspan="3" class="text-right"><?php esc_html_e('Remaining Payment', 'user-manager'); ?></td><td class="text-right"><?php echo esc_html($invoice_remaining); ?></td></tr><?php endif; ?>
+						<?php if ($invoice_remaining_due !== '') : ?><tr><td colspan="3" class="text-right"><?php esc_html_e('Remaining Payment Due', 'user-manager'); ?></td><td class="text-right"><?php echo esc_html($invoice_remaining_due); ?></td></tr><?php endif; ?>
 					</tbody>
 				</table>
 

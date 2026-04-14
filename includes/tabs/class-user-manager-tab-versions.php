@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.227 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added three new Order Invoice & Approval order-level meta fields in the order editor invoice meta box under Invoice Title: Deposit Amount (`_um_invoice_downpayment`), Remaining Amount (`_um_invoice_remaining`), and Remaining Amount Due Date (`_um_invoice_remaining_due`).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Invoice front-end totals table now conditionally renders new rows for Down Payment, Remaining Payment, and Remaining Payment Due when those values are saved for the order.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.226 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Order Invoice & Approval (`?invoice=`) product and meta images in the Products & Services table are now clickable and open in an in-page lightbox/modal preview.', 'user-manager'); ?></li>
