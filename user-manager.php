@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.227
+ * Version: 2.5.228
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.228 - March 16, 2026
+ * - Added a new optional Additional Meta Fields flag: `display_when_empty` (aliases: `display-empty`, `show_empty`, `show_if_empty`, `render_if_empty`) for both Order detail and All Orders Screen definitions.
+ * - When the new empty-display flag is set, configured additional-meta labels now render even when the underlying order meta key has no stored value (showing an em dash placeholder).
+ * - Updated Additional Meta Fields helper text/examples to include the new empty-display flag usage.
+ *
  * 2.5.227 - March 16, 2026
  * - Added three order-level invoice meta box text fields under Invoice Title in WP Admin: Deposit Amount (`_um_invoice_downpayment`), Remaining Amount (`_um_invoice_remaining`), and Remaining Amount Due Date (`_um_invoice_remaining_due`).
  * - Invoice totals table now conditionally renders new rows when values exist: Down Payment, Remaining Payment, and Remaining Payment Due.

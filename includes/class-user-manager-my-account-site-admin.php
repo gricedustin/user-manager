@@ -1730,7 +1730,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Parse configured additional order meta fields.
 	 *
 	 * @param string $raw Raw setting value.
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
 	 */
 	private static function parse_order_additional_meta_field_definitions(string $raw): array {
 		$raw = trim($raw);
@@ -1783,6 +1783,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'prefix_before_value'   => self::sanitize_meta_prefix_before_value($prefix_raw),
 				'count_text_file_lines' => $parsed_flags['count_text_file_lines'],
 				'enable_file_preview'   => $parsed_flags['enable_file_preview'],
+				'display_when_empty'    => $parsed_flags['display_when_empty'],
 			];
 			$seen_keys[$meta_key] = true;
 		}
@@ -1846,7 +1847,10 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Supported preview flags:
 	 * - preview, preview_file, file_preview, preview-modal, preview_modal
 	 *
-	 * @return array{count_text_file_lines:bool,enable_file_preview:bool}
+	 * Supported "display when empty" flags:
+	 * - display_when_empty, display-empty, show_empty, show_if_empty, render_if_empty
+	 *
+	 * @return array{count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}
 	 */
 	private static function parse_order_additional_meta_flags(string $flags_raw): array {
 		$flags_raw = trim(strtolower($flags_raw));
@@ -1854,6 +1858,7 @@ final class User_Manager_My_Account_Site_Admin {
 			return [
 				'count_text_file_lines' => false,
 				'enable_file_preview' => false,
+				'display_when_empty' => false,
 			];
 		}
 
@@ -1862,6 +1867,7 @@ final class User_Manager_My_Account_Site_Admin {
 			return [
 				'count_text_file_lines' => false,
 				'enable_file_preview' => false,
+				'display_when_empty' => false,
 			];
 		}
 
@@ -1878,8 +1884,16 @@ final class User_Manager_My_Account_Site_Admin {
 			'preview-modal',
 			'preview_modal',
 		];
+		$display_when_empty_supported = [
+			'display_when_empty',
+			'display-empty',
+			'show_empty',
+			'show_if_empty',
+			'render_if_empty',
+		];
 		$count_text_file_lines = false;
 		$enable_file_preview = false;
+		$display_when_empty = false;
 		foreach ($parts as $part) {
 			$part = trim((string) $part);
 			if ($part === '') {
@@ -1891,7 +1905,10 @@ final class User_Manager_My_Account_Site_Admin {
 			if (!$enable_file_preview && in_array($part, $preview_supported, true)) {
 				$enable_file_preview = true;
 			}
-			if ($count_text_file_lines && $enable_file_preview) {
+			if (!$display_when_empty && in_array($part, $display_when_empty_supported, true)) {
+				$display_when_empty = true;
+			}
+			if ($count_text_file_lines && $enable_file_preview && $display_when_empty) {
 				break;
 			}
 		}
@@ -1899,6 +1916,7 @@ final class User_Manager_My_Account_Site_Admin {
 		return [
 			'count_text_file_lines' => $count_text_file_lines,
 			'enable_file_preview' => $enable_file_preview,
+			'display_when_empty' => $display_when_empty,
 		];
 	}
 
@@ -1919,11 +1937,20 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Determine whether an additional-meta definition should display even without value(s).
+	 */
+	private static function should_display_meta_definition_when_empty(string $flags_raw): bool {
+		$flags = self::parse_order_additional_meta_flags($flags_raw);
+		return !empty($flags['display_when_empty']);
+	}
+
+	/**
 	 * Determine whether the provided flag string contains any recognized optional flags.
 	 */
 	private static function contains_supported_meta_definition_flags(string $flags_raw): bool {
 		return self::should_count_text_file_lines_for_meta_definition($flags_raw)
-			|| self::should_enable_file_preview_for_meta_definition($flags_raw);
+			|| self::should_enable_file_preview_for_meta_definition($flags_raw)
+			|| self::should_display_meta_definition_when_empty($flags_raw);
 	}
 
 	/**
@@ -1950,6 +1977,11 @@ final class User_Manager_My_Account_Site_Admin {
 			'file_preview',
 			'preview-modal',
 			'preview_modal',
+			'display_when_empty',
+			'display-empty',
+			'show_empty',
+			'show_if_empty',
+			'render_if_empty',
 		];
 		$has_supported = false;
 		foreach ($parts as $part) {
@@ -1969,7 +2001,7 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Get additional order meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
 	 */
 	private static function get_order_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -1983,7 +2015,7 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Get additional order-list meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
 	 */
 	private static function get_order_list_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -2250,6 +2282,14 @@ final class User_Manager_My_Account_Site_Admin {
 		$rows_html = '';
 		foreach ($definitions as $definition) {
 			$meta_values = get_post_meta((int) $order->get_id(), $definition['key']);
+			$display_when_empty = !empty($definition['display_when_empty']);
+			if (empty($meta_values) || !is_array($meta_values)) {
+				if ($display_when_empty) {
+					$meta_values = [''];
+				} else {
+					continue;
+				}
+			}
 			if (empty($meta_values) || !is_array($meta_values)) {
 				continue;
 			}
@@ -2265,8 +2305,11 @@ final class User_Manager_My_Account_Site_Admin {
 				(int) $order->get_id(),
 				(string) $definition['key']
 			);
-			if ($value_html === '') {
+			if ($value_html === '' && !$display_when_empty) {
 				continue;
+			}
+			if ($value_html === '' && $display_when_empty) {
+				$value_html = '&mdash;';
 			}
 
 			ob_start();
@@ -2304,6 +2347,14 @@ final class User_Manager_My_Account_Site_Admin {
 		$field_rows = [];
 		foreach ($definitions as $definition) {
 			$meta_values = get_post_meta((int) $order->get_id(), $definition['key']);
+			$display_when_empty = !empty($definition['display_when_empty']);
+			if (empty($meta_values) || !is_array($meta_values)) {
+				if ($display_when_empty) {
+					$meta_values = [''];
+				} else {
+					continue;
+				}
+			}
 			if (empty($meta_values) || !is_array($meta_values)) {
 				continue;
 			}
@@ -2319,8 +2370,11 @@ final class User_Manager_My_Account_Site_Admin {
 				(int) $order->get_id(),
 				(string) $definition['key']
 			);
-			if ($value_html === '') {
+			if ($value_html === '' && !$display_when_empty) {
 				continue;
+			}
+			if ($value_html === '' && $display_when_empty) {
+				$value_html = '&mdash;';
 			}
 
 			$field_rows[] = '<div class="um-my-account-order-list-meta-item"><strong>' . esc_html($definition['label']) . ':</strong> ' . $value_html . '</div>';
