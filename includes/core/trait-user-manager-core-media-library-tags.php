@@ -4287,6 +4287,7 @@ JS;
 			$single_video_three_column_compact_enabled
 			&& strpos($album_tag_youtube_videos_html, 'um-media-library-tag-videos-wrap-cols-1') !== false
 		);
+		$group_links_html = '';
 		if ($album_description_position !== 'none') {
 			$album_tag_description_html = self::render_media_library_tag_description_paragraphs_html(
 				$tag_description_data,
@@ -4303,8 +4304,13 @@ JS;
 				]
 			);
 			$group_links_html = self::render_media_library_tag_group_links_html_for_expression($url_tag_override);
-			if ($group_links_html !== '') {
+			if ($group_links_html !== '' && !$has_single_video_result) {
 				$album_tag_description_html = $group_links_html . $album_tag_description_html;
+			}
+			if ($has_single_video_result) {
+				// Compact single-video mode renders its own 3-column row, so avoid
+				// duplicating description/featured-image blocks above or below it.
+				$album_tag_description_html = '';
 			}
 		}
 		$lightbox_tag_ajax_url = $show_lightbox_admin_edit_link ? admin_url('admin-ajax.php') : '';
@@ -4343,6 +4349,7 @@ JS;
 					'featuredLightboxIndex' => -1,
 					'useSeparateFeaturedImageColumn' => false,
 					'hideFeaturedImageIfNoDescriptionOrBullets' => false,
+					'suppressFeaturedImage' => true,
 				]
 			);
 			$single_video_compact_featured_image_html = self::render_media_library_tag_featured_image_html(
@@ -4377,7 +4384,10 @@ JS;
 			<?php echo $enable_simple_lightbox_for_this_gallery ? ' data-um-lightbox-simple-thumbnail-click="1"' : ' data-um-lightbox-simple-thumbnail-click="0"'; ?>
 			data-um-lightbox-link-mode="<?php echo esc_attr((string) $effective_link_to); ?>"
 		>
-			<?php if ($album_description_position === 'above' && $album_tag_description_html !== '') : ?>
+			<?php if ($has_single_video_result && $group_links_html !== '') : ?>
+				<?php echo $group_links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			<?php endif; ?>
+			<?php if (!$has_single_video_result && $album_description_position === 'above' && $album_tag_description_html !== '') : ?>
 				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-above">
 					<?php echo $album_tag_description_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
@@ -4587,7 +4597,7 @@ JS;
 					<?php endfor; ?>
 				</div>
 			<?php endif; ?>
-			<?php if ($album_description_position === 'below' && $album_tag_description_html !== '') : ?>
+			<?php if (!$has_single_video_result && $album_description_position === 'below' && $album_tag_description_html !== '') : ?>
 				<div class="um-media-library-tag-description-wrap um-media-library-tag-description-wrap-below">
 					<?php echo $album_tag_description_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
@@ -7883,6 +7893,9 @@ JS;
 					$description_html = $fallback_bullets_html;
 				}
 			}
+		}
+		if (!empty($layout_options['suppressFeaturedImage'])) {
+			return $description_html;
 		}
 		$hide_featured_image_if_no_content = !empty($layout_options['hideFeaturedImageIfNoDescriptionOrBullets']);
 		if (

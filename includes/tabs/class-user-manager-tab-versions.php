@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.232 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed single-video 3-column combined-row output so it now renders exactly one Featured Image + Description/Bullets + Single Video row without duplicate featured images.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When combined-row mode is active, the standard album description block (above/below gallery) is suppressed and group links are rendered once above the combined row.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.231 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Retitled Media Library Tags block/add-on label from "Dynamic Photo Gallery with Media Library Tags" to "Media Library Tags with Photo & YouTube Video Gallery" across active settings cards and documentation references.', 'user-manager'); ?></li>
