@@ -71,6 +71,9 @@ class User_Manager_Addon_Media_Library_Tags {
 		$exclude_logged_in_users_from_tracking = isset($settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
 			? !empty($settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
 			: !empty($defaults['excludeLoggedInUsersFromTracking']);
+		$exclude_wp_administrator_users_from_tracking = isset($settings['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'])
+			? !empty($settings['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'])
+			: !empty($defaults['excludeWpAdministratorUsersFromTracking']);
 		$inline_styles_for_li_tags_if_10_plus_bullets_displayed = isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']) && is_string($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])
 			? (string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']
 			: (string) ($defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] ?? '');
@@ -302,6 +305,13 @@ class User_Manager_Addon_Media_Library_Tags {
 									<?php esc_html_e('Exclude Logged In Users from Tracking', 'user-manager'); ?>
 								</label>
 								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('When enabled, logged-in users are excluded from Tag Reports tracking (album tag views and lightbox views).', 'user-manager'); ?></p>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tag_gallery_exclude_wp_administrator_users_from_tracking" value="1" <?php checked($exclude_wp_administrator_users_from_tracking); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Exclude WP Administrator Users from Tracking', 'user-manager'); ?>
+								</label>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('When enabled, users with the WordPress Administrator role are excluded from Tag Reports tracking.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<button

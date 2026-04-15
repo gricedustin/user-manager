@@ -2456,6 +2456,8 @@ class User_Manager_Actions {
 					&& $_POST['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === '1';
 				$settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] = isset($_POST['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
 					&& $_POST['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] === '1';
+				$settings['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'] = isset($_POST['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'])
+					&& $_POST['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'] === '1';
 				$settings['media_library_tag_gallery_featured_image_max_width_px'] = isset($_POST['media_library_tag_gallery_featured_image_max_width_px'])
 					? max(0, min(2000, absint($_POST['media_library_tag_gallery_featured_image_max_width_px'])))
 					: 360;

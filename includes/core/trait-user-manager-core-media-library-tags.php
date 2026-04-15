@@ -6444,6 +6444,7 @@ JS;
 			'inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed' => '',
 			'singleVideoThreeColumnCompactLayout' => false,
 			'excludeLoggedInUsersFromTracking' => false,
+			'excludeWpAdministratorUsersFromTracking' => false,
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -6556,6 +6557,9 @@ JS;
 		$defaults['excludeLoggedInUsersFromTracking'] = isset($settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
 			? $settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] === true || $settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] === '1'
 			: (bool) ($defaults['excludeLoggedInUsersFromTracking'] ?? false);
+		$defaults['excludeWpAdministratorUsersFromTracking'] = isset($settings['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'])
+			? $settings['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'] === true || $settings['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'] === '1'
+			: (bool) ($defaults['excludeWpAdministratorUsersFromTracking'] ?? false);
 		if (isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])) {
 			$defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] = sanitize_text_field((string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']);
 		}
@@ -7240,7 +7244,13 @@ JS;
 		}
 		$settings = User_Manager_Core::get_settings();
 		$defaults = self::get_media_library_tag_gallery_defaults($settings);
-		return !empty($defaults['excludeLoggedInUsersFromTracking']);
+		if (!empty($defaults['excludeLoggedInUsersFromTracking'])) {
+			return true;
+		}
+		if (empty($defaults['excludeWpAdministratorUsersFromTracking'])) {
+			return false;
+		}
+		return current_user_can('administrator');
 	}
 
 	/**

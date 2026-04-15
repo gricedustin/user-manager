@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.235 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Media Library Tags Block checkbox setting: "Exclude WP Administrator Users from Tracking", placed directly under "Exclude Logged In Users from Tracking".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag-report tracking exclusion now supports an administrator-only mode so WP Administrators can be excluded from album-tag and lightbox view tracking even when other logged-in roles are still tracked.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.234 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Media Library Tags Block setting: "Exclude Logged In Users from Tracking" so admin/testing sessions can be excluded from Tag Reports counters.', 'user-manager'); ?></li>
