@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.233
+ * Version: 2.5.234
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.234 - March 16, 2026
+ * - Added new Media Library Tags Block setting: "Exclude Logged In Users from Tracking" so internal/admin browsing can be excluded from both Tag Reports counters and Lightbox View counters.
+ * - Added a new "Clean Tag Reports Data" button in Blocks > Media Library Tags that clears all tracked Tag Reports counters (image lightbox views + album tag views, including year/month/week/day buckets).
+ *
  * 2.5.233 - March 16, 2026
  * - Updated single-video combined-row rendering to detect when the active tag context has no featured image and skip the empty featured-image column.
  * - In no-featured-image single-video cases, output now falls back to a single-column stack with description/bullets above and the single video centered below (instead of appearing right-shifted).

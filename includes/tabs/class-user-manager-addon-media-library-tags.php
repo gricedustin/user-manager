@@ -68,6 +68,9 @@ class User_Manager_Addon_Media_Library_Tags {
 					? !empty($settings['media_library_tag_gallery_single_video_three_column_alternative_layout'])
 					: !empty($defaults['singleVideoThreeColumnCompactLayout'])
 			);
+		$exclude_logged_in_users_from_tracking = isset($settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
+			? !empty($settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
+			: !empty($defaults['excludeLoggedInUsersFromTracking']);
 		$inline_styles_for_li_tags_if_10_plus_bullets_displayed = isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']) && is_string($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])
 			? (string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']
 			: (string) ($defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] ?? '');
@@ -292,6 +295,24 @@ class User_Manager_Addon_Media_Library_Tags {
 									<input type="checkbox" name="media_library_tag_gallery_single_video_three_column_combined_row" value="1" <?php checked($single_video_three_column_combined_row); ?><?php echo $form_attr; ?> />
 									<?php esc_html_e('If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row', 'user-manager'); ?>
 								</label>
+							</div>
+							<div class="um-form-field">
+								<label>
+									<input type="checkbox" name="media_library_tag_gallery_exclude_logged_in_users_from_tracking" value="1" <?php checked($exclude_logged_in_users_from_tracking); ?><?php echo $form_attr; ?> />
+									<?php esc_html_e('Exclude Logged In Users from Tracking', 'user-manager'); ?>
+								</label>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('When enabled, logged-in users are excluded from Tag Reports tracking (album tag views and lightbox views).', 'user-manager'); ?></p>
+							</div>
+							<div class="um-form-field">
+								<button
+									type="submit"
+									class="button button-secondary"
+									name="media_library_tag_reports_reset"
+									value="1"
+									onclick="return window.confirm('<?php echo esc_js(__('Clean all Tag Reports data now? This cannot be undone.', 'user-manager')); ?>');"
+									<?php echo $form_attr; ?>
+								><?php esc_html_e('Clean All Tag Reports Data', 'user-manager'); ?></button>
+								<p class="description" style="margin:6px 0 0;"><?php esc_html_e('Deletes all tracked Tag Reports counters for image lightbox views and album tag views.', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label for="um-media-library-tags-gallery-10plus-bullets-li-inline-styles"><?php esc_html_e('Inline styles for li tags if 10 plus bullets being displayed', 'user-manager'); ?></label>

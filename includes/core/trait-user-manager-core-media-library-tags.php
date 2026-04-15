@@ -1836,6 +1836,18 @@ CSS;
 		if ($attachment_id <= 0 || get_post_type($attachment_id) !== 'attachment') {
 			wp_send_json_error(['message' => __('Invalid media item.', 'user-manager')], 400);
 		}
+		if (self::should_skip_media_library_tag_tracking_for_current_request()) {
+			$current_period_counts = self::get_media_library_lightbox_period_view_counts($attachment_id);
+			wp_send_json_success([
+				'attachment_id' => $attachment_id,
+				'lightbox_views' => self::get_media_library_lightbox_view_count($attachment_id),
+				'lightbox_views_year' => (int) ($current_period_counts['year'] ?? 0),
+				'lightbox_views_month' => (int) ($current_period_counts['month'] ?? 0),
+				'lightbox_views_week' => (int) ($current_period_counts['week'] ?? 0),
+				'lightbox_views_day' => (int) ($current_period_counts['day'] ?? 0),
+				'tracking_skipped' => 1,
+			]);
+		}
 		$counts = self::increment_media_library_lightbox_view_counts($attachment_id);
 		wp_send_json_success([
 			'attachment_id' => $attachment_id,
@@ -4172,7 +4184,7 @@ JS;
 			}
 			$query_args['tax_query'] = $tax_query;
 		}
-		if (!empty($active_view_tag_slugs)) {
+		if (!empty($active_view_tag_slugs) && !self::should_skip_media_library_tag_tracking_for_current_request()) {
 			self::increment_media_library_album_tag_view_counts_for_slugs($active_view_tag_slugs);
 		}
 
@@ -6431,6 +6443,7 @@ JS;
 			'featuredImageMaxWidthPx' => 360,
 			'inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed' => '',
 			'singleVideoThreeColumnCompactLayout' => false,
+			'excludeLoggedInUsersFromTracking' => false,
 		];
 
 		if (isset($settings['media_library_tag_gallery_columns_desktop'])) {
@@ -6540,6 +6553,9 @@ JS;
 		$defaults['hideFeaturedImageDuplicateInTaggedImages'] = isset($settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
 			? $settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === true || $settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === '1'
 			: (bool) ($defaults['hideFeaturedImageDuplicateInTaggedImages'] ?? true);
+		$defaults['excludeLoggedInUsersFromTracking'] = isset($settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
+			? $settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] === true || $settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] === '1'
+			: (bool) ($defaults['excludeLoggedInUsersFromTracking'] ?? false);
 		if (isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])) {
 			$defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] = sanitize_text_field((string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']);
 		}
@@ -6888,6 +6904,9 @@ JS;
 	 * @param array<int,string> $tag_slugs
 	 */
 	private static function increment_media_library_album_tag_view_counts_for_slugs(array $tag_slugs): void {
+		if (self::should_skip_media_library_tag_report_tracking_for_current_user()) {
+			return;
+		}
 		$tag_slugs = array_values(array_unique(array_filter(array_map('sanitize_title', $tag_slugs))));
 		if (empty($tag_slugs)) {
 			return;
@@ -7077,6 +7096,13 @@ JS;
 	}
 
 	/**
+	 * Determine whether tracking should be skipped for current visitor.
+	 */
+	private static function should_skip_media_library_tag_tracking_for_current_request(): bool {
+		return self::should_skip_media_library_tag_report_tracking_for_current_user();
+	}
+
+	/**
 	 * Post meta key used to store lightbox view totals.
 	 */
 	private static function media_library_lightbox_views_meta_key(): string {
@@ -7100,6 +7126,15 @@ JS;
 	 * @return array{total:int,year:int,month:int,week:int,day:int}
 	 */
 	private static function increment_media_library_lightbox_view_counts(int $attachment_id): array {
+		if (self::should_skip_media_library_tag_report_tracking_for_current_user()) {
+			return [
+				'total' => self::get_media_library_lightbox_view_count($attachment_id),
+				'year' => 0,
+				'month' => 0,
+				'week' => 0,
+				'day' => 0,
+			];
+		}
 		$total = self::get_media_library_lightbox_view_count($attachment_id) + 1;
 		update_post_meta($attachment_id, self::media_library_lightbox_views_meta_key(), $total);
 		$period_counts = self::increment_media_library_lightbox_view_period_counts($attachment_id);
@@ -7194,6 +7229,96 @@ JS;
 			return '';
 		}
 		return 'um_media_lightbox_views_' . $period;
+	}
+
+	/**
+	 * Determine whether tracking should be skipped for the current user.
+	 */
+	private static function should_skip_media_library_tag_report_tracking_for_current_user(): bool {
+		if (!is_user_logged_in()) {
+			return false;
+		}
+		$settings = User_Manager_Core::get_settings();
+		$defaults = self::get_media_library_tag_gallery_defaults($settings);
+		return !empty($defaults['excludeLoggedInUsersFromTracking']);
+	}
+
+	/**
+	 * Clear all stored Media Library Tag report counters.
+	 *
+	 * @return array{attachments:int,tags:int}
+	 */
+	public static function clear_media_library_tag_reports_data(): array {
+		$attachment_updated = 0;
+		$attachment_ids = get_posts([
+			'post_type' => 'attachment',
+			'post_status' => 'any',
+			'posts_per_page' => -1,
+			'fields' => 'ids',
+			'no_found_rows' => true,
+		]);
+		if (is_array($attachment_ids) && !empty($attachment_ids)) {
+			foreach ($attachment_ids as $attachment_id) {
+				$attachment_id = absint($attachment_id);
+				if ($attachment_id <= 0) {
+					continue;
+				}
+				$deleted_any = false;
+				foreach (['', '_year', '_month', '_week', '_day'] as $suffix) {
+					$meta_key = 'um_media_lightbox_views' . $suffix;
+					if (delete_post_meta($attachment_id, $meta_key)) {
+						$deleted_any = true;
+					}
+					if (delete_post_meta($attachment_id, $meta_key . '_key')) {
+						$deleted_any = true;
+					}
+					if (delete_post_meta($attachment_id, $meta_key . '_count')) {
+						$deleted_any = true;
+					}
+				}
+				if ($deleted_any) {
+					$attachment_updated++;
+				}
+			}
+		}
+
+		$term_updated = 0;
+		$terms = get_terms([
+			'taxonomy' => self::media_library_tags_taxonomy(),
+			'hide_empty' => false,
+		]);
+		if (is_array($terms) && !is_wp_error($terms) && !empty($terms)) {
+			foreach ($terms as $term) {
+				if (!($term instanceof WP_Term)) {
+					continue;
+				}
+				$term_id = (int) $term->term_id;
+				if ($term_id <= 0) {
+					continue;
+				}
+				$deleted_any = false;
+				foreach (['', '_year', '_month', '_week', '_day'] as $suffix) {
+					$meta_key = 'um_media_album_tag_views' . $suffix;
+					if (delete_term_meta($term_id, $meta_key)) {
+						$deleted_any = true;
+					}
+					if (delete_term_meta($term_id, $meta_key . '_key')) {
+						$deleted_any = true;
+					}
+					if (delete_term_meta($term_id, $meta_key . '_count')) {
+						$deleted_any = true;
+					}
+				}
+				if ($deleted_any) {
+					$term_updated++;
+				}
+			}
+		}
+
+		return [
+			'attachments' => $attachment_updated,
+			'tags' => $term_updated,
+		];
 	}
 
 	/**

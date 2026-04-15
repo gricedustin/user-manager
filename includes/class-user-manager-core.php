@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.233';
+	const VERSION = '2.5.234';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -8971,6 +8971,9 @@ html body .woocommerce-layout__header {
 				break;
 			case 'view_reports_reset':
 				$content = __('All view-related reports (Page Views, Product Views, 404 Errors, Search Queries) have been reset.', 'user-manager');
+				break;
+			case 'media_library_tag_reports_cleared':
+				$content = __('Media > Tag Reports data has been cleared successfully.', 'user-manager');
 				break;
 			case 'user_exists':
 				$content = __('A user with that email already exists. Enable "Update existing users" in Settings to update instead.', 'user-manager');

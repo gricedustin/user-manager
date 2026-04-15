@@ -2213,6 +2213,11 @@ class User_Manager_Actions {
 		}
 		$bulk_settings_after = $bulk_settings_before;
 		$role_switch_settings_after = $role_switch_settings_before;
+		$should_reset_media_library_tag_reports = false;
+		$media_library_tag_reports_reset_counts = [
+			'attachments' => 0,
+			'tags' => 0,
+		];
 
 		$redirect_tab = User_Manager_Core::TAB_SETTINGS;
 
@@ -2449,6 +2454,8 @@ class User_Manager_Actions {
 					&& $_POST['media_library_tag_gallery_simple_lightbox_thumbnail_click'] === '1';
 				$settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] = isset($_POST['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
 					&& $_POST['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === '1';
+				$settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] = isset($_POST['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
+					&& $_POST['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] === '1';
 				$settings['media_library_tag_gallery_featured_image_max_width_px'] = isset($_POST['media_library_tag_gallery_featured_image_max_width_px'])
 					? max(0, min(2000, absint($_POST['media_library_tag_gallery_featured_image_max_width_px'])))
 					: 360;
@@ -2457,6 +2464,10 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_hidden_frontend_tags'] = isset($_POST['media_library_tag_gallery_hidden_frontend_tags'])
 					? sanitize_text_field(wp_unslash($_POST['media_library_tag_gallery_hidden_frontend_tags']))
 					: '';
+				$should_reset_media_library_tag_reports = isset($_POST['media_library_tag_reports_reset']) && $_POST['media_library_tag_reports_reset'] === '1';
+				if ($should_reset_media_library_tag_reports) {
+					$media_library_tag_reports_reset_counts = User_Manager_Core::clear_media_library_tag_reports_data();
+				}
 				break;
 
 			case 'addons':
@@ -3142,7 +3153,20 @@ class User_Manager_Actions {
 			User_Manager_Core::add_activity_log('settings_updated', get_current_user_id(), 'Settings', $log_extra);
 		}
 
-		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, 'settings_saved');
+		$redirect_message = 'settings_saved';
+		if ($should_reset_media_library_tag_reports) {
+			$redirect_message = 'media_library_tag_reports_cleared';
+		}
+		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, $redirect_message);
+		if ($should_reset_media_library_tag_reports) {
+			$redirect_url = add_query_arg(
+				[
+					'media_library_tag_reports_attachments_cleared' => (string) max(0, (int) ($media_library_tag_reports_reset_counts['attachments'] ?? 0)),
+					'media_library_tag_reports_tags_cleared' => (string) max(0, (int) ($media_library_tag_reports_reset_counts['tags'] ?? 0)),
+				],
+				$redirect_url
+			);
+		}
 		if ($redirect_tab === User_Manager_Core::TAB_ADDONS && isset($_POST['addon_section'])) {
 			$addon_section = sanitize_key(wp_unslash($_POST['addon_section']));
 			if ($addon_section !== '') {

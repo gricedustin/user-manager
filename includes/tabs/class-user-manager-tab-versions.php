@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.234 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Media Library Tags Block setting: "Exclude Logged In Users from Tracking" so admin/testing sessions can be excluded from Tag Reports counters.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new "Clean All Tag Reports Data" action button in Blocks > Media Library Tags that resets image lightbox view metrics and album tag view metrics (including year/month/week/day counters).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.233 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Single-video combined-row layout now falls back to a single stacked column when no featured image is set for the active tag context, preventing empty left columns and right-shifted video output.', 'user-manager'); ?></li>
