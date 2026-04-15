@@ -4336,6 +4336,7 @@ JS;
 		ob_start();
 		$single_video_compact_description_html = '';
 		$single_video_compact_featured_image_html = '';
+		$single_video_compact_has_featured_image = false;
 		if ($has_single_video_result) {
 			$single_video_compact_description_html = self::render_media_library_tag_description_paragraphs_html(
 				$tag_description_data,
@@ -4364,6 +4365,7 @@ JS;
 					'featuredLightboxIndex' => $show_featured_description_image_in_lightbox_collection ? 0 : -1,
 				]
 			);
+			$single_video_compact_has_featured_image = $single_video_compact_featured_image_html !== '';
 		}
 		?>
 		<div
@@ -4404,17 +4406,30 @@ JS;
 				</div>
 			<?php endif; ?>
 			<?php if ($has_single_video_result) : ?>
-				<div class="um-media-library-tag-single-video-three-column-layout">
-					<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-image">
-						<?php echo $single_video_compact_featured_image_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<?php if ($single_video_compact_has_featured_image) : ?>
+					<div class="um-media-library-tag-single-video-three-column-layout">
+						<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-image">
+							<?php echo $single_video_compact_featured_image_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</div>
+						<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-description">
+							<?php echo $single_video_compact_description_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</div>
+						<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-video">
+							<?php echo $album_tag_youtube_videos_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</div>
 					</div>
-					<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-description">
-						<?php echo $single_video_compact_description_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<?php else : ?>
+					<div class="um-media-library-tag-single-video-no-featured-layout">
+						<?php if ($single_video_compact_description_html !== '') : ?>
+							<div class="um-media-library-tag-single-video-no-featured-description">
+								<?php echo $single_video_compact_description_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							</div>
+						<?php endif; ?>
+						<div class="um-media-library-tag-single-video-no-featured-video">
+							<?php echo $album_tag_youtube_videos_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</div>
 					</div>
-					<div class="um-media-library-tag-single-video-three-column um-media-library-tag-single-video-three-column-video">
-						<?php echo $album_tag_youtube_videos_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-					</div>
-				</div>
+				<?php endif; ?>
 			<?php elseif ($album_tag_youtube_videos_html !== '') : ?>
 				<?php echo $album_tag_youtube_videos_html; ?>
 			<?php endif; ?>
@@ -4706,6 +4721,21 @@ JS;
 }
 .um-media-library-tag-single-video-three-column-video .um-media-library-tag-videos-wrap-multi.um-media-library-tag-videos-wrap-cols-1 > .um-media-library-tag-video-item {
 	grid-column: 1 / -1;
+}
+.um-media-library-tag-single-video-no-featured-layout {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 0 0 22px;
+}
+.um-media-library-tag-single-video-no-featured-description .um-media-library-tag-description-wrap {
+	margin: 0;
+}
+.um-media-library-tag-single-video-no-featured-description .um-media-library-tag-description-block .um-media-library-tag-description-paragraph {
+	margin: 0 0 12px;
+}
+.um-media-library-tag-single-video-no-featured-video .um-media-library-tag-videos-wrap {
+	margin: 0;
 }
 @media (max-width: 782px) {
 	.um-media-library-tag-description-layout {

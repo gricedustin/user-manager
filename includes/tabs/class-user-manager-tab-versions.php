@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.233 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Single-video combined-row layout now falls back to a single stacked column when no featured image is set for the active tag context, preventing empty left columns and right-shifted video output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('In the no-featured-image fallback, description/bullets render above the single video and the video remains centered (same centered single-video behavior as existing cols-1 layout rules).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.232 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed single-video 3-column combined-row output so it now renders exactly one Featured Image + Description/Bullets + Single Video row without duplicate featured images.', 'user-manager'); ?></li>

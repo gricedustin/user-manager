@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.232
+ * Version: 2.5.233
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.233 - March 16, 2026
+ * - Updated single-video combined-row rendering to detect when the active tag context has no featured image and skip the empty featured-image column.
+ * - In no-featured-image single-video cases, output now falls back to a single-column stack with description/bullets above and the single video centered below (instead of appearing right-shifted).
+ *
  * 2.5.232 - March 16, 2026
  * - Fixed single-video three-column combined layout duplication so only one featured image appears in the row (featured image column only), while description/bullets column no longer re-renders a floating featured image.
  * - When single-video three-column combined layout is active, default above/below album description wrapper output is suppressed to avoid duplicate featured image/description blocks outside the combined row.
