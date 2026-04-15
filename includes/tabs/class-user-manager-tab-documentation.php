@@ -143,7 +143,7 @@ class User_Manager_Tab_Documentation {
 				'title'   => __('Blocks Tab', 'user-manager'),
 				'summary' => __('Manage content-focused block modules and gallery block defaults from a dedicated area separate from operational add-ons.', 'user-manager'),
 				'details' => [
-					__('Includes block features such as Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Dynamic Photo Gallery with Media Library Tags.', 'user-manager'),
+					__('Includes block features such as Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Media Library Tags with Photo & YouTube Video Gallery.', 'user-manager'),
 					__('Use block_section=... to open a specific block module sub-page directly.', 'user-manager'),
 					__('Useful for content teams building page layouts, visual navigation, and media-rich sections.', 'user-manager'),
 				],
@@ -386,7 +386,7 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'icon'    => 'dashicons-format-gallery',
-				'title'   => __('Dynamic Photo Gallery with Media Library Tags', 'user-manager'),
+				'title'   => __('Media Library Tags with Photo & YouTube Video Gallery', 'user-manager'),
 				'summary' => __('Manage Library Tags taxonomy + media tagging tools and power dynamic front-end galleries with block defaults, styles, URL overrides, and filtering options.', 'user-manager'),
 			],
 		];
@@ -784,7 +784,7 @@ class User_Manager_Tab_Documentation {
 						<li><?php esc_html_e('Settings: global defaults, workflow controls, API keys, template utilities, and system behavior configuration.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Settings-related sub-pages include tab=settings, tab=email-templates, and tab=tools.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Add-ons and Blocks support direct deep-link sub-pages using addon_section and block_section URL parameters.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Blocks: dedicated content module management for Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Dynamic Photo Gallery with Media Library Tags.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Blocks: dedicated content module management for Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Media Library Tags with Photo & YouTube Video Gallery.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Documentation: internal reference, onboarding, installation, support, troubleshooting tools, and versions/changelog access via docs_section sub-pages.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Admin logging and diagnostics: operational event logging with detailed row-level drill-down and filter controls.', 'user-manager'); ?></li>
 					</ul>
@@ -835,7 +835,7 @@ class User_Manager_Tab_Documentation {
 						<li><?php esc_html_e('Tabbed Content Area', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Simple Icons', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Menu Tiles', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Dynamic Photo Gallery with Media Library Tags', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Media Library Tags with Photo & YouTube Video Gallery', 'user-manager'); ?></li>
 					</ul>
 
 					<h3><?php esc_html_e('Screenshots', 'user-manager'); ?></h3>

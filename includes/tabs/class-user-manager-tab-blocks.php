@@ -630,7 +630,7 @@ class User_Manager_Tab_Blocks {
 				],
 			],
 			'media-library-tags' => [
-				'label' => __('Dynamic Photo Gallery with Media Library Tags', 'user-manager'),
+				'label' => __('Media Library Tags with Photo & YouTube Video Gallery', 'user-manager'),
 				'description' => __('Build dynamic tag-driven galleries with URL overrides, layout styles, and media-library tagging tools.', 'user-manager'),
 				'active' => !empty($settings['media_library_tags_enabled']),
 				'tags' => [

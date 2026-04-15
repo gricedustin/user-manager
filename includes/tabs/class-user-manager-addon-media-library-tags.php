@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Dynamic Photo Gallery with Media Library Tags.
+ * Add-on card: Media Library Tags with Photo & YouTube Video Gallery.
  */
 
 if (!defined('ABSPATH')) {
@@ -147,7 +147,7 @@ class User_Manager_Addon_Media_Library_Tags {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-media-library-tags" data-um-active-selectors="#um-media-library-tags-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-tag"></span>
-				<h2><?php esc_html_e('Dynamic Photo Gallery with Media Library Tags', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Media Library Tags with Photo & YouTube Video Gallery', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
