@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.228
+ * Version: 2.5.229
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.229 - March 16, 2026
+ * - Updated Media Library Tag video-grid card alignment so mixed horizontal and vertical videos are vertically centered within each grid column.
+ * - Applies to both shortcode-shared video styles and gallery-rendered video grid styles for consistent row alignment.
+ *
  * 2.5.228 - March 16, 2026
  * - Added a new optional Additional Meta Fields flag: `display_when_empty` (aliases: `display-empty`, `show_empty`, `show_if_empty`, `render_if_empty`) for both Order detail and All Orders Screen definitions.
  * - When the new empty-display flag is set, configured additional-meta labels now render even when the underlying order meta key has no stored value (showing an em dash placeholder).

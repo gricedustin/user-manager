@@ -39,11 +39,10 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-						<h4>2.5.228 <span>(March 16, 2026)</span></h4>
+						<h4>2.5.229 <span>(March 16, 2026)</span></h4>
 						<ul>
-							<li><?php esc_html_e('Added new optional additional-order-meta flag support to force rendering rows even when order meta is empty: `display_when_empty`, `display-empty`, `show_empty`, `show_if_empty`, and `render_if_empty`.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('When the new flag is present, both Order detail and All Orders configured meta outputs now render a placeholder value (`—`) instead of skipping the row when the meta value is missing/blank.', 'user-manager'); ?></li>
-							<li><?php esc_html_e('Extended Additional Meta Fields helper text/examples to document using `display_when_empty` together with existing line-count/preview flags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Media Library Tag video grid card alignment so mixed horizontal and vertical videos are vertically centered within each grid row/column.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied vertical centering in both shared shortcode video CSS and gallery inline CSS for consistent alignment across video layouts.', 'user-manager'); ?></li>
 						</ul>
 					</div>
 					<div class="um-changelog-item">
