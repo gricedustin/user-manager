@@ -6503,9 +6503,21 @@ JS;
 		if (isset($settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'])) {
 			$defaults['inlineStylesForLiTagsIf10PlusBulletsBeingDisplayed'] = sanitize_text_field((string) $settings['media_library_tag_gallery_10plus_bullets_li_inline_styles']);
 		}
-		$defaults['singleVideoThreeColumnCompactLayout'] = isset($settings['media_library_tag_gallery_single_video_three_column_combined_row'])
-			? ($settings['media_library_tag_gallery_single_video_three_column_combined_row'] === true || $settings['media_library_tag_gallery_single_video_three_column_combined_row'] === '1')
-			: (bool) ($defaults['singleVideoThreeColumnCompactLayout'] ?? false);
+		$single_video_three_column_setting_raw = null;
+		if (isset($settings['media_library_tag_gallery_single_video_three_column_combined_row'])) {
+			$single_video_three_column_setting_raw = $settings['media_library_tag_gallery_single_video_three_column_combined_row'];
+		} elseif (isset($settings['media_library_tag_gallery_single_video_three_column_alternative_layout'])) {
+			$single_video_three_column_setting_raw = $settings['media_library_tag_gallery_single_video_three_column_alternative_layout'];
+		}
+		if ($single_video_three_column_setting_raw !== null) {
+			$defaults['singleVideoThreeColumnCompactLayout'] = (
+				$single_video_three_column_setting_raw === true
+				|| $single_video_three_column_setting_raw === '1'
+				|| $single_video_three_column_setting_raw === 1
+			);
+		} else {
+			$defaults['singleVideoThreeColumnCompactLayout'] = (bool) ($defaults['singleVideoThreeColumnCompactLayout'] ?? false);
+		}
 		if (isset($settings['media_library_tag_gallery_featured_image_max_width_px'])) {
 			$defaults['featuredImageMaxWidthPx'] = max(120, min(1600, absint($settings['media_library_tag_gallery_featured_image_max_width_px'])));
 		}

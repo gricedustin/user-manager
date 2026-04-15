@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.229
+ * Version: 2.5.230
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.230 - March 16, 2026
+ * - Fixed Media Library Tags setting persistence for "If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row" on Blocks > Media Library Tags.
+ * - Unified field-name handling so admin UI, save action, and runtime defaults all read/write the same setting key (with backward compatibility for the legacy alternative-layout key).
+ * - The single-video three-column combined layout toggle now reliably controls the exact front-end row layout that renders featured image + description/bullets + single video together on desktop.
+ *
  * 2.5.229 - March 16, 2026
  * - Updated Media Library Tag video-grid card alignment so mixed horizontal and vertical videos are vertically centered within each grid column.
  * - Applies to both shortcode-shared video styles and gallery-rendered video grid styles for consistent row alignment.

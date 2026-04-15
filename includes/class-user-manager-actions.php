@@ -2401,7 +2401,15 @@ class User_Manager_Actions {
 				$settings['media_library_tag_gallery_album_description_position'] = $gallery_album_description_position;
 				$settings['media_library_tag_gallery_featured_image_separate_column'] = isset($_POST['media_library_tag_gallery_featured_image_separate_column']) && $_POST['media_library_tag_gallery_featured_image_separate_column'] === '1';
 				$settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] = isset($_POST['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets']) && $_POST['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] === '1';
-				$settings['media_library_tag_gallery_single_video_three_column_combined_row'] = isset($_POST['media_library_tag_gallery_single_video_three_column_combined_row']) && $_POST['media_library_tag_gallery_single_video_three_column_combined_row'] === '1';
+				$single_video_three_column_compact_enabled = false;
+				if (isset($_POST['media_library_tag_gallery_single_video_three_column_combined_row'])) {
+					$single_video_three_column_compact_enabled = $_POST['media_library_tag_gallery_single_video_three_column_combined_row'] === '1';
+				} elseif (isset($_POST['media_library_tag_gallery_single_video_three_column_alternative_layout'])) {
+					$single_video_three_column_compact_enabled = $_POST['media_library_tag_gallery_single_video_three_column_alternative_layout'] === '1';
+				}
+				$settings['media_library_tag_gallery_single_video_three_column_combined_row'] = $single_video_three_column_compact_enabled;
+				// Keep legacy key in sync for backward compatibility with older UI reads.
+				$settings['media_library_tag_gallery_single_video_three_column_alternative_layout'] = $single_video_three_column_compact_enabled;
 				$settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'] = isset($_POST['media_library_tag_gallery_10plus_bullets_li_inline_styles'])
 					? sanitize_text_field(wp_unslash($_POST['media_library_tag_gallery_10plus_bullets_li_inline_styles']))
 					: '';
