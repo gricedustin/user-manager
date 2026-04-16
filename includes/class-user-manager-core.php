@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.237';
+	const VERSION = '2.5.238';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -3762,7 +3762,7 @@ html body .woocommerce-layout__header {
 		if ($quantity_column === '') {
 			$quantity_column = 'quantity';
 		}
-		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column_header);
+		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column);
 
 		$headers = self::bulk_add_to_cart_build_sample_csv_headers($options, $identifier_column, $product_id_column, $sku_column, $quantity_column);
 
@@ -3838,7 +3838,9 @@ html body .woocommerce-layout__header {
 		if ($quantity_column === '') {
 			$quantity_column = 'quantity';
 		}
-		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column_header);
+		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column);
+		$include_private_products = isset($options['sample_with_data_include_private_products']) && (string) $options['sample_with_data_include_private_products'] === '1';
+		$include_draft_products   = isset($options['sample_with_data_include_draft_products']) && (string) $options['sample_with_data_include_draft_products'] === '1';
 		$post_statuses = ['publish'];
 		if ($include_private_products) {
 			$post_statuses[] = 'private';

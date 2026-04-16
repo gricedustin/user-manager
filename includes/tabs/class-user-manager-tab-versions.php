@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.238 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Bulk Add to Cart sample CSV download handlers to use the resolved Product ID column header variable when checking whether to include a separate identifier column, preventing undefined-variable notices and fatal type errors on `?um_bulk_add_to_cart_sample=1` and sample-with-data downloads.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixed Bulk Add to Cart "sample with product data" CSV export to initialize private/draft inclusion flags from saved settings before building post-status filters, preventing additional undefined-variable warnings during download.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.237 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new My Account Admin Activity Viewer setting: "WP Administrators to Redirect to My Account if Accessing WP-Admin" (comma-separated usernames/emails/user IDs).', 'user-manager'); ?></li>

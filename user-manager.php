@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.237
+ * Version: 2.5.238
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.238 - March 16, 2026
+ * - Fixed Bulk Add to Cart sample CSV download fatal error by correcting identifier-column include checks to use the resolved Product ID column header variable.
+ * - Fixed undefined variable warnings in "Sample with Product Data" CSV download by initializing include-private/include-draft flags from saved settings before post-status filtering.
+ *
  * 2.5.237 - March 16, 2026
  * - Added new My Account Admin Activity Viewer setting: "WP Administrators to Redirect to My Account if Accessing WP-Admin" (comma-separated usernames/emails/user IDs).
  * - Added wp-admin access redirect enforcement for listed WP administrators: matching users are prevented from entering wp-admin and are redirected to My Account without changing roles.
