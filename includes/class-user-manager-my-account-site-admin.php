@@ -3328,6 +3328,21 @@ final class User_Manager_My_Account_Site_Admin {
 				cursor: pointer;
 				opacity: 1 !important;
 			}
+			.woocommerce-MyAccount-content .woocommerce_my_account_admin_tools input,
+			.woocommerce-MyAccount-content .woocommerce_my_account_admin_tools select,
+			.woocommerce-MyAccount-content .woocommerce_my_account_admin_tools textarea,
+			.woocommerce-MyAccount-content .woocommerce_my_account_admin_tools button[type="submit"],
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form input,
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form select,
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form textarea,
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form button[type="submit"],
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form input,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form select,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form textarea,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form button[type="submit"] {
+				pointer-events: auto !important;
+				opacity: 1 !important;
+			}
 			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-wrap {
 				position: relative;
 				z-index: 5;

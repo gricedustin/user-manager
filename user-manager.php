@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.245
+ * Version: 2.5.246
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.246 - March 16, 2026
+ * - Removed legacy disabled-control behavior for My Account Admin area by explicitly restoring interactivity for `.woocommerce-MyAccount-content` form inputs/selects/textareas/submit buttons.
+ * - Added scoped CSS override so My Account Admin controls remain clickable/fully visible even if older disabled-style rules are cached or injected.
+ *
  * 2.5.245 - March 16, 2026
  * - Updated the default WP-Admin menu label fallback from "User Experience Manager" to "UX Manager" when no Plugin Title Override is set.
  * - Updated Settings > User Experience helper text/placeholder for Plugin Title Override and admin-bar shortcut copy to reflect the new default label.

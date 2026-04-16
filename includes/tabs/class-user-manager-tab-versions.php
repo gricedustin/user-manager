@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.246 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed legacy My Account Admin disabled-control styling for `.woocommerce-MyAccount-content input/select/textarea/button[type="submit"]` and added explicit control-enable safeguards so those fields are clickable/fully visible in My Account Admin screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.245 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated default plugin-title fallback used for WP-Admin menu labels from "User Experience Manager" to "UX Manager" when Plugin Title Override is empty.', 'user-manager'); ?></li>
