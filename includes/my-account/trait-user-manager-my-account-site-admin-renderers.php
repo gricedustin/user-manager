@@ -90,17 +90,18 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		private static function render_orders_list(): void {
 			$endpoint     = 'admin_orders';
 			$current_page = self::get_current_page();
+			$per_page     = self::get_per_page_limit();
 			$search       = self::get_search_query();
 			$status_filters = self::get_configured_order_status_filters();
 			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
 			if ($search !== '') {
 				$all_orders = self::search_orders($search, $selected_status_key);
-				$paged      = self::paginate_items($all_orders, $current_page, self::PER_PAGE);
+				$paged      = self::paginate_items($all_orders, $current_page, $per_page);
 				$orders     = $paged['items'];
 				$pages      = $paged['total_pages'];
 			} else {
 				$query_args = [
-					'limit'    => self::PER_PAGE,
+					'limit'    => $per_page,
 					'page'     => $current_page,
 					'paginate' => true,
 					'orderby'  => 'date',
@@ -340,19 +341,20 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		private static function render_products_list(): void {
 			$endpoint     = 'admin_products';
 			$current_page = self::get_current_page();
+			$per_page     = self::get_per_page_limit();
 			$search       = self::get_search_query();
 			$total_pages = 1;
 	
 			if ($search !== '') {
 				$matching_ids = self::search_product_ids($search);
-				$paged        = self::paginate_items($matching_ids, $current_page, self::PER_PAGE);
+				$paged        = self::paginate_items($matching_ids, $current_page, $per_page);
 				$product_ids  = $paged['items'];
 				$total_pages  = $paged['total_pages'];
 			} else {
 				$query = new WP_Query([
 					'post_type'      => ['product', 'product_variation'],
 					'post_status'    => ['publish', 'private'],
-					'posts_per_page' => self::PER_PAGE,
+					'posts_per_page' => $per_page,
 					'paged'          => $current_page,
 					'orderby'        => 'date',
 					'order'          => 'DESC',
@@ -497,18 +499,19 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		private static function render_coupons_list(): void {
 			$endpoint     = 'admin_coupons';
 			$current_page = self::get_current_page();
+			$per_page     = self::get_per_page_limit();
 			$search       = self::get_search_query();
 			$total_pages = 1;
 			if ($search !== '') {
 				$matching_ids = self::search_coupon_ids($search);
-				$paged        = self::paginate_items($matching_ids, $current_page, self::PER_PAGE);
+				$paged        = self::paginate_items($matching_ids, $current_page, $per_page);
 				$coupon_ids   = $paged['items'];
 				$total_pages  = $paged['total_pages'];
 			} else {
 				$query = new WP_Query([
 					'post_type'      => 'shop_coupon',
 					'post_status'    => ['publish', 'private', 'draft'],
-					'posts_per_page' => self::PER_PAGE,
+					'posts_per_page' => $per_page,
 					'paged'          => $current_page,
 					'orderby'        => 'date',
 					'order'          => 'DESC',
@@ -622,16 +625,17 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		private static function render_users_list(): void {
 			$endpoint     = 'admin_users';
 			$current_page = self::get_current_page();
+			$per_page     = self::get_per_page_limit();
 			$search       = self::get_search_query();
 			if ($search !== '') {
 				$matching_users = self::search_users($search);
-				$paged          = self::paginate_items($matching_users, $current_page, self::PER_PAGE);
+				$paged          = self::paginate_items($matching_users, $current_page, $per_page);
 				$users          = $paged['items'];
 				$pages          = $paged['total_pages'];
 			} else {
-				$offset = ($current_page - 1) * self::PER_PAGE;
+				$offset = ($current_page - 1) * $per_page;
 				$query  = new WP_User_Query([
-					'number'      => self::PER_PAGE,
+					'number'      => $per_page,
 					'offset'      => $offset,
 					'orderby'     => 'registered',
 					'order'       => 'DESC',
@@ -639,7 +643,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 				]);
 				$users = $query->get_results();
 				$total = (int) $query->get_total();
-				$pages = (int) ceil($total / self::PER_PAGE);
+				$pages = (int) ceil($total / $per_page);
 				if ($pages < 1) {
 					$pages = 1;
 				}
@@ -735,7 +739,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			}
 
 			$endpoint             = 'admin_activity';
-			$per_page             = self::PER_PAGE;
+			$per_page             = self::get_per_page_limit();
 			$current_page         = self::get_current_page();
 			$offset               = ($current_page - 1) * $per_page;
 			$search               = self::get_search_query();

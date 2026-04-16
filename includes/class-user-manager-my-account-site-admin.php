@@ -11,7 +11,9 @@ if (!defined('ABSPATH')) {
 require_once __DIR__ . '/my-account/trait-user-manager-my-account-site-admin-renderers.php';
 final class User_Manager_My_Account_Site_Admin {
 	use User_Manager_My_Account_Site_Admin_Renderers_Trait;
-	private const PER_PAGE = 20;
+	private const DEFAULT_PER_PAGE = 20;
+	private const MIN_PER_PAGE = 1;
+	private const MAX_PER_PAGE = 200;
 	private const DEBUG_PARAM = 'um_my_account_admin_debug';
 	private const LINE_COUNT_CACHE_META_KEY = '_um_text_file_line_count_cache';
 	private const LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY = '_um_text_file_line_count_cache_number_only';
@@ -3233,6 +3235,22 @@ final class User_Manager_My_Account_Site_Admin {
 	 */
 	private static function get_activity_action_filter_query_arg(): string {
 		return isset($_GET['ua_action_filter']) ? sanitize_text_field(wp_unslash($_GET['ua_action_filter'])) : '';
+	}
+
+	/**
+	 * Resolve per-page limit for My Account Admin list views.
+	 *
+	 * @return int
+	 */
+	private static function get_per_page_limit(): int {
+		$settings = User_Manager_Core::get_settings();
+		$value = isset($settings['my_account_admin_items_per_page'])
+			? absint($settings['my_account_admin_items_per_page'])
+			: self::DEFAULT_PER_PAGE;
+		if ($value < self::MIN_PER_PAGE) {
+			$value = self::DEFAULT_PER_PAGE;
+		}
+		return max(self::MIN_PER_PAGE, min(self::MAX_PER_PAGE, $value));
 	}
 
 	/**

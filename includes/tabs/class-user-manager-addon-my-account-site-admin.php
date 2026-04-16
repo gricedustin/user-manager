@@ -43,6 +43,11 @@ class User_Manager_Addon_My_Account_Site_Admin {
 				</div>
 				<div id="um-my-account-site-admin-fields" style="<?php echo $is_enabled ? '' : 'display:none;'; ?>">
 				<div class="um-form-field">
+					<label for="um-my-account-admin-items-per-page"><?php esc_html_e('Rows per page in My Account Admin lists', 'user-manager'); ?></label>
+					<input type="number" name="my_account_admin_items_per_page" id="um-my-account-admin-items-per-page" class="small-text" min="1" max="200" value="<?php echo esc_attr(isset($settings['my_account_admin_items_per_page']) ? (int) $settings['my_account_admin_items_per_page'] : 20); ?>" />
+					<p class="description"><?php esc_html_e('Controls pagination size for My Account Admin Orders, Products, Coupons, Users, and Activity tables.', 'user-manager'); ?></p>
+				</div>
+				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="my_account_admin_order_viewer_enabled" id="um-my-account-admin-order-viewer-enabled" value="1" <?php checked($settings['my_account_admin_order_viewer_enabled'] ?? false); ?> />
 						<?php esc_html_e('My Account Admin Order Viewer', 'user-manager'); ?>

@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.247 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new My Account Admin add-on setting: "Items per page in My Account Admin lists" so pagination size can be configured instead of using a fixed default.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('My Account Admin Orders, Products, Coupons, Users, and Activity list queries now use the saved per-page setting for pagination/count calculations.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.246 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Removed legacy My Account Admin disabled-control styling for `.woocommerce-MyAccount-content input/select/textarea/button[type="submit"]` and added explicit control-enable safeguards so those fields are clickable/fully visible in My Account Admin screens.', 'user-manager'); ?></li>
