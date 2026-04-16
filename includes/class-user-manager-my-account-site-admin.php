@@ -3328,6 +3328,35 @@ final class User_Manager_My_Account_Site_Admin {
 				cursor: pointer;
 				opacity: 1 !important;
 			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-wrap {
+				position: relative;
+				z-index: 5;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form {
+				display: inline-flex !important;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 8px;
+				margin: 0;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form * {
+				pointer-events: auto !important;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form select,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form button,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form .button {
+				opacity: 1 !important;
+				filter: none !important;
+				cursor: pointer;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form select {
+				min-width: 220px;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form select:disabled,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form button:disabled {
+				cursor: not-allowed;
+			}
 			table.express_checkout_order_approvals {
 				width: 100%;
 				border-collapse: collapse;

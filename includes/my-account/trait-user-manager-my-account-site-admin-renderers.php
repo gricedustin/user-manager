@@ -950,8 +950,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 
 		private static function render_activity_action_filter_form(string $endpoint, array $all_actions, string $action_filter, string $search): void {
 			$base_url = self::get_endpoint_url($endpoint);
-			echo '<div style="margin-bottom: 16px;">';
-			echo '<form method="get" action="' . esc_url($base_url) . '" style="display:inline-block;">';
+			echo '<div class="um-my-account-admin-activity-filter-wrap" style="margin-bottom: 16px;">';
+			echo '<form class="um-my-account-admin-activity-filter-form" method="get" action="' . esc_url($base_url) . '" style="display:inline-block;">';
 			if ($search !== '') {
 				echo '<input type="hidden" name="um_search" value="' . esc_attr($search) . '" />';
 			}

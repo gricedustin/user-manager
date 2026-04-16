@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.243 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed My Account Admin Activity "Filter by Action" controls rendering as non-clickable/disabled on some front-end themes by adding dedicated filter form wrapper/classes and explicit interactivity CSS (pointer-events, opacity, z-index, and button/select targeting).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Activity filter form markup to use dedicated classes so form-control styles can be scoped safely without affecting other My Account admin tools.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.242 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated My Account Admin Activity Viewer hidden-email behavior so "Partial Match Emails to Hide on Front End" now excludes matching users\' activity rows from the entire front-end query results (instead of only masking email text).', 'user-manager'); ?></li>

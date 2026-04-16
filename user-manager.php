@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.242
+ * Version: 2.5.243
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.243 - March 16, 2026
+ * - Fixed My Account Admin Activity "Filter by Action" controls rendering as disabled/non-clickable in some themes by adding dedicated filter-form classes and reinforced interactive styles.
+ * - Added explicit front-end CSS safeguards for the activity filter wrapper/form/controls (`pointer-events`, `opacity`, `cursor`, and stacking context) so dropdown and Apply Filter button remain clickable.
+ *
  * 2.5.242 - March 16, 2026
  * - Updated My Account Admin Activity Viewer "Partial Match Emails to Hide on Front End" behavior to fully exclude matching email records from frontend Admin: Activity results.
  * - Applied partial-email exclusion at SQL query level (count, row fetch, and action filter options) so matching users/actions are not included anywhere in front-end activity output.
