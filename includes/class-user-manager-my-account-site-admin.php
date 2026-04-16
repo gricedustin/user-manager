@@ -66,7 +66,6 @@ final class User_Manager_My_Account_Site_Admin {
 		add_action('woocommerce_account_admin_coupons_endpoint', [__CLASS__, 'render_admin_coupons_endpoint']);
 		add_action('woocommerce_account_admin_users_endpoint', [__CLASS__, 'render_admin_users_endpoint']);
 		add_action('woocommerce_account_admin_activity_endpoint', [__CLASS__, 'render_admin_activity_endpoint']);
-		add_action('admin_init', [__CLASS__, 'maybe_redirect_selected_wp_admin_users_to_my_account'], 1, 0);
 	}
 
 	/**
@@ -1671,7 +1670,9 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		// This redirect rule is only for WP Administrators.
-		if (!current_user_can('administrator')) {
+		$current_roles = is_array($current_user->roles) ? array_map('sanitize_key', $current_user->roles) : [];
+		$is_wp_administrator = in_array('administrator', $current_roles, true) || current_user_can('manage_options');
+		if (!$is_wp_administrator) {
 			return;
 		}
 

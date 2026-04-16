@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.241 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed WP-Admin redirect enforcement for "WP Administrators to Redirect to My Account if Accessing WP-Admin" by registering the redirect check at core/plugin bootstrap so it runs for wp-admin requests even when My Account endpoint hooks are not initialized.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Hardened administrator detection in the redirect guard to use explicit administrator role matching with a `manage_options` fallback, so listed administrator usernames/emails/user IDs are redirected reliably.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.240 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Updated My Account Admin Activity Viewer role-change badge copy from "Role Review" to "User role change found in past" in both settings label text and table output badge text.', 'user-manager'); ?></li>

@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.240';
+	const VERSION = '2.5.241';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -233,6 +233,10 @@ final class User_Manager_Core {
 			// Use a late priority so we can adjust columns after WooCommerce or other plugins.
 			add_filter('manage_edit-shop_coupon_columns', [__CLASS__, 'add_coupon_email_column'], 99);
 			add_action('manage_shop_coupon_posts_custom_column', [__CLASS__, 'render_coupon_email_column'], 10, 2);
+		}
+		if (class_exists('User_Manager_My_Account_Site_Admin')) {
+			// Enforce the wp-admin redirect list even when endpoint viewers are disabled.
+			add_action('admin_init', ['User_Manager_My_Account_Site_Admin', 'maybe_redirect_selected_wp_admin_users_to_my_account'], 1, 0);
 		}
 		if (class_exists('User_Manager_My_Account_Site_Admin') && self::is_my_account_site_admin_enabled($settings)) {
 			User_Manager_My_Account_Site_Admin::init();
