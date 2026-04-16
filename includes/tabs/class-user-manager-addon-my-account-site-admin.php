@@ -250,7 +250,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 					<div class="um-form-field" id="um-my-account-admin-activity-viewer-role-review-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label>
 							<input type="checkbox" name="my_account_admin_activity_viewer_role_review_enabled" id="um-my-account-admin-activity-viewer-role-review-enabled" value="1" <?php checked($settings['my_account_admin_activity_viewer_role_review_enabled'] ?? false); ?> />
-							<?php esc_html_e('Display "Role Review" Flag on Users where they have another record in the log with a different Role', 'user-manager'); ?>
+							<?php esc_html_e('Display "User role change found in past" Flag on Users where they have another record in the log with a different Role', 'user-manager'); ?>
 						</label>
 					</div>
 				</div>

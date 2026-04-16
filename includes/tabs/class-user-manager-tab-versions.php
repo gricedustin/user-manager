@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.240 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated My Account Admin Activity Viewer role-change badge copy from "Role Review" to "User role change found in past" in both settings label text and table output badge text.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixed Admin: Activity action filtering by replacing auto-submit-only dropdown behavior with an explicit Apply Filter submit button, preserving selected action values reliably.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Simplified Admin: Activity table columns by removing Username, Time Ago, URL, IP, User Agent, and Edit User button columns; renamed "Login Time" column label to "Timestamp".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.239 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Invoice pages now display a paid-status notice near the top (similar to the approval notice) when an order is paid.', 'user-manager'); ?></li>

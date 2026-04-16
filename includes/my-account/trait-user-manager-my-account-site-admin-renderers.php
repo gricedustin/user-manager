@@ -739,7 +739,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			$current_page         = self::get_current_page();
 			$offset               = ($current_page - 1) * $per_page;
 			$search               = self::get_search_query();
-			$action_filter        = self::get_activity_action_filter_query_arg();
+			$action_filter        = trim(self::get_activity_action_filter_query_arg());
 			$allowed_actions      = self::get_activity_allowed_actions_from_settings();
 			$hidden_email_filters = self::get_activity_hidden_email_partials();
 			$role_review_enabled  = self::is_activity_role_review_enabled();
@@ -772,7 +772,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 				}
 
 				if ($action_filter !== '') {
-					$where_parts[] = 'h.action = %s';
+					$where_parts[] = 'TRIM(h.action) = %s';
 					$params[] = $action_filter;
 				}
 
@@ -870,17 +870,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 
 			echo '<table class="express_checkout_order_approvals woocommerce_my_account_admin_tools woocommerce_my_account_admin_tools_users">';
 			echo '<thead><tr>';
-			echo '<th>' . esc_html__('Action', 'user-manager') . '</th>';
 			echo '<th>' . esc_html__('User', 'user-manager') . '</th>';
 			echo '<th>' . esc_html__('Email', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('Username', 'user-manager') . '</th>';
 			echo '<th>' . esc_html__('Roles', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('Login Time', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('Time Ago', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('URL', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('IP', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('User Agent', 'user-manager') . '</th>';
-			echo '<th></th>';
+			echo '<th>' . esc_html__('Timestamp', 'user-manager') . '</th>';
+			echo '<th>' . esc_html__('Action', 'user-manager') . '</th>';
 			echo '</tr></thead><tbody>';
 
 			foreach ($entries as $entry) {
@@ -889,7 +883,6 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 				$has_role_review = !empty($entry['role_review']);
 				$user_id = isset($entry['user_id']) ? (int) $entry['user_id'] : 0;
 				echo '<tr class="express_checkout_order_approvals_row">';
-				echo '<td class="middle">' . esc_html((string) ($entry['action'] ?? '')) . '</td>';
 				echo '<td class="middle">';
 				$display_user = (string) ($entry['display_name'] ?? '');
 				if ($display_user === '') {
@@ -911,42 +904,16 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 				echo '</td>';
 				$email = (string) ($entry['user_email'] ?? '');
 				echo '<td class="middle">' . ($email !== '' ? esc_html($email) : '&mdash;') . '</td>';
-				$user_login = (string) ($entry['user_login'] ?? '');
-				echo '<td class="middle">' . ($user_login !== '' ? esc_html($user_login) : '&mdash;') . '</td>';
 				echo '<td class="middle">';
 				echo $roles_text !== '' ? esc_html($roles_text) : '&mdash;';
 				if ($has_role_review) {
-					echo ' <span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:#f0f6ff;color:#0a4b78;font-size:11px;font-weight:600;line-height:1.4;">' . esc_html__('Role Review', 'user-manager') . '</span>';
+					echo ' <span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:#f0f6ff;color:#0a4b78;font-size:11px;font-weight:600;line-height:1.4;">' . esc_html__('User role change found in past', 'user-manager') . '</span>';
 				}
 				echo '</td>';
 				echo '<td class="middle">';
 				echo $ts > 0 ? esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $ts)) : '&mdash;';
 				echo '</td>';
-				echo '<td class="middle">' . ($ts > 0 ? esc_html(User_Manager_Core::nice_time($ts)) : '&mdash;') . '</td>';
-				echo '<td class="middle" style="max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">';
-				$url = (string) ($entry['url'] ?? '');
-				if ($url !== '') {
-					echo '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html($url) . '</a>';
-				} else {
-					echo '&mdash;';
-				}
-				echo '</td>';
-				$ip_address = (string) ($entry['ip_address'] ?? '');
-				echo '<td class="middle"><code>' . esc_html($ip_address !== '' ? $ip_address : '--') . '</code></td>';
-				$user_agent = (string) ($entry['user_agent'] ?? '');
-				echo '<td class="middle" style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' . esc_attr($user_agent) . '">' . esc_html($user_agent !== '' ? $user_agent : '--') . '</td>';
-				echo '<td class="middle">';
-				if ($user_id > 0) {
-					$edit_user_url = get_edit_user_link($user_id);
-					if (is_string($edit_user_url) && $edit_user_url !== '') {
-						echo '<a class="button button-small" href="' . esc_url($edit_user_url) . '">' . esc_html__('Edit User', 'user-manager') . '</a>';
-					} else {
-						echo '&mdash;';
-					}
-				} else {
-					echo '&mdash;';
-				}
-				echo '</td>';
+				echo '<td class="middle">' . esc_html((string) ($entry['action'] ?? '')) . '</td>';
 				echo '</tr>';
 			}
 
@@ -962,16 +929,17 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 				echo '<input type="hidden" name="um_search" value="' . esc_attr($search) . '" />';
 			}
 			echo '<label for="um-my-account-activity-action-filter" style="margin-right:8px;"><strong>' . esc_html__('Filter by Action:', 'user-manager') . '</strong></label>';
-			echo '<select name="ua_action_filter" id="um-my-account-activity-action-filter" onchange="this.form.submit();" style="min-width:220px;">';
+			echo '<select name="ua_action_filter" id="um-my-account-activity-action-filter" style="min-width:220px;">';
 			echo '<option value="">' . esc_html__('All Actions', 'user-manager') . '</option>';
 			foreach ($all_actions as $action_option) {
-				$action_option = sanitize_text_field((string) $action_option);
+				$action_option = trim(sanitize_text_field((string) $action_option));
 				if ($action_option === '') {
 					continue;
 				}
 				echo '<option value="' . esc_attr($action_option) . '" ' . selected($action_filter, $action_option, false) . '>' . esc_html($action_option) . '</option>';
 			}
 			echo '</select>';
+			echo ' <button type="submit" class="button">' . esc_html__('Apply Filter', 'user-manager') . '</button>';
 			if ($action_filter !== '') {
 				$clear_args = [];
 				if ($search !== '') {
@@ -996,8 +964,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 
 			$actions = [];
 			foreach ($raw_actions as $raw_action) {
-				$action = sanitize_text_field((string) $raw_action);
-				$action = trim($action);
+				$action = trim(sanitize_text_field((string) $raw_action));
 				if ($action === '') {
 					continue;
 				}

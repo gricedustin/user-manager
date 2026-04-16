@@ -2,15 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.239
+ * Version: 2.5.240
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
- * 2.5.239 - March 16, 2026
- * - Invoice output now shows a paid-status notice near the top (similar to approval notices) when an order is paid, including paid date/time and payment method.
- * - Added paid-date and payment-method fallbacks so paid notices still render safely when one of those values is unavailable.
+ * 2.5.240 - March 16, 2026
+ * - Updated My Account Admin Activity Viewer "Role Review" wording to "User role change found in past" in both settings and table flag output.
+ * - Fixed My Account Admin Activity Viewer action filtering submit behavior by replacing auto-submit onchange with an explicit "Apply Filter" button flow.
+ * - Simplified Activity table columns by removing Username, Time Ago, URL, IP, User Agent, and Edit User action column; renamed "Login Time" to "Timestamp".
  *
  * 2.5.237 - March 16, 2026
  * - Added new My Account Admin Activity Viewer setting: "WP Administrators to Redirect to My Account if Accessing WP-Admin" (comma-separated usernames/emails/user IDs).
