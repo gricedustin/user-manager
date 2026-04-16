@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.249 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new My Account Admin setting, "Add Download to CSV Button below Paging Buttons," directly beneath the rows-per-page control.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, Admin: Orders, Products, Coupons, Users, and Activity now render an Export to CSV button below pagination controls in My Account.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('CSV exports include all matching rows across all pages and preserve active search and filter selections (including order-status and activity-action filters).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.248 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Moved the wp-admin redirect-list setting out of the My Account Admin Activity Viewer subsection into its own My Account Admin card-level setting so it applies addon-wide.', 'user-manager'); ?></li>

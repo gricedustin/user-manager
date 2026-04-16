@@ -9,10 +9,11 @@ if (!defined('ABSPATH')) {
 
 trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		public static function render_admin_orders_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('orders')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('orders');
+			self::render_shared_styles();
 			self::maybe_handle_order_approval_action();
 			self::render_order_approval_notice();
 	
@@ -28,10 +29,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		
 
 		public static function render_admin_products_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('products')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('products');
+			self::render_shared_styles();
 	
 			$product_id = isset($_GET['id']) ? absint(wp_unslash($_GET['id'])) : 0;
 			if ($product_id > 0) {
@@ -45,10 +47,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		
 
 		public static function render_admin_coupons_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('coupons')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('coupons');
+			self::render_shared_styles();
 	
 			$coupon_id = isset($_GET['id']) ? absint(wp_unslash($_GET['id'])) : 0;
 			if ($coupon_id > 0) {
@@ -62,10 +65,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		
 
 		public static function render_admin_users_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('users')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('users');
+			self::render_shared_styles();
 	
 			$user_id = isset($_GET['id']) ? absint(wp_unslash($_GET['id'])) : 0;
 			if ($user_id > 0) {
@@ -77,10 +81,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		}
 
 		public static function render_admin_activity_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('activity')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('activity');
+			self::render_shared_styles();
 
 			self::render_activity_list();
 		}
@@ -226,6 +231,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 	
 		
@@ -431,6 +437,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $total_pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 	
 		
@@ -569,6 +576,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $total_pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 	
 		
@@ -690,6 +698,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 	
 		
@@ -891,11 +900,13 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 
 			if (!$table_exists) {
 				self::print_error_notice(__('User activity table was not found yet. Activity appears after log entries are created.', 'user-manager'));
+				self::render_my_account_admin_csv_export_button($endpoint);
 				return;
 			}
 
 			if (empty($entries)) {
 				echo '<p class="woocommerce-info">' . esc_html__('No user activity found for the selected filters.', 'user-manager') . '</p>';
+				self::render_my_account_admin_csv_export_button($endpoint);
 				return;
 			}
 
@@ -950,6 +961,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $total_pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 
 		private static function render_activity_action_filter_form(string $endpoint, array $all_actions, string $action_filter, string $search): void {

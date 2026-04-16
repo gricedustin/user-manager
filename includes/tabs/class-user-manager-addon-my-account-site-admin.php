@@ -48,6 +48,13 @@ class User_Manager_Addon_My_Account_Site_Admin {
 					<p class="description"><?php esc_html_e('Controls pagination size for My Account Admin Orders, Products, Coupons, Users, and Activity tables.', 'user-manager'); ?></p>
 				</div>
 				<div class="um-form-field">
+					<label>
+						<input type="checkbox" name="my_account_admin_enable_csv_export_button" id="um-my-account-admin-enable-csv-export-button" value="1" <?php checked($settings['my_account_admin_enable_csv_export_button'] ?? false); ?> />
+						<?php esc_html_e('Add Download to CSV Button below Paging Buttons', 'user-manager'); ?>
+					</label>
+					<p class="description"><?php esc_html_e('Adds an Export to CSV button to My Account Admin Orders, Products, Coupons, Users, and Activity list screens. Downloads all rows across all pages for the active filters/search.', 'user-manager'); ?></p>
+				</div>
+				<div class="um-form-field">
 					<label for="um-my-account-admin-wp-admin-redirect-list"><?php esc_html_e('WP Administrators to Redirect to My Account if Accessing WP-Admin and Remove WP-Admin Top Bar on Front End?', 'user-manager'); ?></label>
 					<input type="text" name="my_account_admin_wp_admin_redirect_list" id="um-my-account-admin-wp-admin-redirect-list" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_wp_admin_redirect_list'] ?? ($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'] ?? '')); ?>" placeholder="adminuser, admin@example.com, 123" />
 					<p class="description"><?php esc_html_e('Comma-separated list of WP Administrator usernames, emails, or user IDs. Matching users are redirected away from wp-admin to My Account and the WP-Admin top bar is hidden for them on the front end. Leaves roles unchanged. If empty, no users are affected.', 'user-manager'); ?></p>

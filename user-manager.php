@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.248
+ * Version: 2.5.249
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.249 - March 16, 2026
+ * - Added new My Account Admin setting: "Add Download to CSV Button below Paging Buttons" directly below the rows-per-page setting.
+ * - Added optional "Export to CSV" buttons under pagination in Admin: Orders, Products, Coupons, Users, and Activity My Account list views.
+ * - CSV exports now download all matching rows across all pages while preserving current search/filter context for each list.
+ *
  * 2.5.248 - March 16, 2026
  * - Moved "WP Administrators to Redirect to My Account if Accessing WP-Admin" out of the Admin: Activity sub-settings into its own My Account Admin addon-level field so it applies across the full addon.
  * - Updated the field label to: "WP Administrators to Redirect to My Account if Accessing WP-Admin and Remove WP-Admin Top Bar on Front End?"

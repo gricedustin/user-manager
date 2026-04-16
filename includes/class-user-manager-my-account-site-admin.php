@@ -1920,6 +1920,416 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Whether My Account Admin list CSV exports are enabled.
+	 */
+	private static function is_my_account_admin_csv_export_enabled(): bool {
+		$settings = User_Manager_Core::get_settings();
+		return !empty($settings['my_account_admin_enable_csv_export_button']);
+	}
+
+	/**
+	 * Build a CSV export URL for a My Account Admin list endpoint.
+	 *
+	 * @param string $endpoint Endpoint key.
+	 * @param array  $query_args Optional extra query args to preserve.
+	 * @return string
+	 */
+	private static function get_my_account_admin_csv_export_url(string $endpoint, array $query_args = []): string {
+		$args = $query_args;
+		$args['um_export_csv'] = '1';
+		return self::get_endpoint_url($endpoint, $args);
+	}
+
+	/**
+	 * Render the CSV export button below list pagination controls.
+	 *
+	 * @param string $endpoint Endpoint key.
+	 */
+	private static function render_my_account_admin_csv_export_button(string $endpoint): void {
+		if (!self::is_my_account_admin_csv_export_enabled()) {
+			return;
+		}
+		if (!in_array($endpoint, ['admin_orders', 'admin_products', 'admin_coupons', 'admin_users', 'admin_activity'], true)) {
+			return;
+		}
+
+		$args = self::get_list_context_query_args();
+		unset($args['um_page']);
+		$url = self::get_my_account_admin_csv_export_url($endpoint, $args);
+
+		echo '<div class="um-my-account-admin-export-csv-wrap" style="margin-top:12px;">';
+		echo '<a class="button button-secondary um-my-account-admin-export-csv-button" href="' . esc_url($url) . '">' . esc_html__('Export to CSV', 'user-manager') . '</a>';
+		echo '</div>';
+	}
+
+	/**
+	 * Handle My Account Admin CSV export download for an area.
+	 *
+	 * @param string $area_key Area key (orders/products/coupons/users/activity).
+	 */
+	private static function maybe_handle_my_account_admin_csv_export_download(string $area_key): void {
+		if (!self::is_my_account_admin_csv_export_enabled()) {
+			return;
+		}
+		if (!isset($_GET['um_export_csv']) || (string) wp_unslash($_GET['um_export_csv']) !== '1') {
+			return;
+		}
+		if (!in_array($area_key, ['orders', 'products', 'coupons', 'users', 'activity'], true)) {
+			return;
+		}
+
+		if (!self::ensure_area_access($area_key)) {
+			exit;
+		}
+
+		$filename = 'my-account-admin-' . $area_key . '-' . gmdate('Y-m-d-His') . '.csv';
+		nocache_headers();
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename="' . sanitize_file_name($filename) . '"');
+		header('X-Content-Type-Options: nosniff');
+
+		$output = fopen('php://output', 'w');
+		if ($output === false) {
+			exit;
+		}
+
+		$rows = self::get_my_account_admin_csv_rows($area_key);
+		self::stream_my_account_admin_csv_rows($output, $rows);
+
+		fclose($output);
+		exit;
+	}
+
+	/**
+	 * Stream rows as CSV content.
+	 *
+	 * @param resource $output Open output stream.
+	 * @param array<int,array<int,string>> $rows CSV rows.
+	 */
+	private static function stream_my_account_admin_csv_rows($output, array $rows): void {
+		foreach ($rows as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+			fputcsv($output, $row);
+		}
+	}
+
+	/**
+	 * Build CSV rows for a My Account Admin area.
+	 *
+	 * @param string $area_key Area key.
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_csv_rows(string $area_key): array {
+		if ($area_key === 'orders') {
+			return self::get_my_account_admin_orders_csv_rows();
+		}
+		if ($area_key === 'products') {
+			return self::get_my_account_admin_products_csv_rows();
+		}
+		if ($area_key === 'coupons') {
+			return self::get_my_account_admin_coupons_csv_rows();
+		}
+		if ($area_key === 'users') {
+			return self::get_my_account_admin_users_csv_rows();
+		}
+		if ($area_key === 'activity') {
+			return self::get_my_account_admin_activity_csv_rows();
+		}
+		return [];
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_orders_csv_rows(): array {
+		$search = self::get_search_query();
+		$status_filters = self::get_configured_order_status_filters();
+		$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
+		$orders = [];
+
+		if ($search !== '') {
+			$orders = self::search_orders($search, $selected_status_key);
+		} else {
+			$query_args = [
+				'limit'    => -1,
+				'paginate' => false,
+				'orderby'  => 'date',
+				'order'    => 'DESC',
+			];
+			if ($selected_status_key !== '') {
+				$status_slug = preg_replace('/^wc-/', '', $selected_status_key);
+				$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+				if ($status_slug !== '') {
+					$query_args['status'] = [$status_slug];
+				}
+			}
+			$result = wc_get_orders($query_args);
+			if (is_array($result)) {
+				$orders = $result;
+			}
+		}
+
+		$rows = [];
+		$rows[] = ['Order ID', 'Order Number', 'Date', 'Status', 'Billing Email'];
+		foreach ($orders as $order) {
+			if (!$order instanceof WC_Order) {
+				continue;
+			}
+			$date_created = $order->get_date_created();
+			$rows[] = [
+				(string) $order->get_id(),
+				(string) $order->get_order_number(),
+				$date_created ? (string) $date_created->date_i18n('Y-m-d H:i:s') : '',
+				(string) $order->get_status(),
+				(string) $order->get_billing_email(),
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_products_csv_rows(): array {
+		$search = self::get_search_query();
+		$product_ids = [];
+		if ($search !== '') {
+			$product_ids = self::search_product_ids($search);
+		} else {
+			$query = new WP_Query([
+				'post_type'      => ['product', 'product_variation'],
+				'post_status'    => ['publish', 'private'],
+				'posts_per_page' => -1,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+			]);
+			$product_ids = is_array($query->posts) ? $query->posts : [];
+		}
+
+		$rows = [];
+		$rows[] = ['Product ID', 'Type', 'Product Name', 'Variation', 'SKU', 'Inventory', 'Price', 'Status', 'Created'];
+		foreach ($product_ids as $post_id) {
+			$product = wc_get_product($post_id);
+			if (!$product) {
+				continue;
+			}
+			$is_variation = $product->is_type('variation');
+			$product_name = $is_variation ? (string) get_the_title((int) $product->get_parent_id()) : (string) $product->get_name();
+			$variation = $is_variation ? (string) wp_strip_all_tags(wc_get_formatted_variation($product, true, false, false)) : '';
+			$rows[] = [
+				(string) $product->get_id(),
+				$is_variation ? 'variation' : 'product',
+				$product_name,
+				$variation,
+				(string) $product->get_sku(),
+				(string) self::get_product_stock_display($product),
+				(string) wp_strip_all_tags($product->get_price_html()),
+				(string) $product->get_status(),
+				(string) get_post_time('Y-m-d H:i:s', false, (int) $product->get_id()),
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_coupons_csv_rows(): array {
+		$search = self::get_search_query();
+		$coupon_ids = [];
+		if ($search !== '') {
+			$coupon_ids = self::search_coupon_ids($search);
+		} else {
+			$query = new WP_Query([
+				'post_type'      => 'shop_coupon',
+				'post_status'    => ['publish', 'private', 'draft'],
+				'posts_per_page' => -1,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+			]);
+			$coupon_ids = is_array($query->posts) ? $query->posts : [];
+		}
+
+		$rows = [];
+		$rows[] = ['Coupon ID', 'Coupon Code', 'Amount', 'Type', 'Free Shipping', 'Used', 'Limit', 'Expiration', 'Created'];
+		foreach ($coupon_ids as $coupon_id) {
+			$coupon = new WC_Coupon((int) $coupon_id);
+			if (!$coupon || !$coupon->get_id()) {
+				continue;
+			}
+			$expires = $coupon->get_date_expires();
+			$rows[] = [
+				(string) $coupon->get_id(),
+				(string) $coupon->get_code(),
+				(string) $coupon->get_amount(),
+				(string) $coupon->get_discount_type(),
+				$coupon->get_free_shipping() ? 'yes' : 'no',
+				(string) $coupon->get_usage_count(),
+				(string) $coupon->get_usage_limit(),
+				$expires ? (string) $expires->date_i18n('Y-m-d H:i:s') : '',
+				(string) get_post_time('Y-m-d H:i:s', false, (int) $coupon->get_id()),
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_users_csv_rows(): array {
+		$search = self::get_search_query();
+		$users = [];
+		if ($search !== '') {
+			$users = self::search_users($search);
+		} else {
+			$batch_size = 1000;
+			$offset     = 0;
+			while (true) {
+				$query = new WP_User_Query([
+					'number'      => $batch_size,
+					'offset'      => $offset,
+					'orderby'     => 'registered',
+					'order'       => 'DESC',
+					'count_total' => false,
+				]);
+				$results = $query->get_results();
+				if (!is_array($results) || empty($results)) {
+					break;
+				}
+				foreach ($results as $result_user) {
+					if ($result_user instanceof WP_User) {
+						$users[] = $result_user;
+					}
+				}
+				if (count($results) < $batch_size) {
+					break;
+				}
+				$offset += $batch_size;
+			}
+		}
+
+		$rows = [];
+		$rows[] = ['User ID', 'Login', 'Email', 'Display Name', 'Roles', 'Registered'];
+		foreach ($users as $user) {
+			if (!$user instanceof WP_User) {
+				continue;
+			}
+			$rows[] = [
+				(string) $user->ID,
+				(string) $user->user_login,
+				(string) $user->user_email,
+				(string) $user->display_name,
+				implode(', ', (array) $user->roles),
+				(string) $user->user_registered,
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_activity_csv_rows(): array {
+		global $wpdb;
+		if (!$wpdb instanceof wpdb) {
+			return [['User ID', 'User', 'Email', 'Roles', 'Timestamp', 'Action']];
+		}
+
+		$search               = self::get_search_query();
+		$action_filter        = trim(self::get_activity_action_filter_query_arg());
+		$allowed_actions      = self::get_activity_allowed_actions_from_settings();
+		$hidden_email_filters = self::get_activity_hidden_email_partials();
+		$table                = $wpdb->prefix . 'um_user_activity';
+		$table_exists         = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table;
+		if (!$table_exists) {
+			return [['User ID', 'User', 'Email', 'Roles', 'Timestamp', 'Action']];
+		}
+
+		if (!empty($allowed_actions) && !in_array($action_filter, $allowed_actions, true)) {
+			$action_filter = '';
+		}
+
+		$where_parts = ['1=1'];
+		$params = [];
+
+		if (!empty($allowed_actions)) {
+			$allowed_placeholders = implode(',', array_fill(0, count($allowed_actions), '%s'));
+			$where_parts[] = "h.action IN ({$allowed_placeholders})";
+			foreach ($allowed_actions as $allowed_action) {
+				$params[] = $allowed_action;
+			}
+		}
+
+		if ($action_filter !== '') {
+			$where_parts[] = 'TRIM(h.action) = %s';
+			$params[] = $action_filter;
+		}
+
+		if ($search !== '') {
+			$like = '%' . $wpdb->esc_like($search) . '%';
+			$where_parts[] = '(h.action LIKE %s OR h.url LIKE %s OR h.ip_address LIKE %s OR h.user_agent LIKE %s OR h.roles LIKE %s OR u.user_login LIKE %s OR u.user_email LIKE %s OR u.display_name LIKE %s OR CAST(h.user_id AS CHAR) LIKE %s)';
+			for ($i = 0; $i < 9; $i++) {
+				$params[] = $like;
+			}
+		}
+
+		if (!empty($hidden_email_filters)) {
+			foreach ($hidden_email_filters as $hidden_email_partial) {
+				$hidden_email_partial = trim((string) $hidden_email_partial);
+				if ($hidden_email_partial === '') {
+					continue;
+				}
+				$where_parts[] = "(u.user_email IS NULL OR u.user_email = '' OR u.user_email NOT LIKE %s)";
+				$params[] = '%' . $wpdb->esc_like($hidden_email_partial) . '%';
+			}
+		}
+
+		$where_sql = implode(' AND ', $where_parts);
+		$query_sql = "
+			SELECT h.user_id, h.action, h.roles, h.created_at, u.user_login, u.user_email, u.display_name
+			  FROM {$table} h
+			  LEFT JOIN {$wpdb->users} u ON h.user_id = u.ID
+			 WHERE {$where_sql}
+		  ORDER BY h.created_at DESC
+		";
+		$rows_raw = !empty($params)
+			? $wpdb->get_results($wpdb->prepare($query_sql, ...$params))
+			: $wpdb->get_results($query_sql);
+
+		$rows = [];
+		$rows[] = ['User ID', 'User', 'Email', 'Roles', 'Timestamp', 'Action'];
+		if (is_array($rows_raw)) {
+			foreach ($rows_raw as $row) {
+				$user_id = isset($row->user_id) ? (int) $row->user_id : 0;
+				$display_name = isset($row->display_name) ? (string) $row->display_name : '';
+				$user_login = isset($row->user_login) ? (string) $row->user_login : '';
+				$user_email = isset($row->user_email) ? (string) $row->user_email : '';
+				if ($display_name === '') {
+					$display_name = $user_email !== '' ? $user_email : $user_login;
+				}
+				$rows[] = [
+					$user_id > 0 ? (string) $user_id : '',
+					$display_name,
+					$user_email,
+					isset($row->roles) ? (string) $row->roles : '',
+					isset($row->created_at) ? (string) $row->created_at : '',
+					isset($row->action) ? (string) $row->action : '',
+				];
+			}
+		}
+
+		return $rows;
+	}
+
+	/**
 	 * Render a shared key/value row.
 	 *
 	 * @param string $label Label.

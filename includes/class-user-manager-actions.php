@@ -2775,6 +2775,7 @@ class User_Manager_Actions {
 				$settings['my_account_admin_items_per_page'] = isset($_POST['my_account_admin_items_per_page'])
 					? max(1, min(200, absint($_POST['my_account_admin_items_per_page'])))
 					: 20;
+				$settings['my_account_admin_enable_csv_export_button'] = isset($_POST['my_account_admin_enable_csv_export_button']) && $_POST['my_account_admin_enable_csv_export_button'] === '1';
 				$settings['my_account_site_admin_enabled'] = isset($_POST['my_account_site_admin_enabled']) && $_POST['my_account_site_admin_enabled'] === '1';
 				$settings['my_account_coupon_screen_enabled'] = isset($_POST['my_account_coupon_screen_enabled']) && $_POST['my_account_coupon_screen_enabled'] === '1';
 				$menu_title = isset($_POST['my_account_coupon_screen_menu_title']) ? sanitize_text_field(wp_unslash($_POST['my_account_coupon_screen_menu_title'])) : 'Coupons';
