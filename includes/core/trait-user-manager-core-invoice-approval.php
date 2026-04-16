@@ -494,6 +494,27 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		$invoice_remaining_due = (string) get_post_meta($order->get_id(), '_um_invoice_remaining_due', true);
 		$approval_data = $order->get_meta('_um_invoice_approval');
 		$has_approval = is_array($approval_data) && !empty($approval_data);
+		$is_paid = method_exists($order, 'is_paid') ? (bool) $order->is_paid() : false;
+		$payment_method_title = method_exists($order, 'get_payment_method_title')
+			? trim((string) $order->get_payment_method_title())
+			: '';
+		if ($payment_method_title === '' && method_exists($order, 'get_payment_method')) {
+			$payment_method_title = trim((string) $order->get_payment_method());
+		}
+		$paid_datetime = method_exists($order, 'get_date_paid') ? $order->get_date_paid() : null;
+		$paid_on = '';
+		if (is_object($paid_datetime) && method_exists($paid_datetime, 'getTimestamp')) {
+			$timestamp = (int) $paid_datetime->getTimestamp();
+			if ($timestamp > 0) {
+				$paid_on = wc_format_datetime(
+					$paid_datetime,
+					get_option('date_format') . ' ' . get_option('time_format')
+				);
+			}
+		}
+		if (!$is_paid && $paid_on !== '') {
+			$is_paid = true;
+		}
 
 		$billing_email = $order->get_billing_email();
 		$approval_enabled = self::invoice_is_approval_enabled_for_email((string) $billing_email, $settings);
@@ -576,6 +597,7 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		.invoice-approval-form{margin:24px 0;padding:18px;border:2px solid #ddd;border-radius:6px;background:#f9f9f9;}
 		.invoice-approval-form input[type="text"], .invoice-approval-form input[type="email"]{width:100%;max-width:420px;padding:8px;border:1px solid #ccc;border-radius:4px;}
 		.invoice-approval-notification{background:#d4edda;border:1px solid #c3e6cb;border-radius:6px;padding:14px;margin:16px 0;color:#155724;}
+		.invoice-payment-notification{background:#e8f4fd;border-color:#b6def8;color:#0b3f63;}
 		.invoice-address-edit{margin:16px 0 20px;}
 		.invoice-address-edit__panel{display:none;margin-top:8px;padding:12px;border:1px solid #ddd;border-radius:6px;background:#fcfcfc;}
 		.invoice-address-edit__grid{display:flex;gap:16px;flex-wrap:wrap;}
@@ -605,6 +627,22 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 				</div>
 			</div>
 			<div class="content">
+				<?php if ($is_paid && !$pdf_mode) : ?>
+					<div class="invoice-approval-notification invoice-payment-notification">
+						<strong>✓ <?php esc_html_e('Paid:', 'user-manager'); ?></strong>
+						<?php
+						$paid_on_display = $paid_on !== '' ? $paid_on : __('Unknown date/time', 'user-manager');
+						$paid_method_display = $payment_method_title !== '' ? $payment_method_title : __('Unknown payment method', 'user-manager');
+						echo esc_html(
+							sprintf(
+								__('This order was paid on %1$s via %2$s.', 'user-manager'),
+								$paid_on_display,
+								$paid_method_display
+							)
+						);
+						?>
+					</div>
+				<?php endif; ?>
 				<?php if ($has_approval && !$pdf_mode) : ?>
 					<div class="invoice-approval-notification">
 						<strong>✓ <?php esc_html_e('Approved:', 'user-manager'); ?></strong>
