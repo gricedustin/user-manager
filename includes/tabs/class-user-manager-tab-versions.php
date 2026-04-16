@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.237 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new My Account Admin Activity Viewer setting: "WP Administrators to Redirect to My Account if Accessing WP-Admin" (comma-separated usernames/emails/user IDs).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added wp-admin redirect enforcement for only the explicitly listed administrator users: matching users are blocked from wp-admin and automatically redirected to My Account without changing their roles.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.236 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new My Account Site Admin area: "My Account Admin Activity Viewer", available as a dedicated Admin: Activity endpoint in WooCommerce My Account for allowed usernames/roles.', 'user-manager'); ?></li>

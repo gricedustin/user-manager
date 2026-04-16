@@ -226,6 +226,11 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<input type="text" name="my_account_admin_activity_viewer_hidden_email_partials" id="um-my-account-admin-activity-viewer-hidden-emails" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_activity_viewer_hidden_email_partials'] ?? ''); ?>" placeholder="internal@, @mycompany.com" />
 						<p class="description"><?php esc_html_e('If an email contains any value from this list, the email is hidden in Activity results.', 'user-manager'); ?></p>
 					</div>
+					<div class="um-form-field" id="um-my-account-admin-activity-viewer-wp-admin-redirect-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label for="um-my-account-admin-activity-viewer-wp-admin-redirect-list"><?php esc_html_e('WP Administrators to Redirect to My Account if Accessing WP-Admin', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_activity_viewer_wp_admin_redirect_list" id="um-my-account-admin-activity-viewer-wp-admin-redirect-list" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'] ?? ''); ?>" placeholder="adminuser, admin@example.com, 123" />
+						<p class="description"><?php esc_html_e('Comma-separated list of WP Administrator usernames, emails, or user IDs that should be redirected to My Account whenever they attempt to access wp-admin. Leaves their role unchanged. If empty, no users are redirected.', 'user-manager'); ?></p>
+					</div>
 					<div class="um-form-field" id="um-my-account-admin-activity-viewer-actions-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label class="um-label-block"><strong><?php esc_html_e('Only Display Actions', 'user-manager'); ?></strong></label>
 						<p class="description" style="margin-top:0;"><?php esc_html_e('If none are checked, all actions are shown.', 'user-manager'); ?></p>

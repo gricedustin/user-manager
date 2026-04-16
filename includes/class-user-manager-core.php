@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.236';
+	const VERSION = '2.5.237';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -454,7 +454,8 @@ final class User_Manager_Core {
 				|| !empty($settings['my_account_admin_product_viewer_enabled'])
 				|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
 				|| !empty($settings['my_account_admin_user_viewer_enabled'])
-				|| !empty($settings['my_account_admin_activity_viewer_enabled']);
+				|| !empty($settings['my_account_admin_activity_viewer_enabled'])
+				|| !empty($settings['my_account_admin_activity_viewer_wp_admin_redirect_list']);
 		}
 		return $enabled && !self::is_addon_temporarily_disabled('my-account-site-admin');
 	}
@@ -9689,6 +9690,7 @@ html body .woocommerce-layout__header {
 					'my_account_admin_coupon_viewer_enabled',
 					'my_account_admin_user_viewer_enabled',
 					'my_account_admin_activity_viewer_enabled',
+					'my_account_admin_activity_viewer_wp_admin_redirect_list',
 				],
 			],
 			'media-library-tags' => [

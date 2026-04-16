@@ -2768,6 +2768,9 @@ class User_Manager_Actions {
 					isset($_POST['my_account_admin_activity_viewer_actions']) ? wp_unslash($_POST['my_account_admin_activity_viewer_actions']) : []
 				);
 				$settings['my_account_admin_activity_viewer_role_review_enabled'] = isset($_POST['my_account_admin_activity_viewer_role_review_enabled']) && $_POST['my_account_admin_activity_viewer_role_review_enabled'] === '1';
+				$settings['my_account_admin_activity_viewer_wp_admin_redirect_list'] = self::sanitize_text_values_csv(
+					isset($_POST['my_account_admin_activity_viewer_wp_admin_redirect_list']) ? wp_unslash($_POST['my_account_admin_activity_viewer_wp_admin_redirect_list']) : ''
+				);
 				$settings['my_account_site_admin_enabled'] = isset($_POST['my_account_site_admin_enabled']) && $_POST['my_account_site_admin_enabled'] === '1';
 				$settings['my_account_coupon_screen_enabled'] = isset($_POST['my_account_coupon_screen_enabled']) && $_POST['my_account_coupon_screen_enabled'] === '1';
 				$menu_title = isset($_POST['my_account_coupon_screen_menu_title']) ? sanitize_text_field(wp_unslash($_POST['my_account_coupon_screen_menu_title'])) : 'Coupons';
@@ -5823,6 +5826,34 @@ class User_Manager_Actions {
 		}
 
 		return array_values(array_unique($values));
+	}
+
+	/**
+	 * Normalize and sanitize comma/newline separated text values.
+	 */
+	private static function sanitize_text_values_csv($raw): string {
+		$raw = is_string($raw) ? $raw : '';
+		if ($raw === '') {
+			return '';
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw);
+		if (!is_array($parts)) {
+			return '';
+		}
+
+		$values = [];
+		foreach ($parts as $part) {
+			$value = sanitize_text_field((string) $part);
+			$value = trim($value);
+			if ($value === '') {
+				continue;
+			}
+			$values[] = $value;
+		}
+
+		$values = array_values(array_unique($values));
+		return implode(', ', $values);
 	}
 
 	/**

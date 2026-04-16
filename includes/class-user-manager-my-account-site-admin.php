@@ -66,6 +66,7 @@ final class User_Manager_My_Account_Site_Admin {
 		add_action('woocommerce_account_admin_coupons_endpoint', [__CLASS__, 'render_admin_coupons_endpoint']);
 		add_action('woocommerce_account_admin_users_endpoint', [__CLASS__, 'render_admin_users_endpoint']);
 		add_action('woocommerce_account_admin_activity_endpoint', [__CLASS__, 'render_admin_activity_endpoint']);
+		add_action('admin_init', [__CLASS__, 'maybe_redirect_selected_wp_admin_users_to_my_account'], 1, 0);
 	}
 
 	/**
@@ -1582,6 +1583,130 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return $roles;
+	}
+
+	/**
+	 * Parse CSV list of user identifiers (username/email/user ID).
+	 *
+	 * @param string $raw Raw CSV list.
+	 * @return array{user_ids:array<int,int>, usernames:array<int,string>, emails:array<int,string>}
+	 */
+	private static function parse_user_identifier_list(string $raw): array {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return [
+				'user_ids'  => [],
+				'usernames' => [],
+				'emails'    => [],
+			];
+		}
+
+		$parts = preg_split('/[\s,]+/', $raw);
+		if (!is_array($parts)) {
+			return [
+				'user_ids'  => [],
+				'usernames' => [],
+				'emails'    => [],
+			];
+		}
+
+		$user_ids = [];
+		$usernames = [];
+		$emails = [];
+
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+
+			if (ctype_digit($part)) {
+				$user_id = absint($part);
+				if ($user_id > 0) {
+					$user_ids[] = $user_id;
+				}
+				continue;
+			}
+
+			if (strpos($part, '@') !== false) {
+				$email = sanitize_email($part);
+				if ($email !== '') {
+					$emails[] = strtolower($email);
+					continue;
+				}
+			}
+
+			$username = sanitize_user($part, false);
+			if ($username !== '') {
+				$usernames[] = strtolower($username);
+			}
+		}
+
+		return [
+			'user_ids'  => array_values(array_unique($user_ids)),
+			'usernames' => array_values(array_unique($usernames)),
+			'emails'    => array_values(array_unique($emails)),
+		];
+	}
+
+	/**
+	 * Redirect selected WP administrators away from wp-admin to My Account.
+	 */
+	public static function maybe_redirect_selected_wp_admin_users_to_my_account(): void {
+		if (!is_admin() || wp_doing_ajax()) {
+			return;
+		}
+
+		if (!is_user_logged_in()) {
+			return;
+		}
+
+		if (defined('DOING_CRON') && DOING_CRON) {
+			return;
+		}
+
+		$current_user = wp_get_current_user();
+		if (!$current_user instanceof WP_User || empty($current_user->ID)) {
+			return;
+		}
+
+		// This redirect rule is only for WP Administrators.
+		if (!current_user_can('administrator')) {
+			return;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$raw_list = isset($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'])
+			? (string) $settings['my_account_admin_activity_viewer_wp_admin_redirect_list']
+			: '';
+		$targets = self::parse_user_identifier_list($raw_list);
+
+		if (empty($targets['user_ids']) && empty($targets['usernames']) && empty($targets['emails'])) {
+			return;
+		}
+
+		$current_user_id = (int) $current_user->ID;
+		$current_login = strtolower((string) ($current_user->user_login ?? ''));
+		$current_email = strtolower((string) ($current_user->user_email ?? ''));
+
+		$should_redirect = in_array($current_user_id, $targets['user_ids'], true)
+			|| ($current_login !== '' && in_array($current_login, $targets['usernames'], true))
+			|| ($current_email !== '' && in_array($current_email, $targets['emails'], true));
+
+		if (!$should_redirect) {
+			return;
+		}
+
+		$my_account_url = function_exists('wc_get_page_permalink')
+			? wc_get_page_permalink('myaccount')
+			: home_url('/my-account/');
+
+		if (!is_string($my_account_url) || $my_account_url === '') {
+			$my_account_url = home_url('/my-account/');
+		}
+
+		wp_safe_redirect($my_account_url);
+		exit;
 	}
 
 	/**
