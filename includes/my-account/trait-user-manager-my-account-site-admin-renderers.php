@@ -784,6 +784,17 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					}
 				}
 
+				if (!empty($hidden_email_filters)) {
+					foreach ($hidden_email_filters as $hidden_email_partial) {
+						$hidden_email_partial = trim((string) $hidden_email_partial);
+						if ($hidden_email_partial === '') {
+							continue;
+						}
+						$where_parts[] = "(u.user_email IS NULL OR u.user_email = '' OR u.user_email NOT LIKE %s)";
+						$params[] = '%' . $wpdb->esc_like($hidden_email_partial) . '%';
+					}
+				}
+
 				$where_sql = implode(' AND ', $where_parts);
 				$count_sql = "SELECT COUNT(*) FROM {$table} h LEFT JOIN {$wpdb->users} u ON h.user_id = u.ID WHERE {$where_sql}";
 				if (!empty($params)) {
@@ -811,18 +822,16 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 						$timestamp = $row->created_at ? strtotime((string) $row->created_at) : 0;
 						$user_id = isset($row->user_id) ? (int) $row->user_id : 0;
 						$user_email = isset($row->user_email) ? (string) $row->user_email : '';
-						$email_hidden = self::should_hide_activity_email($user_email, $hidden_email_filters);
-						$display_email = $email_hidden ? '' : $user_email;
 
 						$display_name = isset($row->display_name) ? (string) $row->display_name : '';
 						if ($display_name === '') {
-							$display_name = $display_email !== '' ? $display_email : ((string) ($row->user_login ?? ''));
+							$display_name = $user_email !== '' ? $user_email : ((string) ($row->user_login ?? ''));
 						}
 
 						$entries[] = [
 							'user_id'       => $user_id,
 							'user_login'    => isset($row->user_login) ? (string) $row->user_login : '',
-							'user_email'    => $display_email,
+							'user_email'    => $user_email,
 							'display_name'  => $display_name,
 							'action'        => isset($row->action) ? (string) $row->action : '',
 							'url'           => isset($row->url) ? (string) $row->url : '',
@@ -838,7 +847,25 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 				if (!empty($allowed_actions)) {
 					$all_actions = $allowed_actions;
 				} else {
-					$raw_actions = $wpdb->get_col("SELECT DISTINCT action FROM {$table} WHERE action <> '' ORDER BY action ASC");
+					$actions_where_parts = ["h.action <> ''"];
+					$actions_params = [];
+					if (!empty($hidden_email_filters)) {
+						foreach ($hidden_email_filters as $hidden_email_partial) {
+							$hidden_email_partial = trim((string) $hidden_email_partial);
+							if ($hidden_email_partial === '') {
+								continue;
+							}
+							$actions_where_parts[] = "(u.user_email IS NULL OR u.user_email = '' OR u.user_email NOT LIKE %s)";
+							$actions_params[] = '%' . $wpdb->esc_like($hidden_email_partial) . '%';
+						}
+					}
+					$actions_where_sql = implode(' AND ', $actions_where_parts);
+					$actions_sql = "SELECT DISTINCT h.action FROM {$table} h LEFT JOIN {$wpdb->users} u ON h.user_id = u.ID WHERE {$actions_where_sql} ORDER BY h.action ASC";
+					if (!empty($actions_params)) {
+						$raw_actions = $wpdb->get_col($wpdb->prepare($actions_sql, ...$actions_params));
+					} else {
+						$raw_actions = $wpdb->get_col($actions_sql);
+					}
 					if (is_array($raw_actions)) {
 						foreach ($raw_actions as $raw_action) {
 							$normalized_action = sanitize_text_field((string) $raw_action);
@@ -1003,25 +1030,6 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			}
 
 			return array_values(array_unique($values));
-		}
-
-		private static function should_hide_activity_email(string $email, array $hidden_email_partials): bool {
-			$email = strtolower(trim($email));
-			if ($email === '' || empty($hidden_email_partials)) {
-				return false;
-			}
-
-			foreach ($hidden_email_partials as $partial) {
-				$partial = strtolower(trim((string) $partial));
-				if ($partial === '') {
-					continue;
-				}
-				if (strpos($email, $partial) !== false) {
-					return true;
-				}
-			}
-
-			return false;
 		}
 
 		private static function is_activity_role_review_enabled(): bool {

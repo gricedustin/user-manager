@@ -224,7 +224,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<?php self::render_role_checkboxes('my_account_admin_activity_viewer_roles', $settings['my_account_admin_activity_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Activity', 'user-manager')); ?>
 						<label for="um-my-account-admin-activity-viewer-hidden-emails"><?php esc_html_e('Partial Match Emails to Hide on Front End (comma-separated)', 'user-manager'); ?></label>
 						<input type="text" name="my_account_admin_activity_viewer_hidden_email_partials" id="um-my-account-admin-activity-viewer-hidden-emails" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_activity_viewer_hidden_email_partials'] ?? ''); ?>" placeholder="internal@, @mycompany.com" />
-						<p class="description"><?php esc_html_e('If an email contains any value from this list, the email is hidden in Activity results.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('If an email contains any value from this list, that user activity record is excluded from front-end Activity results.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-activity-viewer-wp-admin-redirect-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label for="um-my-account-admin-activity-viewer-wp-admin-redirect-list"><?php esc_html_e('WP Administrators to Redirect to My Account if Accessing WP-Admin', 'user-manager'); ?></label>

@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.242 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated My Account Admin Activity Viewer hidden-email behavior so "Partial Match Emails to Hide on Front End" now excludes matching users\' activity rows from the entire front-end query results (instead of only masking email text).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied hidden-email exclusion consistently to activity totals, paginated rows, and available-action option sourcing so filters and counts reflect only visible records.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clarified Activity Viewer settings helper text to state that matching partial emails are excluded from front-end Activity records.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.241 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed WP-Admin redirect enforcement for "WP Administrators to Redirect to My Account if Accessing WP-Admin" by registering the redirect check at core/plugin bootstrap so it runs for wp-admin requests even when My Account endpoint hooks are not initialized.', 'user-manager'); ?></li>

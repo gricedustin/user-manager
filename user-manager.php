@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.241
+ * Version: 2.5.242
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.242 - March 16, 2026
+ * - Updated My Account Admin Activity Viewer "Partial Match Emails to Hide on Front End" behavior to fully exclude matching email records from frontend Admin: Activity results.
+ * - Applied partial-email exclusion at SQL query level (count, row fetch, and action filter options) so matching users/actions are not included anywhere in front-end activity output.
+ * - Clarified settings help text to indicate matching email records are excluded entirely from frontend Activity query results.
+ *
  * 2.5.241 - March 16, 2026
  * - Fixed WP-Admin redirect enforcement for "WP Administrators to Redirect to My Account if Accessing WP-Admin" by registering the redirect check at plugin bootstrap so it runs on wp-admin requests even when My Account area hooks are not initialized.
  * - Hardened administrator detection in the redirect guard to use reliable role/capability checks, ensuring listed administrator usernames/emails/user IDs are redirected consistently.
