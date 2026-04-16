@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.244
+ * Version: 2.5.245
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.245 - March 16, 2026
+ * - Updated the default WP-Admin menu label fallback from "User Experience Manager" to "UX Manager" when no Plugin Title Override is set.
+ * - Updated Settings > User Experience helper text/placeholder for Plugin Title Override and admin-bar shortcut copy to reflect the new default label.
+ *
  * 2.5.244 - March 16, 2026
  * - Added new Settings > Email Settings input under "Emails/Texts Per Batch": "Based on User Activity Report, if a user logs in and they have logged in before but had a different role than what they are currently logging in with, send an email notifiction to".
  * - Added My Account Dashboard role-change email alert flow that checks User Activity history and sends a "User Role Changed" email to the configured address when a user's previous roles differ from current roles (supports SSO/non-standard login paths).

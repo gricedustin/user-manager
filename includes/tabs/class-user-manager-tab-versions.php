@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.245 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated default plugin-title fallback used for WP-Admin menu labels from "User Experience Manager" to "UX Manager" when Plugin Title Override is empty.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Settings > User Experience copy to reflect the new default "UX Manager" label in the WP-Admin top-bar toggle text and Plugin Title Override placeholder.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.244 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new Settings > Email Settings field under "Emails/Texts Per Batch": "Based on User Activity Report, if a user logs in and they have logged in before but had a different role than what they are currently logging in with, send an email notifiction to".', 'user-manager'); ?></li>

@@ -233,13 +233,13 @@ if (!defined('ABSPATH')) {
 						<div class="um-form-field">
 							<label>
 								<input type="checkbox" name="show_user_manager_admin_bar_link" value="1" <?php checked($settings['show_user_manager_admin_bar_link'] ?? false); ?> />
-								<?php esc_html_e('Show User Experience Manager link in WP-Admin top bar', 'user-manager'); ?>
+								<?php esc_html_e('Show UX Manager link in WP-Admin top bar', 'user-manager'); ?>
 							</label>
-							<p class="description"><?php esc_html_e('Disabled by default. Enable to show the "User Experience Manager" shortcut in the admin bar.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('Disabled by default. Enable to show the "UX Manager" shortcut in the admin bar.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
 							<label for="um-plugin-title-override"><?php esc_html_e('Plugin Title Override', 'user-manager'); ?></label>
-							<input type="text" name="plugin_title_override" id="um-plugin-title-override" class="regular-text" value="<?php echo esc_attr($settings['plugin_title_override'] ?? ''); ?>" placeholder="<?php esc_attr_e('User Experience Manager', 'user-manager'); ?>" />
+							<input type="text" name="plugin_title_override" id="um-plugin-title-override" class="regular-text" value="<?php echo esc_attr($settings['plugin_title_override'] ?? ''); ?>" placeholder="<?php esc_attr_e('UX Manager', 'user-manager'); ?>" />
 							<p class="description"><?php esc_html_e('Optional. Overrides the plugin title shown in the Users submenu item, WP-Admin bar shortcut, top-level menu item (if enabled below), and the title at the top of all plugin pages.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
