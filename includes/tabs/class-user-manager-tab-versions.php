@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.248 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved the wp-admin redirect-list setting out of the My Account Admin Activity Viewer subsection into its own My Account Admin card-level setting so it applies addon-wide.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated setting label to: "WP Administrators to Redirect to My Account if Accessing WP-Admin and Remove WP-Admin Top Bar on Front End?"', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Listed administrators now have the WP-Admin top bar removed on the front end in addition to being redirected away from wp-admin access.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.247 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new My Account Admin add-on setting: "Items per page in My Account Admin lists" so pagination size can be configured instead of using a fixed default.', 'user-manager'); ?></li>

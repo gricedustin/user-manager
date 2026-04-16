@@ -2769,8 +2769,8 @@ class User_Manager_Actions {
 					isset($_POST['my_account_admin_activity_viewer_actions']) ? wp_unslash($_POST['my_account_admin_activity_viewer_actions']) : []
 				);
 				$settings['my_account_admin_activity_viewer_role_review_enabled'] = isset($_POST['my_account_admin_activity_viewer_role_review_enabled']) && $_POST['my_account_admin_activity_viewer_role_review_enabled'] === '1';
-				$settings['my_account_admin_activity_viewer_wp_admin_redirect_list'] = self::sanitize_text_values_csv(
-					isset($_POST['my_account_admin_activity_viewer_wp_admin_redirect_list']) ? wp_unslash($_POST['my_account_admin_activity_viewer_wp_admin_redirect_list']) : ''
+				$settings['my_account_admin_wp_admin_redirect_list'] = self::sanitize_text_values_csv(
+					isset($_POST['my_account_admin_wp_admin_redirect_list']) ? wp_unslash($_POST['my_account_admin_wp_admin_redirect_list']) : ''
 				);
 				$settings['my_account_admin_items_per_page'] = isset($_POST['my_account_admin_items_per_page'])
 					? max(1, min(200, absint($_POST['my_account_admin_items_per_page'])))

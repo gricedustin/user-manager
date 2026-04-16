@@ -48,6 +48,11 @@ class User_Manager_Addon_My_Account_Site_Admin {
 					<p class="description"><?php esc_html_e('Controls pagination size for My Account Admin Orders, Products, Coupons, Users, and Activity tables.', 'user-manager'); ?></p>
 				</div>
 				<div class="um-form-field">
+					<label for="um-my-account-admin-wp-admin-redirect-list"><?php esc_html_e('WP Administrators to Redirect to My Account if Accessing WP-Admin and Remove WP-Admin Top Bar on Front End?', 'user-manager'); ?></label>
+					<input type="text" name="my_account_admin_wp_admin_redirect_list" id="um-my-account-admin-wp-admin-redirect-list" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_wp_admin_redirect_list'] ?? ($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'] ?? '')); ?>" placeholder="adminuser, admin@example.com, 123" />
+					<p class="description"><?php esc_html_e('Comma-separated list of WP Administrator usernames, emails, or user IDs. Matching users are redirected away from wp-admin to My Account and the WP-Admin top bar is hidden for them on the front end. Leaves roles unchanged. If empty, no users are affected.', 'user-manager'); ?></p>
+				</div>
+				<div class="um-form-field">
 					<label>
 						<input type="checkbox" name="my_account_admin_order_viewer_enabled" id="um-my-account-admin-order-viewer-enabled" value="1" <?php checked($settings['my_account_admin_order_viewer_enabled'] ?? false); ?> />
 						<?php esc_html_e('My Account Admin Order Viewer', 'user-manager'); ?>
@@ -230,11 +235,6 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						<label for="um-my-account-admin-activity-viewer-hidden-emails"><?php esc_html_e('Partial Match Emails to Hide on Front End (comma-separated)', 'user-manager'); ?></label>
 						<input type="text" name="my_account_admin_activity_viewer_hidden_email_partials" id="um-my-account-admin-activity-viewer-hidden-emails" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_activity_viewer_hidden_email_partials'] ?? ''); ?>" placeholder="internal@, @mycompany.com" />
 						<p class="description"><?php esc_html_e('If an email contains any value from this list, that user activity record is excluded from front-end Activity results.', 'user-manager'); ?></p>
-					</div>
-					<div class="um-form-field" id="um-my-account-admin-activity-viewer-wp-admin-redirect-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
-						<label for="um-my-account-admin-activity-viewer-wp-admin-redirect-list"><?php esc_html_e('WP Administrators to Redirect to My Account if Accessing WP-Admin', 'user-manager'); ?></label>
-						<input type="text" name="my_account_admin_activity_viewer_wp_admin_redirect_list" id="um-my-account-admin-activity-viewer-wp-admin-redirect-list" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'] ?? ''); ?>" placeholder="adminuser, admin@example.com, 123" />
-						<p class="description"><?php esc_html_e('Comma-separated list of WP Administrator usernames, emails, or user IDs that should be redirected to My Account whenever they attempt to access wp-admin. Leaves their role unchanged. If empty, no users are redirected.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-activity-viewer-actions-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label class="um-label-block"><strong><?php esc_html_e('Only Display Actions', 'user-manager'); ?></strong></label>

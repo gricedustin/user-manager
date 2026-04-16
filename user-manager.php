@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.247
+ * Version: 2.5.248
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.248 - March 16, 2026
+ * - Moved "WP Administrators to Redirect to My Account if Accessing WP-Admin" out of the Admin: Activity sub-settings into its own My Account Admin addon-level field so it applies across the full addon.
+ * - Updated the field label to: "WP Administrators to Redirect to My Account if Accessing WP-Admin and Remove WP-Admin Top Bar on Front End?"
+ * - Matching listed administrators now have the front-end WP-Admin top bar removed in addition to being redirected out of wp-admin.
+ *
  * 2.5.247 - March 16, 2026
  * - Added a new My Account Admin setting to control list pagination size (items per page) across Admin: Orders, Products, Coupons, Users, and Activity in the My Account front end.
  * - Updated My Account Admin list queries/pagination to use the saved per-page value instead of a fixed 20-row limit.

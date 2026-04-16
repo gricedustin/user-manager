@@ -237,6 +237,8 @@ final class User_Manager_Core {
 		if (class_exists('User_Manager_My_Account_Site_Admin')) {
 			// Enforce the wp-admin redirect list even when endpoint viewers are disabled.
 			add_action('admin_init', ['User_Manager_My_Account_Site_Admin', 'maybe_redirect_selected_wp_admin_users_to_my_account'], 1, 0);
+			// Remove front-end admin bar for users listed in My Account Admin redirect/toolbar setting.
+			add_filter('show_admin_bar', ['User_Manager_My_Account_Site_Admin', 'maybe_hide_admin_bar_for_redirected_administrators'], 20, 1);
 		}
 		if (class_exists('User_Manager_My_Account_Site_Admin') && self::is_my_account_site_admin_enabled($settings)) {
 			User_Manager_My_Account_Site_Admin::init();
@@ -459,6 +461,7 @@ final class User_Manager_Core {
 				|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
 				|| !empty($settings['my_account_admin_user_viewer_enabled'])
 				|| !empty($settings['my_account_admin_activity_viewer_enabled'])
+				|| !empty($settings['my_account_admin_wp_admin_redirect_list'])
 				|| !empty($settings['my_account_admin_activity_viewer_wp_admin_redirect_list']);
 		}
 		return $enabled && !self::is_addon_temporarily_disabled('my-account-site-admin');
@@ -9696,7 +9699,8 @@ html body .woocommerce-layout__header {
 					'my_account_admin_coupon_viewer_enabled',
 					'my_account_admin_user_viewer_enabled',
 					'my_account_admin_activity_viewer_enabled',
-					'my_account_admin_activity_viewer_wp_admin_redirect_list',
+					'my_account_admin_wp_admin_redirect_list',
+					'my_account_admin_activity_viewer_wp_admin_redirect_list', // Legacy compatibility
 				],
 			],
 			'media-library-tags' => [

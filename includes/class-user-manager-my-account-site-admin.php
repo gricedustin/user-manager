@@ -1679,9 +1679,13 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		$settings = User_Manager_Core::get_settings();
-		$raw_list = isset($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'])
-			? (string) $settings['my_account_admin_activity_viewer_wp_admin_redirect_list']
+		$raw_list = isset($settings['my_account_admin_wp_admin_redirect_list'])
+			? (string) $settings['my_account_admin_wp_admin_redirect_list']
 			: '';
+		if ($raw_list === '' && isset($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'])) {
+			// Backward compatibility for previously saved key.
+			$raw_list = (string) $settings['my_account_admin_activity_viewer_wp_admin_redirect_list'];
+		}
 		$targets = self::parse_user_identifier_list($raw_list);
 
 		if (empty($targets['user_ids']) && empty($targets['usernames']) && empty($targets['emails'])) {
@@ -1710,6 +1714,60 @@ final class User_Manager_My_Account_Site_Admin {
 
 		wp_safe_redirect($my_account_url);
 		exit;
+	}
+
+	/**
+	 * Hide front-end WP admin bar for configured administrators.
+	 *
+	 * @param bool $show Current show-admin-bar decision.
+	 * @return bool
+	 */
+	public static function maybe_hide_admin_bar_for_redirected_administrators($show): bool {
+		if (!is_user_logged_in()) {
+			return (bool) $show;
+		}
+		if (is_admin()) {
+			return (bool) $show;
+		}
+		if (!self::should_apply_wp_admin_redirect_list_to_current_administrator()) {
+			return (bool) $show;
+		}
+		return false;
+	}
+
+	/**
+	 * Check if current administrator is listed in redirect/remove-admin-bar targets.
+	 */
+	private static function should_apply_wp_admin_redirect_list_to_current_administrator(): bool {
+		$current_user = wp_get_current_user();
+		if (!$current_user instanceof WP_User || empty($current_user->ID)) {
+			return false;
+		}
+		$current_roles = is_array($current_user->roles) ? array_map('sanitize_key', $current_user->roles) : [];
+		$is_wp_administrator = in_array('administrator', $current_roles, true) || current_user_can('manage_options');
+		if (!$is_wp_administrator) {
+			return false;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$raw_list = isset($settings['my_account_admin_wp_admin_redirect_list'])
+			? (string) $settings['my_account_admin_wp_admin_redirect_list']
+			: '';
+		if ($raw_list === '' && isset($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'])) {
+			$raw_list = (string) $settings['my_account_admin_activity_viewer_wp_admin_redirect_list'];
+		}
+		$targets = self::parse_user_identifier_list($raw_list);
+		if (empty($targets['user_ids']) && empty($targets['usernames']) && empty($targets['emails'])) {
+			return false;
+		}
+
+		$current_user_id = (int) $current_user->ID;
+		$current_login = strtolower((string) ($current_user->user_login ?? ''));
+		$current_email = strtolower((string) ($current_user->user_email ?? ''));
+
+		return in_array($current_user_id, $targets['user_ids'], true)
+			|| ($current_login !== '' && in_array($current_login, $targets['usernames'], true))
+			|| ($current_email !== '' && in_array($current_email, $targets['emails'], true));
 	}
 
 	/**

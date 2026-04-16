@@ -1160,7 +1160,6 @@ class User_Manager_Tab_Addons {
 				toggleMyAccountAdminViewerField('#um-my-account-admin-user-viewer-enabled', '#um-my-account-admin-user-viewer-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-user-viewer-enabled', '#um-my-account-admin-user-meta-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-activity-viewer-enabled', '#um-my-account-admin-activity-viewer-users-field');
-				toggleMyAccountAdminViewerField('#um-my-account-admin-activity-viewer-enabled', '#um-my-account-admin-activity-viewer-wp-admin-redirect-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-activity-viewer-enabled', '#um-my-account-admin-activity-viewer-actions-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-activity-viewer-enabled', '#um-my-account-admin-activity-viewer-role-review-field');
 			}
