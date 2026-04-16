@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.235
+ * Version: 2.5.236
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.236 - March 16, 2026
+ * - Added a new My Account Site Admin endpoint/area: "Admin: Activity" that mirrors Reports > User Activity data on the My Account front end.
+ * - Added new "My Account Admin Activity Viewer" settings under Add-ons > My Account Site Admin: allowed usernames, allowed roles, partial email-hide matches, action checkboxes, and role-review flag.
+ * - Activity viewer now supports action filtering, search, pagination context, optional action-allowlist display, and a "Role Review" badge when a user has activity records with differing role snapshots.
+ *
  * 2.5.235 - March 16, 2026
  * - Added a new Media Library Tags Block setting under "Exclude Logged In Users from Tracking": "Exclude WP Administrator Users from Tracking".
  * - Tracking exclusion logic now supports admin-only exclusion, so administrators can be excluded from Tag Reports/Lightbox tracking even when other logged-in roles are still tracked.

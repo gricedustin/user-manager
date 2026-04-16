@@ -2754,6 +2754,20 @@ class User_Manager_Actions {
 					isset($_POST['my_account_admin_user_viewer_roles']) ? wp_unslash($_POST['my_account_admin_user_viewer_roles']) : []
 				);
 				$settings['my_account_admin_user_viewer_show_meta'] = isset($_POST['my_account_admin_user_viewer_show_meta']) && $_POST['my_account_admin_user_viewer_show_meta'] === '1';
+				$settings['my_account_admin_activity_viewer_enabled'] = isset($_POST['my_account_admin_activity_viewer_enabled']) && $_POST['my_account_admin_activity_viewer_enabled'] === '1';
+				$settings['my_account_admin_activity_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_activity_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_activity_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_activity_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_activity_viewer_roles']) ? wp_unslash($_POST['my_account_admin_activity_viewer_roles']) : []
+				);
+				$settings['my_account_admin_activity_viewer_hidden_email_partials'] = self::sanitize_text_partials_csv(
+					isset($_POST['my_account_admin_activity_viewer_hidden_email_partials']) ? wp_unslash($_POST['my_account_admin_activity_viewer_hidden_email_partials']) : ''
+				);
+				$settings['my_account_admin_activity_viewer_actions'] = self::sanitize_text_values_array(
+					isset($_POST['my_account_admin_activity_viewer_actions']) ? wp_unslash($_POST['my_account_admin_activity_viewer_actions']) : []
+				);
+				$settings['my_account_admin_activity_viewer_role_review_enabled'] = isset($_POST['my_account_admin_activity_viewer_role_review_enabled']) && $_POST['my_account_admin_activity_viewer_role_review_enabled'] === '1';
 				$settings['my_account_site_admin_enabled'] = isset($_POST['my_account_site_admin_enabled']) && $_POST['my_account_site_admin_enabled'] === '1';
 				$settings['my_account_coupon_screen_enabled'] = isset($_POST['my_account_coupon_screen_enabled']) && $_POST['my_account_coupon_screen_enabled'] === '1';
 				$menu_title = isset($_POST['my_account_coupon_screen_menu_title']) ? sanitize_text_field(wp_unslash($_POST['my_account_coupon_screen_menu_title'])) : 'Coupons';
@@ -5760,6 +5774,55 @@ class User_Manager_Actions {
 		}
 
 		return $roles;
+	}
+
+	/**
+	 * Normalize and sanitize comma/space/newline separated free-text partials.
+	 */
+	private static function sanitize_text_partials_csv($raw): string {
+		$raw = is_string($raw) ? $raw : '';
+		if ($raw === '') {
+			return '';
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw);
+		if (!is_array($parts)) {
+			return '';
+		}
+
+		$values = [];
+		foreach ($parts as $part) {
+			$part = sanitize_text_field((string) $part);
+			$part = strtolower(trim($part));
+			if ($part === '') {
+				continue;
+			}
+			$values[] = $part;
+		}
+
+		$values = array_values(array_unique($values));
+		return implode(', ', $values);
+	}
+
+	/**
+	 * Sanitize a posted text-values array (e.g. selected actions).
+	 *
+	 * @param mixed $raw Raw posted values.
+	 * @return array<int,string>
+	 */
+	private static function sanitize_text_values_array($raw): array {
+		$parts = is_array($raw) ? $raw : [];
+		$values = [];
+		foreach ($parts as $part) {
+			$value = sanitize_text_field((string) $part);
+			$value = trim($value);
+			if ($value === '') {
+				continue;
+			}
+			$values[] = $value;
+		}
+
+		return array_values(array_unique($values));
 	}
 
 	/**

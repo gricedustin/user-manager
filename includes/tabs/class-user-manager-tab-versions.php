@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.236 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new My Account Site Admin area: "My Account Admin Activity Viewer", available as a dedicated Admin: Activity endpoint in WooCommerce My Account for allowed usernames/roles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Admin: Activity mirrors Reports > User Activity data and supports frontend action filtering, search, pagination, partial-email hiding, optional action-whitelist display, and optional "Role Review" flags for users with mixed role history snapshots in activity logs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new My Account Admin Activity Viewer settings under Add-ons > My Account Site Admin: Allowed usernames, Allowed roles for Admin: Activity, Partial Match Emails to Hide on Front End, Only Display Actions, and Display "Role Review" Flag.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.235 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Media Library Tags Block checkbox setting: "Exclude WP Administrator Users from Tracking", placed directly under "Exclude Logged In Users from Tracking".', 'user-manager'); ?></li>

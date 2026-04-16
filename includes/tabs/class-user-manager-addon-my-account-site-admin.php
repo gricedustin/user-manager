@@ -11,11 +11,13 @@ class User_Manager_Addon_My_Account_Site_Admin {
 
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$available_roles = self::get_available_roles();
+		$available_activity_actions = self::get_available_activity_actions();
 		$form_attr = $settings_form_id !== '' ? ' form="' . esc_attr($settings_form_id) . '"' : '';
 		$order_status_note = self::get_order_statuses_note();
 		$order_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses() : [];
 		$order_statuses = is_array($order_statuses) ? $order_statuses : [];
 		$order_status_title_overrides = self::normalize_order_status_title_overrides($settings['my_account_admin_order_status_titles'] ?? []);
+		$selected_activity_actions = self::normalize_activity_actions($settings['my_account_admin_activity_viewer_actions'] ?? []);
 		$is_enabled = array_key_exists('my_account_site_admin_enabled', $settings)
 			? !empty($settings['my_account_site_admin_enabled'])
 			: (
@@ -23,6 +25,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 				|| !empty($settings['my_account_admin_product_viewer_enabled'])
 				|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
 				|| !empty($settings['my_account_admin_user_viewer_enabled'])
+				|| !empty($settings['my_account_admin_activity_viewer_enabled'])
 			);
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-my-account" data-um-active-selectors="#um-my-account-site-admin-enabled">
@@ -207,6 +210,45 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						</label>
 					</div>
 				</div>
+
+				<div class="um-form-field">
+					<label>
+						<input type="checkbox" name="my_account_admin_activity_viewer_enabled" id="um-my-account-admin-activity-viewer-enabled" value="1" <?php checked($settings['my_account_admin_activity_viewer_enabled'] ?? false); ?> />
+						<?php esc_html_e('My Account Admin Activity Viewer', 'user-manager'); ?>
+					</label>
+				</div>
+				<div class="um-my-account-activity-viewer-sub-settings" style="margin-left: 24px; padding-left: 16px; border-left: 2px solid #dcdcde;">
+					<div class="um-form-field" id="um-my-account-admin-activity-viewer-users-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label for="um-my-account-admin-activity-viewer-usernames"><?php esc_html_e('Allowed usernames (comma-separated)', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_activity_viewer_usernames" id="um-my-account-admin-activity-viewer-usernames" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_activity_viewer_usernames'] ?? ''); ?>" placeholder="username1, username2" />
+						<?php self::render_role_checkboxes('my_account_admin_activity_viewer_roles', $settings['my_account_admin_activity_viewer_roles'] ?? [], $available_roles, __('Allowed roles for Admin: Activity', 'user-manager')); ?>
+						<label for="um-my-account-admin-activity-viewer-hidden-emails"><?php esc_html_e('Partial Match Emails to Hide on Front End (comma-separated)', 'user-manager'); ?></label>
+						<input type="text" name="my_account_admin_activity_viewer_hidden_email_partials" id="um-my-account-admin-activity-viewer-hidden-emails" class="large-text" value="<?php echo esc_attr($settings['my_account_admin_activity_viewer_hidden_email_partials'] ?? ''); ?>" placeholder="internal@, @mycompany.com" />
+						<p class="description"><?php esc_html_e('If an email contains any value from this list, the email is hidden in Activity results.', 'user-manager'); ?></p>
+					</div>
+					<div class="um-form-field" id="um-my-account-admin-activity-viewer-actions-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label class="um-label-block"><strong><?php esc_html_e('Only Display Actions', 'user-manager'); ?></strong></label>
+						<p class="description" style="margin-top:0;"><?php esc_html_e('If none are checked, all actions are shown.', 'user-manager'); ?></p>
+						<?php if (!empty($available_activity_actions)) : ?>
+							<div class="um-checkbox-grid">
+								<?php foreach ($available_activity_actions as $activity_action) : ?>
+									<label class="um-checkbox-chip">
+										<input type="checkbox" name="my_account_admin_activity_viewer_actions[]" value="<?php echo esc_attr($activity_action); ?>" <?php checked(in_array($activity_action, $selected_activity_actions, true)); ?> />
+										<span><?php echo esc_html($activity_action); ?></span>
+									</label>
+								<?php endforeach; ?>
+							</div>
+						<?php else : ?>
+							<p class="description"><?php esc_html_e('No activity actions found yet. Actions appear after user activity is logged.', 'user-manager'); ?></p>
+						<?php endif; ?>
+					</div>
+					<div class="um-form-field" id="um-my-account-admin-activity-viewer-role-review-field" style="<?php echo empty($settings['my_account_admin_activity_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label>
+							<input type="checkbox" name="my_account_admin_activity_viewer_role_review_enabled" id="um-my-account-admin-activity-viewer-role-review-enabled" value="1" <?php checked($settings['my_account_admin_activity_viewer_role_review_enabled'] ?? false); ?> />
+							<?php esc_html_e('Display "Role Review" Flag on Users where they have another record in the log with a different Role', 'user-manager'); ?>
+						</label>
+					</div>
+				</div>
 				</div>
 			</div>
 		</div>
@@ -261,6 +303,64 @@ class User_Manager_Addon_My_Account_Site_Admin {
 		}
 
 		return $roles;
+	}
+
+	/**
+	 * Normalize selected activity actions from settings.
+	 *
+	 * @param mixed $raw Raw stored value.
+	 * @return array<int,string>
+	 */
+	private static function normalize_activity_actions($raw): array {
+		if (!is_array($raw)) {
+			return [];
+		}
+
+		$actions = [];
+		foreach ($raw as $action) {
+			$action = sanitize_text_field((string) $action);
+			if ($action === '') {
+				continue;
+			}
+			$actions[] = $action;
+		}
+
+		return array_values(array_unique($actions));
+	}
+
+	/**
+	 * Return distinct action values from user activity table.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_available_activity_actions(): array {
+		global $wpdb;
+
+		if (!$wpdb instanceof wpdb) {
+			return [];
+		}
+
+		$table = $wpdb->prefix . 'um_user_activity';
+		$table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+		if ($table_exists !== $table) {
+			return [];
+		}
+
+		$rows = $wpdb->get_col("SELECT DISTINCT action FROM {$table} WHERE action <> '' ORDER BY action ASC");
+		if (!is_array($rows)) {
+			return [];
+		}
+
+		$actions = [];
+		foreach ($rows as $row) {
+			$action = sanitize_text_field((string) $row);
+			if ($action === '') {
+				continue;
+			}
+			$actions[] = $action;
+		}
+
+		return array_values(array_unique($actions));
 	}
 
 	/**

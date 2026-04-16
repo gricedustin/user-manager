@@ -65,6 +65,7 @@ final class User_Manager_My_Account_Site_Admin {
 		add_action('woocommerce_account_admin_products_endpoint', [__CLASS__, 'render_admin_products_endpoint']);
 		add_action('woocommerce_account_admin_coupons_endpoint', [__CLASS__, 'render_admin_coupons_endpoint']);
 		add_action('woocommerce_account_admin_users_endpoint', [__CLASS__, 'render_admin_users_endpoint']);
+		add_action('woocommerce_account_admin_activity_endpoint', [__CLASS__, 'render_admin_activity_endpoint']);
 	}
 
 	/**
@@ -1511,7 +1512,8 @@ final class User_Manager_My_Account_Site_Admin {
 		return !empty($settings['my_account_admin_order_viewer_enabled'])
 			|| !empty($settings['my_account_admin_product_viewer_enabled'])
 			|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
-			|| !empty($settings['my_account_admin_user_viewer_enabled']);
+			|| !empty($settings['my_account_admin_user_viewer_enabled'])
+			|| !empty($settings['my_account_admin_activity_viewer_enabled']);
 	}
 
 	/**
@@ -1621,6 +1623,13 @@ final class User_Manager_My_Account_Site_Admin {
 				'roles_key'     => 'my_account_admin_user_viewer_roles',
 				'show_meta_key' => 'my_account_admin_user_viewer_show_meta',
 			],
+			'activity' => [
+				'endpoint'      => 'admin_activity',
+				'menu_label'    => __('Admin: Activity', 'user-manager'),
+				'enabled_key'   => 'my_account_admin_activity_viewer_enabled',
+				'usernames_key' => 'my_account_admin_activity_viewer_usernames',
+				'roles_key'     => 'my_account_admin_activity_viewer_roles',
+			],
 		];
 	}
 
@@ -1634,13 +1643,19 @@ final class User_Manager_My_Account_Site_Admin {
 		$search = self::get_search_query();
 		$url    = self::get_endpoint_url($endpoint);
 		$selected_status_key = '';
+		$selected_activity_action = '';
 		if ($endpoint === 'admin_orders') {
 			$status_filters = self::get_configured_order_status_filters();
 			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
+		} elseif ($endpoint === 'admin_activity') {
+			$selected_activity_action = self::get_activity_action_filter_query_arg();
 		}
 		echo '<form class="um-my-account-admin-search-form" method="get" action="' . esc_url($url) . '">';
 		if ($selected_status_key !== '') {
 			echo '<input type="hidden" name="um_order_status" value="' . esc_attr($selected_status_key) . '" />';
+		}
+		if ($selected_activity_action !== '') {
+			echo '<input type="hidden" name="ua_action_filter" value="' . esc_attr($selected_activity_action) . '" />';
 		}
 		echo '<input type="search" name="um_search" value="' . esc_attr($search) . '" placeholder="' . esc_attr($placeholder) . '" />';
 		echo '<button type="submit" class="button um-my-account-admin-search-submit">' . esc_html__('Search', 'user-manager') . '</button>';
@@ -1648,6 +1663,9 @@ final class User_Manager_My_Account_Site_Admin {
 			$clear_args = [];
 			if ($selected_status_key !== '') {
 				$clear_args['um_order_status'] = $selected_status_key;
+			}
+			if ($selected_activity_action !== '') {
+				$clear_args['ua_action_filter'] = $selected_activity_action;
 			}
 			$clear_url = self::get_endpoint_url($endpoint, $clear_args);
 			echo ' <a class="button" href="' . esc_url($clear_url) . '">' . esc_html__('Clear', 'user-manager') . '</a>';
@@ -1677,6 +1695,11 @@ final class User_Manager_My_Account_Site_Admin {
 			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
 			if ($selected_status_key !== '') {
 				$base_args['um_order_status'] = $selected_status_key;
+			}
+		} elseif ($endpoint === 'admin_activity') {
+			$selected_activity_action = self::get_activity_action_filter_query_arg();
+			if ($selected_activity_action !== '') {
+				$base_args['ua_action_filter'] = $selected_activity_action;
 			}
 		}
 
@@ -3080,6 +3103,13 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Read selected activity action filter query argument.
+	 */
+	private static function get_activity_action_filter_query_arg(): string {
+		return isset($_GET['ua_action_filter']) ? sanitize_text_field(wp_unslash($_GET['ua_action_filter'])) : '';
+	}
+
+	/**
 	 * Build endpoint URL.
 	 *
 	 * @param string $endpoint Endpoint key.
@@ -3126,6 +3156,12 @@ final class User_Manager_My_Account_Site_Admin {
 			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
 			if ($selected_status_key !== '') {
 				$args['um_order_status'] = $selected_status_key;
+			}
+		}
+		if (function_exists('get_query_var') && get_query_var('admin_activity', null) !== null) {
+			$selected_activity_action = self::get_activity_action_filter_query_arg();
+			if ($selected_activity_action !== '') {
+				$args['ua_action_filter'] = $selected_activity_action;
 			}
 		}
 		return $args;
