@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.244 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Settings > Email Settings field under "Emails/Texts Per Batch": "Based on User Activity Report, if a user logs in and they have logged in before but had a different role than what they are currently logging in with, send an email notifiction to".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When that email address is configured, role-change monitoring now runs on My Account Dashboard loads and compares current roles against the latest prior User Activity role snapshot so SSO/non-standard logins are also covered.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Role-change emails use subject "User Role Changed" and include helpful context such as user ID/login/email/display name, previous roles/timestamp/action, current roles, current URL, IP address, and user agent.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.243 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed My Account Admin Activity "Filter by Action" controls rendering as non-clickable/disabled on some front-end themes by adding dedicated filter form wrapper/classes and explicit interactivity CSS (pointer-events, opacity, z-index, and button/select targeting).', 'user-manager'); ?></li>

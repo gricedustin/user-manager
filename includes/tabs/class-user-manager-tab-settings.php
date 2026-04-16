@@ -133,6 +133,11 @@ if (!defined('ABSPATH')) {
 							<input type="number" name="throttle_emails_count" id="um-throttle-emails-count" class="small-text" min="1" value="<?php echo esc_attr($settings['throttle_emails_count'] ?? 50); ?>" />
 							<p class="description"><?php esc_html_e('Number used per batch for both Email Users and Send SMS Texts. After sending a batch, a button appears to send the next batch.', 'user-manager'); ?></p>
 						</div>
+						<div class="um-form-field">
+							<label for="um-dashboard-role-change-alert-email"><?php esc_html_e('Based on User Activity Report, if a user logs in and they have logged in before but had a different role than what they are currently logging in with, send an email notification to', 'user-manager'); ?></label>
+							<input type="email" name="dashboard_role_change_alert_email" id="um-dashboard-role-change-alert-email" class="regular-text" value="<?php echo esc_attr($settings['dashboard_role_change_alert_email'] ?? ''); ?>" placeholder="admin@example.com" />
+							<p class="description"><?php esc_html_e('If this email address is set, User Manager checks role history from Reports > User Activity when the user lands on My Account Dashboard. If previous role(s) differ from current role(s), an email titled "User Role Changed" is sent with helpful role-change details.', 'user-manager'); ?></p>
+						</div>
 					</div>
 				</div>
 

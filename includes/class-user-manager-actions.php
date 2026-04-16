@@ -2332,6 +2332,7 @@ class User_Manager_Actions {
 				$settings['reply_to_email'] = isset($_POST['reply_to_email']) ? sanitize_email(wp_unslash($_POST['reply_to_email'])) : '';
 				$settings['throttle_emails_enabled'] = isset($_POST['throttle_emails_enabled']) && $_POST['throttle_emails_enabled'] === '1';
 				$settings['throttle_emails_count'] = isset($_POST['throttle_emails_count']) ? max(1, absint($_POST['throttle_emails_count'])) : 50;
+				$settings['dashboard_role_change_alert_email'] = isset($_POST['dashboard_role_change_alert_email']) ? sanitize_email(wp_unslash($_POST['dashboard_role_change_alert_email'])) : '';
 				break;
 
 			case 'blocks':

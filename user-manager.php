@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.243
+ * Version: 2.5.244
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.244 - March 16, 2026
+ * - Added new Settings > Email Settings input under "Emails/Texts Per Batch": "Based on User Activity Report, if a user logs in and they have logged in before but had a different role than what they are currently logging in with, send an email notifiction to".
+ * - Added My Account Dashboard role-change email alert flow that checks User Activity history and sends a "User Role Changed" email to the configured address when a user's previous roles differ from current roles (supports SSO/non-standard login paths).
+ * - Role-change alert email now includes helpful context: user ID, username/display name/email, old roles from activity history, current roles, current page URL, IP address, and user agent.
+ *
  * 2.5.243 - March 16, 2026
  * - Fixed My Account Admin Activity "Filter by Action" controls rendering as disabled/non-clickable in some themes by adding dedicated filter-form classes and reinforced interactive styles.
  * - Added explicit front-end CSS safeguards for the activity filter wrapper/form/controls (`pointer-events`, `opacity`, `cursor`, and stacking context) so dropdown and Apply Filter button remain clickable.

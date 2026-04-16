@@ -10759,7 +10759,172 @@ html body .woocommerce-layout__header {
 		$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
 		$current_url = $scheme . $host . $uri;
 		
-		self::add_user_activity(get_current_user_id(), 'View My Account: ' . $endpoint_label, $current_url);
+		$current_user_id = get_current_user_id();
+		self::maybe_send_dashboard_role_change_alert((int) $current_user_id, (string) $endpoint_label, (string) $current_url);
+		self::add_user_activity($current_user_id, 'View My Account: ' . $endpoint_label, $current_url);
+	}
+
+	/**
+	 * Send a role-change alert when a user reaches My Account Dashboard and prior activity roles differ.
+	 *
+	 * @param int    $user_id        Current user ID.
+	 * @param string $endpoint_label Current My Account endpoint label.
+	 * @param string $current_url    Current page URL.
+	 */
+	private static function maybe_send_dashboard_role_change_alert(int $user_id, string $endpoint_label, string $current_url): void {
+		if ($user_id <= 0) {
+			return;
+		}
+
+		if (strcasecmp($endpoint_label, 'Dashboard') !== 0) {
+			return;
+		}
+
+		$settings = self::get_settings();
+		$notify_email = isset($settings['dashboard_role_change_alert_email'])
+			? sanitize_email((string) $settings['dashboard_role_change_alert_email'])
+			: '';
+		if ($notify_email === '' || !is_email($notify_email)) {
+			return;
+		}
+
+		$user = get_userdata($user_id);
+		if (!$user instanceof WP_User) {
+			return;
+		}
+
+		global $wpdb;
+		if (!$wpdb instanceof wpdb) {
+			return;
+		}
+
+		$activity_table = $wpdb->prefix . 'um_user_activity';
+		$table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $activity_table)) === $activity_table;
+		if (!$table_exists) {
+			return;
+		}
+
+		$new_roles = self::normalize_role_snapshot_to_array(implode(', ', is_array($user->roles) ? $user->roles : []));
+		$recent_rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, roles, action, created_at
+				 FROM {$activity_table}
+				 WHERE user_id = %d
+				 ORDER BY created_at DESC, id DESC
+				 LIMIT 30",
+				$user_id
+			),
+			ARRAY_A
+		);
+		if (!is_array($recent_rows) || empty($recent_rows)) {
+			return;
+		}
+
+		$last_prior_row = null;
+		$old_roles = [];
+		foreach ($recent_rows as $recent_row) {
+			if (!is_array($recent_row)) {
+				continue;
+			}
+			$recent_roles = self::normalize_role_snapshot_to_array((string) ($recent_row['roles'] ?? ''));
+			if (empty($recent_roles)) {
+				continue;
+			}
+			if ($recent_roles === $new_roles) {
+				continue;
+			}
+			$last_prior_row = $recent_row;
+			$old_roles = $recent_roles;
+			break;
+		}
+
+		if (!is_array($last_prior_row) || empty($last_prior_row)) {
+			return;
+		}
+
+		$old_role_display = !empty($old_roles) ? implode(', ', $old_roles) : __('(none)', 'user-manager');
+		$new_role_display = !empty($new_roles) ? implode(', ', $new_roles) : __('(none)', 'user-manager');
+		$old_action = isset($last_prior_row['action']) ? (string) $last_prior_row['action'] : '';
+		$old_created_at = isset($last_prior_row['created_at']) ? (string) $last_prior_row['created_at'] : '';
+
+		$alert_signature = md5(implode('|', [
+			(string) $user_id,
+			implode(',', $old_roles),
+			implode(',', $new_roles),
+			$old_created_at,
+		]));
+		$alert_meta_key = '_um_role_change_dashboard_alert_signature';
+		$last_signature = (string) get_user_meta($user_id, $alert_meta_key, true);
+		if ($last_signature !== '' && hash_equals($last_signature, $alert_signature)) {
+			return;
+		}
+
+		$user_login = (string) ($user->user_login ?? '');
+		$user_email = (string) ($user->user_email ?? '');
+		$user_display_name = (string) ($user->display_name ?? '');
+		$subject = __('User Role Changed', 'user-manager');
+		$admin_user_edit_url = get_edit_user_link($user_id);
+		$roles_report_url = admin_url('admin.php?page=user-manager&tab=reports&reports_section=user-activity');
+		$ip_address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+		$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+
+		$message_lines = [
+			__('User role change was detected on My Account Dashboard.', 'user-manager'),
+			'',
+			sprintf(__('Timestamp: %s', 'user-manager'), current_time('mysql')),
+			sprintf(__('User ID: %d', 'user-manager'), $user_id),
+			sprintf(__('Current login: %s', 'user-manager'), $user_login !== '' ? $user_login : __('(unknown)', 'user-manager')),
+			sprintf(__('Previous login: %s', 'user-manager'), $user_login !== '' ? $user_login : __('(unknown)', 'user-manager')),
+			sprintf(__('Current email: %s', 'user-manager'), $user_email !== '' ? $user_email : __('(none)', 'user-manager')),
+			sprintf(__('Current display name: %s', 'user-manager'), $user_display_name !== '' ? $user_display_name : __('(none)', 'user-manager')),
+			sprintf(__('Current role(s): %s', 'user-manager'), $new_role_display),
+			sprintf(__('Previous role(s) from User Activity report: %s', 'user-manager'), $old_role_display),
+			sprintf(__('Previous activity action: %s', 'user-manager'), $old_action !== '' ? $old_action : __('(none)', 'user-manager')),
+			sprintf(__('Previous activity timestamp: %s', 'user-manager'), $old_created_at !== '' ? $old_created_at : __('(unknown)', 'user-manager')),
+			sprintf(__('Current page URL: %s', 'user-manager'), $current_url),
+			sprintf(__('IP Address: %s', 'user-manager'), $ip_address !== '' ? $ip_address : __('(unavailable)', 'user-manager')),
+			sprintf(__('User Agent: %s', 'user-manager'), $user_agent !== '' ? $user_agent : __('(unavailable)', 'user-manager')),
+		];
+		if (is_string($admin_user_edit_url) && $admin_user_edit_url !== '') {
+			$message_lines[] = sprintf(__('Edit user: %s', 'user-manager'), $admin_user_edit_url);
+		}
+		$message_lines[] = sprintf(__('User Activity report: %s', 'user-manager'), $roles_report_url);
+
+		$sent = wp_mail($notify_email, $subject, implode("\n", $message_lines));
+		if ($sent) {
+			update_user_meta($user_id, $alert_meta_key, $alert_signature);
+		}
+	}
+
+	/**
+	 * Normalize a roles snapshot string into a sorted unique role array.
+	 *
+	 * @param string $roles_snapshot CSV/pipe role snapshot string.
+	 * @return array<int,string>
+	 */
+	private static function normalize_role_snapshot_to_array(string $roles_snapshot): array {
+		$roles_snapshot = trim($roles_snapshot);
+		if ($roles_snapshot === '') {
+			return [];
+		}
+
+		$parts = preg_split('/[,|]+/', $roles_snapshot);
+		if (!is_array($parts)) {
+			return [];
+		}
+
+		$roles = [];
+		foreach ($parts as $part) {
+			$role = sanitize_key(trim((string) $part));
+			if ($role === '') {
+				continue;
+			}
+			$roles[] = $role;
+		}
+
+		$roles = array_values(array_unique($roles));
+		sort($roles);
+		return $roles;
 	}
 	
 	/**
@@ -11162,7 +11327,7 @@ html body .woocommerce-layout__header {
 		);
 		wp_mail($settings['role_change_alert_email'], $subject, $message);
 	}
-	
+
 	/**
 	 * Log wp-admin login to activity log.
 	 * Called on admin_init to detect when user accesses wp-admin after login.
