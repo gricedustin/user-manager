@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.5.249
+ * Version: 2.5.250
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.250 - March 16, 2026
+ * - Added a new role-change setting: "Emails to EXCLUDE from Admin email address for role change alerts" to skip notifications for specific user emails.
+ * - Role-change admin alert emails now check the exclusion list before sending and do not send when the triggering user email matches an excluded address.
+ *
  * 2.5.249 - March 16, 2026
  * - Added new My Account Admin setting: "Add Download to CSV Button below Paging Buttons" directly below the rows-per-page setting.
  * - Added optional "Export to CSV" buttons under pagination in Admin: Orders, Products, Coupons, Users, and Activity My Account list views.

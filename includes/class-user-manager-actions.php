@@ -2303,6 +2303,9 @@ class User_Manager_Actions {
 					$settings['role_change_alert_roles'] = array_map('sanitize_key', wp_unslash($_POST['role_change_alert_roles']));
 				}
 				$settings['role_change_alert_email'] = isset($_POST['role_change_alert_email']) ? sanitize_email(wp_unslash($_POST['role_change_alert_email'])) : '';
+				$settings['role_change_alert_email_exclusions'] = self::sanitize_email_csv(
+					isset($_POST['role_change_alert_email_exclusions']) ? wp_unslash($_POST['role_change_alert_email_exclusions']) : ''
+				);
 				$settings['log_activity'] = isset($_POST['log_activity']) && $_POST['log_activity'] === '1';
 				$settings['log_activity_debug'] = isset($_POST['log_activity_debug']) && $_POST['log_activity_debug'] === '1';
 				$settings['log_admin_activity'] = isset($_POST['log_admin_activity']) && $_POST['log_admin_activity'] === '1';
@@ -5913,6 +5916,34 @@ class User_Manager_Actions {
 	private static function sanitize_plugin_title_override($raw): string {
 		$title = sanitize_text_field((string) $raw);
 		return trim($title);
+	}
+
+	/**
+	 * Normalize and sanitize comma/newline separated emails.
+	 */
+	private static function sanitize_email_csv($raw): string {
+		$raw = is_string($raw) ? $raw : '';
+		if ($raw === '') {
+			return '';
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw);
+		if (!is_array($parts)) {
+			return '';
+		}
+
+		$emails = [];
+		foreach ($parts as $part) {
+			$email = sanitize_email((string) $part);
+			$email = strtolower(trim($email));
+			if ($email === '' || !is_email($email)) {
+				continue;
+			}
+			$emails[] = $email;
+		}
+
+		$emails = array_values(array_unique($emails));
+		return implode(', ', $emails);
 	}
 
 	/**

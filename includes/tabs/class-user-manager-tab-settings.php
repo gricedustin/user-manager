@@ -205,6 +205,11 @@ if (!defined('ABSPATH')) {
 								<input type="email" name="role_change_alert_email" id="um-role-change-alert-email" class="regular-text" value="<?php echo esc_attr($settings['role_change_alert_email'] ?? ''); ?>" placeholder="admin@example.com" />
 								<p class="description"><?php esc_html_e('Alerts are sent once per role change when the user\'s previous role (from the last User Activity record) was one of the monitored roles.', 'user-manager'); ?></p>
 							</div>
+							<div class="um-form-field">
+								<label for="um-role-change-alert-email-exclude-list"><?php esc_html_e('Emails to EXCLUDE from Admin email address for role change alerts', 'user-manager'); ?></label>
+								<input type="text" name="role_change_alert_email_exclusions" id="um-role-change-alert-email-exclude-list" class="regular-text" value="<?php echo esc_attr($settings['role_change_alert_email_exclusions'] ?? ''); ?>" placeholder="user1@example.com, user2@example.com" />
+								<p class="description"><?php esc_html_e('Comma-separated email addresses. If the user who triggered the role change alert matches one of these emails, no role change alert email is sent.', 'user-manager'); ?></p>
+							</div>
 						</div>
 					</div>
 				</div>

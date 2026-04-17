@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.250 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > Activity & Logging: added new field "Emails to EXCLUDE from Admin email address for role change alerts" beneath the admin alert email setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Role-change alert logic now checks that exclusion list and skips sending the notification when the triggering user email is listed.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.5.249 <span>(March 16, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a new My Account Admin setting, "Add Download to CSV Button below Paging Buttons," directly beneath the rows-per-page control.', 'user-manager'); ?></li>

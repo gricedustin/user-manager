@@ -57,7 +57,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.5.249';
+	const VERSION = '2.5.250';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -11279,6 +11279,13 @@ html body .woocommerce-layout__header {
 		if (empty($settings['role_change_alert_enabled']) || empty($settings['role_change_alert_email']) || !is_email($settings['role_change_alert_email'])) {
 			return;
 		}
+		$trigger_user_email = sanitize_email((string) ($user->user_email ?? ''));
+		if (
+			$trigger_user_email !== ''
+			&& self::is_role_change_alert_email_excluded($trigger_user_email, (string) ($settings['role_change_alert_email_exclusions'] ?? ''))
+		) {
+			return;
+		}
 		$monitored = isset($settings['role_change_alert_roles']) && is_array($settings['role_change_alert_roles']) ? $settings['role_change_alert_roles'] : [];
 		if (empty($monitored)) {
 			return;
@@ -11330,6 +11337,42 @@ html body .woocommerce-layout__header {
 			$new_role_display
 		);
 		wp_mail($settings['role_change_alert_email'], $subject, $message);
+	}
+
+	/**
+	 * Check if a triggering user email should be excluded from role-change alert sending.
+	 *
+	 * @param string $trigger_user_email Triggering user email.
+	 * @param string $raw_excluded_emails CSV/newline list of excluded emails.
+	 * @return bool
+	 */
+	private static function is_role_change_alert_email_excluded(string $trigger_user_email, string $raw_excluded_emails): bool {
+		$trigger_user_email = strtolower(sanitize_email($trigger_user_email));
+		if ($trigger_user_email === '') {
+			return false;
+		}
+
+		$raw_excluded_emails = trim($raw_excluded_emails);
+		if ($raw_excluded_emails === '') {
+			return false;
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw_excluded_emails);
+		if (!is_array($parts) || empty($parts)) {
+			return false;
+		}
+
+		foreach ($parts as $part) {
+			$email = strtolower(sanitize_email((string) $part));
+			if ($email === '') {
+				continue;
+			}
+			if (hash_equals($email, $trigger_user_email)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
