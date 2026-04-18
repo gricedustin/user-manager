@@ -505,6 +505,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 		if (empty($roles_to_notify)) {
 			return;
 		}
+		$hide_empty = !empty($settings['admin_email_list_check_role_notification_hide_empty']);
 
 		$registered_roles = method_exists(__CLASS__, 'get_user_roles') ? self::get_user_roles() : [];
 		if (!is_array($registered_roles)) {
@@ -525,6 +526,13 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 				'fields'  => ['ID', 'user_email', 'display_name', 'user_login'],
 			]);
 			$users = is_array($users) ? $users : [];
+
+			// Per the "Hide Notification for Each if No Users are Found"
+			// setting, stay silent for roles with zero matching users
+			// instead of showing an empty-state card.
+			if ($hide_empty && empty($users)) {
+				continue;
+			}
 
 			echo '<div class="notice notice-info"><p><strong>'
 				. esc_html(sprintf(

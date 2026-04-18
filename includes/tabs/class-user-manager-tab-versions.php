@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.31 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('"Also Display Notification with All Users with X Role" setting: added a new "Hide Notification for Each if No Users are Found" checkbox. When enabled, the per-role admin notice is only rendered for roles that actually have at least one user assigned — roles with zero users stay silent instead of showing an empty-state card.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.30 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('"User Manager: Missing WP Administrators from Remote Admin List" admin notice: added a "Bulk Create all N administrators" button at the bottom that opens the Bulk Create tool with every missing email prefilled in "Paste from Spreadsheet" and the Default Role preset to Administrator.', 'user-manager'); ?></li>

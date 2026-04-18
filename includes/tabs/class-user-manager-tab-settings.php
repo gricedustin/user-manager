@@ -471,6 +471,13 @@ if (!defined('ABSPATH')) {
 							<p class="description" style="margin-top:6px;">
 								<?php esc_html_e('Notifications only display to WP Administrators and only on User Manager admin screens, the Users list screen, and the Dashboard, matching where the other Remote Admin Email List notices render.', 'user-manager'); ?>
 							</p>
+							<label style="display:block; margin-top:10px;">
+								<input type="checkbox" name="admin_email_list_check_role_notification_hide_empty" value="1" <?php checked(!empty($settings['admin_email_list_check_role_notification_hide_empty'])); ?> />
+								<?php esc_html_e('Hide Notification for Each if No Users are Found', 'user-manager'); ?>
+							</label>
+							<p class="description" style="margin-top:4px;">
+								<?php esc_html_e('When checked, a per-role notification is only rendered for roles that actually have at least one user assigned. Roles with zero users stay silent instead of showing a "No users are currently assigned this role" card.', 'user-manager'); ?>
+							</p>
 						</div>
 					</div>
 				</div>

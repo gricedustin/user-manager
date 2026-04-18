@@ -2648,6 +2648,8 @@ class User_Manager_Actions {
 					}
 					$settings['admin_email_list_check_role_notification_roles'] = array_values(array_unique($settings['admin_email_list_check_role_notification_roles']));
 				}
+				$settings['admin_email_list_check_role_notification_hide_empty'] = isset($_POST['admin_email_list_check_role_notification_hide_empty'])
+					&& $_POST['admin_email_list_check_role_notification_hide_empty'] === '1';
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['simple_texting_api_token'] = isset($_POST['simple_texting_api_token']) ? sanitize_text_field(wp_unslash($_POST['simple_texting_api_token'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';

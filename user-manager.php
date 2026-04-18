@@ -2,11 +2,14 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.30
+ * Version: 2.6.31
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.31 - April 18, 2026
+ * - "Also Display Notification with All Users with X Role" setting: added a new "Hide Notification for Each if No Users are Found" checkbox. When enabled, the per-role admin notice is only rendered for roles that actually have at least one user assigned — roles with zero users stay silent instead of showing an empty-state card.
  *
  * 2.6.30 - April 18, 2026
  * - "User Manager: Missing WP Administrators from Remote Admin List" admin notice: added a "Bulk Create all N administrators" button at the bottom that opens the Bulk Create tool with every missing email prefilled in "Paste from Spreadsheet" and the Default Role preset to Administrator.
