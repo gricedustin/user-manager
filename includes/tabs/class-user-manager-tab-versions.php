@@ -39,6 +39,16 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.8 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a per-row "Show flag when" selector to the "Additional Flag to Display Below Additional Fields in All Orders Screen" setting: "Values are equal" (existing) or "Values are NOT equal" (new inverse behavior).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Without a grace value: "equal" flags on exact match (case-insensitive); "NOT equal" flags when the values differ.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('With a grace value (both values must be numeric): "equal" flags when ABS(A − B) > grace; "NOT equal" flags when ABS(A − B) ≤ grace.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a preview panel under the repeater that samples the 5 most recent orders and shows Meta A / Meta B values, the calculation, and whether the flag would display for each order.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Stored raw format accepts both are_they_equal and are_they_not_equal operator tokens; existing rows remain fully backward compatible.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.7 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Retitled the "Post Meta Viewer" add-on to "Post Meta Field Viewer & Editor" across the Add-ons tab, the add-on card header, the add-on registry, the Documentation tab feature list, and related role-access copy. Historical changelog entries retain their original wording.', 'user-manager'); ?></li>
