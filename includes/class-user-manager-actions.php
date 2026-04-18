@@ -796,6 +796,7 @@ class User_Manager_Actions {
 		$settings = User_Manager_Core::get_settings();
 		$is_multisite = is_multisite();
 		$delete_from_network = $is_multisite && isset($_POST['delete_from_network_if_no_other_sites']) && $_POST['delete_from_network_if_no_other_sites'] === '1';
+		$delete_from_network_all_sites = $is_multisite && isset($_POST['delete_from_network_and_remove_from_all_sites']) && $_POST['delete_from_network_and_remove_from_all_sites'] === '1';
 		$removed_count = 0;
 		$not_found_count = 0;
 
@@ -816,6 +817,72 @@ class User_Manager_Actions {
 			// Store user info before deletion for logging
 			$user_email = $user->user_email;
 			$user_id = $user->ID;
+
+			if ($is_multisite && $delete_from_network_all_sites) {
+				if ($user_id === get_current_user_id()) {
+					$not_found_count++;
+					if ($settings['log_activity'] ?? true) {
+						User_Manager_Core::add_activity_log('user_remove_failed', $user_id, 'Remove User', [
+							'error' => __('Cannot delete your own account from network', 'user-manager'),
+							'attempted_email' => $email,
+							'multisite' => true,
+						]);
+					}
+					continue;
+				}
+
+				$removed_from_blog_ids = [];
+				$all_sites = get_sites(['number' => 9999]);
+				if (is_array($all_sites)) {
+					foreach ($all_sites as $site) {
+						$blog_id = (int) $site->blog_id;
+						if ($blog_id <= 0) {
+							continue;
+						}
+						if (!is_user_member_of_blog($user_id, $blog_id)) {
+							continue;
+						}
+						remove_user_from_blog($user_id, $blog_id);
+						$removed_from_blog_ids[] = $blog_id;
+					}
+				}
+
+				require_once(ABSPATH . 'wp-admin/includes/user.php');
+				if (!function_exists('wpmu_delete_user')) {
+					require_once(ABSPATH . 'wp-admin/includes/ms.php');
+				}
+				$deleted = false;
+				if (function_exists('wpmu_delete_user')) {
+					$deleted = wpmu_delete_user($user_id);
+				} else {
+					$deleted = wp_delete_user($user_id, get_current_user_id());
+				}
+
+				if ($deleted) {
+					$removed_count++;
+					if ($settings['log_activity'] ?? true) {
+						User_Manager_Core::add_activity_log('user_deleted', $user_id, 'Remove User', [
+							'user_email' => $user_email,
+							'multisite' => true,
+							'deleted_from_network' => true,
+							'removed_from_all_sites' => true,
+							'removed_from_blog_ids' => $removed_from_blog_ids,
+						]);
+					}
+				} else {
+					$not_found_count++;
+					if ($settings['log_activity'] ?? true) {
+						User_Manager_Core::add_activity_log('user_remove_failed', $user_id, 'Remove User', [
+							'error' => __('Network deletion failed', 'user-manager'),
+							'attempted_email' => $email,
+							'multisite' => true,
+							'removed_from_blog_ids' => $removed_from_blog_ids,
+						]);
+					}
+				}
+
+				continue;
+			}
 
 			if ($is_multisite) {
 				// On multisite, remove user from current site only

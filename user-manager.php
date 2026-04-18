@@ -2,12 +2,18 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.4
+ * Version: 2.6.5
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.5 - April 18, 2026
+ * - Added new Remove User option on multisite: "Delete from network and remove this user from all other sub sites".
+ * - When checked, the user is removed from every site on the network where they are a member, then permanently deleted from the entire network via wpmu_delete_user (with wp_delete_user as a fallback).
+ * - This new option takes precedence over "Delete from network if user does not exist in any other sub sites" when both are checked.
+ * - Activity log entries now include `removed_from_all_sites` and the list of `removed_from_blog_ids` for audit trails.
+ *
  * 2.6.4 - April 18, 2026
  * - Replaced the free-text "Additional Meta Fields to Display Under Order", "Additional Meta Fields to Display Under Order in All Orders Screen", and "Additional Flag to Display Below Additional Fields in All Orders Screen" textareas with UI-friendly repeaters.
  * - Each row now has dedicated inputs for Meta Field, Custom Label, Prefix, and checkbox toggles for the Count file lines / Preview in modal / Show row when empty flags.
