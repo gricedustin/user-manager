@@ -133,6 +133,12 @@ class User_Manager_Addon_My_Account_Site_Admin {
 							<?php esc_html_e('Default all new orders into a payment pending status', 'user-manager'); ?>
 						</label>
 					</div>
+					<div class="um-form-field" id="um-my-account-admin-order-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
+						<label>
+							<input type="checkbox" name="my_account_admin_order_viewer_show_meta" id="um-my-account-admin-order-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_order_viewer_show_meta'] ?? false); ?> />
+							<?php esc_html_e('Show Meta Data area for Order details', 'user-manager'); ?>
+						</label>
+					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label><?php esc_html_e('Additional Meta Fields to Display Under Order', 'user-manager'); ?></label>
 						<p class="description"><?php esc_html_e('Add one row per meta field you want rendered under each Order detail view. Each row below becomes a meta_field:Label:prefix_before_value[:flags] entry, joined by commas when saved.', 'user-manager'); ?></p>
@@ -174,12 +180,6 @@ class User_Manager_Addon_My_Account_Site_Admin {
 							'um-my-account-admin-order-additional-flag-fields-list',
 							(string) ($settings['my_account_admin_order_list_additional_flag_fields'] ?? '')
 						); ?>
-					</div>
-					<div class="um-form-field" id="um-my-account-admin-order-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
-						<label>
-							<input type="checkbox" name="my_account_admin_order_viewer_show_meta" id="um-my-account-admin-order-viewer-show-meta" value="1" <?php checked($settings['my_account_admin_order_viewer_show_meta'] ?? false); ?> />
-							<?php esc_html_e('Show Meta Data area for Order details', 'user-manager'); ?>
-						</label>
 					</div>
 				</div>
 
