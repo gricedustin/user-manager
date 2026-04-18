@@ -7,7 +7,11 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+require_once __DIR__ . '/addons/trait-my-account-admin-meta-fields-repeater.php';
+
 class User_Manager_Addon_My_Account_Site_Admin {
+
+	use User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait;
 
 	public static function render(array $settings, string $settings_form_id = ''): void {
 		$available_roles = self::get_available_roles();
@@ -130,17 +134,25 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						</label>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
-						<label for="um-my-account-admin-order-additional-meta-fields"><?php esc_html_e('Additional Meta Fields to Display Under Order', 'user-manager'); ?></label>
-						<textarea name="my_account_admin_order_additional_meta_fields" id="um-my-account-admin-order-additional-meta-fields" class="large-text" rows="4" placeholder="_tracking_number:Tracking Number, _invoice_url:Invoice URL"><?php echo esc_textarea($settings['my_account_admin_order_additional_meta_fields'] ?? ''); ?></textarea>
-						<p class="description"><?php esc_html_e('Format: meta_field:Label:prefix_before_value[:flags]. Renders under each Order detail view. Optional flags: text_line_count, text-file-line-count, line_count, count_lines, preview, preview_file, file_preview, preview-modal, preview_modal, display_when_empty, display-empty, show_empty, show_if_empty, render_if_empty. Separate values using commas and/or line breaks.', 'user-manager'); ?></p>
-						<p class="description"><?php esc_html_e('Example with line count, preview modal, and always-show row: _volunteer_file:Volunteer File:https://example.com/uploads/::text_line_count|preview|display_when_empty', 'user-manager'); ?></p>
+						<label><?php esc_html_e('Additional Meta Fields to Display Under Order', 'user-manager'); ?></label>
+						<p class="description"><?php esc_html_e('Add one row per meta field you want rendered under each Order detail view. Each row below becomes a meta_field:Label:prefix_before_value[:flags] entry, joined by commas when saved.', 'user-manager'); ?></p>
+						<?php self::render_additional_meta_fields_repeater(
+							'my_account_admin_order_additional_meta_fields',
+							'um-my-account-admin-order-additional-meta-fields',
+							(string) ($settings['my_account_admin_order_additional_meta_fields'] ?? '')
+						); ?>
+						<p class="description" style="margin-top:8px;"><?php esc_html_e('Example: Meta Field = _volunteer_file, Label = Volunteer File, Prefix = https://example.com/uploads/, flags = Count file lines + Preview in modal + Show row when empty.', 'user-manager'); ?></p>
 						<p class="description"><?php esc_html_e('Debug: append ?um_text_file_line_count_debug=1 to the Admin: Orders URL to output URL-build/fetch/cache diagnostics for flagged file fields.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-meta-list-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
-						<label for="um-my-account-admin-order-additional-meta-fields-list"><?php esc_html_e('Additional Meta Fields to Display Under Order in All Orders Screen', 'user-manager'); ?></label>
-						<textarea name="my_account_admin_order_list_additional_meta_fields" id="um-my-account-admin-order-additional-meta-fields-list" class="large-text" rows="5" placeholder="_tracking_number:Tracking Number, _invoice_url:Invoice URL"><?php echo esc_textarea($settings['my_account_admin_order_list_additional_meta_fields'] ?? ''); ?></textarea>
-						<p class="description"><?php esc_html_e('Format: meta_field:Label:prefix_before_value[:flags]. Renders in Admin: Orders list (inline under action buttons). Optional flags: text_line_count, text-file-line-count, line_count, count_lines, preview, preview_file, file_preview, preview-modal, preview_modal, display_when_empty, display-empty, show_empty, show_if_empty, render_if_empty. Separate values using commas and/or line breaks.', 'user-manager'); ?></p>
-						<p class="description"><?php esc_html_e('Example with line count, preview modal, and always-show row: _volunteer_file:Volunteer File:https://example.com/uploads/::text_line_count|preview|display_when_empty', 'user-manager'); ?></p>
+						<label><?php esc_html_e('Additional Meta Fields to Display Under Order in All Orders Screen', 'user-manager'); ?></label>
+						<p class="description"><?php esc_html_e('Add one row per meta field you want rendered inline under the action buttons of each row in the Admin: Orders list.', 'user-manager'); ?></p>
+						<?php self::render_additional_meta_fields_repeater(
+							'my_account_admin_order_list_additional_meta_fields',
+							'um-my-account-admin-order-additional-meta-fields-list',
+							(string) ($settings['my_account_admin_order_list_additional_meta_fields'] ?? '')
+						); ?>
+						<p class="description" style="margin-top:8px;"><?php esc_html_e('Example: Meta Field = _volunteer_file, Label = Volunteer File, Prefix = https://example.com/uploads/, flags = Count file lines + Preview in modal + Show row when empty.', 'user-manager'); ?></p>
 						<p class="description"><?php esc_html_e('Debug: append ?um_text_file_line_count_debug=1 to the Admin: Orders URL to output URL-build/fetch/cache diagnostics for flagged file fields.', 'user-manager'); ?></p>
 						<div style="margin-top:8px;">
 							<button
@@ -155,10 +167,13 @@ class User_Manager_Addon_My_Account_Site_Admin {
 						</div>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-flag-list-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
-						<label for="um-my-account-admin-order-additional-flag-fields-list"><?php esc_html_e('Additional Flag to Display Below Additional Fields in All Orders Screen', 'user-manager'); ?></label>
-						<textarea name="my_account_admin_order_list_additional_flag_fields" id="um-my-account-admin-order-additional-flag-fields-list" class="large-text" rows="5" placeholder="_meta_field_a:_meta_field_b:are_they_equal:3:FLAG TITLE:#000000:#ffffff"><?php echo esc_textarea($settings['my_account_admin_order_list_additional_flag_fields'] ?? ''); ?></textarea>
-						<p class="description"><?php esc_html_e('Format (one per line): meta_field_a:meta_field_b:are_they_equal:FLAG TITLE:bgcolor:textcolor OR meta_field_a:meta_field_b:are_they_equal:grace_value:FLAG TITLE:bgcolor:textcolor', 'user-manager'); ?></p>
-						<p class="description"><?php esc_html_e('Without grace_value, the flag renders when the compared values are equal (case-insensitive). With grace_value, both values must be numeric and the flag renders only when ABS(meta_a - meta_b) is greater than grace_value. Default colors: black background and white text.', 'user-manager'); ?></p>
+						<label><?php esc_html_e('Additional Flag to Display Below Additional Fields in All Orders Screen', 'user-manager'); ?></label>
+						<p class="description"><?php esc_html_e('Compare two meta values per row. Without a grace value the flag renders when the two values are equal (case-insensitive); with a grace value both values must be numeric and the flag renders only when ABS(meta_a − meta_b) is greater than the grace value. Default colors are black background and white text.', 'user-manager'); ?></p>
+						<?php self::render_additional_meta_compare_flags_repeater(
+							'my_account_admin_order_list_additional_flag_fields',
+							'um-my-account-admin-order-additional-flag-fields-list',
+							(string) ($settings['my_account_admin_order_list_additional_flag_fields'] ?? '')
+						); ?>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-meta-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label>
@@ -269,6 +284,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 				</div>
 			</div>
 		</div>
+		<?php self::render_additional_meta_fields_repeater_assets(); ?>
 		<?php
 	}
 
