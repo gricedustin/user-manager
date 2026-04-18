@@ -2,12 +2,20 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.0
+ * Version: 2.6.1
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.1 - April 18, 2026
+ * - My Account Admin: replaced the textarea "Prefix Before Value" segment on Additional Meta Fields with a Flexible Checkout Fields PRO File Upload flag ("fcf_file").
+ * - When the fcf_file flag is set on an Additional Meta Field definition, the stored meta value is treated as a Flexible Checkout Fields PRO upload hash and resolved against `wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/<hash>/` before linking, previewing, and counting lines.
+ * - Supports several flag aliases: fcf_file, fcf_file_upload, fcf-file, fcf-file-upload, flexible_checkout_fields_file, flexible_checkout_fields_file_upload, flexible-checkout-fields-file, flexible-checkout-fields-file-upload.
+ * - Accepts several stored-value shapes: bare hash, `<hash>/<filename>`, `<hash>|<filename>`, `<hash>::<filename>`, and full URLs that already point at the Flexible Checkout Fields upload directory.
+ * - Line-count and preview pipelines now read resolved local files directly when available, avoiding unnecessary HTTP round-trips on the same host.
+ * - Existing `prefix_before_value` entries remain parsed for backward compatibility; new configurations should use the fcf_file flag for FCF PRO uploads.
+ *
  * 2.6.0 - April 18, 2026
  * - Merged outstanding feature branches into main and bumped the plugin to a new minor version (0.1 bump).
  * - Consolidated pending work from `cursor/cart-and-order-page-settings-cd89` and `cursor/datalist-content-deferral-c56c` branches.

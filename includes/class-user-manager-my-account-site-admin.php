@@ -2349,7 +2349,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Parse configured additional order meta fields.
 	 *
 	 * @param string $raw Raw setting value.
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool,is_fcf_file_upload:bool}>
 	 */
 	private static function parse_order_additional_meta_field_definitions(string $raw): array {
 		$raw = trim($raw);
@@ -2403,6 +2403,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'count_text_file_lines' => $parsed_flags['count_text_file_lines'],
 				'enable_file_preview'   => $parsed_flags['enable_file_preview'],
 				'display_when_empty'    => $parsed_flags['display_when_empty'],
+				'is_fcf_file_upload'    => $parsed_flags['is_fcf_file_upload'],
 			];
 			$seen_keys[$meta_key] = true;
 		}
@@ -2445,6 +2446,14 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 		}
 
+		// When the entire trailing segment is just a supported flag token (no colons at all),
+		// prefer flag semantics over treating the whole thing as a bare prefix. This keeps
+		// short forms like `meta:label:fcf_file` readable without requiring the explicit
+		// `::fcf_file` double-colon delimiter.
+		if (self::is_supported_meta_definition_flags_segment($prefix_and_flags_raw)) {
+			return ['', $prefix_and_flags_raw];
+		}
+
 		return [$prefix_and_flags_raw, ''];
 	}
 
@@ -2469,7 +2478,11 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Supported "display when empty" flags:
 	 * - display_when_empty, display-empty, show_empty, show_if_empty, render_if_empty
 	 *
-	 * @return array{count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}
+	 * Supported "Flexible Checkout Fields PRO File Upload" flags:
+	 * - fcf_file, fcf_file_upload, fcf-file, fcf-file-upload, flexible_checkout_fields_file,
+	 *   flexible_checkout_fields_file_upload, flexible-checkout-fields-file-upload
+	 *
+	 * @return array{count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool,is_fcf_file_upload:bool}
 	 */
 	private static function parse_order_additional_meta_flags(string $flags_raw): array {
 		$flags_raw = trim(strtolower($flags_raw));
@@ -2478,6 +2491,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'count_text_file_lines' => false,
 				'enable_file_preview' => false,
 				'display_when_empty' => false,
+				'is_fcf_file_upload' => false,
 			];
 		}
 
@@ -2487,6 +2501,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'count_text_file_lines' => false,
 				'enable_file_preview' => false,
 				'display_when_empty' => false,
+				'is_fcf_file_upload' => false,
 			];
 		}
 
@@ -2510,9 +2525,11 @@ final class User_Manager_My_Account_Site_Admin {
 			'show_if_empty',
 			'render_if_empty',
 		];
+		$fcf_file_supported = self::get_fcf_file_upload_flag_aliases();
 		$count_text_file_lines = false;
 		$enable_file_preview = false;
 		$display_when_empty = false;
+		$is_fcf_file_upload = false;
 		foreach ($parts as $part) {
 			$part = trim((string) $part);
 			if ($part === '') {
@@ -2527,7 +2544,10 @@ final class User_Manager_My_Account_Site_Admin {
 			if (!$display_when_empty && in_array($part, $display_when_empty_supported, true)) {
 				$display_when_empty = true;
 			}
-			if ($count_text_file_lines && $enable_file_preview && $display_when_empty) {
+			if (!$is_fcf_file_upload && in_array($part, $fcf_file_supported, true)) {
+				$is_fcf_file_upload = true;
+			}
+			if ($count_text_file_lines && $enable_file_preview && $display_when_empty && $is_fcf_file_upload) {
 				break;
 			}
 		}
@@ -2536,6 +2556,27 @@ final class User_Manager_My_Account_Site_Admin {
 			'count_text_file_lines' => $count_text_file_lines,
 			'enable_file_preview' => $enable_file_preview,
 			'display_when_empty' => $display_when_empty,
+			'is_fcf_file_upload' => $is_fcf_file_upload,
+		];
+	}
+
+	/**
+	 * Supported token aliases for the "Flexible Checkout Fields PRO File Upload" flag.
+	 *
+	 * Tokens MUST be lowercase to match `parse_order_additional_meta_flags()` normalization.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_fcf_file_upload_flag_aliases(): array {
+		return [
+			'fcf_file',
+			'fcf_file_upload',
+			'fcf-file',
+			'fcf-file-upload',
+			'flexible_checkout_fields_file',
+			'flexible_checkout_fields_file_upload',
+			'flexible-checkout-fields-file',
+			'flexible-checkout-fields-file-upload',
 		];
 	}
 
@@ -2564,12 +2605,23 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Determine whether an additional-meta definition's value should be resolved as a
+	 * Flexible Checkout Fields PRO File Upload (hash-based folder under
+	 * `wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/`).
+	 */
+	private static function should_render_meta_as_fcf_file_upload_for_meta_definition(string $flags_raw): bool {
+		$flags = self::parse_order_additional_meta_flags($flags_raw);
+		return !empty($flags['is_fcf_file_upload']);
+	}
+
+	/**
 	 * Determine whether the provided flag string contains any recognized optional flags.
 	 */
 	private static function contains_supported_meta_definition_flags(string $flags_raw): bool {
 		return self::should_count_text_file_lines_for_meta_definition($flags_raw)
 			|| self::should_enable_file_preview_for_meta_definition($flags_raw)
-			|| self::should_display_meta_definition_when_empty($flags_raw);
+			|| self::should_display_meta_definition_when_empty($flags_raw)
+			|| self::should_render_meta_as_fcf_file_upload_for_meta_definition($flags_raw);
 	}
 
 	/**
@@ -2586,22 +2638,25 @@ final class User_Manager_My_Account_Site_Admin {
 			return false;
 		}
 
-		$supported = [
-			'text_line_count',
-			'text-file-line-count',
-			'line_count',
-			'count_lines',
-			'preview',
-			'preview_file',
-			'file_preview',
-			'preview-modal',
-			'preview_modal',
-			'display_when_empty',
-			'display-empty',
-			'show_empty',
-			'show_if_empty',
-			'render_if_empty',
-		];
+		$supported = array_merge(
+			[
+				'text_line_count',
+				'text-file-line-count',
+				'line_count',
+				'count_lines',
+				'preview',
+				'preview_file',
+				'file_preview',
+				'preview-modal',
+				'preview_modal',
+				'display_when_empty',
+				'display-empty',
+				'show_empty',
+				'show_if_empty',
+				'render_if_empty',
+			],
+			self::get_fcf_file_upload_flag_aliases()
+		);
 		$has_supported = false;
 		foreach ($parts as $part) {
 			$part = trim((string) $part);
@@ -2620,7 +2675,7 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Get additional order meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool,is_fcf_file_upload:bool}>
 	 */
 	private static function get_order_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -2634,7 +2689,7 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Get additional order-list meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool,is_fcf_file_upload:bool}>
 	 */
 	private static function get_order_list_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -2916,13 +2971,15 @@ final class User_Manager_My_Account_Site_Admin {
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
 			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
 			$enable_file_preview = !empty($definition['enable_file_preview']);
+			$is_fcf_file_upload = !empty($definition['is_fcf_file_upload']);
 			$value_html = self::format_meta_values_for_display_with_links(
 				$meta_values,
 				$prefix_before_value,
 				$should_count_text_file_lines,
 				$enable_file_preview,
 				(int) $order->get_id(),
-				(string) $definition['key']
+				(string) $definition['key'],
+				$is_fcf_file_upload
 			);
 			if ($value_html === '' && !$display_when_empty) {
 				continue;
@@ -2981,13 +3038,15 @@ final class User_Manager_My_Account_Site_Admin {
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
 			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
 			$enable_file_preview = !empty($definition['enable_file_preview']);
+			$is_fcf_file_upload = !empty($definition['is_fcf_file_upload']);
 			$value_html = self::format_meta_values_for_display_with_links(
 				$meta_values,
 				$prefix_before_value,
 				$should_count_text_file_lines,
 				$enable_file_preview,
 				(int) $order->get_id(),
-				(string) $definition['key']
+				(string) $definition['key'],
+				$is_fcf_file_upload
 			);
 			if ($value_html === '' && !$display_when_empty) {
 				continue;
@@ -3020,9 +3079,12 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @param bool   $enable_file_preview Whether to render a modal preview trigger for URL values.
 	 * @param int    $order_id Optional order ID for persistent line-count caching.
 	 * @param string $meta_key Optional source meta key for debug context.
+	 * @param bool   $is_fcf_file_upload Whether the raw meta value is a Flexible Checkout Fields PRO
+	 *                                   File Upload hash (folder name) that must be resolved to an
+	 *                                   actual file URL before linking/counting/previewing.
 	 * @return string
 	 */
-	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false, bool $enable_file_preview = false, int $order_id = 0, string $meta_key = ''): string {
+	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false, bool $enable_file_preview = false, int $order_id = 0, string $meta_key = '', bool $is_fcf_file_upload = false): string {
 		$rendered = [];
 		$prefix_before_value = trim($prefix_before_value);
 		$debug_enabled = $count_text_file_lines && self::is_text_file_line_count_debug_enabled();
@@ -3039,8 +3101,14 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 
 			$normalized_value = self::normalize_meta_scalar_for_prefixed_link($display_value);
+			$fcf_resolution = null;
 			$value_for_output = $display_value;
-			if ($prefix_before_value !== '') {
+			if ($is_fcf_file_upload) {
+				$fcf_resolution = self::resolve_flexible_checkout_fields_file_upload_value($normalized_value);
+				if (is_array($fcf_resolution) && $fcf_resolution['url'] !== '') {
+					$value_for_output = $fcf_resolution['url'];
+				}
+			} elseif ($prefix_before_value !== '') {
 				$value_for_output = self::build_meta_prefixed_url_candidate($normalized_value, $prefix_before_value);
 			}
 
@@ -3049,6 +3117,8 @@ final class User_Manager_My_Account_Site_Admin {
 				'raw_meta_value' => $display_value,
 				'normalized_meta_value' => $normalized_value,
 				'prefix_before_value' => $prefix_before_value,
+				'is_fcf_file_upload' => $is_fcf_file_upload,
+				'fcf_resolution' => $fcf_resolution,
 				'combined_value' => $value_for_output,
 				'order_id' => $order_id,
 				'meta_key' => $meta_key,
@@ -3064,7 +3134,14 @@ final class User_Manager_My_Account_Site_Admin {
 					}
 					$link_html = implode(' <span class="um-my-account-meta-file-link-sep">|</span> ', $link_actions);
 					if ($count_text_file_lines) {
-						$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
+						$local_path_for_count = ($is_fcf_file_upload && is_array($fcf_resolution) && !empty($fcf_resolution['path']))
+							? (string) $fcf_resolution['path']
+							: '';
+						if ($local_path_for_count !== '') {
+							$line_count_debug = self::get_text_file_line_count_debug_data_from_local_path($local_path_for_count, $url, $order_id);
+						} else {
+							$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
+						}
 						$line_count = isset($line_count_debug['line_count']) && is_int($line_count_debug['line_count'])
 							? (int) $line_count_debug['line_count']
 							: null;
@@ -3128,6 +3205,229 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return $prefix_before_value . ltrim($normalized_value, '/');
+	}
+
+	/**
+	 * Resolve a Flexible Checkout Fields PRO File Upload meta value.
+	 *
+	 * FCF PRO stores uploads on disk at:
+	 *   wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/<hash>/<original-filename>
+	 * and saves the `<hash>` (optionally with an embedded filename) as the meta value.
+	 * This method translates that stored hash into a concrete filesystem path and public URL
+	 * so the rest of the rendering pipeline (Open File / Preview File / line count) can reuse
+	 * the same http(s) code path.
+	 *
+	 * Recognized stored-value shapes (seen across FCF versions/exports):
+	 * - "<hash>"                                  → resolve newest file inside the hash folder
+	 * - "<hash>/<filename>"                       → resolve that specific file
+	 * - "<hash>|<filename>" / "<hash>::<filename>"→ resolve that specific file
+	 * - full URL under woocommerce_uploads/flexible-checkout-fields/… → returned as-is
+	 *
+	 * @param string $normalized_value Normalized meta value (no JSON array wrapping, trimmed).
+	 * @return array{url:string,path:string,hash:string,filename:string,error:string}
+	 */
+	private static function resolve_flexible_checkout_fields_file_upload_value(string $normalized_value): array {
+		$result = [
+			'url' => '',
+			'path' => '',
+			'hash' => '',
+			'filename' => '',
+			'error' => '',
+		];
+
+		$normalized_value = trim($normalized_value);
+		if ($normalized_value === '') {
+			$result['error'] = 'empty_value';
+			return $result;
+		}
+
+		if (preg_match('#^https?://#i', $normalized_value)) {
+			$result['url'] = esc_url_raw($normalized_value);
+			return $result;
+		}
+
+		[$hash, $explicit_filename] = self::split_fcf_file_upload_hash_and_filename($normalized_value);
+		if ($hash === '') {
+			$result['error'] = 'missing_hash';
+			return $result;
+		}
+
+		$result['hash'] = $hash;
+		$result['filename'] = $explicit_filename;
+
+		$base_dir = self::get_flexible_checkout_fields_base_upload_dir();
+		$base_url = self::get_flexible_checkout_fields_base_upload_url();
+		if ($base_dir === '' || $base_url === '') {
+			$result['error'] = 'uploads_dir_unavailable';
+			return $result;
+		}
+
+		$hash_dir = trailingslashit($base_dir) . $hash;
+		if (!is_dir($hash_dir)) {
+			$result['error'] = 'hash_dir_not_found';
+			return $result;
+		}
+
+		$resolved_filename = $explicit_filename;
+		if ($resolved_filename === '') {
+			$resolved_filename = self::find_first_file_in_fcf_hash_dir($hash_dir);
+		}
+		if ($resolved_filename === '') {
+			$result['error'] = 'no_file_in_hash_dir';
+			return $result;
+		}
+
+		$resolved_filename = ltrim($resolved_filename, '/\\');
+		$candidate_path = trailingslashit($hash_dir) . $resolved_filename;
+		if (!is_file($candidate_path)) {
+			$fallback_filename = self::find_first_file_in_fcf_hash_dir($hash_dir);
+			if ($fallback_filename === '') {
+				$result['error'] = 'file_not_found_in_hash_dir';
+				return $result;
+			}
+			$resolved_filename = $fallback_filename;
+			$candidate_path = trailingslashit($hash_dir) . $resolved_filename;
+			if (!is_file($candidate_path)) {
+				$result['error'] = 'file_not_found_in_hash_dir';
+				return $result;
+			}
+		}
+
+		$result['filename'] = $resolved_filename;
+		$result['path'] = $candidate_path;
+		$result['url'] = esc_url_raw(trailingslashit($base_url) . rawurlencode($hash) . '/' . rawurlencode($resolved_filename));
+		return $result;
+	}
+
+	/**
+	 * Split a stored FCF file upload meta value into a hash folder and (optional) filename.
+	 *
+	 * @return array{0:string,1:string}
+	 */
+	private static function split_fcf_file_upload_hash_and_filename(string $normalized_value): array {
+		$normalized_value = trim($normalized_value);
+		if ($normalized_value === '') {
+			return ['', ''];
+		}
+
+		// Prefer explicit delimiters so filenames containing slashes cannot be
+		// confused with a hash/filename separator.
+		foreach (['::', '|'] as $delimiter) {
+			$delim_pos = strpos($normalized_value, $delimiter);
+			if ($delim_pos !== false) {
+				$hash_raw = substr($normalized_value, 0, $delim_pos);
+				$filename_raw = substr($normalized_value, $delim_pos + strlen($delimiter));
+				return [
+					self::sanitize_fcf_hash_token((string) $hash_raw),
+					self::sanitize_fcf_filename_token((string) $filename_raw),
+				];
+			}
+		}
+
+		if (strpos($normalized_value, '/') !== false) {
+			$segments = explode('/', $normalized_value, 2);
+			return [
+				self::sanitize_fcf_hash_token((string) ($segments[0] ?? '')),
+				self::sanitize_fcf_filename_token((string) ($segments[1] ?? '')),
+			];
+		}
+
+		return [self::sanitize_fcf_hash_token($normalized_value), ''];
+	}
+
+	/**
+	 * Sanitize a FCF hash token to safe filesystem/url characters.
+	 */
+	private static function sanitize_fcf_hash_token(string $raw): string {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return '';
+		}
+		return (string) preg_replace('/[^A-Za-z0-9._-]/', '', $raw);
+	}
+
+	/**
+	 * Sanitize a FCF filename token defensively before using it on disk.
+	 */
+	private static function sanitize_fcf_filename_token(string $raw): string {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return '';
+		}
+		$raw = str_replace(['\\', "\0"], ['/', ''], $raw);
+		$raw = ltrim($raw, '/');
+		if (strpos($raw, '..') !== false) {
+			return '';
+		}
+		if (function_exists('sanitize_file_name')) {
+			$clean = sanitize_file_name(basename($raw));
+			return is_string($clean) ? $clean : '';
+		}
+		return basename($raw);
+	}
+
+	/**
+	 * Find the first (most recent) regular file inside a FCF hash directory.
+	 */
+	private static function find_first_file_in_fcf_hash_dir(string $hash_dir): string {
+		$hash_dir = (string) $hash_dir;
+		if ($hash_dir === '' || !is_dir($hash_dir)) {
+			return '';
+		}
+
+		$entries = @scandir($hash_dir);
+		if (!is_array($entries) || empty($entries)) {
+			return '';
+		}
+
+		$candidates = [];
+		foreach ($entries as $entry) {
+			if ($entry === '.' || $entry === '..') {
+				continue;
+			}
+			$full_path = trailingslashit($hash_dir) . $entry;
+			if (!is_file($full_path)) {
+				continue;
+			}
+			$mtime = @filemtime($full_path);
+			$candidates[$entry] = is_int($mtime) ? $mtime : 0;
+		}
+
+		if (empty($candidates)) {
+			return '';
+		}
+
+		arsort($candidates);
+		$names = array_keys($candidates);
+		return (string) $names[0];
+	}
+
+	/**
+	 * Base directory for Flexible Checkout Fields PRO uploads.
+	 */
+	private static function get_flexible_checkout_fields_base_upload_dir(): string {
+		if (!function_exists('wp_upload_dir')) {
+			return '';
+		}
+		$uploads = wp_upload_dir();
+		if (!is_array($uploads) || empty($uploads['basedir']) || !is_string($uploads['basedir'])) {
+			return '';
+		}
+		return trailingslashit((string) $uploads['basedir']) . 'woocommerce_uploads/flexible-checkout-fields';
+	}
+
+	/**
+	 * Base URL for Flexible Checkout Fields PRO uploads.
+	 */
+	private static function get_flexible_checkout_fields_base_upload_url(): string {
+		if (!function_exists('wp_upload_dir')) {
+			return '';
+		}
+		$uploads = wp_upload_dir();
+		if (!is_array($uploads) || empty($uploads['baseurl']) || !is_string($uploads['baseurl'])) {
+			return '';
+		}
+		return trailingslashit((string) $uploads['baseurl']) . 'woocommerce_uploads/flexible-checkout-fields';
 	}
 
 	/**
@@ -3238,6 +3538,121 @@ final class User_Manager_My_Account_Site_Admin {
 		$cache[$cache_lookup_key] = $debug;
 
 		return $debug;
+	}
+
+	/**
+	 * Count lines for a text file resolved to a local filesystem path.
+	 *
+	 * Reuses the same per-order URL cache so cached results are shared with the
+	 * HTTP fetcher, and avoids unnecessary HTTP round-trips for FCF uploads that
+	 * already resolved to a concrete server path.
+	 *
+	 * @param string $local_path   Absolute path on disk.
+	 * @param string $url_for_cache Canonical URL for the file (used as cache key).
+	 * @param int    $order_id     Optional order ID for persistent cache storage.
+	 * @return array{is_valid_url:bool,requested:bool,exists:bool,status_code:int|null,line_count:int|null,error:string,content_type:string,body_size:int|null,cache_hit:bool,source:string,local_path:string}
+	 */
+	private static function get_text_file_line_count_debug_data_from_local_path(string $local_path, string $url_for_cache, int $order_id = 0): array {
+		static $cache = [];
+
+		$local_path = trim((string) $local_path);
+		$url_for_cache = trim((string) $url_for_cache);
+		$cache_lookup_key = $order_id . '|' . $url_for_cache . '|' . $local_path;
+		if (isset($cache[$cache_lookup_key])) {
+			return $cache[$cache_lookup_key];
+		}
+
+		$debug = [
+			'is_valid_url' => false,
+			'requested' => false,
+			'exists' => false,
+			'status_code' => null,
+			'line_count' => null,
+			'error' => '',
+			'content_type' => '',
+			'body_size' => null,
+			'cache_hit' => false,
+			'source' => 'local_path',
+			'local_path' => $local_path,
+		];
+
+		if ($local_path === '' || !is_file($local_path)) {
+			$debug['error'] = 'local_file_not_found';
+			$cache[$cache_lookup_key] = $debug;
+			return $debug;
+		}
+
+		$sanitized_url = esc_url_raw($url_for_cache);
+		if ($sanitized_url !== '' && preg_match('#^https?://#i', $sanitized_url)) {
+			$debug['is_valid_url'] = true;
+			if ($order_id > 0) {
+				$cached_line_count = self::get_cached_text_file_line_count_from_order_meta($order_id, $sanitized_url);
+				if ($cached_line_count !== null) {
+					$debug['cache_hit'] = true;
+					$debug['exists'] = true;
+					$debug['line_count'] = $cached_line_count;
+					$cache[$cache_lookup_key] = $debug;
+					return $debug;
+				}
+			}
+		}
+
+		$debug['exists'] = true;
+		$debug['requested'] = true;
+		$body = @file_get_contents($local_path);
+		if ($body === false) {
+			$debug['error'] = 'unable_to_read_local_file';
+			$cache[$cache_lookup_key] = $debug;
+			return $debug;
+		}
+
+		$debug['body_size'] = strlen($body);
+		$content_type_guess = self::guess_content_type_for_local_file($local_path);
+		$debug['content_type'] = $content_type_guess;
+
+		if ($body === '') {
+			$debug['line_count'] = 0;
+		} else {
+			$debug['line_count'] = self::count_rows_from_remote_file_contents($body, $content_type_guess, $sanitized_url !== '' ? $sanitized_url : $local_path);
+		}
+
+		if ($order_id > 0 && $sanitized_url !== '' && $debug['line_count'] !== null) {
+			self::set_cached_text_file_line_count_on_order_meta($order_id, $sanitized_url, (int) $debug['line_count']);
+		}
+
+		$cache[$cache_lookup_key] = $debug;
+		return $debug;
+	}
+
+	/**
+	 * Best-effort MIME content-type guess for a local file based on its extension.
+	 */
+	private static function guess_content_type_for_local_file(string $local_path): string {
+		$local_path = (string) $local_path;
+		if ($local_path === '') {
+			return '';
+		}
+		$ext = strtolower((string) pathinfo($local_path, PATHINFO_EXTENSION));
+		switch ($ext) {
+			case 'csv':
+				return 'text/csv';
+			case 'tsv':
+			case 'tab':
+				return 'text/tab-separated-values';
+			case 'xlsx':
+				return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+			case 'xls':
+				return 'application/vnd.ms-excel';
+			case 'xml':
+				return 'application/xml';
+			case 'html':
+			case 'htm':
+				return 'text/html';
+			case 'txt':
+			case 'log':
+				return 'text/plain';
+		}
+		return '';
 	}
 
 	/**

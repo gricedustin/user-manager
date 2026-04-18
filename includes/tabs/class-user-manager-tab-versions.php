@@ -39,6 +39,16 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.1 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Additional Meta Fields: replaced the textarea "Prefix Before Value" segment with a Flexible Checkout Fields PRO File Upload flag ("fcf_file").', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When fcf_file is set, the stored meta value is treated as a Flexible Checkout Fields PRO upload hash and the plugin resolves it under wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/<hash>/ before rendering links, previews, and line counts.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Accepts several flag aliases (fcf_file, fcf_file_upload, fcf-file, fcf-file-upload, flexible_checkout_fields_file, flexible_checkout_fields_file_upload, flexible-checkout-fields-file, flexible-checkout-fields-file-upload) and several stored-value shapes (bare hash, <hash>/<filename>, <hash>|<filename>, <hash>::<filename>, and full URLs already pointing inside the FCF upload directory).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Line-count and preview pipelines now read resolved FCF files directly from disk when available, avoiding unnecessary HTTP round-trips to the same host.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Existing prefix_before_value configurations continue to work unchanged for backward compatibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.0 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Merged outstanding feature branches into main and bumped the plugin to a new minor version (0.1 bump).', 'user-manager'); ?></li>
