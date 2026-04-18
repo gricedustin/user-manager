@@ -83,6 +83,7 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				<label><input type="checkbox" data-um-meta-fields-flag="text_line_count" <?php checked(in_array('text_line_count', $flags, true)); ?> /> <?php esc_html_e('Count file lines', 'user-manager'); ?></label>
 				<label><input type="checkbox" data-um-meta-fields-flag="preview" <?php checked(in_array('preview', $flags, true)); ?> /> <?php esc_html_e('Preview in modal', 'user-manager'); ?></label>
 				<label><input type="checkbox" data-um-meta-fields-flag="display_when_empty" <?php checked(in_array('display_when_empty', $flags, true)); ?> /> <?php esc_html_e('Show row when empty', 'user-manager'); ?></label>
+				<label title="<?php esc_attr_e('Treat the stored meta value as a Flexible Checkout Fields PRO upload hash and resolve the actual file before linking/previewing/counting lines.', 'user-manager'); ?>"><input type="checkbox" data-um-meta-fields-flag="fcf_file" <?php checked(in_array('fcf_file', $flags, true)); ?> /> <?php esc_html_e('Render as Flexible Checkout Fields PRO File Upload Field', 'user-manager'); ?></label>
 			</div>
 			<div class="um-meta-fields-repeater-row-actions">
 				<button type="button" class="button-link button-link-delete" data-um-meta-fields-remove>
@@ -290,6 +291,16 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 		$line_count_synonyms = ['text_line_count', 'text-file-line-count', 'line_count', 'count_lines'];
 		$preview_synonyms    = ['preview', 'preview_file', 'file_preview', 'preview-modal', 'preview_modal'];
 		$display_synonyms    = ['display_when_empty', 'display-empty', 'show_empty', 'show_if_empty', 'render_if_empty'];
+		$fcf_file_synonyms   = [
+			'fcf_file',
+			'fcf_file_upload',
+			'fcf-file',
+			'fcf-file-upload',
+			'flexible_checkout_fields_file',
+			'flexible_checkout_fields_file_upload',
+			'flexible-checkout-fields-file',
+			'flexible-checkout-fields-file-upload',
+		];
 		if (in_array($token, $line_count_synonyms, true)) {
 			return 'text_line_count';
 		}
@@ -298,6 +309,9 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 		}
 		if (in_array($token, $display_synonyms, true)) {
 			return 'display_when_empty';
+		}
+		if (in_array($token, $fcf_file_synonyms, true)) {
+			return 'fcf_file';
 		}
 		return '';
 	}

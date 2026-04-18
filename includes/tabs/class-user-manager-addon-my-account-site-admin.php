@@ -148,6 +148,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 							(string) ($settings['my_account_admin_order_additional_meta_fields'] ?? '')
 						); ?>
 						<p class="description" style="margin-top:8px;"><?php esc_html_e('Example: Meta Field = _volunteer_file, Label = Volunteer File, Prefix = https://example.com/uploads/, flags = Count file lines + Preview in modal + Show row when empty.', 'user-manager'); ?></p>
+						<p class="description"><strong><?php esc_html_e('Flexible Checkout Fields PRO File Upload support:', 'user-manager'); ?></strong> <?php esc_html_e('add the fcf_file flag to a row to treat the stored meta value as a Flexible Checkout Fields PRO upload hash. The plugin resolves the file from wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/<hash>/ before linking, previewing, and counting lines.', 'user-manager'); ?></p>
 						<p class="description"><?php esc_html_e('Debug: append ?um_text_file_line_count_debug=1 to the Admin: Orders URL to output URL-build/fetch/cache diagnostics for flagged file fields.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-meta-list-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
@@ -159,6 +160,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 							(string) ($settings['my_account_admin_order_list_additional_meta_fields'] ?? '')
 						); ?>
 						<p class="description" style="margin-top:8px;"><?php esc_html_e('Example: Meta Field = _volunteer_file, Label = Volunteer File, Prefix = https://example.com/uploads/, flags = Count file lines + Preview in modal + Show row when empty.', 'user-manager'); ?></p>
+						<p class="description"><strong><?php esc_html_e('Flexible Checkout Fields PRO File Upload support:', 'user-manager'); ?></strong> <?php esc_html_e('add the fcf_file flag to a row to treat the stored meta value as a Flexible Checkout Fields PRO upload hash. The plugin resolves the file from wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/<hash>/ before linking, previewing, and counting lines.', 'user-manager'); ?></p>
 						<p class="description"><?php esc_html_e('Debug: append ?um_text_file_line_count_debug=1 to the Admin: Orders URL to output URL-build/fetch/cache diagnostics for flagged file fields.', 'user-manager'); ?></p>
 						<div style="margin-top:8px;">
 							<button

@@ -2,11 +2,20 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.12
+ * Version: 2.6.13
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.13 - April 18, 2026
+ * - My Account Admin Additional Meta Fields: added a Flexible Checkout Fields PRO File Upload flag ("fcf_file") that marks a meta field as an FCF PRO upload hash.
+ * - When the flag is set, the plugin resolves the hash to an actual file under `wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/<hash>/` before linking, previewing, and counting lines.
+ * - Supports several flag aliases: fcf_file, fcf_file_upload, fcf-file, fcf-file-upload, flexible_checkout_fields_file, flexible_checkout_fields_file_upload, flexible-checkout-fields-file, flexible-checkout-fields-file-upload.
+ * - Accepts several stored-value shapes: bare hash, `<hash>/<filename>`, `<hash>|<filename>`, `<hash>::<filename>`, and full URLs that already point at the Flexible Checkout Fields upload directory.
+ * - Line-count and preview pipelines now read resolved local files directly when available, avoiding unnecessary HTTP round-trips on the same host.
+ * - The Additional Meta Fields repeater UI now includes a "Render as Flexible Checkout Fields PRO File Upload Field" checkbox alongside the existing Count/Preview/Show-when-empty flags.
+ * - Existing `prefix_before_value` entries remain parsed for backward compatibility.
  * 
  * 2.6.12 - April 18, 2026
  * - My Account Admin file preview modal: forced the close (×) button color to black so it stays visible on themes that inherit a light or white link color.
