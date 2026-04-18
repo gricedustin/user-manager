@@ -2,11 +2,21 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.23
+ * Version: 2.6.24
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.24 - April 18, 2026
+ * - Fixed FCF PRO file Preview still failing in Office Web Viewer with "We can't process this request" even after the 2.6.22 signed-proxy work.
+ * - Root cause #1: Office Web Viewer sniffs the file type from the URL PATH, not from the query string. The `?um_fcf_file=1&file=Foo.xlsx&sig=…` URL we sent had the extension in the query, so Microsoft's servers treated the URL as "no extension" and refused to open it.
+ * - Root cause #2: Office Web Viewer also trips on responses that carry `Cache-Control: private` or `Pragma: no-cache`; the inline response from 2.6.22 was sending both.
+ * - Added a new path-based proxy URL variant used for Preview only: `https://example.com/um-fcf-file/<filename>?hash=…&expires=…&sig=…`. The URL path now ends in the real filename + extension (e.g. `.xlsx`) so Office can sniff it correctly.
+ * - Added an `init` priority 0 hook that matches `REQUEST_URI` against `/um-fcf-file/<filename>` and serves the file before WordPress resolves the URL into a 404 (no rewrite flush required, works on subdirectory WP installs via `home_url()` prefix normalization, rejects traversal via single-segment + sanitized filename + `realpath()` sandbox against the FCF base directory).
+ * - Inline (Preview) responses now send `Cache-Control: public, max-age=600` with `Pragma` explicitly removed, plus `Access-Control-Allow-Methods: GET, HEAD, OPTIONS`, `Access-Control-Expose-Headers: Content-Disposition, Content-Length, Content-Type`, and `Accept-Ranges: none` so Microsoft's CDN is happy fetching the file.
+ * - Download links continue to use the existing `?um_fcf_file=1` query URL with `dl=1`, since Download worked already and keeps sending the hard-no-cache headers.
+ * - Signatures still HMAC `hash|filename|expires` with `wp_salt('auth')`; the path variant just moves `filename` from the query to the path and the intercept pulls it back out during verification.
  *
  * 2.6.23 - April 18, 2026
  * - Added a shortcut inside the WordPress Admin Bar "Site Name" dropdown (next to Dashboard, Plugins, Themes) that opens the plugin's Add-ons tab.

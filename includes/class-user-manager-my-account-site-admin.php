@@ -70,6 +70,11 @@ final class User_Manager_My_Account_Site_Admin {
 		add_action('woocommerce_account_admin_activity_endpoint', [__CLASS__, 'render_admin_activity_endpoint']);
 		add_action('template_redirect', [__CLASS__, 'maybe_intercept_csv_export_request'], 1, 0);
 		add_action('template_redirect', [__CLASS__, 'maybe_intercept_fcf_file_proxy_request'], 1, 0);
+		// Early path-based intercept for Office Web Viewer friendliness.
+		// Office sniffs the file extension from the URL path, not the
+		// query string, so we serve Preview URLs as /um-fcf-file/<name>.xlsx
+		// and resolve them before WordPress has decided the request is a 404.
+		add_action('init', [__CLASS__, 'maybe_intercept_fcf_file_path_proxy_request'], 0, 0);
 	}
 
 	/**
@@ -191,6 +196,97 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Path-based proxy intercept for Office Web Viewer friendliness.
+	 *
+	 * Office Web Viewer sniffs the file type from the URL path, not the
+	 * query string, and prefers URLs whose last path segment ends in the
+	 * original extension (e.g. `…/Volunteer-List.xlsx`). When we hand it
+	 * `?um_fcf_file=1&file=Volunteer-List.xlsx&sig=…` it fails with
+	 * "We can't process this request" even though the bytes stream fine.
+	 *
+	 * This hook runs on `init` priority 0 and inspects `REQUEST_URI` for
+	 * our canonical prefix (`/um-fcf-file/<urlencoded_filename>`). When it
+	 * matches we resolve + stream the file before WordPress has resolved
+	 * the request into a 404, so the URL never has to be a real rewrite
+	 * rule.
+	 */
+	public static function maybe_intercept_fcf_file_path_proxy_request(): void {
+		$request_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
+		if ($request_uri === '') {
+			return;
+		}
+		$path = (string) parse_url($request_uri, PHP_URL_PATH);
+		if ($path === '') {
+			return;
+		}
+
+		// Resolve the host-relative path under the WP root so subdirectory
+		// installs still match correctly.
+		$home_path = (string) parse_url(home_url('/'), PHP_URL_PATH);
+		$home_path = $home_path === '' ? '/' : $home_path;
+		if ($home_path !== '/' && strpos($path, $home_path) === 0) {
+			$path = substr($path, strlen($home_path) - 1);
+		}
+
+		$prefix = '/um-fcf-file/';
+		if (strpos($path, $prefix) !== 0) {
+			return;
+		}
+
+		$after_prefix = substr($path, strlen($prefix));
+		if ($after_prefix === '' || $after_prefix === false) {
+			return;
+		}
+		// Only a single path segment is expected (the filename). Any extra
+		// slashes would indicate a path-traversal attempt or a bogus URL.
+		if (strpos($after_prefix, '/') !== false) {
+			self::send_fcf_file_proxy_error_response(400, 'um_fcf_bad_path');
+		}
+
+		$path_filename = self::sanitize_fcf_filename_token(rawurldecode($after_prefix));
+		if ($path_filename === '') {
+			self::send_fcf_file_proxy_error_response(400, 'um_fcf_bad_filename');
+		}
+
+		$hash        = isset($_GET['hash']) ? sanitize_text_field(wp_unslash($_GET['hash'])) : '';
+		$expires     = isset($_GET['expires']) ? absint($_GET['expires']) : 0;
+		$signature   = isset($_GET['sig']) ? sanitize_text_field(wp_unslash($_GET['sig'])) : '';
+		$disposition = isset($_GET['dl']) && (string) wp_unslash($_GET['dl']) === '1' ? 'attachment' : 'inline';
+
+		if ($hash === '' || $expires <= 0 || $signature === '') {
+			self::send_fcf_file_proxy_error_response(400, 'um_fcf_missing_params');
+		}
+		if ($expires < time()) {
+			self::send_fcf_file_proxy_error_response(410, 'um_fcf_token_expired');
+		}
+
+		$expected = self::build_fcf_file_proxy_signature($hash, $path_filename, $expires);
+		if (!hash_equals($expected, $signature)) {
+			self::send_fcf_file_proxy_error_response(403, 'um_fcf_invalid_signature');
+		}
+
+		$resolution = self::resolve_flexible_checkout_fields_file_upload_value($hash . '/' . $path_filename);
+		if (!is_array($resolution) || empty($resolution['path']) || !is_file((string) $resolution['path'])) {
+			$resolution = self::resolve_flexible_checkout_fields_file_upload_value($hash);
+		}
+		if (!is_array($resolution) || empty($resolution['path']) || !is_file((string) $resolution['path'])) {
+			self::send_fcf_file_proxy_error_response(404, 'um_fcf_file_not_found');
+		}
+
+		$absolute_path = (string) $resolution['path'];
+		$resolved_name = isset($resolution['filename']) ? (string) $resolution['filename'] : basename($absolute_path);
+
+		$base_dir = self::get_flexible_checkout_fields_base_upload_dir();
+		$normalized_path = realpath($absolute_path);
+		$normalized_base = $base_dir !== '' ? realpath($base_dir) : '';
+		if ($normalized_path === false || $normalized_base === '' || strpos($normalized_path, $normalized_base) !== 0) {
+			self::send_fcf_file_proxy_error_response(403, 'um_fcf_outside_base');
+		}
+
+		self::stream_fcf_file_proxy_response($normalized_path, $resolved_name, $disposition);
+	}
+
+	/**
 	 * Build the HMAC signature for a proxy-URL token.
 	 */
 	private static function build_fcf_file_proxy_signature(string $hash, string $filename, int $expires): string {
@@ -229,6 +325,36 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Path-based proxy URL variant used for Preview links. Office Web Viewer
+	 * sniffs the file extension from the URL path (not the query string), so
+	 * we emit a URL whose last path segment IS the original filename:
+	 *
+	 *   https://example.com/um-fcf-file/Volunteer-List.xlsx?hash=…&expires=…&sig=…
+	 *
+	 * The `maybe_intercept_fcf_file_path_proxy_request()` hook recognizes
+	 * that prefix on `init` priority 0 and serves the file before WordPress
+	 * has a chance to resolve the URL into a 404.
+	 */
+	public static function build_fcf_file_proxy_path_url(string $hash, string $filename): string {
+		$hash     = self::sanitize_fcf_hash_token($hash);
+		$filename = self::sanitize_fcf_filename_token($filename);
+		if ($hash === '' || $filename === '') {
+			return '';
+		}
+		$expires = time() + (15 * MINUTE_IN_SECONDS);
+		$sig     = self::build_fcf_file_proxy_signature($hash, $filename, $expires);
+		$url = home_url('/um-fcf-file/' . rawurlencode($filename));
+		return add_query_arg(
+			[
+				'hash'    => $hash,
+				'expires' => $expires,
+				'sig'     => $sig,
+			],
+			$url
+		);
+	}
+
+	/**
 	 * Stream the resolved file to the client, inline or as an attachment.
 	 */
 	private static function stream_fcf_file_proxy_response(string $absolute_path, string $filename, string $disposition): void {
@@ -239,13 +365,27 @@ final class User_Manager_My_Account_Site_Admin {
 		$mime = self::detect_fcf_file_mime_type($absolute_path, $filename);
 		$size = @filesize($absolute_path);
 
-		nocache_headers();
-		header('Cache-Control: private, max-age=600', true);
+		$disposition = $disposition === 'attachment' ? 'attachment' : 'inline';
+
+		// Office Web Viewer (view.officeapps.live.com) fetches the src URL
+		// from Microsoft's CDN. It has historically refused responses that
+		// carry `Cache-Control: private` or `Pragma: no-cache`, and it
+		// ignores the query string when sniffing file type. For inline
+		// responses we emit cache headers that Microsoft's fetcher will
+		// accept and a filename/extension that matches the URL path.
+		if (function_exists('nocache_headers') && $disposition !== 'inline') {
+			nocache_headers();
+		}
+		if ($disposition === 'inline') {
+			header('Cache-Control: public, max-age=600', true);
+			header_remove('Pragma');
+		} else {
+			header('Cache-Control: private, max-age=600', true);
+		}
 		header('Content-Type: ' . $mime, true);
 		if (is_int($size) && $size > 0) {
 			header('Content-Length: ' . $size, true);
 		}
-		$disposition = $disposition === 'attachment' ? 'attachment' : 'inline';
 		$ascii_name = preg_replace('/[^\x20-\x7E]+/', '_', $filename);
 		$ascii_name = is_string($ascii_name) && $ascii_name !== '' ? $ascii_name : 'file';
 		$utf8_name = rawurlencode($filename);
@@ -258,6 +398,9 @@ final class User_Manager_My_Account_Site_Admin {
 		header('X-Content-Type-Options: nosniff', true);
 		header('X-Robots-Tag: noindex, nofollow', true);
 		header('Access-Control-Allow-Origin: *', true);
+		header('Access-Control-Allow-Methods: GET, HEAD, OPTIONS', true);
+		header('Access-Control-Expose-Headers: Content-Disposition, Content-Length, Content-Type', true);
+		header('Accept-Ranges: none', true);
 
 		$handle = @fopen($absolute_path, 'rb');
 		if ($handle === false) {
@@ -3694,9 +3837,18 @@ final class User_Manager_My_Account_Site_Admin {
 					$preview_url  = $url;
 					$download_url = $url;
 					if ($is_fcf_file_upload && is_array($fcf_resolution) && !empty($fcf_resolution['hash']) && !empty($fcf_resolution['filename'])) {
-						$proxy_inline   = self::build_fcf_file_proxy_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename'], false);
-						$proxy_download = self::build_fcf_file_proxy_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename'], true);
-						if ($proxy_inline !== '') {
+						// Preview uses the path-based URL so the URL ends in
+						// the original extension (e.g. /um-fcf-file/File.xlsx?…).
+						// Office Web Viewer sniffs the extension from the URL
+						// path — using the query-string URL here causes
+						// "We can't process this request" even when the
+						// response bytes are correct.
+						$proxy_inline_path = self::build_fcf_file_proxy_path_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename']);
+						$proxy_inline      = self::build_fcf_file_proxy_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename'], false);
+						$proxy_download    = self::build_fcf_file_proxy_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename'], true);
+						if ($proxy_inline_path !== '') {
+							$preview_url = $proxy_inline_path;
+						} elseif ($proxy_inline !== '') {
 							$preview_url = $proxy_inline;
 						}
 						if ($proxy_download !== '') {

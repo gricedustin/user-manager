@@ -39,6 +39,18 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.24 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed FCF PRO file Preview still failing in Office Web Viewer with "We can\'t process this request" even after the 2.6.22 signed-proxy work.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Root cause #1: Office Web Viewer sniffs the file type from the URL PATH, not from the query string. The old proxy URL put the filename + extension in the query, so Microsoft\'s servers treated the URL as "no extension" and refused to open it.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Root cause #2: Office Web Viewer also trips on responses that carry Cache-Control: private or Pragma: no-cache; the inline response from 2.6.22 was sending both.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new path-based proxy URL used for Preview only: /um-fcf-file/<filename>?hash=…&expires=…&sig=…. The URL path now ends in the real filename + extension so Office can sniff it correctly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added an init priority 0 hook that matches REQUEST_URI against /um-fcf-file/<filename> and serves the file before WordPress resolves the URL into a 404 (no rewrite flush required, works on subdirectory WP installs, rejects traversal).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Inline (Preview) responses now send Cache-Control: public, max-age=600 with Pragma explicitly removed, plus Access-Control-Allow-Methods, Access-Control-Expose-Headers, and Accept-Ranges: none so Microsoft\'s CDN is happy fetching the file.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Download links continue to use the existing ?um_fcf_file=1 query URL with dl=1 (Download already worked and keeps the hard-no-cache headers).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.23 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a shortcut inside the WordPress Admin Bar "Site Name" dropdown (next to Dashboard, Plugins, Themes) that opens the plugin\'s Add-ons tab.', 'user-manager'); ?></li>
