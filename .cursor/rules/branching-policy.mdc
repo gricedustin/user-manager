@@ -1,0 +1,44 @@
+---
+description: Keep the repository on a single active feature branch at a time
+alwaysApply: true
+---
+
+# Branching Policy
+
+Always work on a single feature branch at a time in this repository.
+
+## Never start a new branch unless every other branch is already in sync with `main`
+
+Before creating ANY new branch:
+
+1. Check the remote branch list (`git fetch --all --prune && git branch -a`).
+2. Confirm that every `cursor/...` branch on the remote has either:
+   - Been merged into `main` (its PR is in the `MERGED` state), OR
+   - Been deleted from the remote.
+3. If ANY unmerged / open `cursor/...` branch still exists (local or remote), do NOT create a new branch.
+   Instead, either:
+   - Continue committing the new work on that existing open branch, OR
+   - Ask the user which branch/PR to merge first, wait for confirmation, and only proceed once `main` is fully up to date with every prior branch's work.
+
+## One-branch rule
+
+- Only one open `cursor/...` branch should exist at any time.
+- Do not stack new feature work on top of another unmerged feature branch as a base (e.g. do NOT `git checkout -b cursor/new-thing <another-cursor-branch>`).
+- New feature branches are always created directly from an up-to-date local `main`:
+  ```
+  git checkout main
+  git pull origin main
+  git checkout -b cursor/<descriptive-name>-<suffix>
+  ```
+
+## Clean-up discipline
+
+- When a PR is merged, delete both the local and remote branch before moving on.
+- Run `git remote prune origin` after remote branch deletions to drop stale refs.
+- If a branch/PR is abandoned, explicitly close the PR and delete the branch instead of leaving it dangling.
+
+## When in doubt
+
+- Prefer continuing work on the currently open feature branch over opening a new one.
+- Ask the user to merge the current PR before starting new work if the tasks are independent.
+- Keep the working tree, local branches, and remote branches as clean as possible at all times.

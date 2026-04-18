@@ -39,6 +39,35 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.12 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin file preview modal: forced the close (×) button color to black so it stays visible on themes that inherit a light or white link color.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.11 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Restricted Access shared-password prompt sometimes requiring the password to be entered twice when the Set-Cookie response was stripped by a CDN/proxy or conflicting cookie path/domain rules.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Successful password submissions now append a short-lived (90 seconds), HMAC-signed one-time access token to the redirect URL (?um_ra_ok=...).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The enforcement pass validates the token on the follow-up GET, (re-)sets the access cookie and optional trusted-IP cookie, strips the token, and redirects to a clean URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('nocache_headers() is now sent on the password-POST response and the token-cleanup redirect so caching layers cannot serve a stale overlay.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.10 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added .cursor/rules/branching-policy.mdc AI workspace rule: never start a new branch unless every other cursor/... branch is already merged into main or deleted; always branch from an up-to-date main; never stack feature branches; clean up local + remote branches after each merge.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.9 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Background/Text Color values saving into the Flag Title field in the "Additional Flag" repeater when admins typed a hex value without a leading # (e.g. 000000).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('JS composer now normalizes every color to #XXXXXX before joining; PHP parsers accept hex with or without a leading # so previously-saved broken rows rehydrate correctly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Replaced the plain Background/Text Color text inputs with a native color swatch next to each field; swatch and text input stay in sync.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.8 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added a per-row "Show flag when" selector to the "Additional Flag to Display Below Additional Fields in All Orders Screen" setting: "Values are equal" (existing) or "Values are NOT equal" (new inverse behavior).', 'user-manager'); ?></li>

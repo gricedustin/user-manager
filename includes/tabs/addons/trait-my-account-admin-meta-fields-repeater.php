@@ -172,11 +172,17 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				</label>
 				<label class="um-meta-fields-repeater-cell">
 					<span><?php esc_html_e('Background Color', 'user-manager'); ?></span>
-					<input type="text" class="regular-text" data-um-meta-compare-flags-bg placeholder="#000000" value="<?php echo esc_attr($bg); ?>" />
+					<span class="um-meta-fields-repeater-color-input">
+						<input type="color" class="um-meta-fields-repeater-color-swatch" data-um-meta-compare-flags-bg-swatch value="<?php echo esc_attr($bg !== '' ? $bg : '#000000'); ?>" />
+						<input type="text" class="regular-text" data-um-meta-compare-flags-bg placeholder="#000000" value="<?php echo esc_attr($bg); ?>" />
+					</span>
 				</label>
 				<label class="um-meta-fields-repeater-cell">
 					<span><?php esc_html_e('Text Color', 'user-manager'); ?></span>
-					<input type="text" class="regular-text" data-um-meta-compare-flags-text placeholder="#ffffff" value="<?php echo esc_attr($text); ?>" />
+					<span class="um-meta-fields-repeater-color-input">
+						<input type="color" class="um-meta-fields-repeater-color-swatch" data-um-meta-compare-flags-text-swatch value="<?php echo esc_attr($text !== '' ? $text : '#ffffff'); ?>" />
+						<input type="text" class="regular-text" data-um-meta-compare-flags-text placeholder="#ffffff" value="<?php echo esc_attr($text); ?>" />
+					</span>
 				</label>
 			</div>
 			<p class="description" style="margin:6px 0 0;">
@@ -342,13 +348,14 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 			$bg = '';
 			$text = '';
 			$remaining_count = count($remaining);
-			if ($remaining_count >= 3 && preg_match('/^#[0-9a-fA-F]{3,8}$/', $remaining[$remaining_count - 2]) && preg_match('/^#[0-9a-fA-F]{3,8}$/', $remaining[$remaining_count - 1])) {
-				$bg = $remaining[$remaining_count - 2];
-				$text = $remaining[$remaining_count - 1];
+			$hex_regex = '/^#?[0-9a-fA-F]{3,8}$/';
+			if ($remaining_count >= 3 && preg_match($hex_regex, $remaining[$remaining_count - 2]) && preg_match($hex_regex, $remaining[$remaining_count - 1])) {
+				$bg = self::normalize_compare_flag_hex_color($remaining[$remaining_count - 2]);
+				$text = self::normalize_compare_flag_hex_color($remaining[$remaining_count - 1]);
 				array_pop($remaining);
 				array_pop($remaining);
-			} elseif ($remaining_count >= 2 && preg_match('/^#[0-9a-fA-F]{3,8}$/', $remaining[$remaining_count - 1])) {
-				$bg = $remaining[$remaining_count - 1];
+			} elseif ($remaining_count >= 2 && preg_match($hex_regex, $remaining[$remaining_count - 1])) {
+				$bg = self::normalize_compare_flag_hex_color($remaining[$remaining_count - 1]);
 				array_pop($remaining);
 			}
 			$title = trim(implode(':', $remaining));
@@ -369,6 +376,30 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * Normalize a compare-flag hex color value entered by the user or
+	 * stored in the raw settings value. Accepts values with or without a
+	 * leading `#`, only allowing 3/4/6/8-digit hex codes. Returns an empty
+	 * string for anything else (caller should treat that as "no color").
+	 */
+	private static function normalize_compare_flag_hex_color(string $value): string {
+		$value = trim($value);
+		if ($value === '') {
+			return '';
+		}
+		if ($value[0] !== '#') {
+			$value = '#' . ltrim($value, '#');
+		}
+		if (!preg_match('/^#[0-9a-fA-F]{3,8}$/', $value)) {
+			return '';
+		}
+		$len = strlen($value) - 1;
+		if (!in_array($len, [3, 4, 6, 8], true)) {
+			return '';
+		}
+		return $value;
 	}
 
 	/**
@@ -445,6 +476,25 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 			align-items: center;
 			gap: 4px;
 		}
+		.um-meta-fields-repeater-color-input {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+		.um-meta-fields-repeater-color-input input[type="color"] {
+			flex: 0 0 auto;
+			width: 36px;
+			height: 28px;
+			padding: 0;
+			border: 1px solid #c3c4c7;
+			border-radius: 3px;
+			cursor: pointer;
+			background: #fff;
+		}
+		.um-meta-fields-repeater-color-input input[type="text"] {
+			flex: 1 1 auto;
+			min-width: 0;
+		}
 		</style>
 		<script>
 		(function(){
@@ -452,6 +502,17 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				return;
 			}
 			window.umMetaFieldsRepeaterBound = true;
+
+			function normalizeHexColor(value) {
+				var raw = (value || '').toString().trim();
+				if (raw === '') { return ''; }
+				if (raw.charAt(0) !== '#') { raw = '#' + raw; }
+				if (/^#[0-9a-fA-F]{3}$/.test(raw)) { return raw; }
+				if (/^#[0-9a-fA-F]{4}$/.test(raw)) { return raw; }
+				if (/^#[0-9a-fA-F]{6}$/.test(raw)) { return raw; }
+				if (/^#[0-9a-fA-F]{8}$/.test(raw)) { return raw; }
+				return '';
+			}
 
 			function syncMetaFieldsRepeater(container) {
 				var targetId = container.getAttribute('data-um-meta-fields-target');
@@ -504,16 +565,20 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 					if (op !== 'are_they_not_equal') { op = 'are_they_equal'; }
 					var grace = (row.querySelector('[data-um-meta-compare-flags-grace]') || {value:''}).value.trim();
 					var title = (row.querySelector('[data-um-meta-compare-flags-title]') || {value:''}).value.trim();
-					var bg = (row.querySelector('[data-um-meta-compare-flags-bg]') || {value:''}).value.trim();
-					var text = (row.querySelector('[data-um-meta-compare-flags-text]') || {value:''}).value.trim();
+					var bg = normalizeHexColor((row.querySelector('[data-um-meta-compare-flags-bg]') || {value:''}).value);
+					var text = normalizeHexColor((row.querySelector('[data-um-meta-compare-flags-text]') || {value:''}).value);
 					if (!a || !b || !title) { continue; }
 					var parts = [a, b, op];
 					if (grace !== '' && !isNaN(parseFloat(grace))) {
 						parts.push(grace);
 					}
 					parts.push(title);
-					if (bg !== '') { parts.push(bg); }
-					if (text !== '') { parts.push(text); }
+					if (bg !== '' || text !== '') {
+						parts.push(bg !== '' ? bg : '#000000');
+						if (text !== '') {
+							parts.push(text);
+						}
+					}
 					lines.push(parts.join(':'));
 				}
 				target.value = lines.join('\n');
@@ -525,6 +590,12 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				for (var i = 0; i < inputs.length; i++) {
 					if (inputs[i].type === 'checkbox') {
 						inputs[i].checked = false;
+					} else if (inputs[i].type === 'color') {
+						if (inputs[i].hasAttribute('data-um-meta-compare-flags-text-swatch')) {
+							inputs[i].value = '#ffffff';
+						} else {
+							inputs[i].value = '#000000';
+						}
 					} else {
 						inputs[i].value = '';
 					}
@@ -605,7 +676,45 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				}
 			});
 
+			function syncColorInputsInRow(row) {
+				if (!row) { return; }
+				var pairs = [
+					['[data-um-meta-compare-flags-bg-swatch]', '[data-um-meta-compare-flags-bg]'],
+					['[data-um-meta-compare-flags-text-swatch]', '[data-um-meta-compare-flags-text]']
+				];
+				for (var p = 0; p < pairs.length; p++) {
+					var swatch = row.querySelector(pairs[p][0]);
+					var textInput = row.querySelector(pairs[p][1]);
+					if (!swatch || !textInput) { continue; }
+					var normalizedText = normalizeHexColor(textInput.value);
+					if (normalizedText !== '') {
+						swatch.value = normalizedText.length === 4 ? expandShortHex(normalizedText) : (normalizedText.length > 7 ? normalizedText.substring(0, 7) : normalizedText);
+					}
+				}
+			}
+
+			function expandShortHex(hex) {
+				if (!hex || hex.charAt(0) !== '#' || hex.length !== 4) { return hex; }
+				return '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+			}
+
 			document.addEventListener('input', function(ev) {
+				var swatchTarget = ev.target && ev.target.hasAttribute && (
+					ev.target.hasAttribute('data-um-meta-compare-flags-bg-swatch') ||
+					ev.target.hasAttribute('data-um-meta-compare-flags-text-swatch')
+				);
+				if (swatchTarget) {
+					var row = ev.target.closest('[data-um-meta-compare-flags-row]');
+					if (row) {
+						var textSelector = ev.target.hasAttribute('data-um-meta-compare-flags-bg-swatch')
+							? '[data-um-meta-compare-flags-bg]'
+							: '[data-um-meta-compare-flags-text]';
+						var textInput = row.querySelector(textSelector);
+						if (textInput) {
+							textInput.value = ev.target.value;
+						}
+					}
+				}
 				var container = ev.target.closest && ev.target.closest('[data-um-meta-fields-repeater]');
 				if (container) {
 					syncMetaFieldsRepeater(container);
@@ -617,6 +726,16 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				}
 			});
 			document.addEventListener('change', function(ev) {
+				var textSwatch = ev.target && ev.target.hasAttribute && (
+					ev.target.hasAttribute('data-um-meta-compare-flags-bg') ||
+					ev.target.hasAttribute('data-um-meta-compare-flags-text')
+				);
+				if (textSwatch) {
+					var row2 = ev.target.closest('[data-um-meta-compare-flags-row]');
+					if (row2) {
+						syncColorInputsInRow(row2);
+					}
+				}
 				var container = ev.target.closest && ev.target.closest('[data-um-meta-fields-repeater]');
 				if (container) {
 					syncMetaFieldsRepeater(container);
@@ -636,6 +755,10 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				var ccontainers = document.querySelectorAll('[data-um-meta-compare-flags-repeater]');
 				for (var j = 0; j < ccontainers.length; j++) {
 					syncCompareFlagsRepeater(ccontainers[j]);
+					var compareRows = ccontainers[j].querySelectorAll('[data-um-meta-compare-flags-row]');
+					for (var r = 0; r < compareRows.length; r++) {
+						syncColorInputsInRow(compareRows[r]);
+					}
 				}
 			};
 			if (document.readyState === 'loading') {
