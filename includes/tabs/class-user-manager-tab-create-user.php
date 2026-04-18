@@ -14,6 +14,22 @@ class User_Manager_Tab_Create_User {
 		$templates = User_Manager_Core::get_email_templates();
 		$activity_data = User_Manager_Core::get_activity_log();
 
+		$prefill_email = '';
+		if (isset($_GET['um_prefill_email'])) {
+			$raw_prefill_email = rawurldecode((string) wp_unslash($_GET['um_prefill_email']));
+			$sanitized_prefill_email = sanitize_email($raw_prefill_email);
+			if ($sanitized_prefill_email !== '' && is_email($sanitized_prefill_email)) {
+				$prefill_email = $sanitized_prefill_email;
+			}
+		}
+		$prefill_role = '';
+		if (isset($_GET['um_prefill_role'])) {
+			$candidate_role = sanitize_key(wp_unslash($_GET['um_prefill_role']));
+			if ($candidate_role !== '' && array_key_exists($candidate_role, $roles)) {
+				$prefill_role = $candidate_role;
+			}
+		}
+
 		// Normalize activity log structure (supports newer ['entries' => []] format).
 		$entries = $activity_data['entries'] ?? $activity_data;
 		if (!is_array($entries)) {
@@ -40,7 +56,7 @@ class User_Manager_Tab_Create_User {
 						<div class="um-create-user-fields-grid">
 						<div class="um-form-field">
 							<label for="um-email"><?php esc_html_e('Email Address', 'user-manager'); ?> <span style="color:red;">*</span></label>
-							<input type="email" name="email" id="um-email" class="regular-text" required />
+							<input type="email" name="email" id="um-email" class="regular-text" required value="<?php echo esc_attr($prefill_email); ?>" />
 							<?php
 							$current_user = wp_get_current_user();
 							if ($current_user->user_email && strpos($current_user->user_email, '@') !== false) {
@@ -79,9 +95,10 @@ class User_Manager_Tab_Create_User {
 						
 						<div class="um-form-field">
 							<label for="um-role"><?php esc_html_e('Role', 'user-manager'); ?></label>
+							<?php $selected_default_role = $prefill_role !== '' ? $prefill_role : 'customer'; ?>
 							<select name="role" id="um-role" class="regular-text">
 								<?php foreach ($roles as $key => $name) : ?>
-									<option value="<?php echo esc_attr($key); ?>" <?php selected($key, 'customer'); ?>><?php echo esc_html($name); ?></option>
+									<option value="<?php echo esc_attr($key); ?>" <?php selected($key, $selected_default_role); ?>><?php echo esc_html($name); ?></option>
 								<?php endforeach; ?>
 							</select>
 						</div>

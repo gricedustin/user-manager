@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.3 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Remote Admin Email List notices now pre-fill the Create User form Email Address input and Role dropdown when "Create this administrator" is clicked.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Remote Admin Email List notices now pre-fill the Remove User tool Email Addresses textarea when "Remove this administrator" is clicked.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.2 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added new Settings field "Remote TXT File URL List of WP Administrator Emails for This Site" beneath "SFTP/Directory Paths for CSV Import".', 'user-manager'); ?></li>

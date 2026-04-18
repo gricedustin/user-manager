@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.2
+ * Version: 2.6.3
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.3 - April 18, 2026
+ * - Remote Admin Email List notices now pre-fill the Create User form's Email Address input and Role dropdown when "Create this administrator" is clicked.
+ * - Remote Admin Email List notices now pre-fill the Remove User tool's Email Addresses textarea when "Remove this administrator" is clicked (resolves by `um_prefill_user_email` or falls back to the user ID).
+ *
  * 2.6.2 - April 18, 2026
  * - Added new Settings field "Remote TXT File URL List of WP Administrator Emails for This Site" beneath "SFTP/Directory Paths for CSV Import".
  * - Accepts a remote TXT URL (emails separated line-by-line and/or comma separated); list is fetched and cached on a daily basis.
