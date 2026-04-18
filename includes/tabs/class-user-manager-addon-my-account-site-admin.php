@@ -174,12 +174,13 @@ class User_Manager_Addon_My_Account_Site_Admin {
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-flag-list-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label><?php esc_html_e('Additional Flag to Display Below Additional Fields in All Orders Screen', 'user-manager'); ?></label>
-						<p class="description"><?php esc_html_e('Compare two meta values per row. Without a grace value the flag renders when the two values are equal (case-insensitive); with a grace value both values must be numeric and the flag renders only when ABS(meta_a − meta_b) is greater than the grace value. Default colors are black background and white text.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Compare two meta values per row and pick whether the flag should show when the values ARE equal or when they are NOT equal. With a grace value, both values must be numeric — "equal" flags when ABS(A − B) > grace, "not equal" flags when ABS(A − B) ≤ grace. Default colors are black background and white text.', 'user-manager'); ?></p>
 						<?php self::render_additional_meta_compare_flags_repeater(
 							'my_account_admin_order_list_additional_flag_fields',
 							'um-my-account-admin-order-additional-flag-fields-list',
 							(string) ($settings['my_account_admin_order_list_additional_flag_fields'] ?? '')
 						); ?>
+						<?php self::render_additional_meta_compare_flags_preview(); ?>
 					</div>
 				</div>
 
@@ -285,6 +286,98 @@ class User_Manager_Addon_My_Account_Site_Admin {
 			</div>
 		</div>
 		<?php self::render_additional_meta_fields_repeater_assets(); ?>
+		<?php
+	}
+
+	/**
+	 * Render a read-only preview under the Additional Flag repeater showing
+	 * the latest orders, the meta values that would be compared, and
+	 * whether each configured compare flag would render for each order.
+	 *
+	 * Rendered only when the My Account Admin Order Viewer is enabled and
+	 * at least one compare-flag row is configured.
+	 */
+	private static function render_additional_meta_compare_flags_preview(): void {
+		if (!class_exists('User_Manager_My_Account_Site_Admin')) {
+			return;
+		}
+		if (!method_exists('User_Manager_My_Account_Site_Admin', 'get_order_list_additional_meta_compare_flags_preview')) {
+			return;
+		}
+
+		$preview_rows = User_Manager_My_Account_Site_Admin::get_order_list_additional_meta_compare_flags_preview(5);
+		?>
+		<div class="um-meta-compare-flags-preview" style="margin-top:12px;">
+			<div class="um-admin-card" style="background:#fff;border:1px solid #dcdcde;border-radius:4px;padding:12px;">
+				<h4 style="margin:0 0 6px;">
+					<span class="dashicons dashicons-visibility" style="line-height:1.2;"></span>
+					<?php esc_html_e('Preview: latest 5 orders', 'user-manager'); ?>
+				</h4>
+				<p class="description" style="margin:0 0 8px;">
+					<?php esc_html_e('Re-saves settings to refresh this preview. Each row shows the compared meta values, the calculation, and whether the flag would render on the Admin: Orders list.', 'user-manager'); ?>
+				</p>
+				<?php if (empty($preview_rows)) : ?>
+					<p class="description" style="margin:0;">
+						<?php esc_html_e('No preview available yet. Save at least one compare-flag row with Meta Field A / Meta Field B / Flag Title set, and make sure this site has at least one WooCommerce order.', 'user-manager'); ?>
+					</p>
+				<?php else : ?>
+					<?php foreach ($preview_rows as $row) : ?>
+						<div class="um-meta-compare-flags-preview-order" style="padding:8px;border-top:1px solid #f0f0f1;">
+							<strong><?php
+								/* translators: 1: order number, 2: order id */
+								echo esc_html(sprintf(__('Order #%1$s (ID %2$d)', 'user-manager'), (string) $row['order_number'], (int) $row['order_id']));
+							?></strong>
+							<?php if (empty($row['flags'])) : ?>
+								<p class="description" style="margin:4px 0 0;">
+									<?php esc_html_e('No compare-flag rows configured.', 'user-manager'); ?>
+								</p>
+							<?php else : ?>
+								<ul style="list-style:disc;margin:6px 0 0 20px;padding:0;">
+									<?php foreach ($row['flags'] as $f) :
+										$operator_label = $f['operator'] === 'are_they_not_equal'
+											? __('Values are NOT equal', 'user-manager')
+											: __('Values are equal', 'user-manager');
+										$would = !empty($f['would_display']);
+										$badge_style = sprintf(
+											'display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:%1$s;color:%2$s;margin-left:6px;vertical-align:middle;',
+											esc_attr($f['background_color'] !== '' ? $f['background_color'] : '#000000'),
+											esc_attr($f['text_color'] !== '' ? $f['text_color'] : '#ffffff')
+										);
+										?>
+										<li style="margin-bottom:4px;">
+											<code><?php echo esc_html($f['meta_key_a']); ?></code>
+											= <?php echo $f['value_a'] === '' ? '<em>' . esc_html__('(empty)', 'user-manager') . '</em>' : ('"' . esc_html($f['value_a']) . '"'); ?>
+											&nbsp;|&nbsp;
+											<code><?php echo esc_html($f['meta_key_b']); ?></code>
+											= <?php echo $f['value_b'] === '' ? '<em>' . esc_html__('(empty)', 'user-manager') . '</em>' : ('"' . esc_html($f['value_b']) . '"'); ?>
+											<br />
+											<span class="description"><?php echo esc_html($operator_label); ?><?php
+												if (isset($f['grace_value']) && $f['grace_value'] !== null) {
+													echo esc_html(sprintf(' — ' . __('grace %s', 'user-manager'), (string) $f['grace_value']));
+												}
+											?></span>
+											<br />
+											<span class="description"><?php echo esc_html((string) $f['calculation']); ?></span>
+											<br />
+											<?php if ($would) : ?>
+												<strong style="color:#008a20;">
+													<?php esc_html_e('Flag would display:', 'user-manager'); ?>
+												</strong>
+												<span style="<?php echo $badge_style; ?>"><?php echo esc_html((string) $f['title']); ?></span>
+											<?php else : ?>
+												<strong style="color:#8c8f94;">
+													<?php esc_html_e('Flag would NOT display for this order.', 'user-manager'); ?>
+												</strong>
+											<?php endif; ?>
+										</li>
+									<?php endforeach; ?>
+								</ul>
+							<?php endif; ?>
+						</div>
+					<?php endforeach; ?>
+				<?php endif; ?>
+			</div>
+		</div>
 		<?php
 	}
 

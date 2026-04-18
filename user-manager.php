@@ -2,12 +2,19 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.7
+ * Version: 2.6.8
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.8 - April 18, 2026
+ * - Added a per-row "Show flag when" selector to the "Additional Flag to Display Below Additional Fields in All Orders Screen" setting: choose between "Values are equal" (existing behavior) and "Values are NOT equal" (new inverse behavior).
+ * - Without a grace value: "Values are equal" flags on exact match (case-insensitive); "Values are NOT equal" flags when the two values differ.
+ * - With a grace value (both values must be numeric): "Values are equal" flags when ABS(A − B) > grace (existing behavior); "Values are NOT equal" flags when ABS(A − B) ≤ grace (new).
+ * - Added an auto-rendered preview panel directly under the repeater that samples the 5 most recent WooCommerce orders and shows, for each configured compare row: the actual Meta A / Meta B values, the calculation, and whether the flag would display.
+ * - Stored raw format now supports both `are_they_equal` and `are_they_not_equal` operator tokens; existing rows remain fully backward compatible.
+ *
  * 2.6.7 - April 18, 2026
  * - Retitled the "Post Meta Viewer" add-on to "Post Meta Field Viewer & Editor" across the Add-ons tab, the add-on card header, the add-on registry, the Documentation tab feature list, and related role-access copy. Historical changelog entries retain their original wording.
  *

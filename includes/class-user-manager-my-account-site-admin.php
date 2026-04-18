@@ -2693,9 +2693,15 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Parse configured compare-flags for order-list additional meta rendering.
 	 *
-	 * Format per line:
-	 * - meta_field_a:meta_field_b:are_they_equal:FLAG TITLE[:bgcolor[:textcolor]]
-	 * - meta_field_a:meta_field_b:are_they_equal:grace_value:FLAG TITLE[:bgcolor[:textcolor]]
+	 * Format per line (supported operators: `are_they_equal`, `are_they_not_equal`):
+	 * - meta_field_a:meta_field_b:<operator>:FLAG TITLE[:bgcolor[:textcolor]]
+	 * - meta_field_a:meta_field_b:<operator>:grace_value:FLAG TITLE[:bgcolor[:textcolor]]
+	 *
+	 * Semantics:
+	 * - `are_they_equal`     — flag when the two meta values ARE equal (case-insensitive).
+	 *                          With grace_value: flag when ABS(a − b) > grace_value.
+	 * - `are_they_not_equal` — flag when the two meta values are NOT equal (case-insensitive).
+	 *                          With grace_value: flag when ABS(a − b) <= grace_value (inverse).
 	 *
 	 * @param string $raw Raw setting value.
 	 * @return array<int,array{
@@ -2771,14 +2777,15 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($meta_key_a === '' || $meta_key_b === '' || $title === '') {
 				continue;
 			}
-			if ($operator_raw !== 'are_they_equal') {
+			$allowed_operators = ['are_they_equal', 'are_they_not_equal'];
+			if (!in_array($operator_raw, $allowed_operators, true)) {
 				continue;
 			}
 
 			$flags[] = [
 				'meta_key_a' => $meta_key_a,
 				'meta_key_b' => $meta_key_b,
-				'operator' => 'are_they_equal',
+				'operator' => $operator_raw,
 				'grace_value' => $grace_value,
 				'title' => $title,
 				'background_color' => $bg ? $bg : '#000000',
@@ -2865,6 +2872,211 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Evaluate whether a configured compare-flag row should render for the
+	 * given pair of normalized meta values.
+	 *
+	 * @param string     $operator       `are_they_equal` or `are_they_not_equal`.
+	 * @param string     $value_a        First normalized meta value.
+	 * @param string     $value_b        Second normalized meta value.
+	 * @param float|null $grace_value    Optional numeric grace value.
+	 * @return bool
+	 */
+	public static function evaluate_order_list_additional_meta_compare_flag(string $operator, string $value_a, string $value_b, ?float $grace_value): bool {
+		if ($value_a === '' || $value_b === '') {
+			return false;
+		}
+
+		$normalized_grace = ($grace_value !== null && is_numeric($grace_value)) ? max(0, abs((float) $grace_value)) : null;
+
+		if ($operator === 'are_they_equal') {
+			if ($normalized_grace !== null) {
+				$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
+				$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+				if ($numeric_a === null || $numeric_b === null) {
+					return false;
+				}
+				return abs($numeric_a - $numeric_b) > $normalized_grace;
+			}
+			return strcasecmp($value_a, $value_b) === 0;
+		}
+
+		if ($operator === 'are_they_not_equal') {
+			if ($normalized_grace !== null) {
+				$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
+				$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+				if ($numeric_a === null || $numeric_b === null) {
+					return false;
+				}
+				return abs($numeric_a - $numeric_b) <= $normalized_grace;
+			}
+			return strcasecmp($value_a, $value_b) !== 0;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Collect compare-flag preview rows for the most recent orders. Used by
+	 * the settings UI to show admins the actual meta values and whether
+	 * each flag would render for real orders.
+	 *
+	 * @param int $max_orders Number of most-recent orders to sample.
+	 * @return array<int,array{
+	 *   order_id:int,
+	 *   order_number:string,
+	 *   flags:array<int,array{
+	 *     meta_key_a:string,
+	 *     meta_key_b:string,
+	 *     value_a:string,
+	 *     value_b:string,
+	 *     operator:string,
+	 *     grace_value:float|null,
+	 *     title:string,
+	 *     background_color:string,
+	 *     text_color:string,
+	 *     would_display:bool,
+	 *     calculation:string
+	 *   }>
+	 * }>
+	 */
+	public static function get_order_list_additional_meta_compare_flags_preview(int $max_orders = 5): array {
+		$flags = self::get_order_list_additional_meta_compare_flags();
+		if (empty($flags) || !function_exists('wc_get_orders')) {
+			return [];
+		}
+
+		$max_orders = max(1, min(20, $max_orders));
+		$recent = wc_get_orders([
+			'limit'    => $max_orders,
+			'orderby'  => 'date',
+			'order'    => 'DESC',
+			'paginate' => false,
+		]);
+		if (!is_array($recent) || empty($recent)) {
+			return [];
+		}
+
+		$preview = [];
+		foreach ($recent as $order) {
+			if (!$order instanceof WC_Order) {
+				continue;
+			}
+			$order_id = (int) $order->get_id();
+			if ($order_id <= 0) {
+				continue;
+			}
+
+			$row_flags = [];
+			foreach ($flags as $flag) {
+				$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
+				$value_b = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
+				$grace_value = isset($flag['grace_value']) && is_numeric($flag['grace_value'])
+					? (float) $flag['grace_value']
+					: null;
+				$would_display = self::evaluate_order_list_additional_meta_compare_flag(
+					(string) $flag['operator'],
+					$value_a,
+					$value_b,
+					$grace_value
+				);
+
+				$row_flags[] = [
+					'meta_key_a'       => (string) $flag['meta_key_a'],
+					'meta_key_b'       => (string) $flag['meta_key_b'],
+					'value_a'          => $value_a,
+					'value_b'          => $value_b,
+					'operator'         => (string) $flag['operator'],
+					'grace_value'      => $grace_value,
+					'title'            => (string) $flag['title'],
+					'background_color' => (string) $flag['background_color'],
+					'text_color'       => (string) $flag['text_color'],
+					'would_display'    => $would_display,
+					'calculation'      => self::describe_order_list_additional_meta_compare_calculation(
+						(string) $flag['operator'],
+						$value_a,
+						$value_b,
+						$grace_value
+					),
+				];
+			}
+
+			$preview[] = [
+				'order_id'     => $order_id,
+				'order_number' => (string) $order->get_order_number(),
+				'flags'        => $row_flags,
+			];
+		}
+
+		return $preview;
+	}
+
+	/**
+	 * Produce a short, human-readable description of the comparison the
+	 * flag performed, e.g. "5 == 5 (equal)" or "ABS(5 − 7) = 2, grace 1 ⇒ 2 > 1".
+	 */
+	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value): string {
+		if ($value_a === '' || $value_b === '') {
+			if ($value_a === '' && $value_b === '') {
+				return __('Both meta values are empty; flag skipped.', 'user-manager');
+			}
+			return $value_a === ''
+				? __('Meta A is empty; flag skipped.', 'user-manager')
+				: __('Meta B is empty; flag skipped.', 'user-manager');
+		}
+
+		if ($grace_value !== null) {
+			$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
+			$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+			if ($numeric_a === null || $numeric_b === null) {
+				return __('Grace value set, but one or both values are not numeric; flag skipped.', 'user-manager');
+			}
+			$diff = abs($numeric_a - $numeric_b);
+			$grace_abs = max(0, abs($grace_value));
+			if ($operator === 'are_they_equal') {
+				return sprintf(
+					/* translators: 1: numeric a, 2: numeric b, 3: diff, 4: grace, 5: comparison sign */
+					__('ABS(%1$s − %2$s) = %3$s; flags when diff > grace (%4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
+					self::format_compare_preview_number($numeric_a),
+					self::format_compare_preview_number($numeric_b),
+					self::format_compare_preview_number($diff),
+					self::format_compare_preview_number($grace_abs),
+					$diff > $grace_abs ? '>' : '≤'
+				);
+			}
+			return sprintf(
+				__('ABS(%1$s − %2$s) = %3$s; flags when diff ≤ grace (%4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
+				self::format_compare_preview_number($numeric_a),
+				self::format_compare_preview_number($numeric_b),
+				self::format_compare_preview_number($diff),
+				self::format_compare_preview_number($grace_abs),
+				$diff <= $grace_abs ? '≤' : '>'
+			);
+		}
+
+		$equal = strcasecmp($value_a, $value_b) === 0;
+		if ($operator === 'are_they_equal') {
+			return $equal
+				? sprintf(__('"%1$s" == "%2$s" → equal.', 'user-manager'), $value_a, $value_b)
+				: sprintf(__('"%1$s" != "%2$s" → not equal.', 'user-manager'), $value_a, $value_b);
+		}
+		return $equal
+			? sprintf(__('"%1$s" == "%2$s" → equal.', 'user-manager'), $value_a, $value_b)
+			: sprintf(__('"%1$s" != "%2$s" → not equal.', 'user-manager'), $value_a, $value_b);
+	}
+
+	/**
+	 * Format a numeric preview value. Trims trailing zeros on floats so
+	 * integer values render cleanly (e.g. 5 instead of 5.00000).
+	 */
+	private static function format_compare_preview_number(float $number): string {
+		if ((float) (int) $number === $number) {
+			return (string) (int) $number;
+		}
+		$formatted = rtrim(rtrim(sprintf('%.6F', $number), '0'), '.');
+		return $formatted === '' ? '0' : $formatted;
+	}
+
+	/**
 	 * Build badge HTML for configured compare-flags that match this order.
 	 */
 	private static function get_order_list_additional_meta_compare_flags_html($order): string {
@@ -2890,21 +3102,12 @@ final class User_Manager_My_Account_Site_Admin {
 				continue;
 			}
 
-			$matches = false;
-			if ((string) $flag['operator'] === 'are_they_equal') {
-				$grace_value = isset($flag['grace_value']) && is_numeric($flag['grace_value'])
-					? max(0, (float) $flag['grace_value'])
-					: null;
-				if ($grace_value !== null) {
-					$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
-					$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
-					if ($numeric_a !== null && $numeric_b !== null) {
-						$matches = abs($numeric_a - $numeric_b) > $grace_value;
-					}
-				} else {
-					$matches = (strcasecmp($value_a, $value_b) === 0);
-				}
-			}
+			$matches = self::evaluate_order_list_additional_meta_compare_flag(
+				(string) $flag['operator'],
+				$value_a,
+				$value_b,
+				isset($flag['grace_value']) && is_numeric($flag['grace_value']) ? (float) $flag['grace_value'] : null
+			);
 			if (!$matches) {
 				continue;
 			}
