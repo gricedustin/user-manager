@@ -39,6 +39,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.25 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings tab (?page=user-manager&tab=settings): fixed the Save Settings button and pressing Enter inside form fields not persisting changes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Root cause: the collapsible-card click + keydown handler bound on .um-admin-card-header was intercepting Enter keydowns that bubbled up from inputs nested inside the card body and canceling the implicit form submit. Tightened the handler to only toggle when the event originated on the header itself (or its icon/title span).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a defensive fallback: if the native submit event does not fire within a microtask after clicking Save, the JS now explicitly calls form.submit() so an ancestor preventDefault() (from any past or future handler) can no longer swallow the submission.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Also fixed a long-standing field-name mismatch on the User Experience card\'s "Legacy/Broken Shortcodes" input: it was rendered under the name legacy_noop_shortcodes_list while the save handler persists under legacy_broken_shortcodes_noop_list, so admin-entered values were silently discarded. The input now uses the canonical key and falls back to either stored value during hydration.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.24 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed FCF PRO file Preview still failing in Office Web Viewer with "We can\'t process this request" even after the 2.6.22 signed-proxy work.', 'user-manager'); ?></li>

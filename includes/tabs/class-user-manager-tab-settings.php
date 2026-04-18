@@ -256,7 +256,20 @@ if (!defined('ABSPATH')) {
 						</div>
 					<div class="um-form-field">
 						<label for="um-legacy-noop-shortcodes"><?php esc_html_e('Legacy/Broken Shortcodes (comma-separated)', 'user-manager'); ?></label>
-						<input type="text" name="legacy_noop_shortcodes_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($settings['legacy_noop_shortcodes_list'] ?? ''); ?>" placeholder="old_shortcode_one, old_shortcode_two" />
+						<?php
+						// Saved key on the server side is
+						// `legacy_broken_shortcodes_noop_list`. A prior revision
+						// had the input rendered under the unrelated name
+						// `legacy_noop_shortcodes_list`, which meant admin
+						// typed values were never persisted. Read from either
+						// key for display while writing under the canonical
+						// save-handler key.
+						$legacy_noop_shortcodes_value = (string) (
+							$settings['legacy_broken_shortcodes_noop_list']
+								?? ($settings['legacy_noop_shortcodes_list'] ?? '')
+						);
+						?>
+						<input type="text" name="legacy_broken_shortcodes_noop_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($legacy_noop_shortcodes_value); ?>" placeholder="old_shortcode_one, old_shortcode_two" />
 						<p class="description"><?php esc_html_e('Optional. Registers empty handlers for legacy shortcodes so old content does not break when those shortcode sources are removed.', 'user-manager'); ?></p>
 					</div>
 					</div>
@@ -593,6 +606,14 @@ if (!defined('ABSPATH')) {
 					if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') {
 						return;
 					}
+					// Defensive guard: only toggle when the event originated on
+					// the header itself (or its direct icon/title span). Without
+					// this, a click on a form-control-ish descendant inside the
+					// header, or an Enter key bubbling up from a nested field,
+					// would be intercepted and the outer form submit swallowed.
+					if (e.target !== this && !$(e.target).closest('.um-settings-collapse-indicator, .dashicons, h2', this).length) {
+						return;
+					}
 					if (isSettingsFilterActive()) {
 						return;
 					}
@@ -653,6 +674,32 @@ if (!defined('ABSPATH')) {
 			});
 			initSettingsCardCollapse();
 			applySettingsFilter();
+
+			// Belt-and-suspenders: if the native submit does not fire within
+			// a microtask after the Save button is clicked (because some
+			// ancestor handler called preventDefault), force it explicitly.
+			// We track the native submit event so the fallback only triggers
+			// when the native path was actually blocked.
+			var $settingsForm = $('.um-settings-save-card').closest('form');
+			if ($settingsForm.length) {
+				$settingsForm.on('submit', function() {
+					$settingsForm.data('umNativeSubmitFired', true);
+				});
+				$('.um-settings-save-card input[name="submit"], .um-settings-save-card button[name="submit"]').on('click', function() {
+					$settingsForm.data('umNativeSubmitFired', false);
+					setTimeout(function() {
+						if ($settingsForm.data('umNativeSubmitFired')) {
+							return;
+						}
+						try {
+							var el = $settingsForm[0];
+							if (el && typeof el.submit === 'function') {
+								el.submit();
+							}
+						} catch (err) { /* ignore */ }
+					}, 0);
+				});
+			}
 		});
 		</script>
 		<?php

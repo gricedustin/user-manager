@@ -2,11 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.24
+ * Version: 2.6.25
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.25 - April 18, 2026
+ * - Settings tab (?page=user-manager&tab=settings): fixed the Save Settings button and pressing Enter inside form fields not persisting changes.
+ * - Root cause: the collapsible-card click + keydown handler bound on `.um-admin-card-header` was intercepting Enter keydowns that bubbled up from inputs nested inside the card body and canceling the implicit form submit. Tightened the handler to only toggle when the event originated on the header itself (or its icon/title span).
+ * - Added a defensive fallback: if the native submit event does not fire within a microtask after clicking Save, the JS now explicitly calls `form.submit()` so an ancestor `preventDefault()` (from any past or future handler) can no longer swallow the submission.
+ * - Also fixed a long-standing field-name mismatch on the User Experience card's "Legacy/Broken Shortcodes" input: it was rendered under the name `legacy_noop_shortcodes_list` while the save handler persists under `legacy_broken_shortcodes_noop_list`, so admin-entered values were silently discarded. The input now uses the canonical key and falls back to either stored value during hydration for round-trip compatibility.
  *
  * 2.6.24 - April 18, 2026
  * - Fixed FCF PRO file Preview still failing in Office Web Viewer with "We can't process this request" even after the 2.6.22 signed-proxy work.
