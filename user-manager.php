@@ -2,12 +2,21 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.0
+ * Version: 2.6.1
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.1 - April 18, 2026
+ * - Restricted Access add-on: stabilized the front-end shared-password gate so visitors no longer have to submit the password twice before access is granted.
+ * - Password submissions now process before any redirect/overlay branch decision, so a correct password is never lost behind a cache/proxy or the background-HTML overlay path.
+ * - Added a signed single-use "grant token" (transient-backed) appended to the post-login redirect URL so access is still granted when a CDN or proxy drops the outbound Set-Cookie on a 3xx response. The grant param is consumed once and then stripped from the address bar.
+ * - All post-login redirects now use HTTP 303 with explicit `Cache-Control: no-store, no-cache, private`, `Pragma: no-cache`, `Vary: Cookie`, and DONOTCACHEPAGE so they are never cached.
+ * - The overlay password form now posts to dedicated `admin-ajax.php` / `admin-post.php` endpoints (action: `um_restricted_access_submit`) instead of the current page URL, so submissions work reliably even on cached/background-HTML pages.
+ * - Added an inline, self-contained JS handler that submits via `fetch()`, shows the server's error message in place, and navigates to the grant URL on success; a native form-POST fallback runs automatically on any JS/network error so users are never trapped.
+ * - Removed the unverified `wp_nonce_field` from the password form (it added cache-invalidation surface without providing any security since it was never verified server-side).
+ *
  * 2.6.0 - April 18, 2026
  * - Merged outstanding feature branches into main and bumped the plugin to a new minor version (0.1 bump).
  * - Consolidated pending work from `cursor/cart-and-order-page-settings-cd89` and `cursor/datalist-content-deferral-c56c` branches.
