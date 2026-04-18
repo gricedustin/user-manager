@@ -2,12 +2,20 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.3
+ * Version: 2.6.4
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.4 - April 18, 2026
+ * - Replaced the free-text "Additional Meta Fields to Display Under Order", "Additional Meta Fields to Display Under Order in All Orders Screen", and "Additional Flag to Display Below Additional Fields in All Orders Screen" textareas with UI-friendly repeaters.
+ * - Each row now has dedicated inputs for Meta Field, Custom Label, Prefix, and checkbox toggles for the Count file lines / Preview in modal / Show row when empty flags.
+ * - New "Add Meta Field" and "Add Comparison Flag" buttons add additional rows, each with a Remove action.
+ * - Comparison Flag rows have dedicated inputs for Meta Field A, Meta Field B, Grace Value (optional numeric), Flag Title, Background Color, and Text Color.
+ * - Existing stored values are parsed on page load and hydrated into repeater rows; the underlying `meta_field:Label:prefix::flags` / `a:b:are_they_equal:...:bg:text` format is preserved in a hidden input so all existing backend parsers and saved data continue to work unchanged.
+ * - Extracted repeater UI + parser helpers into `includes/tabs/addons/trait-my-account-admin-meta-fields-repeater.php` to keep the addon file lean per the tab-file-organization rule.
+ *
  * 2.6.3 - April 18, 2026
  * - Remote Admin Email List notices now pre-fill the Create User form's Email Address input and Role dropdown when "Create this administrator" is clicked.
  * - Remote Admin Email List notices now pre-fill the Remove User tool's Email Addresses textarea when "Remove this administrator" is clicked (resolves by `um_prefill_user_email` or falls back to the user ID).

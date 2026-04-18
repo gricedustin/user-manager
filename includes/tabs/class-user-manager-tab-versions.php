@@ -39,6 +39,16 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.4 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Replaced the free-text "Additional Meta Fields to Display Under Order" and "in All Orders Screen" textareas with a UI-friendly repeater — each row has Meta Field, Custom Label, and Prefix inputs plus checkboxes for the Count file lines / Preview in modal / Show row when empty flags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Replaced the free-text "Additional Flag to Display Below Additional Fields" textarea with a repeater — each row has Meta Field A, Meta Field B, Grace Value (optional numeric), Flag Title, Background Color, and Text Color inputs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added "Add Meta Field" and "Add Comparison Flag" buttons plus per-row Remove actions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Existing stored values are parsed and hydrated into rows on page load; the underlying raw format is preserved in a hidden input so backend parsers and saved data keep working unchanged.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Extracted the repeater UI and parser helpers into a dedicated trait (trait-my-account-admin-meta-fields-repeater.php) to keep the addon file lean.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.3 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Remote Admin Email List notices now pre-fill the Create User form Email Address input and Role dropdown when "Create this administrator" is clicked.', 'user-manager'); ?></li>
