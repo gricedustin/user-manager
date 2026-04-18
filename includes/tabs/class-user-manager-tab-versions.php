@@ -39,6 +39,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.11 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Restricted Access shared-password prompt sometimes requiring the password to be entered twice when the Set-Cookie response was stripped by a CDN/proxy or conflicting cookie path/domain rules.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Successful password submissions now append a short-lived (90 seconds), HMAC-signed one-time access token to the redirect URL (?um_ra_ok=...).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The enforcement pass validates the token on the follow-up GET, (re-)sets the access cookie and optional trusted-IP cookie, strips the token, and redirects to a clean URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('nocache_headers() is now sent on the password-POST response and the token-cleanup redirect so caching layers cannot serve a stale overlay.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.10 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Added .cursor/rules/branching-policy.mdc AI workspace rule: never start a new branch unless every other cursor/... branch is already merged into main or deleted; always branch from an up-to-date main; never stack feature branches; clean up local + remote branches after each merge.', 'user-manager'); ?></li>

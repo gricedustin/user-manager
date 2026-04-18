@@ -2,12 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.10
+ * Version: 2.6.11
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.11 - April 18, 2026
+ * - Fixed Restricted Access shared-password prompt sometimes requiring the password to be entered twice. After a successful password, the POST→redirect→GET round-trip could lose the `um_restricted_access` cookie (CDN/reverse-proxy stripping `Set-Cookie`, conflicting cookie path/domain rules, or aggressive caching), leaving visitors back at the overlay with "Incorrect password. Please try again."
+ * - Successful password submissions now append a short-lived (90 seconds), signed, one-time access token to the redirect URL (`?um_ra_ok=...`). The enforcement pass validates the HMAC-signed token on the follow-up GET, (re-)sets the access cookie + optional trusted-IP cookie, strips the token from the URL, and redirects to a clean URL — so access still works even when the Set-Cookie response from the POST is dropped upstream.
+ * - `nocache_headers()` is now sent on the password-POST response and on the token-clean-up redirect so no caching layer can serve a stale overlay or stash the 302 response.
+ *
  * 2.6.10 - April 18, 2026
  * - Added `.cursor/rules/branching-policy.mdc` AI workspace rule: never start a new branch unless every other cursor/... branch is already merged into main or deleted; always branch from an up-to-date main, never stack feature branches on top of another unmerged feature branch, and clean up local + remote branches after each merge.
  *

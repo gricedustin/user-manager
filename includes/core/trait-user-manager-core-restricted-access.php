@@ -103,6 +103,15 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			return;
 		}
 
+		// Short-lived, one-time signed token in the URL after a successful
+		// password submission: this lets admins through even when the
+		// response cookie from the POST→redirect→GET round-trip is stripped
+		// by a CDN, reverse proxy, or conflicting cookie path/domain rules.
+		// Consumes the token and strips it from the URL before continuing.
+		if (self::restricted_access_consume_one_time_access_token($settings)) {
+			return;
+		}
+
 		// Existing timed access cookie grants access.
 		if (self::restricted_access_has_valid_access_cookie()) {
 			// Refresh the cookie so expiry slides forward and normalize
@@ -391,27 +400,125 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	 * @param array<string,mixed> $settings Plugin settings.
 	 */
 	private static function restricted_access_maybe_handle_password_submission(array $settings): void {
-		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+		if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 			return;
 		}
 		if (!isset($_POST['um_restricted_access_submit'])) {
 			return;
 		}
+
+		// Prevent caching layers from serving or caching the POST/redirect
+		// response so cookies and one-time tokens reach the browser freshly.
+		nocache_headers();
+
 		$submitted_password = isset($_POST['um_restricted_access_password']) ? sanitize_text_field(wp_unslash($_POST['um_restricted_access_password'])) : '';
 		$saved_password     = self::restricted_access_get_shared_password($settings);
-		$is_correct_password = ($saved_password !== '' && hash_equals($saved_password, $submitted_password));
+
 		if ($saved_password !== '' && hash_equals($saved_password, $submitted_password)) {
 			self::restricted_access_log_access_attempt($submitted_password, true, '');
 			self::restricted_access_set_access_cookie($settings);
 			if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
 				self::restricted_access_set_trusted_ip_cookie();
 			}
-			wp_safe_redirect(self::restricted_access_get_current_url());
+			// Append a short-lived, signed one-time token to the redirect so
+			// access still works even when the Set-Cookie response header is
+			// dropped/altered by an upstream cache/CDN or path/domain rules.
+			$redirect_url = self::restricted_access_append_one_time_access_token(
+				self::restricted_access_get_current_url()
+			);
+			wp_safe_redirect($redirect_url);
 			exit;
 		}
 
 		self::restricted_access_log_access_attempt('', false, $submitted_password);
 		self::$restricted_access_password_error = (string) __('Incorrect password. Please try again.', 'user-manager');
+	}
+
+	/**
+	 * Query-arg name carrying the one-time access token after a successful
+	 * password submission.
+	 */
+	private static function restricted_access_one_time_token_query_arg(): string {
+		return 'um_ra_ok';
+	}
+
+	/**
+	 * Build a short-lived signed access token. The token carries its own
+	 * expiry and is validated with a `wp_salt('auth')` HMAC so callers can
+	 * verify it without any server-side state.
+	 */
+	private static function restricted_access_build_one_time_access_token(): string {
+		$expires = time() + (90); // 90 seconds is plenty for a 302 round-trip.
+		$nonce   = wp_generate_password(12, false, false);
+		$payload = $expires . '.' . $nonce;
+		$sig     = hash_hmac('sha256', $payload, wp_salt('auth'));
+		return $payload . '.' . $sig;
+	}
+
+	/**
+	 * Validate a one-time access token passed in the URL after a successful
+	 * password submission.
+	 */
+	private static function restricted_access_is_valid_one_time_access_token(string $raw): bool {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return false;
+		}
+		$parts = explode('.', $raw);
+		if (count($parts) !== 3) {
+			return false;
+		}
+		$expires = absint($parts[0]);
+		if ($expires <= 0 || $expires < time()) {
+			return false;
+		}
+		$expected = hash_hmac('sha256', $parts[0] . '.' . $parts[1], wp_salt('auth'));
+		return hash_equals($expected, (string) $parts[2]);
+	}
+
+	/**
+	 * Append the one-time access token to a URL for the post-password
+	 * redirect.
+	 */
+	private static function restricted_access_append_one_time_access_token(string $url): string {
+		$token = self::restricted_access_build_one_time_access_token();
+		return add_query_arg(self::restricted_access_one_time_token_query_arg(), rawurlencode($token), $url);
+	}
+
+	/**
+	 * If the current request carries a valid one-time access token, (re-)set
+	 * the access cookie, strip the token from the URL, and redirect. This
+	 * defends against environments where the `Set-Cookie` response from the
+	 * password-POST step is dropped or cached before reaching the browser.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function restricted_access_consume_one_time_access_token(array $settings): bool {
+		$arg = self::restricted_access_one_time_token_query_arg();
+		if (!isset($_GET[$arg])) {
+			return false;
+		}
+		$raw = (string) wp_unslash($_GET[$arg]);
+		$raw = rawurldecode($raw);
+		if (!self::restricted_access_is_valid_one_time_access_token($raw)) {
+			return false;
+		}
+
+		self::restricted_access_set_access_cookie($settings);
+		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
+			self::restricted_access_set_trusted_ip_cookie();
+		}
+
+		// Strip the token from the URL so it can't be shared, cached, or
+		// bookmarked accidentally.
+		$current_url = self::restricted_access_get_current_url();
+		$clean_url = remove_query_arg($arg, $current_url);
+		if ($clean_url !== $current_url) {
+			nocache_headers();
+			wp_safe_redirect($clean_url);
+			exit;
+		}
+		return true;
 	}
 
 	/**
