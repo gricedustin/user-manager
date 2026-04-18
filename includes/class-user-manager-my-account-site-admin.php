@@ -2755,8 +2755,8 @@ final class User_Manager_My_Account_Site_Admin {
 			$text = '';
 			$remaining_count = count($remaining);
 			if ($remaining_count >= 3) {
-				$maybe_bg = sanitize_hex_color((string) $remaining[$remaining_count - 2]);
-				$maybe_text = sanitize_hex_color((string) $remaining[$remaining_count - 1]);
+				$maybe_bg = self::normalize_compare_flag_hex_color((string) $remaining[$remaining_count - 2]);
+				$maybe_text = self::normalize_compare_flag_hex_color((string) $remaining[$remaining_count - 1]);
 				if ($maybe_bg && $maybe_text) {
 					$bg = $maybe_bg;
 					$text = $maybe_text;
@@ -2765,7 +2765,7 @@ final class User_Manager_My_Account_Site_Admin {
 				}
 			}
 			if ($bg === '' && $text === '' && count($remaining) >= 2) {
-				$maybe_bg = sanitize_hex_color((string) $remaining[count($remaining) - 1]);
+				$maybe_bg = self::normalize_compare_flag_hex_color((string) $remaining[count($remaining) - 1]);
 				if ($maybe_bg) {
 					$bg = $maybe_bg;
 					array_pop($remaining);
@@ -2869,6 +2869,32 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return (float) $normalized;
+	}
+
+	/**
+	 * Normalize a user-supplied hex color. Accepts values with or without
+	 * a leading `#`; returns an empty string for non-hex input. This is a
+	 * more permissive replacement for `sanitize_hex_color()` so historical
+	 * raw-format rows that were saved without a `#` still round-trip
+	 * correctly (the value was otherwise being parsed as part of the flag
+	 * title).
+	 */
+	private static function normalize_compare_flag_hex_color(string $value): string {
+		$value = trim($value);
+		if ($value === '') {
+			return '';
+		}
+		if ($value[0] !== '#') {
+			$value = '#' . ltrim($value, '#');
+		}
+		if (!preg_match('/^#[0-9a-fA-F]{3,8}$/', $value)) {
+			return '';
+		}
+		$len = strlen($value) - 1;
+		if (!in_array($len, [3, 4, 6, 8], true)) {
+			return '';
+		}
+		return $value;
 	}
 
 	/**
