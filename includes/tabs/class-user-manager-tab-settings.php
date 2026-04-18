@@ -380,6 +380,58 @@ if (!defined('ABSPATH')) {
 								<li><code><?php echo esc_html(ABSPATH . 'imports/'); ?></code> — <?php esc_html_e('Site root folder', 'user-manager'); ?></li>
 							</ul>
 						</div>
+						<div class="um-form-field">
+							<?php
+							$admin_email_list_key = method_exists('User_Manager_Core', 'admin_email_list_check_url_setting_key')
+								? User_Manager_Core::admin_email_list_check_url_setting_key()
+								: 'admin_email_list_check_remote_url';
+							$admin_email_list_url = isset($settings[$admin_email_list_key]) ? (string) $settings[$admin_email_list_key] : '';
+							?>
+							<label for="um-admin-email-list-check-url"><?php esc_html_e('Remote TXT File URL List of WP Administrator Emails for This Site', 'user-manager'); ?></label>
+							<input type="url" name="<?php echo esc_attr($admin_email_list_key); ?>" id="um-admin-email-list-check-url" class="regular-text code" style="width:100%;max-width:720px;" value="<?php echo esc_attr($admin_email_list_url); ?>" placeholder="https://example.com/path/to/admins.txt" />
+							<p class="description"><?php esc_html_e('Line by line, or comma separated. Display a WP Admin Notification if any email is missing and link to the Add New User form for each email to quickly create them, and another WP Admin Notification for each WP Administrator on this site that is NOT in the remote list, linking each to the Remove User tool. The remote TXT file is cached on a daily basis.', 'user-manager'); ?></p>
+							<?php
+							if ($admin_email_list_url !== '' && method_exists('User_Manager_Core', 'get_admin_email_list_check_remote_emails')) {
+								$admin_email_list_result = User_Manager_Core::get_admin_email_list_check_remote_emails();
+								$admin_email_list_count = is_array($admin_email_list_result['emails'] ?? null) ? count($admin_email_list_result['emails']) : 0;
+								$admin_email_list_error = isset($admin_email_list_result['error']) ? (string) $admin_email_list_result['error'] : '';
+								echo '<p class="description" style="margin-top:6px;">';
+								if ($admin_email_list_error !== '') {
+									echo '<strong>' . esc_html__('Cache status:', 'user-manager') . '</strong> ';
+									echo esc_html(sprintf(
+										/* translators: %s: error message */
+										__('Last fetch failed: %s', 'user-manager'),
+										$admin_email_list_error
+									));
+								} else {
+									echo '<strong>' . esc_html__('Cache status:', 'user-manager') . '</strong> ';
+									echo esc_html(sprintf(
+										/* translators: %d: count of emails currently cached */
+										_n('%d email cached from remote TXT file.', '%d emails cached from remote TXT file.', $admin_email_list_count, 'user-manager'),
+										$admin_email_list_count
+									));
+								}
+								echo '</p>';
+							}
+							?>
+							<p style="margin-top:8px;">
+								<?php
+								$clear_cache_url = wp_nonce_url(
+									add_query_arg(
+										['action' => 'user_manager_clear_admin_email_list_check_cache'],
+										admin_url('admin-post.php')
+									),
+									'user_manager_clear_admin_email_list_check_cache'
+								);
+								?>
+								<a href="<?php echo esc_url($clear_cache_url); ?>" class="button button-secondary">
+									<?php esc_html_e('Remove TXT File Cache', 'user-manager'); ?>
+								</a>
+								<span class="description" style="margin-left:8px;">
+									<?php esc_html_e('Click to clear the cached remote TXT file so the list is re-checked on the next admin page load.', 'user-manager'); ?>
+								</span>
+							</p>
+						</div>
 					</div>
 				</div>
 

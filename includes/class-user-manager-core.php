@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 
 
 require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
+require_once __DIR__ . '/core/trait-user-manager-core-admin-email-list-check.php';
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-min-max-quantities.php';
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-price-per-piece.php';
@@ -31,6 +32,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-seo-basics.php';
 require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
 final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
+	use User_Manager_Core_Admin_Email_List_Check_Trait;
 	use User_Manager_Core_Add_To_Cart_Min_Max_Quantities_Trait;
 	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
 	use User_Manager_Core_Cart_Price_Per_Piece_Trait;
@@ -57,7 +59,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.6.1';
+	const VERSION = '2.6.3';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -140,6 +142,7 @@ final class User_Manager_Core {
 		add_filter('plugin_row_meta', [__CLASS__, 'add_plugin_row_meta_links'], 10, 2);
 		add_action('admin_notices', [__CLASS__, 'maybe_render_user_new_notice']);
 		add_action('admin_notices', [__CLASS__, 'render_custom_admin_notifications'], 5);
+		self::maybe_boot_admin_email_list_check();
 		add_action('admin_init', [__CLASS__, 'register_settings']);
 		add_action('admin_init', [__CLASS__, 'maybe_handle_csv_export']);
 		add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_assets']);
@@ -8959,6 +8962,9 @@ html body .woocommerce-layout__header {
 			case 'text_file_line_count_cache_reset_error':
 				$content = __('Unable to reset text-file line-count cache. Please try again.', 'user-manager');
 				$type = 'error';
+				break;
+			case 'admin_email_list_check_cache_cleared':
+				$content = __('Remote TXT file cache for WP Administrator emails cleared. The list will be re-fetched on the next admin page load.', 'user-manager');
 				break;
 			case 'emali_log_resent':
 				$content = __('Email resent successfully from Email Log.', 'user-manager');

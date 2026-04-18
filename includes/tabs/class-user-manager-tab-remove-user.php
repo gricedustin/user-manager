@@ -18,6 +18,35 @@ class User_Manager_Tab_Remove_User {
 			$entries = [];
 		}
 
+		$prefill_emails_raw = [];
+		if (isset($_GET['um_prefill_user_email'])) {
+			$raw_value = (string) wp_unslash($_GET['um_prefill_user_email']);
+			$raw_value = rawurldecode($raw_value);
+			$tokens = preg_split('/[\r\n,]+/', $raw_value);
+			if (is_array($tokens)) {
+				foreach ($tokens as $token) {
+					$token = trim((string) $token);
+					if ($token === '') {
+						continue;
+					}
+					$sanitized = sanitize_email($token);
+					if ($sanitized !== '' && is_email($sanitized)) {
+						$prefill_emails_raw[] = $sanitized;
+					}
+				}
+			}
+		}
+		if (empty($prefill_emails_raw) && isset($_GET['um_prefill_user'])) {
+			$prefill_user_id = absint(wp_unslash($_GET['um_prefill_user']));
+			if ($prefill_user_id > 0) {
+				$prefill_user = get_user_by('id', $prefill_user_id);
+				if ($prefill_user instanceof WP_User && !empty($prefill_user->user_email) && is_email($prefill_user->user_email)) {
+					$prefill_emails_raw[] = $prefill_user->user_email;
+				}
+			}
+		}
+		$prefill_emails_text = implode("\n", array_values(array_unique($prefill_emails_raw)));
+
 		// Filter to only entries from Remove User tool.
 		$recent_deletions = array_filter($entries, static function ($entry) {
 			return is_array($entry)
@@ -41,7 +70,7 @@ class User_Manager_Tab_Remove_User {
 						
 						<div class="um-form-field">
 							<label for="um-remove-emails"><?php esc_html_e('Email Addresses', 'user-manager'); ?> <span style="color:red;">*</span></label>
-							<textarea name="emails" id="um-remove-emails" class="large-text" rows="4" required placeholder="<?php esc_attr_e("user1@example.com\nuser2@example.com", 'user-manager'); ?>"></textarea>
+							<textarea name="emails" id="um-remove-emails" class="large-text" rows="4" required placeholder="<?php esc_attr_e("user1@example.com\nuser2@example.com", 'user-manager'); ?>"><?php echo esc_textarea($prefill_emails_text); ?></textarea>
 							<p class="description"><?php esc_html_e('Enter one email address per line. Multiple emails will be removed from the environment.', 'user-manager'); ?></p>
 						</div>
 						
