@@ -2,11 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.31
+ * Version: 2.6.33
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.33 - April 18, 2026
+ * - “Bulk Create all N administrators” deep link: `esc_url()` strips `%0A`/`%0D` from hrefs (WordPress core), so newline-separated `um_prefill_paste_data` was merged into one string and emails corrupted in Paste Data. The notice now passes a comma-separated list in the query string; Bulk Create still hydrates one email per line in the textarea.
+ *
+ * 2.6.32 - April 18, 2026
+ * - Remote Admin Email List notice links: fixed double URL-encoding when building `add_query_arg()` links. Values were pre-encoded with `rawurlencode()` and encoded again by WordPress, which broke `um_prefill_paste_data` (Bulk Create “Paste Data” showed empty/invalid emails instead of one email per line) and could corrupt `um_prefill_user_email` / `um_prefill_email` prefills. Unencoded values are now passed through; `add_query_arg()` handles encoding once.
  *
  * 2.6.31 - April 18, 2026
  * - "Also Display Notification with All Users with X Role" setting: added a new "Hide Notification for Each if No Users are Found" checkbox. When enabled, the per-role admin notice is only rendered for roles that actually have at least one user assigned — roles with zero users stay silent instead of showing an empty-state card.

@@ -39,6 +39,18 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.33 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('"Bulk Create all N administrators" deep link: esc_url() strips percent-encoded newlines from hrefs (WordPress core), so newline-separated um_prefill_paste_data was merged and corrupted Paste Data. The notice now uses a comma-separated query value; Bulk Create still shows one email per line in the textarea.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.32 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Remote Admin Email List notice links: fixed double URL-encoding when building add_query_arg() links. Pre-encoding with rawurlencode() and encoding again in WordPress broke um_prefill_paste_data (Bulk Create Paste Data showed empty or invalid emails instead of one per line) and could corrupt other email prefills. Values are now passed unencoded so add_query_arg encodes once.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.31 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('"Also Display Notification with All Users with X Role" setting: added a new "Hide Notification for Each if No Users are Found" checkbox. When enabled, the per-role admin notice is only rendered for roles that actually have at least one user assigned — roles with zero users stay silent instead of showing an empty-state card.', 'user-manager'); ?></li>

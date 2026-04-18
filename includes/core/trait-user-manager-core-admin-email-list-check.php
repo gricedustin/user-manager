@@ -350,7 +350,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 						'tab'                  => self::TAB_LOGIN_TOOLS,
 						'login_tools_section'  => self::TAB_REMOVE_USER,
 						'um_prefill_user'      => (int) $entry['id'],
-						'um_prefill_user_email' => rawurlencode($entry['email']),
+						'um_prefill_user_email' => $entry['email'],
 					],
 					admin_url('admin.php')
 				);
@@ -359,7 +359,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 						'page'                  => self::SETTINGS_PAGE_SLUG,
 						'tab'                   => self::TAB_LOGIN_TOOLS,
 						'login_tools_section'   => self::TAB_CHANGE_ROLE,
-						'um_prefill_user_email' => rawurlencode($entry['email']),
+						'um_prefill_user_email' => $entry['email'],
 						'um_prefill_role'       => 'customer',
 					],
 					admin_url('admin.php')
@@ -381,7 +381,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 				return isset($entry['email']) ? (string) $entry['email'] : '';
 			}, $extra_locally)));
 			if (!empty($all_emails)) {
-				$bulk_list = rawurlencode(implode(',', $all_emails));
+				$bulk_list = implode(',', $all_emails);
 				$bulk_remove_url = add_query_arg(
 					[
 						'page'                  => self::SETTINGS_PAGE_SLUG,
@@ -434,7 +434,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 						'page'                => self::SETTINGS_PAGE_SLUG,
 						'tab'                 => self::TAB_LOGIN_TOOLS,
 						'login_tools_section' => self::TAB_CREATE_USER,
-						'um_prefill_email'    => rawurlencode($missing_email),
+						'um_prefill_email'    => $missing_email,
 						'um_prefill_role'     => 'administrator',
 					],
 					admin_url('admin.php')
@@ -451,6 +451,10 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 			// line and preselects the Default Role dropdown to
 			// Administrator, so the admin can hit "Import" in one click
 			// after glancing at the list.
+			// Use comma-separated addresses in the query string (not raw
+			// newlines / %0A): esc_url() strips %0a/%0A from hrefs for
+			// safety, which previously merged all lines into one token and
+			// broke validation. Bulk Create already tokenizes commas.
 			$missing_emails_clean = array_values(array_filter(array_map(static function ($email) {
 				$email = trim((string) $email);
 				return $email !== '' && is_email($email) ? sanitize_email($email) : '';
@@ -461,7 +465,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 						'page'                   => self::SETTINGS_PAGE_SLUG,
 						'tab'                    => self::TAB_LOGIN_TOOLS,
 						'login_tools_section'    => self::TAB_BULK_CREATE,
-						'um_prefill_paste_data'  => rawurlencode(implode("\n", $missing_emails_clean)),
+						'um_prefill_paste_data'  => implode(',', $missing_emails_clean),
 						'um_prefill_role'        => 'administrator',
 					],
 					admin_url('admin.php')
@@ -588,7 +592,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 						'tab'                   => self::TAB_LOGIN_TOOLS,
 						'login_tools_section'   => self::TAB_REMOVE_USER,
 						'um_prefill_user'       => $user_id,
-						'um_prefill_user_email' => rawurlencode($email),
+						'um_prefill_user_email' => $email,
 					],
 					admin_url('admin.php')
 				);
@@ -597,7 +601,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 						'page'                  => self::SETTINGS_PAGE_SLUG,
 						'tab'                   => self::TAB_LOGIN_TOOLS,
 						'login_tools_section'   => self::TAB_CHANGE_ROLE,
-						'um_prefill_user_email' => rawurlencode($email),
+						'um_prefill_user_email' => $email,
 						'um_prefill_role'       => 'customer',
 					],
 					admin_url('admin.php')
@@ -618,7 +622,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 			echo '</ul>';
 
 			if (!empty($role_emails_for_bulk)) {
-				$bulk_list = rawurlencode(implode(',', $role_emails_for_bulk));
+				$bulk_list = implode(',', $role_emails_for_bulk);
 				$bulk_remove_url = add_query_arg(
 					[
 						'page'                  => self::SETTINGS_PAGE_SLUG,
