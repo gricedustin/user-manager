@@ -2894,6 +2894,16 @@ class User_Manager_Actions {
 				$settings['restricted_access_overlay_image_max_width'] = isset($_POST['restricted_access_overlay_image_max_width']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_overlay_image_max_width'])) : '';
 				$settings['restricted_access_overlay_image_display_as_normal_above_message'] = isset($_POST['restricted_access_overlay_image_display_as_normal_above_message']) && $_POST['restricted_access_overlay_image_display_as_normal_above_message'] === '1';
 				$settings['restricted_access_render_background_html_for_social_meta'] = isset($_POST['restricted_access_render_background_html_for_social_meta']) && $_POST['restricted_access_render_background_html_for_social_meta'] === '1';
+				// Administrator Custom Dashboard Tiles
+				$settings['admin_custom_dashboard_tiles_enabled'] = isset($_POST['admin_custom_dashboard_tiles_enabled']) && $_POST['admin_custom_dashboard_tiles_enabled'] === '1';
+				$settings['admin_custom_dashboard_tiles_admin_bar_enabled'] = isset($_POST['admin_custom_dashboard_tiles_admin_bar_enabled']) && $_POST['admin_custom_dashboard_tiles_admin_bar_enabled'] === '1';
+				$settings['admin_custom_dashboard_tiles_page_title'] = isset($_POST['admin_custom_dashboard_tiles_page_title']) ? sanitize_text_field(wp_unslash($_POST['admin_custom_dashboard_tiles_page_title'])) : '';
+				$settings['admin_custom_dashboard_tiles_menu_title'] = isset($_POST['admin_custom_dashboard_tiles_menu_title']) ? sanitize_text_field(wp_unslash($_POST['admin_custom_dashboard_tiles_menu_title'])) : '';
+				$admin_custom_dashboard_tiles_menu_priority_raw = isset($_POST['admin_custom_dashboard_tiles_menu_priority']) ? (int) $_POST['admin_custom_dashboard_tiles_menu_priority'] : 80;
+				if ($admin_custom_dashboard_tiles_menu_priority_raw <= 0) {
+					$admin_custom_dashboard_tiles_menu_priority_raw = 80;
+				}
+				$settings['admin_custom_dashboard_tiles_menu_priority'] = min(200, max(1, $admin_custom_dashboard_tiles_menu_priority_raw));
 				$settings['block_pages_by_url_string_enabled'] = isset($_POST['block_pages_by_url_string_enabled']) && $_POST['block_pages_by_url_string_enabled'] === '1';
 				$block_pages_rules = [];
 				if (isset($_POST['block_pages_by_url_string_rules_json'])) {

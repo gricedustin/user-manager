@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 
 
 require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
+require_once __DIR__ . '/core/trait-user-manager-core-admin-custom-dashboard-tiles.php';
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-min-max-quantities.php';
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-price-per-piece.php';
@@ -31,6 +32,7 @@ require_once __DIR__ . '/core/trait-user-manager-core-seo-basics.php';
 require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
 final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
+	use User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait;
 	use User_Manager_Core_Add_To_Cart_Min_Max_Quantities_Trait;
 	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
 	use User_Manager_Core_Cart_Price_Per_Piece_Trait;
@@ -57,7 +59,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.6.0';
+	const VERSION = '2.6.1';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -200,6 +202,7 @@ final class User_Manager_Core {
 		}
 		self::maybe_boot_plugin_tags_notes($settings);
 		self::maybe_boot_restricted_access($settings);
+		self::maybe_boot_admin_custom_dashboard_tiles($settings);
 		self::maybe_boot_block_pages_by_url_string($settings);
 		self::maybe_apply_security_hardening($settings);
 		self::maybe_boot_seo_basics($settings);
@@ -9734,6 +9737,10 @@ html body .woocommerce-layout__header {
 			'user-role-switching' => [
 				'label' => 'User Role Switching',
 				'settings_keys' => ['__role_switching_option_enabled'],
+			],
+			'administrator-custom-dashboard-tiles' => [
+				'label' => 'Administrator Custom Dashboard Tiles',
+				'settings_keys' => ['admin_custom_dashboard_tiles_enabled'],
 			],
 			'wp-admin-bar-menu-items' => [
 				'label' => 'WP-Admin Bar Menu Items',

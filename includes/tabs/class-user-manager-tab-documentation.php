@@ -342,6 +342,11 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Allow approved users to preview the site as alternate roles for UX validation, QA, and permission testing.', 'user-manager'),
 			],
 			[
+				'icon'    => 'dashicons-admin-links',
+				'title'   => __('Administrator Custom Dashboard Tiles', 'user-manager'),
+				'summary' => __('Build a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, search, JSON import/export, and an optional WP-Admin bar dropdown that shows the current user\'s favorites and stays reachable as an icon on mobile.', 'user-manager'),
+			],
+			[
 				'icon'    => 'dashicons-menu-alt',
 				'title'   => __('WP-Admin Bar Menu Items', 'user-manager'),
 				'summary' => __('Create custom top-bar shortcut menus so admins can jump to key areas faster across wp-admin and front end.', 'user-manager'),

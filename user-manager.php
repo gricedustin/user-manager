@@ -2,12 +2,20 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.0
+ * Version: 2.6.1
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.1 - April 18, 2026
+ * - New add-on: "Administrator Custom Dashboard Tiles" — build a drag-and-drop admin dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.
+ * - Add-on settings include: Page Title Override, Menu Title Override, Menu Location Priority, and a WP-Admin Bar Dropdown toggle.
+ * - WP-Admin Bar dropdown lists the current user's favorite tiles, includes an "Add Current Page to Dashboard Tiles" quick action, and is pinned as an icon on mobile viewports so the shortcut stays reachable.
+ * - Dashboard page exposes a jQuery UI sortable Settings tab (section + tile forms, reorder persistence), and a Dashboard tab with color-coded click-count badges, per-tile relative "last clicked" info, and a global search.
+ * - Click tracking + favorites use dedicated AJAX endpoints (um_admin_dashboard_tile_click, um_admin_dashboard_tile_toggle_favorite, um_admin_dashboard_tiles_reorder) guarded by nonces and the current user's read capability.
+ * - JSON import/export rebuilds or migrates the tile set between sites; duplicates (matched by id or by section title / tile title+URL) are skipped instead of duplicated.
+ *
  * 2.6.0 - April 18, 2026
  * - Merged outstanding feature branches into main and bumped the plugin to a new minor version (0.1 bump).
  * - Consolidated pending work from `cursor/cart-and-order-page-settings-cd89` and `cursor/datalist-content-deferral-c56c` branches.
