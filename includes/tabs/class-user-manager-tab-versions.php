@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.30 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('"User Manager: Missing WP Administrators from Remote Admin List" admin notice: added a "Bulk Create all N administrators" button at the bottom that opens the Bulk Create tool with every missing email prefilled in "Paste from Spreadsheet" and the Default Role preset to Administrator.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Create tab now accepts two URL prefill parameters (um_prefill_paste_data and um_prefill_role) so deep-links from other admin notices work without extra typing. Each email token runs through sanitize_email + is_email before hydration; the role is sanitize_key\'d and validated against the live WP role registry.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.29 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Remote Admin Email List admin notices: reordered so "User Manager: WP Administrators Not in Remote Admin List" renders ABOVE "User Manager: Missing WP Administrators from Remote Admin List". Admins now see the higher-severity "unexpected local admin" finding first before the "create this missing admin" prompt.', 'user-manager'); ?></li>

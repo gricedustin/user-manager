@@ -2,11 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.29
+ * Version: 2.6.30
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.30 - April 18, 2026
+ * - "User Manager: Missing WP Administrators from Remote Admin List" admin notice: added a "Bulk Create all N administrators" button at the bottom that opens the Bulk Create tool with every missing email prefilled in "Paste from Spreadsheet" and the Default Role preset to Administrator.
+ * - Bulk Create tab now accepts two URL prefill parameters so deep-links from other screens work without extra typing: `um_prefill_paste_data` (space/comma/newline-separated list of emails; each token individually validated through sanitize_email + is_email before hydration) and `um_prefill_role` (sanitize_key, must exist in the live WP role registry). Both CSV Upload and Paste from Spreadsheet forms honor the role prefill so either workflow preselects the same default.
  *
  * 2.6.29 - April 18, 2026
  * - Remote Admin Email List admin notices: reordered so "User Manager: WP Administrators Not in Remote Admin List" renders ABOVE "User Manager: Missing WP Administrators from Remote Admin List". Admins now see the higher-severity "unexpected local admin" finding first before the "create this missing admin" prompt.

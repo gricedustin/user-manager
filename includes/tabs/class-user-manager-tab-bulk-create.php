@@ -20,6 +20,44 @@ class User_Manager_Tab_Bulk_Create {
 		if (empty($paste_column_headers)) {
 			$paste_column_headers = ['email', 'first_name', 'last_name', 'role', 'username', 'password'];
 		}
+
+		// Optional URL prefills — powers the Remote Admin Email List "Bulk
+		// Create" button (and any future deep-link into this screen). Both
+		// params are individually sanitized/validated so a crafted URL can
+		// only preselect a legitimate role and only inject emails that
+		// actually pass is_email() validation.
+		$prefill_paste_data = '';
+		if (isset($_GET['um_prefill_paste_data'])) {
+			$raw = rawurldecode((string) wp_unslash($_GET['um_prefill_paste_data']));
+			$raw = str_replace(["\r\n", "\r"], "\n", $raw);
+			$tokens = preg_split('/[\s,;]+/', $raw);
+			$valid_emails = [];
+			if (is_array($tokens)) {
+				foreach ($tokens as $token) {
+					$token = trim((string) $token);
+					if ($token === '') {
+						continue;
+					}
+					$sanitized = sanitize_email($token);
+					if ($sanitized !== '' && is_email($sanitized) && !in_array($sanitized, $valid_emails, true)) {
+						$valid_emails[] = $sanitized;
+					}
+				}
+			}
+			$prefill_paste_data = implode("\n", $valid_emails);
+		}
+
+		$prefill_role = '';
+		if (isset($_GET['um_prefill_role'])) {
+			$candidate = sanitize_key(wp_unslash($_GET['um_prefill_role']));
+			if ($candidate !== '' && isset($roles[$candidate])) {
+				$prefill_role = $candidate;
+			}
+		}
+		// Default the <select> selection when no prefill is supplied so the
+		// markup stays identical to its previous behavior.
+		$default_role_selection = $prefill_role !== '' ? $prefill_role : 'customer';
+
 		$activity  = User_Manager_Core::get_activity_log();
 
 		// Normalize activity log structure (supports both flat arrays and ['entries' => []]).
@@ -61,7 +99,7 @@ class User_Manager_Tab_Bulk_Create {
 							<label for="um-bulk-role"><?php esc_html_e('Default Role', 'user-manager'); ?></label>
 							<select name="default_role" id="um-bulk-role" class="regular-text">
 								<?php foreach ($roles as $key => $name) : ?>
-									<option value="<?php echo esc_attr($key); ?>" <?php selected($key, 'customer'); ?>><?php echo esc_html($name); ?></option>
+									<option value="<?php echo esc_attr($key); ?>" <?php selected($key, $default_role_selection); ?>><?php echo esc_html($name); ?></option>
 								<?php endforeach; ?>
 							</select>
 							<p class="description"><?php esc_html_e('Used when role is not specified in CSV.', 'user-manager'); ?></p>
@@ -140,7 +178,7 @@ class User_Manager_Tab_Bulk_Create {
 						
 						<div class="um-form-field">
 							<label for="um-paste-data"><?php esc_html_e('Paste Data', 'user-manager'); ?></label>
-							<textarea name="paste_data" id="um-paste-data" rows="8" class="large-text code" placeholder="<?php esc_attr_e("email@example.com\tJohn\tDoe\tcustomer\tjohn.doe", 'user-manager'); ?>"></textarea>
+							<textarea name="paste_data" id="um-paste-data" rows="8" class="large-text code" placeholder="<?php esc_attr_e("email@example.com\tJohn\tDoe\tcustomer\tjohn.doe", 'user-manager'); ?>"><?php echo esc_textarea($prefill_paste_data); ?></textarea>
 							<p class="description"><?php esc_html_e('Copy and paste tab-separated data directly from Excel or Google Sheets.', 'user-manager'); ?></p>
 							<p class="description"><?php esc_html_e('Required column: email. Optional columns and their default order (when no header row is used) can be changed under Settings → User & Login (“Paste from Spreadsheet: default column order”).', 'user-manager'); ?></p>
 							<p class="description" style="margin-top: 8px;">
@@ -176,7 +214,7 @@ class User_Manager_Tab_Bulk_Create {
 							<label for="um-paste-role"><?php esc_html_e('Default Role', 'user-manager'); ?></label>
 							<select name="default_role" id="um-paste-role" class="regular-text">
 								<?php foreach ($roles as $key => $name) : ?>
-									<option value="<?php echo esc_attr($key); ?>" <?php selected($key, 'customer'); ?>><?php echo esc_html($name); ?></option>
+									<option value="<?php echo esc_attr($key); ?>" <?php selected($key, $default_role_selection); ?>><?php echo esc_html($name); ?></option>
 								<?php endforeach; ?>
 							</select>
 						</div>

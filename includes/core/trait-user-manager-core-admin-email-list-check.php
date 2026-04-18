@@ -444,7 +444,48 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 					. '<a href="' . esc_url($create_url) . '">' . esc_html__('Create this administrator', 'user-manager') . '</a>'
 					. '</li>';
 			}
-			echo '</ul></div>';
+			echo '</ul>';
+
+			// Bulk Create button — prefills the Paste from Spreadsheet
+			// textarea on the Bulk Create tab with one missing email per
+			// line and preselects the Default Role dropdown to
+			// Administrator, so the admin can hit "Import" in one click
+			// after glancing at the list.
+			$missing_emails_clean = array_values(array_filter(array_map(static function ($email) {
+				$email = trim((string) $email);
+				return $email !== '' && is_email($email) ? sanitize_email($email) : '';
+			}, $missing_locally)));
+			if (!empty($missing_emails_clean)) {
+				$bulk_create_url = add_query_arg(
+					[
+						'page'                   => self::SETTINGS_PAGE_SLUG,
+						'tab'                    => self::TAB_LOGIN_TOOLS,
+						'login_tools_section'    => self::TAB_BULK_CREATE,
+						'um_prefill_paste_data'  => rawurlencode(implode("\n", $missing_emails_clean)),
+						'um_prefill_role'        => 'administrator',
+					],
+					admin_url('admin.php')
+				);
+				echo '<p style="margin-top:12px;">'
+					. '<a href="' . esc_url($bulk_create_url) . '" class="button button-primary">'
+					. esc_html(sprintf(
+						/* translators: %d: number of administrators */
+						_n(
+							'Bulk Create %d administrator',
+							'Bulk Create all %d administrators',
+							count($missing_emails_clean),
+							'user-manager'
+						),
+						count($missing_emails_clean)
+					))
+					. '</a>'
+					. ' <span class="description" style="margin-left:8px;">'
+					. esc_html__('Opens the Bulk Create tool with every missing email prefilled in "Paste from Spreadsheet" and the Default Role preset to Administrator.', 'user-manager')
+					. '</span>'
+					. '</p>';
+			}
+
+			echo '</div>';
 		}
 	}
 
