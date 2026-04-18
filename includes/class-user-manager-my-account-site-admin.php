@@ -69,6 +69,7 @@ final class User_Manager_My_Account_Site_Admin {
 		add_action('woocommerce_account_admin_users_endpoint', [__CLASS__, 'render_admin_users_endpoint']);
 		add_action('woocommerce_account_admin_activity_endpoint', [__CLASS__, 'render_admin_activity_endpoint']);
 		add_action('template_redirect', [__CLASS__, 'maybe_intercept_csv_export_request'], 1, 0);
+		add_action('template_redirect', [__CLASS__, 'maybe_intercept_fcf_file_proxy_request'], 1, 0);
 	}
 
 	/**
@@ -113,6 +114,231 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		self::maybe_handle_my_account_admin_csv_export_download($area_key);
+	}
+
+	/**
+	 * Intercept Flexible Checkout Fields PRO file-upload proxy requests.
+	 *
+	 * FCF PRO stores uploads in `wp-content/uploads/woocommerce_uploads/
+	 * flexible-checkout-fields/<hash>/` and drops a `Deny from all` .htaccess
+	 * alongside them so the direct URLs 403 — which is great for security
+	 * but breaks our Download + Preview links in the My Account Admin
+	 * Additional Meta Fields repeater output, and makes Office Web Viewer
+	 * fail with "We can't process this request".
+	 *
+	 * This proxy reads the file from disk after verifying a short-lived
+	 * HMAC-signed token and streams it back with the correct Content-Type
+	 * and Content-Disposition headers. The HMAC is keyed off `wp_salt('auth')`
+	 * and the token embeds expiry, hash, and filename, so:
+	 *
+	 *  - Download links work for the logged-in admin immediately.
+	 *  - Preview links work for Office Web Viewer because Microsoft's
+	 *    servers fetch over the public internet using the signed token
+	 *    (no WordPress session required).
+	 *  - Tokens expire after ~15 minutes; a leaked URL stops working
+	 *    quickly even if scraped from browser history/referrer.
+	 */
+	public static function maybe_intercept_fcf_file_proxy_request(): void {
+		if (!isset($_GET['um_fcf_file']) || (string) wp_unslash($_GET['um_fcf_file']) !== '1') {
+			return;
+		}
+
+		$hash          = isset($_GET['hash']) ? sanitize_text_field(wp_unslash($_GET['hash'])) : '';
+		$filename      = isset($_GET['file']) ? sanitize_text_field(wp_unslash($_GET['file'])) : '';
+		$expires       = isset($_GET['expires']) ? absint($_GET['expires']) : 0;
+		$signature     = isset($_GET['sig']) ? sanitize_text_field(wp_unslash($_GET['sig'])) : '';
+		$disposition   = isset($_GET['dl']) && (string) wp_unslash($_GET['dl']) === '1' ? 'attachment' : 'inline';
+
+		if ($hash === '' || $filename === '' || $expires <= 0 || $signature === '') {
+			self::send_fcf_file_proxy_error_response(400, 'um_fcf_missing_params');
+		}
+
+		if ($expires < time()) {
+			self::send_fcf_file_proxy_error_response(410, 'um_fcf_token_expired');
+		}
+
+		$expected = self::build_fcf_file_proxy_signature($hash, $filename, $expires);
+		if (!hash_equals($expected, $signature)) {
+			self::send_fcf_file_proxy_error_response(403, 'um_fcf_invalid_signature');
+		}
+
+		// Resolve hash + filename against the FCF uploads directory. Reuses
+		// the same resolver that powers the inline render pipeline so a
+		// value like `<hash>` or `<hash>/<filename>` works identically.
+		$resolution = self::resolve_flexible_checkout_fields_file_upload_value($hash . '/' . $filename);
+		if (!is_array($resolution) || empty($resolution['path']) || !is_file((string) $resolution['path'])) {
+			// Try the hash alone as a last-resort fallback (latest file).
+			$resolution = self::resolve_flexible_checkout_fields_file_upload_value($hash);
+		}
+		if (!is_array($resolution) || empty($resolution['path']) || !is_file((string) $resolution['path'])) {
+			self::send_fcf_file_proxy_error_response(404, 'um_fcf_file_not_found');
+		}
+
+		$absolute_path = (string) $resolution['path'];
+		$resolved_name = isset($resolution['filename']) ? (string) $resolution['filename'] : basename($absolute_path);
+
+		// Strict sandbox check: the resolved path must live under the FCF
+		// base upload directory. Guards against any future resolver change
+		// that might otherwise let a symlink or traversal escape.
+		$base_dir = self::get_flexible_checkout_fields_base_upload_dir();
+		$normalized_path = realpath($absolute_path);
+		$normalized_base = $base_dir !== '' ? realpath($base_dir) : '';
+		if ($normalized_path === false || $normalized_base === '' || strpos($normalized_path, $normalized_base) !== 0) {
+			self::send_fcf_file_proxy_error_response(403, 'um_fcf_outside_base');
+		}
+
+		self::stream_fcf_file_proxy_response($normalized_path, $resolved_name, $disposition);
+	}
+
+	/**
+	 * Build the HMAC signature for a proxy-URL token.
+	 */
+	private static function build_fcf_file_proxy_signature(string $hash, string $filename, int $expires): string {
+		$payload = $hash . '|' . $filename . '|' . $expires;
+		return hash_hmac('sha256', $payload, wp_salt('auth'));
+	}
+
+	/**
+	 * Build the proxied public URL for a FCF file. The token is valid for
+	 * roughly 15 minutes so a page reload refreshes expiring links while
+	 * keeping any leaked URL short-lived.
+	 *
+	 * @param string $hash        FCF hash folder.
+	 * @param string $filename    Resolved filename (within the hash folder).
+	 * @param bool   $as_download If true, proxy sends `attachment` disposition.
+	 */
+	public static function build_fcf_file_proxy_url(string $hash, string $filename, bool $as_download = false): string {
+		$hash     = self::sanitize_fcf_hash_token($hash);
+		$filename = self::sanitize_fcf_filename_token($filename);
+		if ($hash === '' || $filename === '') {
+			return '';
+		}
+		$expires = time() + (15 * MINUTE_IN_SECONDS);
+		$sig     = self::build_fcf_file_proxy_signature($hash, $filename, $expires);
+		$args    = [
+			'um_fcf_file' => '1',
+			'hash'        => $hash,
+			'file'        => $filename,
+			'expires'     => $expires,
+			'sig'         => $sig,
+		];
+		if ($as_download) {
+			$args['dl'] = '1';
+		}
+		return add_query_arg($args, home_url('/'));
+	}
+
+	/**
+	 * Stream the resolved file to the client, inline or as an attachment.
+	 */
+	private static function stream_fcf_file_proxy_response(string $absolute_path, string $filename, string $disposition): void {
+		while (ob_get_level() > 0) {
+			@ob_end_clean();
+		}
+
+		$mime = self::detect_fcf_file_mime_type($absolute_path, $filename);
+		$size = @filesize($absolute_path);
+
+		nocache_headers();
+		header('Cache-Control: private, max-age=600', true);
+		header('Content-Type: ' . $mime, true);
+		if (is_int($size) && $size > 0) {
+			header('Content-Length: ' . $size, true);
+		}
+		$disposition = $disposition === 'attachment' ? 'attachment' : 'inline';
+		$ascii_name = preg_replace('/[^\x20-\x7E]+/', '_', $filename);
+		$ascii_name = is_string($ascii_name) && $ascii_name !== '' ? $ascii_name : 'file';
+		$utf8_name = rawurlencode($filename);
+		header(sprintf(
+			'Content-Disposition: %s; filename="%s"; filename*=UTF-8\'\'%s',
+			$disposition,
+			addslashes($ascii_name),
+			$utf8_name
+		));
+		header('X-Content-Type-Options: nosniff', true);
+		header('X-Robots-Tag: noindex, nofollow', true);
+		header('Access-Control-Allow-Origin: *', true);
+
+		$handle = @fopen($absolute_path, 'rb');
+		if ($handle === false) {
+			self::send_fcf_file_proxy_error_response(500, 'um_fcf_open_failed');
+		}
+		while (!feof($handle)) {
+			$chunk = fread($handle, 64 * 1024);
+			if ($chunk === false) {
+				break;
+			}
+			echo $chunk;
+			@ob_flush();
+			flush();
+		}
+		fclose($handle);
+		exit;
+	}
+
+	/**
+	 * Best-effort MIME type resolution for a FCF file based on its extension,
+	 * falling back to finfo when available.
+	 */
+	private static function detect_fcf_file_mime_type(string $absolute_path, string $filename): string {
+		$ext = strtolower((string) pathinfo($filename, PATHINFO_EXTENSION));
+		$map = [
+			'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			'xlsm' => 'application/vnd.ms-excel.sheet.macroEnabled.12',
+			'xlsb' => 'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+			'xls'  => 'application/vnd.ms-excel',
+			'csv'  => 'text/csv',
+			'tsv'  => 'text/tab-separated-values',
+			'tab'  => 'text/tab-separated-values',
+			'txt'  => 'text/plain',
+			'log'  => 'text/plain',
+			'pdf'  => 'application/pdf',
+			'doc'  => 'application/msword',
+			'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			'ppt'  => 'application/vnd.ms-powerpoint',
+			'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+			'png'  => 'image/png',
+			'jpg'  => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'gif'  => 'image/gif',
+			'webp' => 'image/webp',
+			'svg'  => 'image/svg+xml',
+			'zip'  => 'application/zip',
+			'xml'  => 'application/xml',
+			'html' => 'text/html',
+			'htm'  => 'text/html',
+			'json' => 'application/json',
+		];
+		if (isset($map[$ext])) {
+			return $map[$ext];
+		}
+		if (class_exists('finfo')) {
+			try {
+				$finfo = new \finfo(FILEINFO_MIME_TYPE);
+				$detected = $finfo->file($absolute_path);
+				if (is_string($detected) && $detected !== '') {
+					return $detected;
+				}
+			} catch (\Throwable $e) {
+				// fall through
+			}
+		}
+		return 'application/octet-stream';
+	}
+
+	/**
+	 * Emit a plain-text error for the proxy endpoint and exit.
+	 */
+	private static function send_fcf_file_proxy_error_response(int $status, string $code): void {
+		while (ob_get_level() > 0) {
+			@ob_end_clean();
+		}
+		nocache_headers();
+		status_header($status);
+		header('Content-Type: text/plain; charset=utf-8', true);
+		header('X-Content-Type-Options: nosniff', true);
+		echo esc_html($code);
+		exit;
 	}
 
 	/**
@@ -3460,12 +3686,42 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
 				$url = esc_url_raw($trimmed);
 				if ($url !== '') {
+					// For FCF PRO uploads, the original public URL is typically
+					// blocked by FCF's own `Deny from all` .htaccess inside its
+					// upload directory — which makes Download 403 and Office
+					// Web Viewer Preview fail with "We can't process this
+					// request". Generate signed proxy URLs instead.
+					$preview_url  = $url;
+					$download_url = $url;
+					if ($is_fcf_file_upload && is_array($fcf_resolution) && !empty($fcf_resolution['hash']) && !empty($fcf_resolution['filename'])) {
+						$proxy_inline   = self::build_fcf_file_proxy_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename'], false);
+						$proxy_download = self::build_fcf_file_proxy_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename'], true);
+						if ($proxy_inline !== '') {
+							$preview_url = $proxy_inline;
+						}
+						if ($proxy_download !== '') {
+							$download_url = $proxy_download;
+						}
+					}
+
 					// Preview first, then Download; no separator pipe between them.
+					// For FCF rows we also pass the original filename through
+					// data attributes so the preview modal can display the
+					// real name and route extension-based previews correctly
+					// (the proxy URL itself has no filename path segment).
+					$preview_filename = '';
+					if ($is_fcf_file_upload && is_array($fcf_resolution) && !empty($fcf_resolution['filename'])) {
+						$preview_filename = (string) $fcf_resolution['filename'];
+					}
 					$link_actions = [];
 					if ($enable_file_preview) {
-						$link_actions[] = '<a href="' . esc_url($url) . '" class="um-my-account-file-preview-trigger">' . esc_html__('Preview', 'user-manager') . '</a>';
+						$preview_attrs = '';
+						if ($preview_filename !== '') {
+							$preview_attrs = ' data-um-preview-filename="' . esc_attr($preview_filename) . '"';
+						}
+						$link_actions[] = '<a href="' . esc_url($preview_url) . '" class="um-my-account-file-preview-trigger"' . $preview_attrs . '>' . esc_html__('Preview', 'user-manager') . '</a>';
 					}
-					$link_actions[] = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Download', 'user-manager') . '</a>';
+					$link_actions[] = '<a href="' . esc_url($download_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Download', 'user-manager') . '</a>';
 					$link_html = '<span class="um-my-account-meta-file-link-actions">' . implode(' ', $link_actions) . '</span>';
 					if ($count_text_file_lines) {
 						// Still run the line-count fetch so the cached number
@@ -5094,8 +5350,19 @@ final class User_Manager_My_Account_Site_Admin {
 					renderIframePreview(officeEmbedUrl);
 				}
 
-				function renderPreview(url) {
-					var extension = getFileExtension(url);
+				function renderPreview(url, filenameHint) {
+					// Prefer an explicit filename hint (supplied via
+					// `data-um-preview-filename` on the trigger) so extension-
+					// based routing still works when the URL is a signed
+					// proxy URL whose path does not end in the original
+					// filename.
+					var extension = '';
+					if (filenameHint) {
+						extension = getFileExtension(filenameHint);
+					}
+					if (!extension) {
+						extension = getFileExtension(url);
+					}
 					if (extension === 'csv' || extension === 'tsv' || extension === 'txt') {
 						renderTextPreview(url, extension);
 						return;
@@ -5120,7 +5387,7 @@ final class User_Manager_My_Account_Site_Admin {
 					}
 				}
 
-				function openModal(url, trigger) {
+				function openModal(url, trigger, filenameHint) {
 					if (!url) {
 						setStatus(i18n.unsupported, true);
 						return;
@@ -5128,7 +5395,8 @@ final class User_Manager_My_Account_Site_Admin {
 					currentUrl = url;
 					lastActiveElement = trigger || null;
 					if (filenameEl) {
-						filenameEl.textContent = getFilename(url);
+						var label = filenameHint || getFilename(url);
+						filenameEl.textContent = label;
 					}
 					if (openLinkEl) {
 						openLinkEl.href = url;
@@ -5137,7 +5405,7 @@ final class User_Manager_My_Account_Site_Admin {
 					modal.removeAttribute('hidden');
 					modal.setAttribute('aria-hidden', 'false');
 					document.body.style.overflow = 'hidden';
-					renderPreview(url);
+					renderPreview(url, filenameHint);
 				}
 
 				document.addEventListener('click', function (event) {
@@ -5145,7 +5413,8 @@ final class User_Manager_My_Account_Site_Admin {
 					if (previewTrigger) {
 						event.preventDefault();
 						var previewUrl = previewTrigger.getAttribute('href') || '';
-						openModal(previewUrl, previewTrigger);
+						var filenameHint = previewTrigger.getAttribute('data-um-preview-filename') || '';
+						openModal(previewUrl, previewTrigger, filenameHint);
 						return;
 					}
 					var closeTrigger = event.target.closest('[data-um-close-preview="1"]');

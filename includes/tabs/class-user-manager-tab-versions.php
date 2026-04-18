@@ -39,6 +39,18 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.22 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Flexible Checkout Fields PRO file-upload rows: Download was 403-ing and Preview in Office Web Viewer was returning "We can\'t process this request", because FCF PRO drops a "Deny from all" .htaccess into its own upload directory so the public URL is intentionally blocked.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a HMAC-signed PHP proxy endpoint (?um_fcf_file=1&hash=…&file=…&expires=…&sig=…) that reads the resolved file from disk after verifying the signature and streams it back with the correct Content-Type + Content-Disposition.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Signatures use wp_salt(\'auth\'), tokens expire after 15 minutes, and the resolved path is sandboxed with realpath() + prefix match against wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/ so symlinks or traversal cannot escape the FCF base directory.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Download links now target the proxy with dl=1 so the browser sees Content-Disposition: attachment and downloads the real filename.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preview links also target the proxy; Office Web Viewer fetches the signed URL from Microsoft\'s servers over the public internet (no WordPress session required) and now renders Excel/Word/PowerPoint files correctly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The Preview trigger now carries a data-um-preview-filename attribute so the modal header can still display the real filename, and extension-based routing (CSV/TSV/TXT inline table vs Excel Office Viewer) keeps working even though the proxy URL has no filename path segment.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('No file duplication: files stay in the FCF protected directory where they were uploaded. Access stays gated by WordPress, not by Apache .htaccess.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.21 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Additional Meta Fields (file-URL rows): removed the inline "(N lines)" badge that used to render next to the links on flagged file rows. Line counting still runs in the background so the cached value stays fresh for the Grace Value compare-flag feature.', 'user-manager'); ?></li>
