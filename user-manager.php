@@ -2,11 +2,20 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.13
+ * Version: 2.6.14
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.14 - April 18, 2026
+ * - Restricted Access add-on: replaced the 2.6.11 short-lived token fix with a fuller shared-password gate rewrite so visitors are always granted on the first submit.
+ * - Password submissions are now processed before any redirect/overlay branch decision, so a correct password is never lost behind a cache/proxy or the background-HTML overlay path.
+ * - Added a signed single-use "grant token" (transient-backed) appended to the post-login redirect URL so access is still granted when a CDN or proxy drops the outbound Set-Cookie on a 3xx response. The grant param is consumed once and then stripped from the address bar.
+ * - All post-login redirects now use HTTP 303 with explicit `Cache-Control: no-store, no-cache, private`, `Pragma: no-cache`, `Vary: Cookie`, and DONOTCACHEPAGE so they are never cached.
+ * - The overlay password form now posts to dedicated `admin-ajax.php` / `admin-post.php` endpoints (action: `um_restricted_access_submit`) instead of the current page URL, so submissions work reliably even on cached/background-HTML pages.
+ * - Added an inline, self-contained JS handler that submits via `fetch()`, shows the server's error message in place, and navigates to the grant URL on success; a native form-POST fallback runs automatically on any JS/network error so users are never trapped.
+ * - Removed the unverified `wp_nonce_field` from the password form (it added cache-invalidation surface without providing any security since it was never verified server-side).
  *
  * 2.6.13 - April 18, 2026
  * - My Account Admin Additional Meta Fields: added a Flexible Checkout Fields PRO File Upload flag ("fcf_file") that marks a meta field as an FCF PRO upload hash.
@@ -16,7 +25,7 @@
  * - Line-count and preview pipelines now read resolved local files directly when available, avoiding unnecessary HTTP round-trips on the same host.
  * - The Additional Meta Fields repeater UI now includes a "Render as Flexible Checkout Fields PRO File Upload Field" checkbox alongside the existing Count/Preview/Show-when-empty flags.
  * - Existing `prefix_before_value` entries remain parsed for backward compatibility.
- * 
+ *
  * 2.6.12 - April 18, 2026
  * - My Account Admin file preview modal: forced the close (×) button color to black so it stays visible on themes that inherit a light or white link color.
  *

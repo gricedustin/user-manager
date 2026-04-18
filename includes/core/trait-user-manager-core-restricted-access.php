@@ -11,6 +11,22 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	private static string $restricted_access_trusted_ip_cookie_name = 'um_restricted_access_ip_trust';
 
 	/**
+	 * Query-string parameter used to deliver a signed one-time access grant
+	 * across a POST→GET redirect when cookies are dropped by proxies/CDNs.
+	 */
+	private const RESTRICTED_ACCESS_GRANT_QUERY_PARAM = 'um_ra_grant';
+
+	/**
+	 * Transient key prefix for one-time grant tokens stored in the options table.
+	 */
+	private const RESTRICTED_ACCESS_GRANT_TRANSIENT_PREFIX = 'um_ra_grant_';
+
+	/**
+	 * Action name used by the admin-ajax / admin-post style password submit endpoint.
+	 */
+	private const RESTRICTED_ACCESS_PASSWORD_ACTION = 'um_restricted_access_submit';
+
+	/**
 	 * Runtime password error for the current request.
 	 */
 	private static string $restricted_access_password_error = '';
@@ -40,6 +56,16 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		}
 
 		add_action('template_redirect', [__CLASS__, 'maybe_enforce_restricted_access'], 1);
+
+		// Lightweight, cache-friendly AJAX + classic POST endpoints. These run
+		// regardless of where the request was initiated from so a submission
+		// from a background-overlay page still works when the normal
+		// template_redirect path does not re-serve the restricted gate.
+		$ajax_action = self::RESTRICTED_ACCESS_PASSWORD_ACTION;
+		add_action('wp_ajax_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_ajax']);
+		add_action('wp_ajax_nopriv_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_ajax']);
+		add_action('admin_post_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_post']);
+		add_action('admin_post_nopriv_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_post']);
 	}
 
 	/**
@@ -96,19 +122,22 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			return;
 		}
 
+		// Always process an inline password POST first so it cannot be lost
+		// behind a redirect/overlay branch decision or a cached response. A
+		// successful submission issues its own 303 redirect and exits.
+		self::restricted_access_maybe_handle_password_submission($settings);
+
+		// Signed one-time grant token in the URL. Used as a cookie-drop
+		// recovery path after a password submit or AJAX success, and also
+		// works across CDNs / proxies that may strip Set-Cookie on 3xx.
+		if (self::restricted_access_consume_grant_query_param($settings)) {
+			self::restricted_access_redirect_removing_grant_param();
+		}
+
 		// A matching appended URL string grants timed access.
 		if (self::restricted_access_request_matches_access_string($settings)) {
 			self::restricted_access_log_access_attempt('', true, '');
 			self::restricted_access_set_access_cookie($settings);
-			return;
-		}
-
-		// Short-lived, one-time signed token in the URL after a successful
-		// password submission: this lets admins through even when the
-		// response cookie from the POST→redirect→GET round-trip is stripped
-		// by a CDN, reverse proxy, or conflicting cookie path/domain rules.
-		// Consumes the token and strips it from the URL before continuing.
-		if (self::restricted_access_consume_one_time_access_token($settings)) {
 			return;
 		}
 
@@ -146,7 +175,6 @@ trait User_Manager_Core_Restricted_Access_Trait {
 
 		// Overlay mode: when a shared password is set, show a gate form.
 		if ($has_password) {
-			self::restricted_access_maybe_handle_password_submission($settings);
 			self::maybe_render_restricted_access_overlay($settings, true);
 		}
 
@@ -332,6 +360,10 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		$has_image = $overlay_img !== '';
 		$show_password_form = !empty($context['show_password_form']);
 		$show_overlay_image_as_normal = self::restricted_access_show_overlay_image_as_normal_above_message($settings);
+		$current_url = self::restricted_access_get_current_url();
+		$ajax_url    = self::restricted_access_get_ajax_endpoint_url();
+		$post_url    = self::restricted_access_get_post_endpoint_url();
+		$inline_error = self::restricted_access_get_inline_error_message();
 		?>
 		<div class="um-restricted-access-background-overlay" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr($message); ?>">
 			<?php if ($has_image && !$show_overlay_image_as_normal) : ?>
@@ -348,19 +380,28 @@ trait User_Manager_Core_Restricted_Access_Trait {
 				<h1><?php echo esc_html($message); ?></h1>
 				<?php if ($show_password_form) : ?>
 					<p><?php esc_html_e('Enter shared password to continue.', 'user-manager'); ?></p>
-					<form class="um-restricted-access-background-overlay-form" method="post" action="">
-						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required />
+					<form class="um-restricted-access-background-overlay-form um-restricted-access-form-root" method="post" action="<?php echo esc_url($post_url); ?>" data-um-ra-ajax="<?php echo esc_attr($ajax_url); ?>" data-um-ra-redirect="<?php echo esc_attr($current_url); ?>" novalidate>
+						<input type="hidden" name="action" value="<?php echo esc_attr(self::RESTRICTED_ACCESS_PASSWORD_ACTION); ?>" />
+						<input type="hidden" name="um_restricted_access_submit" value="1" />
+						<input type="hidden" name="um_restricted_access_redirect" value="<?php echo esc_attr($current_url); ?>" />
+						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required autofocus />
 						<br />
-						<button type="submit" name="um_restricted_access_submit" value="1"><?php echo esc_html($password_submit_button_text); ?></button>
-						<?php wp_nonce_field('um_restricted_access_submit', 'um_restricted_access_nonce'); ?>
+						<button type="submit"><?php echo esc_html($password_submit_button_text); ?></button>
+						<div class="um-restricted-access-background-overlay-error" data-um-ra-error hidden<?php if ($inline_error !== '' || self::$restricted_access_password_error !== '') : ?> style="display:block;"<?php endif; ?>>
+							<?php
+							if (self::$restricted_access_password_error !== '') {
+								echo esc_html(self::$restricted_access_password_error);
+							} elseif ($inline_error !== '') {
+								echo esc_html($inline_error);
+							}
+							?>
+						</div>
 					</form>
-					<?php if (self::$restricted_access_password_error !== '') : ?>
-						<div class="um-restricted-access-background-overlay-error"><?php echo esc_html(self::$restricted_access_password_error); ?></div>
-					<?php endif; ?>
 				<?php endif; ?>
 			</div>
 		</div>
 		<?php
+		self::render_restricted_access_inline_js();
 		self::$restricted_access_background_overlay_context = null;
 	}
 
@@ -395,130 +436,308 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	}
 
 	/**
-	 * Handle front-end shared password submission.
+	 * Handle front-end shared password submission posted inline to the
+	 * current URL (traditional, non-AJAX path).
+	 *
+	 * On success this function redirects with 303 + explicit no-store /
+	 * Vary: Cookie headers, and appends a signed one-time grant token to
+	 * the redirect URL so the user is granted access even if a proxy or
+	 * CDN strips the outbound Set-Cookie on the 3xx response.
 	 *
 	 * @param array<string,mixed> $settings Plugin settings.
 	 */
 	private static function restricted_access_maybe_handle_password_submission(array $settings): void {
-		if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+		if (!isset($_SERVER['REQUEST_METHOD']) || strtoupper((string) $_SERVER['REQUEST_METHOD']) !== 'POST') {
 			return;
 		}
 		if (!isset($_POST['um_restricted_access_submit'])) {
 			return;
 		}
-
-		// Prevent caching layers from serving or caching the POST/redirect
-		// response so cookies and one-time tokens reach the browser freshly.
-		nocache_headers();
-
+		$saved_password_early = self::restricted_access_get_shared_password($settings);
+		if ($saved_password_early === '') {
+			return;
+		}
 		$submitted_password = isset($_POST['um_restricted_access_password']) ? sanitize_text_field(wp_unslash($_POST['um_restricted_access_password'])) : '';
-		$saved_password     = self::restricted_access_get_shared_password($settings);
-
-		if ($saved_password !== '' && hash_equals($saved_password, $submitted_password)) {
-			self::restricted_access_log_access_attempt($submitted_password, true, '');
-			self::restricted_access_set_access_cookie($settings);
-			if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
-				self::restricted_access_set_trusted_ip_cookie();
-			}
-			// Append a short-lived, signed one-time token to the redirect so
-			// access still works even when the Set-Cookie response header is
-			// dropped/altered by an upstream cache/CDN or path/domain rules.
-			$redirect_url = self::restricted_access_append_one_time_access_token(
-				self::restricted_access_get_current_url()
-			);
-			wp_safe_redirect($redirect_url);
-			exit;
+		$redirect_target_raw = isset($_POST['um_restricted_access_redirect']) ? (string) wp_unslash($_POST['um_restricted_access_redirect']) : '';
+		$redirect_target     = self::restricted_access_sanitize_redirect_url($redirect_target_raw);
+		if ($redirect_target === '') {
+			$redirect_target = self::restricted_access_get_current_url();
 		}
 
-		self::restricted_access_log_access_attempt('', false, $submitted_password);
-		self::$restricted_access_password_error = (string) __('Incorrect password. Please try again.', 'user-manager');
-	}
+		$saved_password = self::restricted_access_get_shared_password($settings);
+		$is_correct_password = ($saved_password !== '' && hash_equals($saved_password, $submitted_password));
 
-	/**
-	 * Query-arg name carrying the one-time access token after a successful
-	 * password submission.
-	 */
-	private static function restricted_access_one_time_token_query_arg(): string {
-		return 'um_ra_ok';
-	}
-
-	/**
-	 * Build a short-lived signed access token. The token carries its own
-	 * expiry and is validated with a `wp_salt('auth')` HMAC so callers can
-	 * verify it without any server-side state.
-	 */
-	private static function restricted_access_build_one_time_access_token(): string {
-		$expires = time() + (90); // 90 seconds is plenty for a 302 round-trip.
-		$nonce   = wp_generate_password(12, false, false);
-		$payload = $expires . '.' . $nonce;
-		$sig     = hash_hmac('sha256', $payload, wp_salt('auth'));
-		return $payload . '.' . $sig;
-	}
-
-	/**
-	 * Validate a one-time access token passed in the URL after a successful
-	 * password submission.
-	 */
-	private static function restricted_access_is_valid_one_time_access_token(string $raw): bool {
-		$raw = trim($raw);
-		if ($raw === '') {
-			return false;
-		}
-		$parts = explode('.', $raw);
-		if (count($parts) !== 3) {
-			return false;
-		}
-		$expires = absint($parts[0]);
-		if ($expires <= 0 || $expires < time()) {
-			return false;
-		}
-		$expected = hash_hmac('sha256', $parts[0] . '.' . $parts[1], wp_salt('auth'));
-		return hash_equals($expected, (string) $parts[2]);
-	}
-
-	/**
-	 * Append the one-time access token to a URL for the post-password
-	 * redirect.
-	 */
-	private static function restricted_access_append_one_time_access_token(string $url): string {
-		$token = self::restricted_access_build_one_time_access_token();
-		return add_query_arg(self::restricted_access_one_time_token_query_arg(), rawurlencode($token), $url);
-	}
-
-	/**
-	 * If the current request carries a valid one-time access token, (re-)set
-	 * the access cookie, strip the token from the URL, and redirect. This
-	 * defends against environments where the `Set-Cookie` response from the
-	 * password-POST step is dropped or cached before reaching the browser.
-	 *
-	 * @param array<string,mixed> $settings Plugin settings.
-	 */
-	private static function restricted_access_consume_one_time_access_token(array $settings): bool {
-		$arg = self::restricted_access_one_time_token_query_arg();
-		if (!isset($_GET[$arg])) {
-			return false;
-		}
-		$raw = (string) wp_unslash($_GET[$arg]);
-		$raw = rawurldecode($raw);
-		if (!self::restricted_access_is_valid_one_time_access_token($raw)) {
-			return false;
+		if (!$is_correct_password) {
+			self::restricted_access_log_access_attempt('', false, $submitted_password);
+			self::$restricted_access_password_error = (string) __('Incorrect password. Please try again.', 'user-manager');
+			return;
 		}
 
+		self::restricted_access_log_access_attempt($submitted_password, true, '');
 		self::restricted_access_set_access_cookie($settings);
 		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
 			self::restricted_access_set_trusted_ip_cookie();
 		}
 
-		// Strip the token from the URL so it can't be shared, cached, or
-		// bookmarked accidentally.
-		$current_url = self::restricted_access_get_current_url();
-		$clean_url = remove_query_arg($arg, $current_url);
-		if ($clean_url !== $current_url) {
-			nocache_headers();
-			wp_safe_redirect($clean_url);
+		$grant_token = self::restricted_access_create_grant_token($settings);
+		$final_redirect = self::restricted_access_append_grant_token_to_url($redirect_target, $grant_token);
+		self::restricted_access_send_post_redirect_get_response($final_redirect);
+	}
+
+	/**
+	 * AJAX submit handler. Returns a small JSON payload with a signed grant
+	 * URL the browser can navigate to. Avoids full page reload races when a
+	 * submission happens from a background-overlay page.
+	 */
+	public static function handle_restricted_access_password_ajax(): void {
+		nocache_headers();
+		header('Cache-Control: no-store, no-cache, private, must-revalidate, max-age=0', true);
+		header('Pragma: no-cache', true);
+
+		$settings = self::get_settings();
+		if (empty($settings['restricted_access_enabled'])) {
+			wp_send_json_error(['code' => 'restricted_access_disabled'], 400);
+		}
+
+		$submitted_password = isset($_POST['password']) ? sanitize_text_field(wp_unslash($_POST['password'])) : '';
+		if ($submitted_password === '' && isset($_POST['um_restricted_access_password'])) {
+			$submitted_password = sanitize_text_field(wp_unslash($_POST['um_restricted_access_password']));
+		}
+		$redirect_raw = isset($_POST['redirect']) ? (string) wp_unslash($_POST['redirect']) : '';
+		if ($redirect_raw === '' && isset($_POST['um_restricted_access_redirect'])) {
+			$redirect_raw = (string) wp_unslash($_POST['um_restricted_access_redirect']);
+		}
+		$redirect_target = self::restricted_access_sanitize_redirect_url($redirect_raw);
+		if ($redirect_target === '') {
+			$redirect_target = self::restricted_access_get_home_url();
+		}
+
+		$saved_password = self::restricted_access_get_shared_password($settings);
+		if ($saved_password === '' || !hash_equals($saved_password, $submitted_password)) {
+			self::restricted_access_log_access_attempt('', false, $submitted_password);
+			wp_send_json_error(
+				[
+					'code'    => 'invalid_password',
+					'message' => (string) __('Incorrect password. Please try again.', 'user-manager'),
+				],
+				401
+			);
+		}
+
+		self::restricted_access_log_access_attempt($submitted_password, true, '');
+		self::restricted_access_set_access_cookie($settings);
+		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
+			self::restricted_access_set_trusted_ip_cookie();
+		}
+
+		$grant_token = self::restricted_access_create_grant_token($settings);
+		$final_redirect = self::restricted_access_append_grant_token_to_url($redirect_target, $grant_token);
+		wp_send_json_success(
+			[
+				'redirect'    => $final_redirect,
+				'grant_token' => $grant_token,
+				'message'     => (string) __('Access granted. Loading the requested page…', 'user-manager'),
+			]
+		);
+	}
+
+	/**
+	 * Fallback admin-post handler for browsers without JS and for submissions
+	 * made via the traditional full-POST path when the overlay is rendered
+	 * via background-HTML mode (wp_footer).
+	 */
+	public static function handle_restricted_access_password_post(): void {
+		$settings = self::get_settings();
+		if (empty($settings['restricted_access_enabled'])) {
+			wp_safe_redirect(self::restricted_access_get_home_url());
 			exit;
 		}
+
+		$submitted_password = isset($_POST['um_restricted_access_password']) ? sanitize_text_field(wp_unslash($_POST['um_restricted_access_password'])) : '';
+		$redirect_raw = isset($_POST['um_restricted_access_redirect']) ? (string) wp_unslash($_POST['um_restricted_access_redirect']) : '';
+		$redirect_target = self::restricted_access_sanitize_redirect_url($redirect_raw);
+		if ($redirect_target === '') {
+			$redirect_target = self::restricted_access_get_home_url();
+		}
+
+		$saved_password = self::restricted_access_get_shared_password($settings);
+		$is_correct_password = ($saved_password !== '' && hash_equals($saved_password, $submitted_password));
+		if (!$is_correct_password) {
+			self::restricted_access_log_access_attempt('', false, $submitted_password);
+			// Send the visitor back to the page they came from; the inline
+			// overlay error state will render on the next GET.
+			$error_url = add_query_arg(
+				['um_ra_error' => '1'],
+				$redirect_target
+			);
+			self::restricted_access_send_post_redirect_get_response($error_url);
+		}
+
+		self::restricted_access_log_access_attempt($submitted_password, true, '');
+		self::restricted_access_set_access_cookie($settings);
+		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
+			self::restricted_access_set_trusted_ip_cookie();
+		}
+
+		$grant_token = self::restricted_access_create_grant_token($settings);
+		$final_redirect = self::restricted_access_append_grant_token_to_url($redirect_target, $grant_token);
+		self::restricted_access_send_post_redirect_get_response($final_redirect);
+	}
+
+	/**
+	 * Issue a 303 See Other redirect with aggressive no-cache headers so a
+	 * POST→GET transition is never cached by a CDN or browser.
+	 */
+	private static function restricted_access_send_post_redirect_get_response(string $redirect_url): void {
+		nocache_headers();
+		header('Cache-Control: no-store, no-cache, private, must-revalidate, max-age=0', true);
+		header('Pragma: no-cache', true);
+		header('Expires: 0', true);
+		header('Vary: Cookie', false);
+		if (!defined('DONOTCACHEPAGE')) {
+			define('DONOTCACHEPAGE', true);
+		}
+		wp_safe_redirect($redirect_url, 303);
+		exit;
+	}
+
+	/**
+	 * Sanitize a visitor-supplied redirect URL so we only redirect back to
+	 * same-origin URLs. Empty string means "no trustworthy target".
+	 */
+	private static function restricted_access_sanitize_redirect_url(string $raw): string {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return '';
+		}
+
+		$home_host = (string) wp_parse_url(home_url('/'), PHP_URL_HOST);
+		$home_host = strtolower($home_host);
+		if (strpos($raw, '/') === 0 && strpos($raw, '//') !== 0) {
+			// Root-relative path — safe, attach home scheme/host.
+			return home_url($raw);
+		}
+
+		$parsed = wp_parse_url($raw);
+		if (!is_array($parsed) || empty($parsed['host'])) {
+			return '';
+		}
+		$raw_host = strtolower((string) $parsed['host']);
+		$request_host = isset($_SERVER['HTTP_HOST']) ? strtolower(preg_replace('/:\d+$/', '', (string) wp_unslash($_SERVER['HTTP_HOST']))) : '';
+		$allowed_hosts = array_values(array_unique(array_filter([$home_host, $request_host])));
+		if (!in_array($raw_host, $allowed_hosts, true)) {
+			return '';
+		}
+		return esc_url_raw($raw);
+	}
+
+	/**
+	 * Resolve the home URL with a safe fallback.
+	 */
+	private static function restricted_access_get_home_url(): string {
+		$url = home_url('/');
+		return is_string($url) && $url !== '' ? $url : '/';
+	}
+
+	/**
+	 * Create a short-lived single-use grant token backed by a transient.
+	 *
+	 * The token value is stored in the options table so it survives across
+	 * the POST→GET hop even if cookies are dropped. It is single-use: the
+	 * first request that consumes it deletes it immediately.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function restricted_access_create_grant_token(array $settings): string {
+		$token = function_exists('wp_generate_password')
+			? wp_generate_password(32, false, false)
+			: bin2hex(random_bytes(16));
+
+		$minutes = self::restricted_access_get_time_limit_minutes($settings);
+		// Cap the grant-redemption window so even unused tokens cannot linger
+		// longer than necessary. The access cookie set after redemption still
+		// honors the full configured minutes value.
+		$grant_ttl = min(max(60, (int) $minutes * MINUTE_IN_SECONDS), 15 * MINUTE_IN_SECONDS);
+
+		$payload = [
+			'ip'         => self::restricted_access_get_request_ip_address(),
+			'created_at' => time(),
+		];
+		set_transient(self::RESTRICTED_ACCESS_GRANT_TRANSIENT_PREFIX . $token, $payload, $grant_ttl);
+		return $token;
+	}
+
+	/**
+	 * Append the one-time grant token as a query param while preserving any
+	 * existing query params on the redirect URL.
+	 */
+	private static function restricted_access_append_grant_token_to_url(string $redirect_url, string $grant_token): string {
+		if ($grant_token === '') {
+			return $redirect_url;
+		}
+		return add_query_arg(
+			self::RESTRICTED_ACCESS_GRANT_QUERY_PARAM,
+			rawurlencode($grant_token),
+			$redirect_url
+		);
+	}
+
+	/**
+	 * Consume a one-time grant token from the current request URL. Returns
+	 * true when the token is valid (in which case an access cookie is set).
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function restricted_access_consume_grant_query_param(array $settings): bool {
+		$raw = isset($_GET[self::RESTRICTED_ACCESS_GRANT_QUERY_PARAM])
+			? (string) wp_unslash($_GET[self::RESTRICTED_ACCESS_GRANT_QUERY_PARAM])
+			: '';
+		$raw = trim($raw);
+		if ($raw === '') {
+			return false;
+		}
+		// Allow only the tokens we actually generate.
+		if (!preg_match('/^[A-Za-z0-9]{16,64}$/', $raw)) {
+			return false;
+		}
+
+		$transient_key = self::RESTRICTED_ACCESS_GRANT_TRANSIENT_PREFIX . $raw;
+		$payload = get_transient($transient_key);
+		if (!is_array($payload)) {
+			return false;
+		}
+
+		// Single-use: invalidate immediately so a leaked URL cannot grant
+		// access more than once.
+		delete_transient($transient_key);
+
+		self::restricted_access_set_access_cookie($settings);
+		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
+			self::restricted_access_set_trusted_ip_cookie();
+		}
 		return true;
+	}
+
+	/**
+	 * After consuming a valid grant token, redirect to the same URL with
+	 * the grant parameter stripped so it does not remain in the address
+	 * bar / browser history / referrer.
+	 */
+	private static function restricted_access_redirect_removing_grant_param(): void {
+		$request_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/';
+		$cleaned_uri = remove_query_arg(self::RESTRICTED_ACCESS_GRANT_QUERY_PARAM, $request_uri);
+		// Also strip the transient error marker so it does not stick around.
+		$cleaned_uri = remove_query_arg('um_ra_error', $cleaned_uri);
+		$target = home_url($cleaned_uri);
+		nocache_headers();
+		header('Cache-Control: no-store, no-cache, private, must-revalidate, max-age=0', true);
+		header('Pragma: no-cache', true);
+		header('Vary: Cookie', false);
+		if (!defined('DONOTCACHEPAGE')) {
+			define('DONOTCACHEPAGE', true);
+		}
+		wp_safe_redirect($target, 302);
+		exit;
 	}
 
 	/**
@@ -702,6 +921,12 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	 */
 	private static function render_restricted_access_overlay_and_exit(array $settings, bool $show_password_form): void {
 		nocache_headers();
+		header('Cache-Control: no-store, no-cache, private, must-revalidate, max-age=0', true);
+		header('Pragma: no-cache', true);
+		header('Vary: Cookie', false);
+		if (!defined('DONOTCACHEPAGE')) {
+			define('DONOTCACHEPAGE', true);
+		}
 		status_header(403);
 
 		$message     = self::restricted_access_get_no_access_message($settings);
@@ -836,19 +1061,33 @@ trait User_Manager_Core_Restricted_Access_Trait {
 					</div>
 				<?php endif; ?>
 				<h1><?php echo esc_html($message); ?></h1>
-				<?php if ($show_password_form) : ?>
+				<?php if ($show_password_form) :
+					$current_url = self::restricted_access_get_current_url();
+					$ajax_url    = self::restricted_access_get_ajax_endpoint_url();
+					$post_url    = self::restricted_access_get_post_endpoint_url();
+					$inline_error = self::restricted_access_get_inline_error_message();
+				?>
 					<p><?php esc_html_e('Enter shared password to continue.', 'user-manager'); ?></p>
-					<form class="um-restricted-access-form" method="post" action="">
-						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required />
+					<form class="um-restricted-access-form um-restricted-access-form-root" method="post" action="<?php echo esc_url($post_url); ?>" data-um-ra-ajax="<?php echo esc_attr($ajax_url); ?>" data-um-ra-redirect="<?php echo esc_attr($current_url); ?>" novalidate>
+						<input type="hidden" name="action" value="<?php echo esc_attr(self::RESTRICTED_ACCESS_PASSWORD_ACTION); ?>" />
+						<input type="hidden" name="um_restricted_access_submit" value="1" />
+						<input type="hidden" name="um_restricted_access_redirect" value="<?php echo esc_attr($current_url); ?>" />
+						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required autofocus />
 						<br />
-						<button type="submit" name="um_restricted_access_submit" value="1"><?php echo esc_html($password_submit_button_text); ?></button>
-						<?php wp_nonce_field('um_restricted_access_submit', 'um_restricted_access_nonce'); ?>
+						<button type="submit"><?php echo esc_html($password_submit_button_text); ?></button>
+						<div class="um-restricted-access-error" data-um-ra-error hidden<?php if ($inline_error !== '' || self::$restricted_access_password_error !== '') : ?> style="display:block;"<?php endif; ?>>
+							<?php
+							if (self::$restricted_access_password_error !== '') {
+								echo esc_html(self::$restricted_access_password_error);
+							} elseif ($inline_error !== '') {
+								echo esc_html($inline_error);
+							}
+							?>
+						</div>
 					</form>
-					<?php if (self::$restricted_access_password_error !== '') : ?>
-						<div class="um-restricted-access-error"><?php echo esc_html(self::$restricted_access_password_error); ?></div>
-					<?php endif; ?>
 				<?php endif; ?>
 			</div>
+			<?php self::render_restricted_access_inline_js(); ?>
 		</body>
 		</html>
 		<?php
@@ -1170,6 +1409,120 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	private static function restricted_access_get_current_url(): string {
 		$request_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/';
 		return home_url($request_uri);
+	}
+
+	/**
+	 * URL for the AJAX password submit endpoint.
+	 */
+	private static function restricted_access_get_ajax_endpoint_url(): string {
+		return function_exists('admin_url') ? admin_url('admin-ajax.php') : '/wp-admin/admin-ajax.php';
+	}
+
+	/**
+	 * URL for the admin-post password submit endpoint (traditional POST fallback).
+	 */
+	private static function restricted_access_get_post_endpoint_url(): string {
+		return function_exists('admin_url') ? admin_url('admin-post.php') : '/wp-admin/admin-post.php';
+	}
+
+	/**
+	 * Read the inline error message bubbled through the ?um_ra_error=1 flag.
+	 */
+	private static function restricted_access_get_inline_error_message(): string {
+		if (!isset($_GET['um_ra_error']) || (string) $_GET['um_ra_error'] !== '1') {
+			return '';
+		}
+		return (string) __('Incorrect password. Please try again.', 'user-manager');
+	}
+
+	/**
+	 * Inline JS for the password form:
+	 *  - Intercepts submit, posts via fetch() to admin-ajax.php
+	 *  - Navigates to the signed grant URL returned by the server
+	 *  - Falls back to the native form POST (to admin-post.php) on any JS/network error
+	 *  - Guards against double-submission (disables the button while in-flight)
+	 */
+	private static function render_restricted_access_inline_js(): void {
+		?>
+		<script id="um-restricted-access-inline-js">
+		(function(){
+			function once(fn){var done=false;return function(){if(done){return;}done=true;return fn.apply(this, arguments);};}
+			function bindForm(form){
+				if(!form || form.__umRaBound){return;}
+				form.__umRaBound = true;
+				var ajaxUrl = form.getAttribute('data-um-ra-ajax') || '';
+				var redirectField = form.querySelector('input[name="um_restricted_access_redirect"]');
+				var fallbackRedirect = form.getAttribute('data-um-ra-redirect') || (redirectField && redirectField.value) || window.location.href;
+				var errorBox = form.querySelector('[data-um-ra-error]');
+				var submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+				var pwInput = form.querySelector('input[type="password"]');
+
+				function showError(msg){
+					if(!errorBox){return;}
+					errorBox.textContent = msg || '';
+					errorBox.hidden = !msg;
+					if(msg){errorBox.style.display = 'block';}
+				}
+				function setBusy(busy){
+					if(submitBtn){submitBtn.disabled = !!busy;}
+					form.setAttribute('data-um-ra-busy', busy ? '1' : '0');
+				}
+
+				form.addEventListener('submit', function(e){
+					if(!window.fetch || !ajaxUrl){return;}
+					e.preventDefault();
+					showError('');
+					setBusy(true);
+					var password = pwInput ? pwInput.value : '';
+					var body = new URLSearchParams();
+					body.set('action', '<?php echo esc_js(self::RESTRICTED_ACCESS_PASSWORD_ACTION); ?>');
+					body.set('password', password);
+					body.set('redirect', fallbackRedirect);
+					fetch(ajaxUrl, {
+						method: 'POST',
+						credentials: 'same-origin',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+							'Accept': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest'
+						},
+						body: body.toString(),
+						cache: 'no-store'
+					}).then(function(res){
+						return res.json().then(function(data){return {status: res.status, data: data};}).catch(function(){return {status: res.status, data: null};});
+					}).then(function(wrap){
+						var data = wrap && wrap.data;
+						if(data && data.success === true && data.data && data.data.redirect){
+							window.location.replace(data.data.redirect);
+							return;
+						}
+						var msg = '';
+						if(data && data.data && typeof data.data.message === 'string'){msg = data.data.message;}
+						if(!msg){msg = '<?php echo esc_js(__('Incorrect password. Please try again.', 'user-manager')); ?>';}
+						showError(msg);
+						setBusy(false);
+						if(pwInput){pwInput.focus(); pwInput.select && pwInput.select();}
+					}).catch(function(){
+						// Network/CORS/cache issue — fall back to native POST so the
+						// visitor is not trapped behind JS errors.
+						setBusy(false);
+						form.submit();
+					});
+				}, false);
+			}
+
+			function init(){
+				var forms = document.querySelectorAll('form.um-restricted-access-form-root');
+				for(var i=0;i<forms.length;i++){bindForm(forms[i]);}
+			}
+			if(document.readyState === 'loading'){
+				document.addEventListener('DOMContentLoaded', once(init));
+			} else {
+				init();
+			}
+		})();
+		</script>
+		<?php
 	}
 
 	/**
