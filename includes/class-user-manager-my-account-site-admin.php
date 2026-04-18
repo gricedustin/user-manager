@@ -68,6 +68,51 @@ final class User_Manager_My_Account_Site_Admin {
 		add_action('woocommerce_account_admin_coupons_endpoint', [__CLASS__, 'render_admin_coupons_endpoint']);
 		add_action('woocommerce_account_admin_users_endpoint', [__CLASS__, 'render_admin_users_endpoint']);
 		add_action('woocommerce_account_admin_activity_endpoint', [__CLASS__, 'render_admin_activity_endpoint']);
+		add_action('template_redirect', [__CLASS__, 'maybe_intercept_csv_export_request'], 1, 0);
+	}
+
+	/**
+	 * Intercept My Account Admin CSV export download requests early, before
+	 * WooCommerce/theme markup is rendered. Without this early hook the CSV
+	 * download would be appended after the full HTML page header/sidebar,
+	 * producing a CSV file that begins with HTML markup.
+	 */
+	public static function maybe_intercept_csv_export_request(): void {
+		if (empty($_GET['um_export_csv']) || (string) wp_unslash($_GET['um_export_csv']) !== '1') {
+			return;
+		}
+		if (!self::is_my_account_admin_csv_export_enabled()) {
+			return;
+		}
+		if (!function_exists('is_account_page') || !is_account_page()) {
+			return;
+		}
+
+		$endpoint_to_area = [
+			'admin_orders'   => 'orders',
+			'admin_products' => 'products',
+			'admin_coupons'  => 'coupons',
+			'admin_users'    => 'users',
+			'admin_activity' => 'activity',
+		];
+
+		$area_key = '';
+		foreach ($endpoint_to_area as $endpoint => $candidate_area) {
+			if (get_query_var($endpoint, null) !== null) {
+				$area_key = $candidate_area;
+				break;
+			}
+		}
+
+		if ($area_key === '') {
+			return;
+		}
+
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
+
+		self::maybe_handle_my_account_admin_csv_export_download($area_key);
 	}
 
 	/**

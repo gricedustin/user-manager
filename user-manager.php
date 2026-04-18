@@ -2,12 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.0
+ * Version: 2.6.1
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.1 - April 18, 2026
+ * - Fixed My Account Admin "Export to CSV" downloads containing HTML page markup by intercepting the export request at `template_redirect` before WooCommerce/theme output begins.
+ * - The CSV handler now clears any buffered output, sends proper CSV headers, and streams only the CSV rows so the downloaded file is valid CSV (no leading HTML).
+ *
  * 2.6.0 - April 18, 2026
  * - Merged outstanding feature branches into main and bumped the plugin to a new minor version (0.1 bump).
  * - Consolidated pending work from `cursor/cart-and-order-page-settings-cd89` and `cursor/datalist-content-deferral-c56c` branches.
