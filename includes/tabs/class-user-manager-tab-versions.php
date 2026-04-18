@@ -39,6 +39,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.5 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Remove User option on multisite: "Delete from network and remove this user from all other sub sites".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When checked, the user is removed from every site they are a member of, then permanently deleted via wpmu_delete_user (with wp_delete_user fallback).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Takes precedence over "Delete from network if user does not exist in any other sub sites" when both are checked.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Activity log entries now include removed_from_all_sites flag and the list of removed_from_blog_ids.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.4 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Replaced the free-text "Additional Meta Fields to Display Under Order" and "in All Orders Screen" textareas with a UI-friendly repeater — each row has Meta Field, Custom Label, and Prefix inputs plus checkboxes for the Count file lines / Preview in modal / Show row when empty flags.', 'user-manager'); ?></li>

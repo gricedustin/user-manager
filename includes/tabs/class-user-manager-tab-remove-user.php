@@ -96,6 +96,13 @@ class User_Manager_Tab_Remove_User {
 							</label>
 							<p class="description"><?php esc_html_e('If checked, after removing the user from this site, the system will check if the user exists on any other sites in the network. If not found on any other sites, the user will be permanently deleted from the entire network.', 'user-manager'); ?></p>
 						</div>
+						<div class="um-form-field" style="margin-top:10px;">
+							<label>
+								<input type="checkbox" name="delete_from_network_and_remove_from_all_sites" id="um-delete-from-network-all-sites" value="1" />
+								<?php esc_html_e('Delete from network and remove this user from all other sub sites', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('If checked, the user will be removed from every site in the network where they are a member, then permanently deleted from the network. This takes precedence over the option above when both are checked.', 'user-manager'); ?></p>
+						</div>
 						<?php endif; ?>
 						
 						<p style="margin-top:20px;">
