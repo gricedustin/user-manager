@@ -2630,6 +2630,24 @@ class User_Manager_Actions {
 				if (method_exists('User_Manager_Core', 'clear_admin_email_list_check_cache')) {
 					User_Manager_Core::clear_admin_email_list_check_cache();
 				}
+
+				// "Also Display Notification with All Users with X Role".
+				// Each saved role key must be sanitize_key'd AND still exist
+				// in the WP role registry at save time so a removed-role
+				// leftover cannot trigger an unbounded user-enumeration
+				// query every admin page load.
+				$settings['admin_email_list_check_role_notification_roles'] = [];
+				if (isset($_POST['admin_email_list_check_role_notification_roles']) && is_array($_POST['admin_email_list_check_role_notification_roles'])) {
+					$allowed_role_keys = array_keys(User_Manager_Core::get_user_roles());
+					foreach (wp_unslash($_POST['admin_email_list_check_role_notification_roles']) as $role_key) {
+						$role_key = sanitize_key((string) $role_key);
+						if ($role_key === '' || !in_array($role_key, $allowed_role_keys, true)) {
+							continue;
+						}
+						$settings['admin_email_list_check_role_notification_roles'][] = $role_key;
+					}
+					$settings['admin_email_list_check_role_notification_roles'] = array_values(array_unique($settings['admin_email_list_check_role_notification_roles']));
+				}
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['simple_texting_api_token'] = isset($_POST['simple_texting_api_token']) ? sanitize_text_field(wp_unslash($_POST['simple_texting_api_token'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';

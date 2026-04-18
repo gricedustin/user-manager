@@ -39,6 +39,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.28 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > User Creation & Import: added a new "Also Display Notification with All Users with X Role" area directly under the "Remote TXT File URL List of WP Administrator Emails for This Site" field. Lists every registered role on the site as a checkbox.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('For each checked role, a dedicated admin notice now renders on User Manager admin screens, the WP Users list, and the Dashboard, listing every user currently assigned that role with per-row "Remove this user" and "Change role for this user" links. The Change Role link preselects the Customer role.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Each role notice also gets bulk buttons at the bottom: "Remove all N {role} users" and "Change all N {role} users\' roles", both prefilling the corresponding tab with the full comma-separated email list (and the role preselected to Customer for the bulk Change Role button).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Runs independently of whether the Remote TXT URL is configured, so admins can use the per-role notice feature on its own. Selected role keys are sanitized with sanitize_key() AND validated against the live WP role registry at save time so a deleted role cannot trigger an unbounded user-enumeration query.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.27 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('"User Manager: WP Administrators Not in Remote Admin List" admin notice: added a per-row "Change Role" link next to the existing "Remove this administrator" link. The link opens the new Change Role(s) screen with the email prefilled and the role preselected to Customer.', 'user-manager'); ?></li>

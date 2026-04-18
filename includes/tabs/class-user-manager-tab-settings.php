@@ -445,6 +445,33 @@ if (!defined('ABSPATH')) {
 								</span>
 							</p>
 						</div>
+						<div class="um-form-field">
+							<?php
+							$role_notification_roles = isset($settings['admin_email_list_check_role_notification_roles'])
+								&& is_array($settings['admin_email_list_check_role_notification_roles'])
+								? array_map('sanitize_key', $settings['admin_email_list_check_role_notification_roles'])
+								: [];
+							$all_site_roles = User_Manager_Core::get_user_roles();
+							?>
+							<label class="um-label-block"><strong><?php esc_html_e('Also Display Notification with All Users with X Role', 'user-manager'); ?></strong></label>
+							<p class="description" style="margin-top:0;">
+								<?php esc_html_e('Select one or more roles. For each selected role, User Manager will render a separate admin notice listing every user with that role, plus per-row "Remove this user" and "Change role for this user" links (the Change Role link prefills the role to Customer).', 'user-manager'); ?>
+							</p>
+							<div class="um-checkbox-list" style="border:1px solid #c3c4c7; padding:10px 12px; background:#fff; border-radius:4px; max-width:720px;">
+								<?php foreach ($all_site_roles as $role_key => $role_label) : ?>
+									<label style="display:block; margin-bottom:6px;">
+										<input type="checkbox" name="admin_email_list_check_role_notification_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $role_notification_roles, true)); ?> />
+										<?php echo esc_html($role_label); ?> (<code><?php echo esc_html($role_key); ?></code>)
+									</label>
+								<?php endforeach; ?>
+								<?php if (empty($all_site_roles)) : ?>
+									<p class="description" style="margin:0;"><?php esc_html_e('No registered roles found.', 'user-manager'); ?></p>
+								<?php endif; ?>
+							</div>
+							<p class="description" style="margin-top:6px;">
+								<?php esc_html_e('Notifications only display to WP Administrators and only on User Manager admin screens, the Users list screen, and the Dashboard, matching where the other Remote Admin Email List notices render.', 'user-manager'); ?>
+							</p>
+						</div>
 					</div>
 				</div>
 

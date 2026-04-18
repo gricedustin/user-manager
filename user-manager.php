@@ -2,11 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.27
+ * Version: 2.6.28
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.28 - April 18, 2026
+ * - Settings > User Creation & Import: added a new "Also Display Notification with All Users with X Role" area directly under the "Remote TXT File URL List of WP Administrator Emails for This Site" field. Lists every registered role on the site as a checkbox.
+ * - For each checked role, a dedicated admin notice now renders on User Manager admin screens, the WP Users list, and the Dashboard, listing every user currently assigned that role with per-row "Remove this user" and "Change role for this user" links. The Change Role link preselects the Customer role.
+ * - Each role notice also gets bulk buttons at the bottom: "Remove all N {role} users" and "Change all N {role} users' roles", both prefilling the corresponding tab with the full comma-separated email list (and the role preselected to Customer for the bulk Change Role button).
+ * - Runs independently of whether the Remote TXT URL is configured, so admins can use the per-role notice feature on its own. Selected role keys are sanitized with sanitize_key() AND validated against the live WP role registry at save time so a deleted role cannot trigger an unbounded user-enumeration query.
  *
  * 2.6.27 - April 18, 2026
  * - "User Manager: WP Administrators Not in Remote Admin List" admin notice: added a per-row "Change Role" link next to the existing "Remove this administrator" link. The link opens the new Change Role(s) screen with the email prefilled and the role preselected to Customer.

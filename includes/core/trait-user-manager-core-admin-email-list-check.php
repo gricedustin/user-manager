@@ -268,6 +268,12 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 			return;
 		}
 
+		// Render the new "Also Display Notification with All Users with X
+		// Role" notices first (independent of whether the Remote TXT URL
+		// is configured), then fall through to the existing remote-list
+		// notices when a URL is present.
+		self::render_admin_email_list_check_role_notices();
+
 		$result = self::get_admin_email_list_check_remote_emails();
 		$url = $result['url'];
 		if ($url === '') {
@@ -429,6 +435,171 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 						/* translators: %d: number of administrators */
 						_n('Change %d role', 'Change all %d roles', count($all_emails), 'user-manager'),
 						count($all_emails)
+					))
+					. '</a>'
+					. '</p>';
+			}
+
+			echo '</div>';
+		}
+	}
+
+	/**
+	 * Render one admin notice per role selected in the
+	 * "Also Display Notification with All Users with X Role" setting,
+	 * each listing every user assigned that role with per-row "Remove
+	 * this user" and "Change role for this user" links. Change Role links
+	 * preselect the Customer role to match the Remote Admin notice UX.
+	 */
+	public static function render_admin_email_list_check_role_notices(): void {
+		$settings = self::get_settings();
+		$roles_to_notify = isset($settings['admin_email_list_check_role_notification_roles'])
+			&& is_array($settings['admin_email_list_check_role_notification_roles'])
+			? array_values(array_unique(array_map('sanitize_key', $settings['admin_email_list_check_role_notification_roles'])))
+			: [];
+		if (empty($roles_to_notify)) {
+			return;
+		}
+
+		$registered_roles = method_exists(__CLASS__, 'get_user_roles') ? self::get_user_roles() : [];
+		if (!is_array($registered_roles)) {
+			$registered_roles = [];
+		}
+
+		foreach ($roles_to_notify as $role_key) {
+			$role_key = sanitize_key($role_key);
+			if ($role_key === '' || !isset($registered_roles[$role_key])) {
+				continue;
+			}
+
+			$role_label = (string) $registered_roles[$role_key];
+			$users = get_users([
+				'role'    => $role_key,
+				'orderby' => 'user_email',
+				'order'   => 'ASC',
+				'fields'  => ['ID', 'user_email', 'display_name', 'user_login'],
+			]);
+			$users = is_array($users) ? $users : [];
+
+			echo '<div class="notice notice-info"><p><strong>'
+				. esc_html(sprintf(
+					/* translators: 1: role label, 2: role key */
+					__('User Manager: Users with role "%1$s" (%2$s)', 'user-manager'),
+					$role_label,
+					$role_key
+				))
+				. '</strong></p>';
+
+			if (empty($users)) {
+				echo '<p>'
+					. esc_html(sprintf(
+						/* translators: %s: role label */
+						__('No users are currently assigned the %s role.', 'user-manager'),
+						$role_label
+					))
+					. '</p></div>';
+				continue;
+			}
+
+			echo '<p>'
+				. esc_html(sprintf(
+					/* translators: 1: count of users, 2: role label */
+					_n(
+						'%1$d user with the %2$s role. Use the per-row links to remove or change each user\'s role.',
+						'%1$d users with the %2$s role. Use the per-row links to remove or change each user\'s role.',
+						count($users),
+						'user-manager'
+					),
+					count($users),
+					$role_label
+				))
+				. '</p>';
+
+			echo '<ul style="list-style:disc;margin-left:20px;">';
+			$role_emails_for_bulk = [];
+			foreach ($users as $user) {
+				$email = isset($user->user_email) ? (string) $user->user_email : '';
+				$email = trim($email);
+				if ($email === '' || !is_email($email)) {
+					continue;
+				}
+				$user_id = isset($user->ID) ? (int) $user->ID : 0;
+				$display = isset($user->display_name) && (string) $user->display_name !== ''
+					? (string) $user->display_name
+					: (string) ($user->user_login ?? $email);
+				$role_emails_for_bulk[] = $email;
+
+				$remove_url = add_query_arg(
+					[
+						'page'                  => self::SETTINGS_PAGE_SLUG,
+						'tab'                   => self::TAB_LOGIN_TOOLS,
+						'login_tools_section'   => self::TAB_REMOVE_USER,
+						'um_prefill_user'       => $user_id,
+						'um_prefill_user_email' => rawurlencode($email),
+					],
+					admin_url('admin.php')
+				);
+				$change_role_url = add_query_arg(
+					[
+						'page'                  => self::SETTINGS_PAGE_SLUG,
+						'tab'                   => self::TAB_LOGIN_TOOLS,
+						'login_tools_section'   => self::TAB_CHANGE_ROLE,
+						'um_prefill_user_email' => rawurlencode($email),
+						'um_prefill_role'       => 'customer',
+					],
+					admin_url('admin.php')
+				);
+
+				echo '<li>'
+					. '<code>' . esc_html($email) . '</code>'
+					. ' (' . esc_html($display);
+				if ($user_id > 0) {
+					echo ', user ID ' . esc_html((string) $user_id);
+				}
+				echo ') — '
+					. '<a href="' . esc_url($remove_url) . '">' . esc_html__('Remove this user', 'user-manager') . '</a>'
+					. ' | '
+					. '<a href="' . esc_url($change_role_url) . '">' . esc_html__('Change role for this user', 'user-manager') . '</a>'
+					. '</li>';
+			}
+			echo '</ul>';
+
+			if (!empty($role_emails_for_bulk)) {
+				$bulk_list = rawurlencode(implode(',', $role_emails_for_bulk));
+				$bulk_remove_url = add_query_arg(
+					[
+						'page'                  => self::SETTINGS_PAGE_SLUG,
+						'tab'                   => self::TAB_LOGIN_TOOLS,
+						'login_tools_section'   => self::TAB_REMOVE_USER,
+						'um_prefill_user_email' => $bulk_list,
+					],
+					admin_url('admin.php')
+				);
+				$bulk_change_role_url = add_query_arg(
+					[
+						'page'                  => self::SETTINGS_PAGE_SLUG,
+						'tab'                   => self::TAB_LOGIN_TOOLS,
+						'login_tools_section'   => self::TAB_CHANGE_ROLE,
+						'um_prefill_user_email' => $bulk_list,
+						'um_prefill_role'       => 'customer',
+					],
+					admin_url('admin.php')
+				);
+				echo '<p style="margin-top:12px;">'
+					. '<a href="' . esc_url($bulk_remove_url) . '" class="button button-secondary" style="margin-right:8px;">'
+					. esc_html(sprintf(
+						/* translators: 1: count of users, 2: role label */
+						_n('Remove all %1$d %2$s user', 'Remove all %1$d %2$s users', count($role_emails_for_bulk), 'user-manager'),
+						count($role_emails_for_bulk),
+						$role_label
+					))
+					. '</a>'
+					. '<a href="' . esc_url($bulk_change_role_url) . '" class="button button-primary">'
+					. esc_html(sprintf(
+						/* translators: 1: count of users, 2: role label */
+						_n('Change %1$d %2$s user\'s role', 'Change all %1$d %2$s users\' roles', count($role_emails_for_bulk), 'user-manager'),
+						count($role_emails_for_bulk),
+						$role_label
 					))
 					. '</a>'
 					. '</p>';
