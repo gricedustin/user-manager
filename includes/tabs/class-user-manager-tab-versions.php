@@ -39,6 +39,17 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.26 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login Tools: added a new "Change Role(s)" sub-page (?page=user-manager&tab=login-tools&login_tools_section=change-role) positioned next to Reset Password(s).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The screen accepts a list of email addresses, a single role picker populated from WordPress\'s registered roles, and an optional "Send Role Change Email" checkbox with a "Not recommended in most cases" note explaining role changes are normally best done silently.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Submissions go through admin-post.php (action: user_manager_change_role) with nonce + manage_options checks; each user is reassigned via WP_User::set_role() so WordPress fires the standard set_user_role action and other plugins that listen for role changes keep running.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Every attempt is written to the Admin Activity Log (role_change, role_change_failed, role_change_unchanged) with old role(s), new role, whether an email was sent, and whether the run was bulk. The right-hand "Recent Role Changes" sidebar on the screen reads from that log, and Reports > Admin Log shows the full history.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Optional notification email is a lightweight wp_mail() message that tells the user their role changed on the site and suggests they contact the admin if unexpected.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added matching redirect notice codes (role_change, role_change_email_sent, role_unchanged, invalid_role, bulk_role_change, bulk_role_change_email_sent) with user-friendly messages that show the new role key and the unchanged/not-found/sent counts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.25 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings tab (?page=user-manager&tab=settings): fixed the Save Settings button and pressing Enter inside form fields not persisting changes.', 'user-manager'); ?></li>

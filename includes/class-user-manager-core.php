@@ -61,7 +61,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.6.25';
+	const VERSION = '2.6.26';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -114,6 +114,7 @@ final class User_Manager_Core {
 	const TAB_LOGIN_TOOLS     = 'login-tools';
 	const TAB_CREATE_USER     = 'create-user';
 	const TAB_RESET_PASSWORD  = 'reset-password';
+	const TAB_CHANGE_ROLE     = 'change-role';
 	const TAB_REMOVE_USER     = 'remove-user';
 	const TAB_DEACTIVATE_USER = 'deactivate-user';
 	const TAB_ROLE_SWITCHING  = 'role-switching';
@@ -8322,7 +8323,7 @@ html body .woocommerce-layout__header {
 	 */
 	public static function get_current_tab(): string {
 		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : self::TAB_LOGIN_TOOLS;
-		if (in_array($tab, [self::TAB_CREATE_USER, self::TAB_BULK_CREATE, self::TAB_RESET_PASSWORD, self::TAB_REMOVE_USER, self::TAB_DEACTIVATE_USER, self::TAB_LOGIN_AS], true)) {
+		if (in_array($tab, [self::TAB_CREATE_USER, self::TAB_BULK_CREATE, self::TAB_RESET_PASSWORD, self::TAB_CHANGE_ROLE, self::TAB_REMOVE_USER, self::TAB_DEACTIVATE_USER, self::TAB_LOGIN_AS], true)) {
 			return self::TAB_LOGIN_TOOLS;
 		}
 		if ($tab === self::TAB_ROLE_SWITCHING) {
@@ -8356,6 +8357,7 @@ html body .woocommerce-layout__header {
 			self::TAB_LOGIN_TOOLS,
 			self::TAB_CREATE_USER,
 			self::TAB_RESET_PASSWORD,
+			self::TAB_CHANGE_ROLE,
 			self::TAB_REMOVE_USER,
 			self::TAB_DEACTIVATE_USER,
 			self::TAB_LOGIN_AS,
@@ -8389,6 +8391,7 @@ html body .woocommerce-layout__header {
 			self::TAB_CREATE_USER,
 			self::TAB_BULK_CREATE,
 			self::TAB_RESET_PASSWORD,
+			self::TAB_CHANGE_ROLE,
 			self::TAB_REMOVE_USER,
 			self::TAB_DEACTIVATE_USER,
 			self::TAB_LOGIN_AS,
@@ -8417,6 +8420,7 @@ html body .woocommerce-layout__header {
 		$create_url = add_query_arg('login_tools_section', self::TAB_CREATE_USER, $base_login_tools_url);
 		$bulk_create_url = add_query_arg('login_tools_section', self::TAB_BULK_CREATE, $base_login_tools_url);
 		$reset_url = add_query_arg('login_tools_section', self::TAB_RESET_PASSWORD, $base_login_tools_url);
+		$change_role_url = add_query_arg('login_tools_section', self::TAB_CHANGE_ROLE, $base_login_tools_url);
 		$remove_url = add_query_arg('login_tools_section', self::TAB_REMOVE_USER, $base_login_tools_url);
 		$deactivate_url = add_query_arg('login_tools_section', self::TAB_DEACTIVATE_USER, $base_login_tools_url);
 		$login_as_url = add_query_arg('login_tools_section', self::TAB_LOGIN_AS, $base_login_tools_url);
@@ -8451,6 +8455,11 @@ html body .woocommerce-layout__header {
 			<li>
 				<a href="<?php echo esc_url($reset_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_RESET_PASSWORD ? 'current' : ''; ?>">
 					<?php esc_html_e('Reset Password(s)', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($change_role_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_CHANGE_ROLE ? 'current' : ''; ?>">
+					<?php esc_html_e('Change Role(s)', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
@@ -8910,6 +8919,41 @@ html body .woocommerce-layout__header {
 			case 'password_reset_email_sent':
 				$content = __('Password reset successfully and email sent.', 'user-manager');
 				break;
+			case 'role_change':
+				$new_role = isset($_GET['new_role']) ? sanitize_key(wp_unslash($_GET['new_role'])) : '';
+				$content = $new_role !== ''
+					? sprintf(
+						/* translators: %s: new role key */
+						__('Role changed successfully to %s.', 'user-manager'),
+						$new_role
+					)
+					: __('Role changed successfully.', 'user-manager');
+				break;
+			case 'role_change_email_sent':
+				$new_role = isset($_GET['new_role']) ? sanitize_key(wp_unslash($_GET['new_role'])) : '';
+				$content = $new_role !== ''
+					? sprintf(
+						/* translators: %s: new role key */
+						__('Role changed successfully to %s and notification email sent.', 'user-manager'),
+						$new_role
+					)
+					: __('Role changed successfully and notification email sent.', 'user-manager');
+				break;
+			case 'role_unchanged':
+				$new_role = isset($_GET['new_role']) ? sanitize_key(wp_unslash($_GET['new_role'])) : '';
+				$content = $new_role !== ''
+					? sprintf(
+						/* translators: %s: role key */
+						__('No change: the user is already assigned to %s.', 'user-manager'),
+						$new_role
+					)
+					: __('No change: the user already has the selected role.', 'user-manager');
+				$type = 'info';
+				break;
+			case 'invalid_role':
+				$content = __('Please choose a valid role from the dropdown.', 'user-manager');
+				$type = 'error';
+				break;
 			case 'bulk_created':
 				$count = isset($_GET['count']) ? absint($_GET['count']) : 0;
 				$content = sprintf(__('%d users created/updated successfully.', 'user-manager'), $count);
@@ -9238,6 +9282,41 @@ html body .woocommerce-layout__header {
 					__('Passwords reset for %d users. %d emails not found. %d notification emails sent.', 'user-manager'),
 					$reset, $not_found, $emails
 				);
+				$type = $not_found > 0 ? 'warning' : 'success';
+				break;
+			case 'bulk_role_change':
+				$changed = isset($_GET['changed']) ? absint($_GET['changed']) : 0;
+				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
+				$unchanged = isset($_GET['unchanged']) ? absint($_GET['unchanged']) : 0;
+				$new_role = isset($_GET['new_role']) ? sanitize_key(wp_unslash($_GET['new_role'])) : '';
+				$content = $new_role !== ''
+					? sprintf(
+						/* translators: 1: changed count, 2: new role key, 3: unchanged count, 4: not found count */
+						__('Role changed for %1$d users to %2$s. %3$d already had that role. %4$d emails not found.', 'user-manager'),
+						$changed, $new_role, $unchanged, $not_found
+					)
+					: sprintf(
+						__('Role changed for %1$d users. %2$d already had that role. %3$d emails not found.', 'user-manager'),
+						$changed, $unchanged, $not_found
+					);
+				$type = $not_found > 0 ? 'warning' : 'success';
+				break;
+			case 'bulk_role_change_email_sent':
+				$changed = isset($_GET['changed']) ? absint($_GET['changed']) : 0;
+				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
+				$unchanged = isset($_GET['unchanged']) ? absint($_GET['unchanged']) : 0;
+				$emails = isset($_GET['emails']) ? absint($_GET['emails']) : 0;
+				$new_role = isset($_GET['new_role']) ? sanitize_key(wp_unslash($_GET['new_role'])) : '';
+				$content = $new_role !== ''
+					? sprintf(
+						/* translators: 1: changed count, 2: new role key, 3: unchanged count, 4: not found count, 5: email count */
+						__('Role changed for %1$d users to %2$s. %3$d already had that role. %4$d emails not found. %5$d notification emails sent.', 'user-manager'),
+						$changed, $new_role, $unchanged, $not_found, $emails
+					)
+					: sprintf(
+						__('Role changed for %1$d users. %2$d already had that role. %3$d emails not found. %4$d notification emails sent.', 'user-manager'),
+						$changed, $unchanged, $not_found, $emails
+					);
 				$type = $not_found > 0 ? 'warning' : 'success';
 				break;
 			case 'emails_sent':

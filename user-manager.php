@@ -2,11 +2,19 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.25
+ * Version: 2.6.26
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.26 - April 18, 2026
+ * - Login Tools: added a new "Change Role(s)" sub-page (?page=user-manager&tab=login-tools&login_tools_section=change-role) positioned right next to Reset Password(s) in the sub-nav, with the same layout/look as Reset Password(s).
+ * - The form accepts a list of email addresses, a single role picker (populated from WordPress\'s registered roles), and an optional "Send Role Change Email" checkbox with a visible "Not recommended in most cases" note explaining that role changes are normally best done silently.
+ * - Submissions route through admin-post.php (action: user_manager_change_role) with nonce protection and manage_options capability check; each matched user is reassigned via WP_User::set_role() so WordPress fires its standard set_user_role action and other plugins that listen for role changes keep running.
+ * - Every attempt is written to the Admin Activity Log as `role_change`, `role_change_failed`, or `role_change_unchanged` with the old role(s), new role, whether an email was sent, and whether the run was bulk — so Reports > Admin Log keeps full history, and the right-hand "Recent Role Changes" sidebar on the screen reads from that log.
+ * - Optional notification email is a lightweight wp_mail() message (not a template-editor form) that tells the user their role changed on the site and suggests they contact the admin if unexpected.
+ * - Added matching redirect message codes (role_change, role_change_email_sent, role_unchanged, invalid_role, bulk_role_change, bulk_role_change_email_sent) with user-friendly notices that show the new role key and the unchanged/not-found/sent counts.
  *
  * 2.6.25 - April 18, 2026
  * - Settings tab (?page=user-manager&tab=settings): fixed the Save Settings button and pressing Enter inside form fields not persisting changes.

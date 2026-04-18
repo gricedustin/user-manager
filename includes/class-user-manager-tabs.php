@@ -11,6 +11,7 @@ require_once __DIR__ . '/tabs/class-user-manager-tab-shared.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-create-user.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-login-history.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-reset-password.php';
+require_once __DIR__ . '/tabs/class-user-manager-tab-change-role.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-remove-user.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-deactivate-user.php';
 require_once __DIR__ . '/tabs/class-user-manager-tab-role-switching.php';
@@ -48,6 +49,9 @@ class User_Manager_Tabs {
 				break;
 			case User_Manager_Core::TAB_RESET_PASSWORD:
 				User_Manager_Tab_Reset_Password::render();
+				break;
+			case User_Manager_Core::TAB_CHANGE_ROLE:
+				User_Manager_Tab_Change_Role::render();
 				break;
 			case User_Manager_Core::TAB_REMOVE_USER:
 				User_Manager_Tab_Remove_User::render();
