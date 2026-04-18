@@ -220,6 +220,13 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		$currency_decimals = function_exists('wc_get_price_decimals') ? (int) wc_get_price_decimals() : 2;
 		$currency_decimal_sep = function_exists('wc_get_price_decimal_separator') ? wc_get_price_decimal_separator() : '.';
 		$currency_thousand_sep = function_exists('wc_get_price_thousand_separator') ? wc_get_price_thousand_separator() : ',';
+		$minimum_total_qty = isset($settings['add_to_cart_variation_table_min_total_qty']) ? max(0, absint($settings['add_to_cart_variation_table_min_total_qty'])) : 0;
+		$minimum_total_qty_alert_message = isset($settings['add_to_cart_variation_table_min_total_qty_alert_message'])
+			? trim((string) $settings['add_to_cart_variation_table_min_total_qty_alert_message'])
+			: '';
+		$success_alert_message = isset($settings['add_to_cart_variation_table_success_alert_message'])
+			? trim((string) $settings['add_to_cart_variation_table_success_alert_message'])
+			: '';
 		$debug_enabled = self::is_add_to_cart_variation_table_debug_enabled();
 		$debug_payload = self::consume_add_to_cart_variation_table_debug_payload();
 		?>
@@ -231,6 +238,9 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			data-currency-decimals="<?php echo esc_attr((string) $currency_decimals); ?>"
 			data-currency-decimal-sep="<?php echo esc_attr($currency_decimal_sep); ?>"
 			data-currency-thousand-sep="<?php echo esc_attr($currency_thousand_sep); ?>"
+			data-min-total-qty="<?php echo esc_attr((string) $minimum_total_qty); ?>"
+			data-min-total-qty-alert-message="<?php echo esc_attr($minimum_total_qty_alert_message); ?>"
+			data-success-alert-message="<?php echo esc_attr($success_alert_message); ?>"
 		>
 			<?php if (trim($table_text_above) !== '') : ?>
 				<div class="um-add-to-cart-variation-table-custom-text um-add-to-cart-variation-table-custom-text-above" style="margin:0 0 12px;">
@@ -307,9 +317,9 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 					var root = document.currentScript ? document.currentScript.closest('.um-add-to-cart-variation-table') : null;
 					if (!root) return;
 					var qtyInputs = root.querySelectorAll('input[name^="um_add_to_cart_variation_qty["]');
+					var form = root.querySelector('.um-add-to-cart-variation-table-form');
 					var totalQtyNode = root.querySelector('.um-add-to-cart-variation-table-total');
 					var totalAmountNode = root.querySelector('.um-add-to-cart-variation-table-total-amount');
-					if (!totalQtyNode) return;
 					var currencySymbol = root.getAttribute('data-currency-symbol') || '$';
 					var currencyPosition = root.getAttribute('data-currency-position') || 'left';
 					var currencyDecimals = parseInt(root.getAttribute('data-currency-decimals') || '2', 10);
@@ -340,7 +350,7 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 								return currencySymbol + amount;
 						}
 					};
-					var recalc = function() {
+					var calculateTotals = function() {
 						var totalQty = 0;
 						var totalAmount = 0;
 						qtyInputs.forEach(function(input) {
@@ -354,15 +364,55 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 								}
 							}
 						});
-						totalQtyNode.textContent = String(totalQty);
+						return {
+							totalQty: totalQty,
+							totalAmount: totalAmount
+						};
+					};
+					var recalc = function() {
+						var totals = calculateTotals();
+						var totalQty = totals.totalQty;
+						var totalAmount = totals.totalAmount;
+						if (totalQtyNode) {
+							totalQtyNode.textContent = String(totalQty);
+						}
 						if (totalAmountNode) {
 							totalAmountNode.textContent = formatMoney(totalAmount);
 						}
 					};
+					var interpolateMessage = function(template, minQty, totalQty) {
+						if (!template) return '';
+						return template
+							.replace(/\{min\}/g, String(minQty))
+							.replace(/\{total\}/g, String(totalQty));
+					};
+					var minTotalQty = parseInt(root.getAttribute('data-min-total-qty') || '0', 10);
+					if (isNaN(minTotalQty) || minTotalQty < 0) {
+						minTotalQty = 0;
+					}
+					var minTotalQtyAlertMessage = root.getAttribute('data-min-total-qty-alert-message') || '';
+					var successAlertMessage = root.getAttribute('data-success-alert-message') || '';
 					qtyInputs.forEach(function(input) {
 						input.addEventListener('input', recalc);
 						input.addEventListener('change', recalc);
 					});
+					if (form) {
+						form.addEventListener('submit', function(event) {
+							var totals = calculateTotals();
+							if (minTotalQty > 0 && totals.totalQty < minTotalQty) {
+								var minMessage = interpolateMessage(minTotalQtyAlertMessage, minTotalQty, totals.totalQty);
+								if (!minMessage) {
+									minMessage = 'Please add at least ' + minTotalQty + ' total items before continuing.';
+								}
+								window.alert(minMessage);
+								event.preventDefault();
+								return;
+							}
+							if (successAlertMessage) {
+								window.alert(interpolateMessage(successAlertMessage, minTotalQty, totals.totalQty));
+							}
+						});
+					}
 					recalc();
 				})();
 			</script>
@@ -580,6 +630,35 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 		if (isset($_POST['um_add_to_cart_variation_qty']) && is_array($_POST['um_add_to_cart_variation_qty'])) {
 			$qty_map = (array) wp_unslash($_POST['um_add_to_cart_variation_qty']);
 		}
+		$settings = User_Manager_Core::get_settings();
+		$minimum_total_qty = isset($settings['add_to_cart_variation_table_min_total_qty'])
+			? max(0, absint($settings['add_to_cart_variation_table_min_total_qty']))
+			: 0;
+		$total_requested_qty = 0;
+		foreach ($qty_map as $qty_raw) {
+			$qty = is_numeric($qty_raw) ? (int) floor((float) $qty_raw) : 0;
+			if ($qty > 0) {
+				$total_requested_qty += $qty;
+			}
+		}
+		if ($minimum_total_qty > 0 && $total_requested_qty < $minimum_total_qty) {
+			$message_template = isset($settings['add_to_cart_variation_table_min_total_qty_alert_message'])
+				? sanitize_text_field((string) $settings['add_to_cart_variation_table_min_total_qty_alert_message'])
+				: '';
+			$minimum_message = self::format_add_to_cart_variation_table_alert_message(
+				$message_template,
+				$minimum_total_qty,
+				$total_requested_qty,
+				__('Please add at least {min} total items. Current total: {total}.', 'user-manager')
+			);
+			wc_add_notice($minimum_message, 'error');
+			self::redirect_add_to_cart_variation_table_request($product_id, self::build_add_to_cart_variation_table_debug_query_args($debug_enabled, [
+				'product_id'           => $product_id,
+				'error'                => 'minimum_total_qty_not_met',
+				'minimum_total_qty'    => $minimum_total_qty,
+				'total_requested_qty'  => $total_requested_qty,
+			]));
+		}
 
 		$rows_selected = 0;
 		$items_added = 0;
@@ -760,6 +839,19 @@ trait User_Manager_Core_Add_To_Cart_Variation_Table_Trait {
 			'errors'        => $error_messages,
 			'rows'          => $debug_rows,
 		]));
+	}
+
+	/**
+	 * Fill alert-message placeholders and ensure a fallback message.
+	 */
+	private static function format_add_to_cart_variation_table_alert_message(string $template, int $minimum_total_qty, int $current_total_qty, string $fallback): string {
+		$message = trim($template);
+		if ($message === '') {
+			$message = $fallback;
+		}
+		$message = str_replace('{min}', (string) $minimum_total_qty, $message);
+		$message = str_replace('{total}', (string) $current_total_qty, $message);
+		return $message;
 	}
 
 	/**

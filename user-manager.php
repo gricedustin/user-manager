@@ -2,12 +2,1360 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.4.3
+ * Version: 2.5.250
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.5.250 - March 16, 2026
+ * - Added a new role-change setting: "Emails to EXCLUDE from Admin email address for role change alerts" to skip notifications for specific user emails.
+ * - Role-change admin alert emails now check the exclusion list before sending and do not send when the triggering user email matches an excluded address.
+ *
+ * 2.5.249 - March 16, 2026
+ * - Added new My Account Admin setting: "Add Download to CSV Button below Paging Buttons" directly below the rows-per-page setting.
+ * - Added optional "Export to CSV" buttons under pagination in Admin: Orders, Products, Coupons, Users, and Activity My Account list views.
+ * - CSV exports now download all matching rows across all pages while preserving current search/filter context for each list.
+ *
+ * 2.5.248 - March 16, 2026
+ * - Moved "WP Administrators to Redirect to My Account if Accessing WP-Admin" out of the Admin: Activity sub-settings into its own My Account Admin addon-level field so it applies across the full addon.
+ * - Updated the field label to: "WP Administrators to Redirect to My Account if Accessing WP-Admin and Remove WP-Admin Top Bar on Front End?"
+ * - Matching listed administrators now have the front-end WP-Admin top bar removed in addition to being redirected out of wp-admin.
+ *
+ * 2.5.247 - March 16, 2026
+ * - Added a new My Account Admin setting to control list pagination size (items per page) across Admin: Orders, Products, Coupons, Users, and Activity in the My Account front end.
+ * - Updated My Account Admin list queries/pagination to use the saved per-page value instead of a fixed 20-row limit.
+ *
+ * 2.5.246 - March 16, 2026
+ * - Removed legacy disabled-control behavior for My Account Admin area by explicitly restoring interactivity for `.woocommerce-MyAccount-content` form inputs/selects/textareas/submit buttons.
+ * - Added scoped CSS override so My Account Admin controls remain clickable/fully visible even if older disabled-style rules are cached or injected.
+ *
+ * 2.5.245 - March 16, 2026
+ * - Updated the default WP-Admin menu label fallback from "User Experience Manager" to "UX Manager" when no Plugin Title Override is set.
+ * - Updated Settings > User Experience helper text/placeholder for Plugin Title Override and admin-bar shortcut copy to reflect the new default label.
+ *
+ * 2.5.244 - March 16, 2026
+ * - Added new Settings > Email Settings input under "Emails/Texts Per Batch": "Based on User Activity Report, if a user logs in and they have logged in before but had a different role than what they are currently logging in with, send an email notifiction to".
+ * - Added My Account Dashboard role-change email alert flow that checks User Activity history and sends a "User Role Changed" email to the configured address when a user's previous roles differ from current roles (supports SSO/non-standard login paths).
+ * - Role-change alert email now includes helpful context: user ID, username/display name/email, old roles from activity history, current roles, current page URL, IP address, and user agent.
+ *
+ * 2.5.243 - March 16, 2026
+ * - Fixed My Account Admin Activity "Filter by Action" controls rendering as disabled/non-clickable in some themes by adding dedicated filter-form classes and reinforced interactive styles.
+ * - Added explicit front-end CSS safeguards for the activity filter wrapper/form/controls (`pointer-events`, `opacity`, `cursor`, and stacking context) so dropdown and Apply Filter button remain clickable.
+ *
+ * 2.5.242 - March 16, 2026
+ * - Updated My Account Admin Activity Viewer "Partial Match Emails to Hide on Front End" behavior to fully exclude matching email records from frontend Admin: Activity results.
+ * - Applied partial-email exclusion at SQL query level (count, row fetch, and action filter options) so matching users/actions are not included anywhere in front-end activity output.
+ * - Clarified settings help text to indicate matching email records are excluded entirely from frontend Activity query results.
+ *
+ * 2.5.241 - March 16, 2026
+ * - Fixed WP-Admin redirect enforcement for "WP Administrators to Redirect to My Account if Accessing WP-Admin" by registering the redirect check at plugin bootstrap so it runs on wp-admin requests even when My Account area hooks are not initialized.
+ * - Hardened administrator detection in the redirect guard to use reliable role/capability checks, ensuring listed administrator usernames/emails/user IDs are redirected consistently.
+ *
+ * 2.5.240 - March 16, 2026
+ * - Updated My Account Admin Activity Viewer "Role Review" wording to "User role change found in past" in both settings and table flag output.
+ * - Fixed My Account Admin Activity Viewer action filtering submit behavior by replacing auto-submit onchange with an explicit "Apply Filter" button flow.
+ * - Simplified Activity table columns by removing Username, Time Ago, URL, IP, User Agent, and Edit User action column; renamed "Login Time" to "Timestamp".
+ *
+ * 2.5.237 - March 16, 2026
+ * - Added new My Account Admin Activity Viewer setting: "WP Administrators to Redirect to My Account if Accessing WP-Admin" (comma-separated usernames/emails/user IDs).
+ * - Added wp-admin access redirect enforcement for listed WP administrators: matching users are prevented from entering wp-admin and are redirected to My Account without changing roles.
+ * - Redirect list is opt-in and exact-match scoped to entered users only; when empty, no users are redirected.
+ *
+ * 2.5.236 - March 16, 2026
+ * - Added a new My Account Site Admin endpoint/area: "Admin: Activity" that mirrors Reports > User Activity data on the My Account front end.
+ * - Added new "My Account Admin Activity Viewer" settings under Add-ons > My Account Site Admin: allowed usernames, allowed roles, partial email-hide matches, action checkboxes, and role-review flag.
+ * - Activity viewer now supports action filtering, search, pagination context, optional action-allowlist display, and a "Role Review" badge when a user has activity records with differing role snapshots.
+ *
+ * 2.5.235 - March 16, 2026
+ * - Added a new Media Library Tags Block setting under "Exclude Logged In Users from Tracking": "Exclude WP Administrator Users from Tracking".
+ * - Tracking exclusion logic now supports admin-only exclusion, so administrators can be excluded from Tag Reports/Lightbox tracking even when other logged-in roles are still tracked.
+ *
+ * 2.5.234 - March 16, 2026
+ * - Added new Media Library Tags Block setting: "Exclude Logged In Users from Tracking" so internal/admin browsing can be excluded from both Tag Reports counters and Lightbox View counters.
+ * - Added a new "Clean Tag Reports Data" button in Blocks > Media Library Tags that clears all tracked Tag Reports counters (image lightbox views + album tag views, including year/month/week/day buckets).
+ *
+ * 2.5.233 - March 16, 2026
+ * - Updated single-video combined-row rendering to detect when the active tag context has no featured image and skip the empty featured-image column.
+ * - In no-featured-image single-video cases, output now falls back to a single-column stack with description/bullets above and the single video centered below (instead of appearing right-shifted).
+ *
+ * 2.5.232 - March 16, 2026
+ * - Fixed single-video three-column combined layout duplication so only one featured image appears in the row (featured image column only), while description/bullets column no longer re-renders a floating featured image.
+ * - When single-video three-column combined layout is active, default above/below album description wrapper output is suppressed to avoid duplicate featured image/description blocks outside the combined row.
+ *
+ * 2.5.231 - March 16, 2026
+ * - Retitled Media Library Tags module labels across Add-ons/Blocks/Documentation UI from "Dynamic Photo Gallery with Media Library Tags" to "Media Library Tags with Photo & YouTube Video Gallery".
+ *
+ * 2.5.230 - March 16, 2026
+ * - Fixed Media Library Tags setting persistence for "If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row" on Blocks > Media Library Tags.
+ * - Unified field-name handling so admin UI, save action, and runtime defaults all read/write the same setting key (with backward compatibility for the legacy alternative-layout key).
+ * - The single-video three-column combined layout toggle now reliably controls the exact front-end row layout that renders featured image + description/bullets + single video together on desktop.
+ *
+ * 2.5.229 - March 16, 2026
+ * - Updated Media Library Tag video-grid card alignment so mixed horizontal and vertical videos are vertically centered within each grid column.
+ * - Applies to both shortcode-shared video styles and gallery-rendered video grid styles for consistent row alignment.
+ *
+ * 2.5.228 - March 16, 2026
+ * - Added a new optional Additional Meta Fields flag: `display_when_empty` (aliases: `display-empty`, `show_empty`, `show_if_empty`, `render_if_empty`) for both Order detail and All Orders Screen definitions.
+ * - When the new empty-display flag is set, configured additional-meta labels now render even when the underlying order meta key has no stored value (showing an em dash placeholder).
+ * - Updated Additional Meta Fields helper text/examples to include the new empty-display flag usage.
+ *
+ * 2.5.227 - March 16, 2026
+ * - Added three order-level invoice meta box text fields under Invoice Title in WP Admin: Deposit Amount (`_um_invoice_downpayment`), Remaining Amount (`_um_invoice_remaining`), and Remaining Amount Due Date (`_um_invoice_remaining_due`).
+ * - Invoice totals table now conditionally renders new rows when values exist: Down Payment, Remaining Payment, and Remaining Payment Due.
+ *
+ * 2.5.226 - March 16, 2026
+ * - Invoice pages rendered via `?invoice=` now treat product and meta-description images as clickable lightbox items, opening a full-size modal preview instead of requiring right-click/open in new tab.
+ * - Added accessible invoice-image modal behavior (click, keyboard Enter/Space, Escape to close, backdrop/close button support) scoped to invoice line-item tables.
+ *
+ * 2.5.225 - March 16, 2026
+ * - Added new optional preview flags for My Account Admin "Additional Meta Fields to Display Under Order" definitions: `preview`, `preview_file`, `file_preview`, `preview-modal`, and `preview_modal`.
+ * - Flagged file-upload meta values now render an in-page "Preview File" modal so admins can review uploads without downloading first, including CSV/text table previews and Excel viewer support.
+ *
+ * 2.5.224 - March 16, 2026
+ * - Added new Media Library Tag gallery checkbox setting: "If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row".
+ * - When enabled, and only when a single video result is present, gallery output now renders an alternate 3-column row (featured image, description/bullets, video) on desktop; mobile stacks to one column.
+ *
+ * 2.5.217 - March 16, 2026
+ * - Fixed album-description bullet rendering regression where bullet lists could disappear after adding per-`<li>` class logic.
+ * - `10plusbullets` now applies to both the bullets `<ul>` and each bullet `<li>` only when more than 10 bullets are rendered.
+ *
+ * 2.5.215 - March 16, 2026
+ * - Tag Groups editor now surfaces missing/unavailable member tag slugs for existing groups and lets admins remove those stale slugs before saving.
+ * - Added a dedicated Legacy/Missing Group Tags removal list so orphaned tag slugs that no longer exist in Library Tags can be cleaned up from group records.
+ *
+ * 2.5.214 - March 16, 2026
+ * - Added conditional `10plusbullets` class on album-description bullets lists when more than 10 bullet items are present.
+ *
+ * 2.5.213 - March 16, 2026
+ * - Added album tag view tracking (total/year/month/week/day) whenever one or more Library Tags are resolved into a front-end album gallery query, including URL-parameter-driven tag queries.
+ * - Added "Album Tag Views" metrics to the Library Tag edit screen with totals and year/month/week/day counters.
+ * - Added new Media submenu screen "Tag Reports" with tabbed reports for "Most Viewed Images" and "Most Viewed Album Tags".
+ *
+ * 2.5.212 - March 16, 2026
+ * - Stabilized Restricted Access shared-password submissions by removing front-end nonce enforcement for the password gate form, avoiding first-submit failures caused by stale cached nonce markup.
+ *
+ * 2.5.211 - March 16, 2026
+ * - Updated multi-tag album description rendering so only the LAST selected tag's description/bullets block is shown (instead of rendering blocks for every matched tag).
+ *
+ * 2.5.210 - March 16, 2026
+ * - Improved Restricted Access password-gate UX for cached/stale overlay forms: correct shared passwords are now accepted even if the nonce is stale, while invalid nonce + wrong password attempts still show a validation retry message.
+ *
+ * 2.5.209 - March 16, 2026
+ * - Hotfix: corrected Library Tag slug-sync hook argument handling so term slug renames now propagate to Video Library `tagSlugs` on standard tag edit saves.
+ * - Slug replacement now works directly against raw stored Video Library items before term-validation filtering, preventing old-slug associations from being dropped during rename migration.
+ *
+ * 2.5.208 - March 16, 2026
+ * - Hotfix: replaced Restricted Access trait constant usage with trait static-property usage for broader PHP compatibility, preventing fatal errors on environments where trait constants are unsupported.
+ *
+ * 2.5.207 - March 16, 2026
+ * - Fixed Media Library Tag slug rename syncing so Video Library tag assignments update from old slug to new slug instead of being dropped.
+ * - Applies to both standard Library Tag edit flow and the Media Library Tags bulk editor update flow.
+ *
+ * 2.5.206 - March 16, 2026
+ * - Added new Restricted Access checkbox setting: "Upon Successful Password, Save IP Address and Do Not Ask Again for Next 30 Days".
+ * - When enabled, successful shared-password submission now stores a signed per-IP trust cookie for 30 days and bypasses the shared-password prompt for that same visitor IP while valid.
+ *
+ * 2.5.205 - March 16, 2026
+ * - Updated mobile Media Library Tag video-grid rules so wrappers with `um-media-library-tag-videos-wrap-cols-1` render as a single full-width column on mobile while multi-video wrappers remain 2 columns.
+ *
+ * 2.5.204 - March 16, 2026
+ * - Updated default Media Library Tag front-end video ordering to date/time ASC (oldest-first) when no explicit sort override is provided.
+ *
+ * 2.5.203 - March 16, 2026
+ * - Strengthened mobile Media Library Tag video-grid CSS specificity so `um-media-library-tag-videos-wrap-cols-3` and `-cols-4` are forced to render as exactly 2 columns on mobile.
+ *
+ * 2.5.202 - March 16, 2026
+ * - Updated Media Library Tag group-links rendering to dedupe rows by group identity, preventing duplicate group-link blocks when multiple active tags belong to the same group.
+ *
+ * 2.5.201 - March 16, 2026
+ * - Removed the custom margin override from `.um-media-library-tag-description-wrap .um-media-library-tag-description-block`.
+ *
+ * 2.5.200 - March 16, 2026
+ * - Updated `.um-media-library-tag-description-wrap .um-media-library-tag-description-block` spacing to use 25px top and 25px bottom margins.
+ *
+ * 2.5.199 - March 16, 2026
+ * - Updated Media Library Tag gallery video rendering to always apply explicit date+time sorting, using newest-first by default when no sort override is provided.
+ * - Ensures same-date videos in gallery output are ordered by saved time consistently instead of relying on incidental source ordering.
+ *
+ * 2.5.198 - March 16, 2026
+ * - Updated split-column album description layout to vertically center description/bullets content against the featured image column on desktop.
+ *
+ * 2.5.197 - March 16, 2026
+ * - Updated Media Library Tag video layout sizing so single-video output can still use configured desktop column widths instead of forcing full-width cards.
+ * - Single-video wrappers now keep multi-column sizing classes (capped to configured columns), preventing oversized desktop embeds.
+ *
+ * 2.5.196 - March 16, 2026
+ * - Added new Media Library Tag Gallery checkbox setting: "Hide tag featured image if no description and no bullets exist".
+ * - Front-end gallery description rendering now suppresses tag featured image output when that setting is enabled and both description and bullets are empty for the active tag context.
+ *
+ * 2.5.195 - March 16, 2026
+ * - Updated Media Library Tag video grids on mobile to display two columns instead of collapsing to a single column.
+ * - Applied the same two-column mobile behavior to both gallery-rendered video blocks and `[um_media_library_tag_videos]` shortcode output.
+ *
+ * 2.5.194 - March 16, 2026
+ * - Updated mobile split-layout behavior so the featured-image column becomes full width on small screens, including full-width featured image rendering.
+ *
+ * 2.5.193 - March 16, 2026
+ * - Updated `.um-media-library-tag-description-wrap` to use `margin: 0 0 50px;` for increased spacing below album description sections.
+ *
+ * 2.5.192 - March 16, 2026
+ * - Added a new Media Library Tag Gallery checkbox under "Display Album Tag Description(s)" to enable a split layout with featured image in its own left column and description/bullets in a right content column.
+ * - Split layout now auto-sizes the left image column to image width, fills remaining space with description content, and stacks vertically on mobile.
+ *
+ * 2.5.191 - March 16, 2026
+ * - Added a dedicated Bullets column to the Media Library Tags Bulk Editor (`upload.php?page=um-media-library-tags-bulk-editor`) for per-tag multi-line bullet editing.
+ * - Bulk save now persists each tag's Bullets value to `um_media_library_tag_bullets` using the same line-by-line sanitization used on single-tag edit screens.
+ *
+ * 2.5.190 - March 16, 2026
+ * - Added a new "Bullets" textarea on Media Library Tag add/edit screens so each line can be saved as a front-end bullet item.
+ * - Tag description output now renders saved bullet lines as a `<ul><li>` list beneath the description paragraph content.
+ *
+ * 2.5.189 - March 16, 2026
+ * - Added shortcode sorting controls for `[um_media_library_tag_videos]` via `sort`/`order` attributes to support oldest-first rendering (date ASC + time ASC).
+ * - Supported values now include `asc|oldest|date_asc` and `desc|newest|date_desc`; default behavior remains unchanged when unset.
+ *
+ * 2.5.188 - March 16, 2026
+ * - Added a per-video Time field to Video Library create/edit and Saved Videos bulk editor rows.
+ * - Video Library sorting now uses Date + Time together so videos on the same date are ordered by time before title fallback.
+ *
+ * 2.5.187 - March 16, 2026
+ * - Increased `.um-media-library-tag-description-paragraph` bottom spacing to 50px for Media Library Tag description content blocks.
+ *
+ * 2.5.186 - March 16, 2026
+ * - Added per-video "Vertical (Short)" support in Video Library create/edit and Saved Videos bulk editor rows.
+ * - Front-end Media Library Tag video embeds now render vertical-marked videos using a 9:16 frame while default videos remain 16:9.
+ *
+ * 2.5.185 - March 16, 2026
+ * - Restricted Access runtime now always allows logged-in administrators (`manage_options`) to bypass the front-end overlay/redirect gate.
+ * - This prevents administrators from being blocked on pages like the home page even when role exclusion selections include Administrator.
+ *
+ * 2.5.184 - March 16, 2026
+ * - Video Library "Saved Videos" is now an inline bulk editor table: Title, YouTube Link, Date, Tags, and Description are all editable inputs on every row.
+ * - Added a "Save All Videos" action that saves all row edits in one request; invalid YouTube URLs are skipped and keep their previous values.
+ *
+ * 2.5.183 - March 16, 2026
+ * - Media Library Tag front-end YouTube cards now show a centered "Edit Video" link for logged-in WP administrators.
+ * - The new link opens the Video Library edit screen directly for that specific video record (`upload.php?page=um-media-library-tag-video-library&video_id=...`).
+ *
+ * 2.5.182 - March 16, 2026
+ * - Fixed plugin admin asset enqueueing for the optional top-level WP-Admin menu shortcut (`toplevel_page_user-manager`) so the same styles/scripts load as the Users submenu route.
+ * - Updated Users submenu highlighting logic to recognize both submenu and top-level menu screen IDs, keeping navigation state consistent.
+ *
+ * 2.5.181 - March 16, 2026
+ * - Extended "Additional Flag to Display Below Additional Fields in All Orders Screen" to support an optional grace segment format: `_meta_field_a:_meta_field_b:are_they_equal:3:FLAG TITLE[:bgcolor[:textcolor]]`.
+ * - When grace is provided, the flag now renders only when both compared meta values are numeric and `ABS(meta_a - meta_b)` is greater than the configured grace value.
+ *
+ * 2.5.180 - March 16, 2026
+ * - My Account Admin text-file line-count cache now also writes a plain integer-only order meta value at `_um_text_file_line_count_cache_number_only` whenever `_um_text_file_line_count_cache` is saved.
+ * - The "Reset Cached Line Counts" action now clears both `_um_text_file_line_count_cache` and `_um_text_file_line_count_cache_number_only`.
+ *
+ * 2.5.179 - March 16, 2026
+ * - Added new My Account Admin setting: "Additional Flag to Display Below Additional Fields in All Orders Screen" (textarea, one rule per line).
+ * - Added compare-flag rendering under All Orders additional meta fields using format `_meta_field_a:_meta_field_b:are_they_equal:FLAG TITLE[:bgcolor[:textcolor]]` with default badge colors black background / white text.
+ *
+ * 2.5.178 - March 16, 2026
+ * - Restricted Access "No access message" now allows an intentionally blank value to be saved instead of forcing a default message.
+ * - Removed runtime fallback that reinserted default no-access text when the saved value is empty.
+ *
+ * 2.5.177 - March 16, 2026
+ * - Swapped Restricted Access default overlay colors so Full Screen Overlay Background defaults to white and Full Screen Overlay Text Color defaults to black.
+ * - Updated both settings UI defaults and save-time fallback defaults to keep behavior consistent.
+ *
+ * 2.5.176 - March 16, 2026
+ * - Restricted Access add-on now includes an "Insert Random URL Parameter String" button next to the appended URL access key setting.
+ * - The new button generates a random 32-character alphanumeric key and inserts it in `?key` format directly into the access field.
+ *
+ * 2.5.175 - March 16, 2026
+ * - Updated Add-ons tab "Inactive Addons" card to only show inactive add-ons; active add-ons remain visible only in the "Active Add-ons" card.
+ * - Updated Blocks tab "Inactive Blocks" card to only show inactive blocks; active blocks remain visible only in the "Active Blocks" card.
+ *
+ * 2.5.174 - March 16, 2026
+ * - Added a new "Reset Text-File Line Count Cache" button on the My Account Admin add-on settings screen to clear cached per-order line-count values and force fresh re-fetching.
+ * - Updated flagged file line-count parsing so CSV/TSV style files count newline rows only (not commas, tabs, or cells), and spreadsheet-like payloads now prioritize row-based counting.
+ *
+ * 2.5.173 - March 16, 2026
+ * - Updated "Additional Meta Fields to Display Under Order" helper text to support optional flags syntax (including text-file line-count flags), matching the All Orders Screen field guidance.
+ * - Added matching example/debug helper copy for flagged file URL line-count usage on the detail-screen additional-meta field.
+ *
+ * 2.5.172 - March 16, 2026
+ * - Changed "Additional Meta Fields to Display Under Order" to a textarea input so values can be entered line-by-line or comma-separated.
+ * - Changed "Additional Meta Fields to Display Under Order in All Orders Screen" to a textarea input with support for line-break or comma-separated entries.
+ * - Updated helper copy for both fields to clarify supported multi-value input formats.
+ *
+ * 2.5.171 - March 16, 2026
+ * - Added persistent per-order caching for text-file line counts used by flagged additional meta fields in Admin: Orders list.
+ * - Line-count rendering now checks cached order meta first and only fetches remote files when a cache value is missing.
+ * - Successful line-count fetches are saved to order meta so subsequent loads avoid repeat remote requests and render faster.
+ *
+ * 2.5.170 - March 16, 2026
+ * - My Account Admin Orders list header now labels column two as "Shipping Address" (replacing "Date").
+ * - Moved order timestamp, billing email, and order status under the Order Number in the first column.
+ * - Shipping address now renders in the second column while keeping custom add-on/meta fields in their dedicated pre-actions column.
+ *
+ * 2.5.169 - March 16, 2026
+ * - My Account Admin Orders list now renders configured custom order meta fields in a dedicated column placed before the actions/buttons column.
+ * - Kept the actions column focused on buttons by moving inline custom meta output into its own untitled column.
+ *
+ * 2.5.168 - March 16, 2026
+ * - Fixed prefixed file URL handling for "Additional Meta Fields to Display Under Order in All Orders Screen" so URL prefixes (for example `https://.../`) correctly preserve separators and generate clickable links.
+ * - Text-file line-count flags now work with prefixed file URLs by normalizing and joining URL parts before fetch.
+ * - Added optional URL-based debug mode for flagged text-file meta fields (`?um_text_file_line_count_debug=1`) that displays resolved URL, fetch status, and line-count diagnostics inline for troubleshooting.
+ *
+ * 2.5.167 - March 16, 2026
+ * - My Account Admin Orders list now merges the former Address column into the Date column, rendering address details beneath date/email/status.
+ * - Additional meta fields configured for "All Orders Screen" now render inside the untitled actions column (below action buttons) instead of a separate full-width row, keeping each order in a single table row.
+ *
+ * 2.5.166 - March 16, 2026
+ * - My Account Admin permissions now strictly follow configured usernames/roles for area access and order approval actions, including administrators.
+ * - Removed implicit `manage_options` bypass in My Account Admin access checks so empty allow-lists correctly block access.
+ *
+ * 2.5.165 - March 16, 2026
+ * - Add-ons tab heading updated so the non-active tile card is now labeled "Inactive Addons" to match the new Active Add-ons card.
+ * - Blocks tab heading updated so the non-active tile card is now labeled "Inactive Blocks" to match the new Active Blocks card.
+ *
+ * 2.5.164 - March 16, 2026
+ * - Plugin Title Override now also updates the plugin submenu label under Users in WP-Admin.
+ * - Added a new Settings checkbox to optionally show this plugin as a top-level WP-Admin parent menu item below Users.
+ * - New top-level WP-Admin parent menu item uses the Plugin Title Override value when provided.
+ *
+ * 2.5.163 - March 16, 2026
+ * - Extended "Additional Meta Fields to Display Under Order in All Orders Screen" with optional flags support so specific fields can be marked as text-file URLs that should also show fetched line counts.
+ * - Added text-file line count flag handling for additional order meta definitions (`text_line_count`, `text-file-line-count`, `line_count`, `count_lines`) and appended `(X lines)` to linked file values when enabled.
+ * - Updated All Orders Screen additional-meta setting helper text with flag usage examples for text-based file line counting.
+ *
+ * 2.5.162 - March 16, 2026
+ * - My Account Admin now includes a new setting: "Additional Meta Fields to Display Under Order in All Orders Screen" for rendering configured order meta directly in the Admin: Orders table view.
+ * - Admin: Orders list now renders configured row-level additional meta fields in a dedicated full-width row below each order, improving visibility for long values/links without squeezing the main columns.
+ *
+ * 2.5.161 - March 16, 2026
+ * - Product Notification add-on now includes a new "Notification Icon/Checkbox Color Override" setting (WordPress color picker) with a default of white (`#ffffff`).
+ * - Product Notification front-end output now applies the configured icon color to `.woocommerce-message.um-product-notification-message::before` so the WooCommerce notice icon/checkmark color can be controlled independently.
+ *
+ * 2.5.160 - March 16, 2026
+ * - Converted all plugin admin settings fields that store color values to use WordPress color picker controls across Add-ons and Blocks screens for easier color selection.
+ * - Updated color-setting sanitization for My Account Admin button colors, Invoice & Approval colors, and WP-Admin Notification background colors to consistently enforce hex color values.
+ * - Added shared Add-ons/Blocks color-picker initialization so dynamically added fields (for example WP-Admin Notifications rows) also receive picker UI automatically.
+ *
+ * 2.5.159 - March 16, 2026
+ * - My Account Admin access checks were hardened so area endpoints only render for explicitly allowed usernames/roles (plus admins), preventing accidental broad access when allow-lists are empty.
+ * - Added per-order-status front-end title overrides in My Account Admin Orders so each WooCommerce status label can be customized individually.
+ * - Block Pages by URL String now supports multiple scoped rule sets with per-rule match URLs, exception URLs, optional username list, optional role checkboxes, and per-rule look/feel + redirect settings.
+ * - Updated Block Pages by URL String color inputs to use WP color pickers for background/text colors.
+ * - Added Settings > User Experience > "Plugin Title Override" to retitle both the plugin page heading and the WP-Admin bar shortcut label.
+ *
+ * 2.5.158 - March 16, 2026
+ * - Add-ons tab now includes a new "Active Add-ons" card directly below Add-ons Filter that shows only active add-ons using the same tile layout and tag filtering.
+ * - Blocks tab now includes a new "Active Blocks" card directly below Blocks Filter that shows only active blocks using the same tile layout and tag filtering.
+ * - Renamed the Users submenu label from "User Experience Manager" to "UX Manager" while keeping the existing page slug and screen behavior.
+ *
+ * 2.5.157 - March 16, 2026
+ * - Updated Tabbed Content Area block front-end mobile CSS to enforce two-column tab layout at <=768px (`.tabs .tab { width: 47% !important; }`) while keeping wrapped tab rows.
+ * - Added explicit mobile `.tabs` flex-wrap rule in the Tabbed Content Area block output style for consistent two-column tab rendering on smaller screens.
+ *
+ * 2.5.152 - March 16, 2026
+ * - Added per-selected-tag "Tag Title Override" inputs on Media > Tag Groups to customize front-end tag labels while preserving original slugs/URLs.
+ * - Tag Group breadcrumb/group link rendering now uses saved tag title overrides for group members only (parent label and link targets remain unchanged).
+ *
+ * 2.5.151 - March 16, 2026
+ * - Updated Tag Group link targets to use the current page as the base URL and append key-only tag query format (`?[tag-slug]`) instead of always linking from site root.
+ * - Tag Group breadcrumb links now keep users on the same gallery/page context while switching tag expressions via key-only query keys.
+ *
+ * 2.5.144 - March 16, 2026
+ * - Added new Media > Tag Groups admin page to create/manage tag groups with a Parent Tag and multiple related member tags.
+ * - Added front-end related group links above gallery description area: when current tag belongs to a group, show links to other group tags plus a Parent Tag link.
+ * - Added Bulk Editor-adjacent Media submenu entry for Tag Groups and secure save/delete handlers for group records.
+ *
+ * 2.5.142 - March 16, 2026
+ * - Added shared CSS injection for `[um_media_library_tag_videos]` shortcode output so video grid classes always render with correct multi-column layout even when no gallery block is present on the page.
+ * - Shortcode video wraps now consistently apply `.um-media-library-tag-videos-wrap-*` column rules (including `*-cols-2/3/4`) and mobile collapse behavior in standalone shortcode contexts.
+ *
+ * 2.5.141 - March 16, 2026
+ * - Fixed Media Library Tag featured description-image lightbox trigger output by preserving generated button markup attributes in album description wrappers (including the inline open handler), so featured images open in the same lightbox flow as gallery items.
+ * - Removed over-sanitization on rendered description wrapper output that was stripping required lightbox trigger attributes from generated internal markup.
+ *
+ * 2.5.140 - March 16, 2026
+ * - Added new shortcode `[um_media_library_tag_videos]` to render centralized Video Library embeds with the same front-end video layout used in gallery blocks.
+ * - Shortcode supports tag expressions (`tag1`, `tag1+tag2`, `tag1_tag2`, `tag1|tag2`) and optional desktop column override (`desktop_columns` / `columns`, 1-4).
+ * - Added shortcode usage guidance to Media > Video Library admin page, including supported tag expression formats and behavior notes.
+ *
+ * 2.5.139 - March 16, 2026
+ * - Replaced long inline lightbox trigger onclick payload with a short delegated call to the resilient `window.umMltgInline.open(...)` API to avoid browser parser edge cases from breaking click-to-open behavior.
+ * - Kept event-prevent/propagation guards in the inline handler while moving state updates/rendering logic fully into the shared lightbox runtime.
+ *
+ * 2.5.138 - March 16, 2026
+ * - Improved Media Library Tag video embed layout so video title/description metadata is rendered below a dedicated responsive frame wrapper, preventing metadata from being clipped by the iframe container.
+ * - Added dynamic desktop video-grid columns for multi-video displays, automatically using up to 4 columns (2/3/4) based on the number of videos shown.
+ *
+ * 2.5.137 - March 16, 2026
+ * - Hardened front-end lightbox/deep-link URL parsing by replacing inline regex escape snippets with a dedicated escape helper in each gallery runtime block to prevent parser edge-case breakage.
+ * - Updated slideshow seconds JavaScript injection to use JSON-safe numeric output, reducing risk of malformed inline script output that can stop lightbox initialization.
+ *
+ * 2.5.136 - March 16, 2026
+ * - Fixed tag description Featured Image lightbox trigger behavior so the featured image still opens in lightbox when Link To is set to "Open Image in Lightbox", even when duplicate featured image tiles are hidden from the gallery grid.
+ * - Preserved duplicate-hiding behavior for gallery tiles while keeping the description-area featured image in the lightbox collection for direct click-to-open.
+ *
+ * 2.5.135 - March 16, 2026
+ * - Added two new Video Library display settings under Media Library Tags: "Display Video Title under each video" and "Display Video Description under each video."
+ * - Front-end Media Library Tag Gallery video embeds now optionally render each video's saved title and/or description beneath the iframe when those settings are enabled.
+ *
+ * 2.5.134 - March 16, 2026
+ * - Added a front-end deep-link auto-open retry helper for Media Library Tag Gallery that re-attempts opening `?image=<attachment_id>` via the resilient inline lightbox API when other scripts fail later on the page.
+ * - Deep-link auto-open now includes delayed retries after DOM ready/load so shared `&image=` links can still open reliably even when unrelated JavaScript errors interrupt gallery runtime initialization.
+ *
+ * 2.5.133 - March 16, 2026
+ * - Edit Video form on Media > Video Library now shows an embedded YouTube preview directly under the YouTube Link field when the current URL is valid.
+ * - Preview uses the canonical saved video URL and renders responsive iframe output so admins can verify the selected video before saving updates.
+ *
+ * 2.5.132 - March 16, 2026
+ * - Added a Delete button in the Video Library table row action column on Media > Video Library.
+ * - Added secure delete handling (nonce + capability check) so saved video records can be removed directly from the Video Library list.
+ *
+ * 2.5.131 - March 16, 2026
+ * - Fixed an early-boot translation timing issue by deferring Media Library Video legacy migration to run on init instead of plugin bootstrap.
+ * - Added an init guard around Video Library legacy migration so taxonomy registration and i18n label calls cannot execute before init.
+ *
+ * 2.5.130 - March 16, 2026
+ * - [tag-name] placeholder replacement now supports URL title override via ?title=... so custom heading text can drive placeholder output.
+ * - When a valid Media Library Tag URL override is active, title query param is sanitized and used as [tag-name] value while tag descriptions continue resolving from selected tags.
+ *
+ * 2.5.129 - March 16, 2026
+ * - Added a new Media Library Tag Gallery setting: "Featured Image Max Width (px)" so the tag description featured image width is configurable from add-on settings instead of hardcoded CSS.
+ * - Featured image description CSS now uses that setting value in the `max-width: min(42vw, Xpx)` rule.
+ *
+ * 2.5.128 - March 16, 2026
+ * - Added new "Activate Video Library" setting under the Media Library Tag Gallery options.
+ * - Added a new Media > Video Library admin page for centralized YouTube video management with Title, Description, Date, Library Tag assignment, save, and edit flows.
+ * - Replaced per-tag YouTube textarea usage in Library Tags Bulk Editor and front-end gallery video embeds with centralized Video Library records (including one-time legacy term-meta migration).
+ *
+ * 2.5.127 - March 16, 2026
+ * - Updated tag description featured-image layout to true text wrapping so description copy flows beside and beneath the image.
+ * - Featured image shown next to tag description can now open in the same lightbox collection as gallery images (with shared prev/next flow).
+ * - Added default-enabled setting to hide duplicate featured image tiles from tagged gallery results when that featured image is already in the tag's image collection.
+ *
+ * 2.5.126 - March 16, 2026
+ * - Updated Media Library Tag Gallery lightbox deep-link query parameter from um_lightbox_image_id to image.
+ * - Auto-open lightbox now resolves from image=<attachment_id> while remaining backward compatible with legacy um_lightbox_image_id links.
+ * - Opening and closing lightbox now writes/clears the image parameter and removes legacy um_lightbox_image_id from the URL.
+ *
+ * 2.5.125 - March 16, 2026
+ * - Added per-Library-Tag featured image selection in both the Library Tags Bulk Editor and individual Edit Tag screen.
+ * - Front-end gallery tag description area now displays the selected tag featured image aligned left beside description content (blog-post featured-image style layout).
+ * - Added media picker controls for tag featured image select/replace/remove with preview in bulk and edit-tag admin UIs.
+ *
+ * 2.5.124 - March 16, 2026
+ * - Fixed Restricted Access overlay viewport coverage on mobile by enforcing full fixed inset coverage with dynamic viewport height fallbacks.
+ * - Updated both immediate full-page overlay mode and background HTML overlay mode to use 100dvh/min-height fallback rules so no page background peeks through on mobile.
+ *
+ * 2.5.123 - March 16, 2026
+ * - Added new Media Library Tag Gallery style option: "Mosaic Grid (Taller Tiles)" that reuses the mosaic layout with 50% taller base tiles.
+ * - Added mosaic taller style CSS variants for desktop/mobile tile auto-row sizing while preserving existing large/tall/wide tile patterns.
+ *
+ * 2.5.122 - March 16, 2026
+ * - Media Library Tag gallery descriptions now convert line breaks to <br> so multi-paragraph/plain-text newlines render on the front end.
+ * - Allowed inline <b> and <i> formatting tags (and strong/em aliases) in rendered gallery tag descriptions while preserving safe sanitization.
+ *
+ * 2.5.121 - March 16, 2026
+ * - Added a new Media Library Tag Gallery setting: "Allow Tap or Click on Left or Right side of image to go to Previous or Next Photo."
+ * - Wired tap/click left-right image-side navigation through add-on defaults, block overrides, and both primary + resilient fallback lightbox runtimes.
+ *
+ * 2.5.120 - March 16, 2026
+ * - Added 25px bottom margin to Media Library Tag Gallery wrapper output so each gallery block has clearer spacing below it.
+ *
+ * 2.5.119 - March 16, 2026
+ * - Renamed Media Library sort option labels from "Lightbox Views" to "Views" in the admin dropdown UI.
+ * - Fixed Media Library grid sort behavior so changing the sort dropdown applies the selected order to attachment queries in-place.
+ * - Grid sort now persists sort query state in the URL without requiring a full page reload when supported.
+ *
+ * 2.5.118 - March 16, 2026
+ * - Added lightbox deep-link support with URL parameter um_lightbox_image_id=<attachment_id> when opening Media Library Tag Gallery images.
+ * - Shared links with um_lightbox_image_id now auto-open the matching image in lightbox on page load (primary and resilient fallback runtimes).
+ * - Lightbox URL deep-link parameter is cleared automatically when closing the modal.
+ *
+ * 2.5.117 - March 16, 2026
+ * - Added rolling Lightbox Views counters for current Year, Month, Week, and Day on each media item.
+ * - Lightbox open tracking now increments total + current period counters in attachment metadata.
+ * - Media Library attachment edit helper now displays Lightbox Views (Year/Month/Week/Day) alongside total Lightbox Views.
+ *
+ * 2.5.116 - March 16, 2026
+ * - Fixed WP_Term-to-integer conversion warnings by hardening menu and term ID handling in Media Library Tags and Quick Search term redirects.
+ * - Updated term edit-link rendering paths to normalize term IDs through absint() before building edit URLs.
+ *
+ * 2.5.115 - March 16, 2026
+ * - Deepened Restricted Access cookie persistence by validating all matching cookie candidates from raw request headers (not only the single parsed PHP cookie value).
+ * - Restricted Access now writes signed access cookies across host-only + host-domain variants and common www/non-www host forms to reduce cross-route cookie mismatch.
+ * - Valid Restricted Access cookie value is now normalized back into runtime state so homepage and other paths consistently honor unlocked access.
+ *
+ * 2.5.114 - March 16, 2026
+ * - Added Lightbox view tracking for Media Library Tag Gallery images and now stores per-attachment counts in media metadata.
+ * - Added "Sort media by" controls in Media Library list/grid views with Lightbox Views (highest/lowest) options.
+ * - Added "Lightbox Views" display next to Library Tags in attachment edit fields.
+ *
+ * 2.5.113 - March 16, 2026
+ * - Added a new Restricted Access setting under No access message: "Password Submit Button Text".
+ * - Shared-password overlays now use the configured custom submit button label in both full-page and background-overlay render modes.
+ *
+ * 2.5.112 - March 16, 2026
+ * - Fixed Restricted Access shared-password session persistence across different site paths (including homepage) by writing the access cookie on all relevant cookie paths.
+ * - Restricted Access cookie now uses a resolved host domain when appropriate so access state remains consistent between protected pages and home navigation.
+ *
+ * 2.5.111 - March 16, 2026
+ * - Removed pre-click hover styling on Media Library Tag Gallery images when using Link To: Open Image in Lightbox.
+ * - Lightbox trigger buttons now keep neutral visual state on hover/focus/active so images do not visually shift before opening.
+ * - Style-specific hover transforms for Polaroid Scrapbook and Perspective 3D now apply only when link mode is not lightbox.
+ *
+ * 2.5.110 - March 16, 2026
+ * - Added a new Media Library Tag Gallery setting: "Allow Swipe to Left or Right to go to Previous or Next Photo."
+ * - Wired swipe navigation through add-on defaults, block-level override controls, and gallery runtime data attributes.
+ * - Swipe gestures now navigate previous/next images in both primary and resilient fallback lightbox runtimes when enabled.
+ *
+ * 2.5.109 - March 16, 2026
+ * - Applied CSS transition animation handling to the resilient inline slideshow fallback path so "Slideshow Transition" visibly affects fallback slide changes (none, crossfade, slide-left).
+ * - Fallback slideshow now toggles image transition state classes during interval-driven next-slide rendering to match transition behavior expected in the main runtime.
+ *
+ * 2.5.108 - March 16, 2026
+ * - Reordered lightbox controls to place the Play Slideshow button between the Previous and Next arrow buttons.
+ *
+ * 2.5.107 - March 16, 2026
+ * - Fixed fallback lightbox slideshow button runtime wiring by defining the missing inline slideshow onclick handler variable used in gallery modal markup.
+ * - Preserved the new arrow-based Previous/Next controls and resilient slideshow behavior paths introduced in 2.5.106.
+ *
+ * 2.5.106 - March 16, 2026
+ * - Lightbox Previous/Next controls now render as arrow buttons instead of text labels.
+ * - Resilient inline fallback lightbox now supports Play/Pause slideshow, slideshow seconds timing, and slideshow transition class handling from existing gallery settings.
+ * - Simplified the Add-ons label text for Slideshow Transition to avoid duplicate verbose wording.
+ *
+ * 2.5.105 - March 16, 2026
+ * - Hooked the resilient Media Library lightbox helper into wp_head so it initializes before gallery markup and remains available even when later in-body scripts fail.
+ * - Added a tiny direct open fallback path inside gallery trigger onclick handlers to force modal open when the helper object is unavailable due to unrelated JavaScript errors.
+ *
+ * 2.5.104 - March 16, 2026
+ * - Fixed a regression where front-end Media Library Tag Gallery helper code was accidentally injected into block-editor JavaScript, which could break script parsing and prevent lightbox opening.
+ * - Added a dedicated front-end inline lightbox helper method and hook-based bootstrap so fallback lightbox behavior initializes from a safe standalone path.
+ * - Kept Duplicate link removed while preserving backdrop-close and Previous/Next + keyboard navigation behavior in fallback flow.
+ *
+ * 2.5.103 - March 16, 2026
+ * - Removed the lightbox Duplicate link from Media Library Tag Gallery modal output.
+ * - Enabled click-on-backdrop-to-close behavior in the inline emergency lightbox fallback path.
+ * - Restored Previous/Next buttons and ArrowLeft/ArrowRight keyboard support in the same emergency fallback path when the related lightbox setting is enabled.
+ *
+ * 2.5.102 - March 16, 2026
+ * - Added inline on-click lightbox open/close fallback handlers on Media Library Tag Gallery lightbox triggers so modal opening still works even when unrelated JavaScript errors stop later runtime scripts.
+ * - Fallback handlers read existing modal data attributes (src/alt/caption/edit URL) directly from the clicked trigger and open the same overlay without depending on jQuery/global runtime availability.
+ *
+ * 2.5.101 - March 16, 2026
+ * - Restored Previous/Next lightbox controls and ArrowLeft/ArrowRight keyboard navigation inside the fail-safe Media Library Tag Gallery lightbox runtime.
+ * - Fallback lightbox now respects the existing "Add Previous & Next Links in Lightbox Window and Allow Keyboard Arrows Shortcut" setting.
+ *
+ * 2.5.100 - March 16, 2026
+ * - Added a fail-safe lightbox script for Media Library Tag Gallery that activates only if the primary lightbox runtime fails to initialize, preventing total lightbox loss from unrelated front-end JavaScript errors.
+ * - Lightbox trigger selector matching now avoids quoted-attribute dependency and includes class/data-based fallbacks for stronger compatibility with aggressive script minification/rewriters.
+ *
+ * 2.5.99 - March 16, 2026
+ * - Reworked Media Library Tag Gallery "Open Image in Lightbox" triggers to use a dedicated modal-trigger data path for stronger click reliability.
+ * - Added hardened capture-phase fallback handling so gallery image clicks open the modal even when other scripts/theme handlers are competing for click events.
+ * - Kept backward compatibility for legacy lightbox trigger attributes while prioritizing the new modal trigger attributes.
+ *
+ * 2.5.98 - March 16, 2026
+ * - Fixed duplicate tag-description output in pipe-separated gallery mode by suppressing the inner gallery album-description block while keeping the pipe section heading/description output.
+ * - Pipe-separated gallery sections continue to render centered H2 + description once and keep the 50px bottom spacing between sections.
+ *
+ * 2.5.96 - March 16, 2026
+ * - Media Library Tag Gallery URL override now supports pipe-separated groups (example: ?tag=gallery1|gallery2|gallery3) to render separate gallery sections sequentially instead of combining all photos into one query.
+ * - Each pipe-separated gallery section now renders a centered H2 tag title and a centered paragraph with the tag description above that gallery when description text exists.
+ * - Existing plus (+) AND and underscore (_) OR behavior remains intact within each individual pipe-separated section expression.
+ *
+ * 2.5.95 - March 16, 2026
+ * - Fixed SEO Basics dynamic placeholder replacement for Page Title Override meta outputs so [tag-name] and [site-title] resolve in frontend social title tags.
+ * - og:title and twitter:title now use the same resolved Page Title Override text path as document title filters, keeping title placeholder behavior consistent.
+ *
+ * 2.5.94 - March 16, 2026
+ * - Replaced the Media Library Tag Gallery "Modal Window" default setting with a restored "Link To" selector.
+ * - Added Link To options: None, Open Image, Open Image in New Window, and Open Image in Lightbox.
+ * - Added block-level "Link To" override support (with Use add-on default) so each gallery block can override the add-on default behavior.
+ *
+ * 2.5.93 - March 16, 2026
+ * - Added a new Media Library Tags add-on setting: "Allow Simple Lightbox when clicking on a thumbnail".
+ * - Added block-level support (with "Use add-on default") for the same simple thumbnail lightbox behavior in Media Library Tag Gallery blocks.
+ * - When enabled, clicking thumbnails opens a simplified image-only lightbox (close + image only) while hiding advanced controls and admin tag tools.
+ *
+ * 2.5.92 - March 16, 2026
+ * - Library Tags Bulk Editor now splits rows into two sections: tags that are live in menu navigation first, then all remaining tags below.
+ * - Added section header rows in the Bulk Editor table to clearly separate "Live in Menu Navigation" tags from other tags.
+ *
+ * 2.5.91 - March 16, 2026
+ * - Added support for [site-title] placeholder replacement alongside [tag-name] and [tag-description].
+ * - [site-title] now resolves to the WordPress Site Title and is supported in post title/content placeholder paths and HTML <title> replacement flows.
+ *
+ * 2.5.90 - March 16, 2026
+ * - Restricted Access now includes a new checkbox under "Full Screen Overlay Image": "Display as normal Image Above No access message instead of Background Image".
+ * - When enabled, the overlay image is rendered as normal content above the No access message instead of as a full-screen background layer.
+ *
+ * 2.5.89 - March 16, 2026
+ * - Library Tags Bulk Editor now lists only individual tag names and omits combined comma-separated tag rows (example: "Pets, Dating").
+ * - Combined tags are filtered out of the Bulk Editor table so split tags like "Pets" and "Dating" remain as separate rows.
+ *
+ * 2.5.88 - March 16, 2026
+ * - Media Library tag filter dropdown options now append a trailing "*" for tags detected in active menu navigation URLs.
+ * - Applied the same menu-navigation star marker to both list-view and grid-view Media Library tag filter dropdowns for consistency.
+ *
+ * 2.5.87 - March 16, 2026
+ * - Removed front-end Media Library Tag Gallery inline administrator tag controls that printed tag lists with Hide/Duplicate quick-action links under each image.
+ * - Cleaned up related gallery-side inline-control CSS/JS runtime paths tied to the removed inline admin tag block markup.
+ *
+ * 2.5.86 - March 16, 2026
+ * - Added a new Restricted Access setting: "Still Allow Full Page HTML to be Rendered in Background behind Overlay for Social Media Share Link Meta Data".
+ * - When enabled, Restricted Access now lets full page HTML render for crawlers/share scrapers while displaying the access overlay on top for visitors.
+ *
+ * 2.5.85 - March 16, 2026
+ * - Reverted admin per-photo tag controls from bottom-image overlay back to below-image placement for clearer readability and less visual obstruction.
+ * - Added extra bottom margin under admin per-photo tag controls specifically in Mosaic Grid style so Hide/Duplicate links are easier to see and click.
+ *
+ * 2.5.84 - March 16, 2026
+ * - Moved admin-only per-image tag controls (tag list + Hide + Duplicate actions) into an overlay positioned at the bottom of each gallery photo.
+ * - Overlay controls now sit on top of image thumbnails with a semi-transparent backdrop while preserving AJAX no-refresh tag actions.
+ *
+ * 2.5.83 - March 16, 2026
+ * - Media Library Tags front-end gallery now shows admin-only per-image tag controls below every photo across all styles, including a list of current tags plus "Hide" and "Duplicate" quick actions.
+ * - New per-image "Hide" and "Duplicate" controls add Library Tags asynchronously (AJAX) without page reload, and refresh the displayed tag list inline after successful updates.
+ *
+ * 2.5.82 - March 16, 2026
+ * - Removed lightbox click anchors to full-size image files for Media Library Tags gallery modal behavior and replaced them with modal trigger buttons using data attributes.
+ * - Mosaic Grid and other gallery styles now open the modal window directly on click without browser navigation to image URLs.
+ *
+ * 2.5.81 - March 16, 2026
+ * - Fixed mosaic-grid click handling so modal/lightbox opens reliably by making gallery links explicit block-level click targets above image layers.
+ * - Added front-end CSS hardening for gallery link wrappers (display:block, width/height:100%, pointer-events:auto) to prevent style-specific tile layouts from swallowing click events.
+ *
+ * 2.5.80 - March 16, 2026
+ * - Fixed Media Library Tags gallery modal-window opening regression by forcing front-end gallery image links to lightbox/modal output even when legacy block attributes or older saved link settings were set to "none".
+ * - Updated block registration/default handling so Link To legacy values no longer prevent lightbox anchor markup from rendering on existing pages.
+ *
+ * 2.5.79 - March 16, 2026
+ * - Removed the "Link To" control from Media Library Tags gallery settings and block inspector, and replaced it with always-on modal window behavior for image clicks.
+ * - Gallery images now open in the modal window by default (except style-specific forced behavior such as fullscreen lightbox grid), keeping existing lightbox controls/settings as the primary interaction model.
+ *
+ * 2.5.78 - March 16, 2026
+ * - Restricted Access now logs shared-password access attempts and displays them in a new "Access History" card under addon_section=restricted-access.
+ * - New Access History table columns: timestamp, IP, IP location, browser, URL accessed from, password if used, and failed password if failed.
+ *
+ * 2.5.77 - March 16, 2026
+ * - Restricted Access add-on now includes a new "Full Screen Overlay Image Max Width" field directly under "Full Screen Overlay Image".
+ * - Full Screen Overlay image now renders as width: 100% with an optional max-width constraint when provided, improving responsive control.
+ *
+ * 2.5.76 - March 16, 2026
+ * - Mosaic Grid mobile behavior now preserves irregular mosaic tile spans when Number of Columns (Mobile) is set to 3 or higher, instead of forcing all tiles back to equal-size blocks.
+ * - When mobile columns are 1-2, the layout still flattens to uniform tiles for readability; 3+ columns now keeps the mosaic styling active on mobile.
+ *
+ * 2.5.75 - March 16, 2026
+ * - Library Tags Bulk Editor now checks active theme menu item URLs for each tag slug and displays a "Live in Menu Navigation" badge under matching slug rows.
+ * - Helps identify which Library Tag slugs are already manually referenced in menu navigation links.
+ *
+ * 2.5.74 - March 16, 2026
+ * - Rebuilt Media Library Tag Gallery lightbox modal opening flow to use a simpler delegated click handler for more reliable, consistent opening behavior.
+ * - Added Lightbox Modal Background Color and Lightbox Modal Text Color settings (with block-level "Use add-on default" overrides) and applied them to modal UI elements.
+ * - Kept caption, previous/next controls, keyboard arrows, slideshow button, slideshow timing, and transition behavior in the new modal runtime.
+ *
+ * 2.5.73 - March 16, 2026
+ * - Removed the custom .um-media-library-tag-description-paragraph typography/color style override from the gallery output CSS so default/theme styling applies.
+ *
+ * 2.5.72 - March 16, 2026
+ * - Added plugin version text directly under the main User Experience Manager admin page title so the active version is always visible at the top of the screen.
+ *
+ * 2.5.71 - March 16, 2026
+ * - Added new "YouTube Video Links" textarea to Library Tag add/edit screens (one URL per line) with sanitized per-term storage.
+ * - Extended Library Tags Bulk Editor to include a "YouTube Video Links" column so links can be managed for all tags from one table.
+ * - Front-end Media Library Tag Gallery now embeds saved YouTube videos above the gallery (below album descriptions): 1 video = full width, multiple videos = 2-column layout.
+ *
+ * 2.5.70 - March 16, 2026
+ * - Added new Media Library Tag Gallery setting: "Display Album Tag Description(s)" with options none / above gallery / below gallery.
+ * - Added matching per-block override controls (including "Use add-on default") and reused [tag-description]-style multi-tag paragraph + edit-link rendering for above/below gallery output.
+ *
+ * 2.5.69 - March 16, 2026
+ * - Fixed Library Tags Bulk Editor save redirect target to use upload.php?page=um-media-library-tags-bulk-editor, preventing the "Cannot load um-media-library-tags-bulk-editor." error after save.
+ * - Bulk Editor now returns to the correct Media submenu page with success/error notices intact.
+ *
+ * 2.5.68 - March 16, 2026
+ * - Added a wp-admin bar color safeguard so broad custom CSS rules from WP-Admin CSS settings no longer force admin-bar links to blue.
+ * - Admin bar link/label colors now stay aligned with default WordPress top-bar colors.
+ *
+ * 2.5.67 - March 16, 2026
+ * - Added server-side lightbox debug activation detection and front-end data attributes so debug mode can be confirmed from rendered HTML even when query parsing is altered by caching or redirects.
+ * - Added an always-visible in-gallery debug badge plus global JS fallback flags to make debug mode presence obvious and resilient.
+ *
+ * 2.5.66 - March 16, 2026
+ * - Hardened front-end lightbox opening by intercepting gallery link interactions at pointer-down capture phase, preventing third-party handlers from navigating to image URLs before lightbox opens.
+ * - Added duplicate-click suppression after pointer-triggered open to avoid double-open races while keeping link navigation fully blocked.
+ *
+ * 2.5.65 - March 16, 2026
+ * - Fixed Media Library Tags Bulk Editor admin menu registration so Bulk Editor reliably appears under Media in wp-admin.
+ * - Added a taxonomy-registration fallback during submenu registration to avoid hook-order/timing issues preventing menu visibility.
+ *
+ * 2.5.64 - March 16, 2026
+ * - Added front-end lightbox debug mode URL flag (?um_mltg_debug=1) with detailed console tracing and a small on-page debug log panel to diagnose click interception/runtime flow.
+ * - Added optional debug auto-open URL flag (?um_mltg_debug_open=1) to force-open the first lightbox image and isolate rendering/control issues from click handler issues.
+ *
+ * 2.5.63 - March 16, 2026
+ * - Fixed gallery click interception so lightbox opening cannot be bypassed by other front-end handlers; added a stricter capture-phase document fallback and immediate propagation stop for lightbox links.
+ * - Restored reliable image-click-to-lightbox behavior after the prior runtime consolidation.
+ *
+ * 2.5.62 - March 16, 2026
+ * - Removed the separate global front-end lightbox fallback runtime so only the per-gallery lightbox runtime handles interactions, preventing control-state conflicts.
+ * - Tightened lightbox control visibility state (display/hidden/disabled/aria) so "Add a Play Slideshow Button" and navigation controls strictly follow settings.
+ * - Control button clicks now stop propagation and reliably execute Previous/Next/Slideshow actions within the active lightbox session.
+ *
+ * 2.5.60 - March 16, 2026
+ * - Added new Library Tags submenu screen: "Bulk Editor" under Media > Library Tags.
+ * - Bulk Editor displays all tags in one table with editable title, slug, and description fields plus a Save All action.
+ * - Added secure bulk-save handler (capability + nonce) for updating all Library Tags in one submission with success/error notices.
+ *
+ * 2.5.59 - March 16, 2026
+ * - Fixed URL tag-expression parsing so single-token URLs (example: /album/?cruise) no longer expand to multiple matched tags for placeholder output.
+ * - [tag-description] now correctly outputs a single description paragraph for single-token URL filters while multi-token expressions still output multiple descriptions.
+ *
+ * 2.5.58 - March 16, 2026
+ * - Fixed front-end gallery lightbox open handler regression caused by an invalid event reference inside the helper function.
+ * - Clicking gallery images with Link To = lightbox now consistently opens the overlay instead of navigating to the file URL.
+ *
+ * 2.5.57 - March 16, 2026
+ * - Reworked front-end lightbox link interception with direct per-link handlers plus delegated capture/bubble fallback so gallery links consistently open in lightbox instead of opening files directly.
+ * - Updated Media Library tag filter validation/parsing paths to use the expanded token-aware filter slug resolver (including URL override parsing) so filters match when the searched token exists anywhere in tag strings.
+ *
+ * 2.5.56 - March 16, 2026
+ * - Media Library grid/list tag filter dropdown now shows only unique individual tag tokens (for example, combined names like "Travel, Italy, Venice" no longer appear as a single filter option).
+ * - Kept bulk-apply tag dropdown behavior unchanged so full stored tag names/slugs are still available for assignment.
+ *
+ * 2.5.55 - March 16, 2026
+ * - Fixed compound/comma-separated Library Tag matching so token order no longer matters (example: both "Cruise, Honeymoon" and "Honeymoon, Cruise" now match cruise/honeymoon filtering consistently).
+ * - Expanded token matching logic now checks each normalized token with boundary-aware matching instead of exact-token equality.
+ *
+ * 2.5.54 - March 16, 2026
+ * - New Media Library Tag Gallery blocks now default all "Use add-on default" toggles to enabled, so block-level settings inherit the main add-on defaults unless manually untoggled.
+ * - Applied this default-on behavior consistently in both block attribute registration and editor attribute bootstrapping.
+ *
+ * 2.5.53 - March 16, 2026
+ * - Media Library Tag filtering now matches related compound tags when filtering by a base tag slug (example: selecting "cruise" now also includes tags like "honeymoon-cruise" and "Honeymoon, Cruise").
+ * - Applied the same expanded matching behavior to both front-end gallery output and WP Media Library list/grid filtering for consistent results.
+ * - Added explicit nopaging handling for gallery queries when Page Limit is 0 to better preserve unlimited output behavior.
+ *
+ * 2.5.52 - March 16, 2026
+ * - Fixed front-end gallery "Link To: lightbox" click handling regression by hardening delegated click-target resolution before calling .closest().
+ * - Restored reliable lightbox opening from gallery image links while keeping the new admin quick-tag tools active.
+ *
+ * 2.5.51 - March 16, 2026
+ * - Front-end gallery lightbox now includes a new admin-only "Duplicate" quick action that adds the "duplicate" Library Tag to the active image.
+ * - Added admin-only inline tag tools in the lightbox to quickly add one or more Library Tags (comma-separated) directly to the active image without leaving the screen.
+ * - Lightbox admin tag actions use secure AJAX nonce checks and attachment-targeted updates through existing Library Tag apply handlers.
+ *
+ * 2.5.50 - March 16, 2026
+ * - [tag-description] now renders all URL-selected Media Library tag descriptions (single, AND, OR) in the same order as the tag expression in the URL.
+ * - Each rendered tag description now outputs as its own paragraph with class "um-media-library-tag-description-paragraph".
+ * - When available for admins, each tag description paragraph now includes its own "Edit Tag Description" link for that specific tag.
+ *
+ * 2.5.49 - March 16, 2026
+ * - Added new Dynamic Photo Gallery lightbox setting: "Slideshow Transition (None, Crossfade, Slide to Left)" as an add-on default.
+ * - Added matching per-block Slideshow Transition control with a "Use add-on default" toggle in the Media Library Tag Gallery block inspector.
+ * - Front-end lightbox slideshow now supports transition modes: none, crossfade, and slide-left.
+ *
+ * 2.5.48 - March 16, 2026
+ * - Dynamic Photo Gallery with Media Library Tags: added new default lightbox settings for Previous/Next navigation + keyboard arrows, Play Slideshow button, and Slideshow Seconds Per Photo.
+ * - Added matching per-block controls in Media Library Tag Gallery block settings, including "Use add-on default" toggles for all three new lightbox options.
+ * - Front-end lightbox now supports optional Previous/Next controls, ArrowLeft/ArrowRight navigation, and a configurable slideshow play/pause timer using the configured seconds-per-photo interval.
+ *
+ * 2.5.47 - March 16, 2026
+ * - Fixed Add-ons settings save redirect context so saving a non-Email Log add-on no longer jumps to addon_section=emali-log.
+ * - Email Log nested forms now avoid emitting conflicting addon_section fields that could override the main Add-ons form section on save.
+ * - Email Log filter form now targets its section URL directly, preserving current section context without introducing duplicate hidden routing fields.
+ *
+ * 2.5.46 - April 3, 2026
+ * - My Account Admin Orders search form button clickability fix: raised search form stacking context and ensured pointer events are enabled on the submit button/input so Search is always clickable.
+ *
+ * 2.5.45 - April 3, 2026
+ * - Email Log add-on UI wording updated from "Emali" to "Email" for user-facing labels/buttons (including "Clear Email Log History").
+ * - Added a new modal HTML preview action in Email Log list rows so the rendered email body can be opened in a popup window without leaving the table.
+ *
+ * 2.5.44 - April 3, 2026
+ * - Updated Documentation tab content to reflect the current top-level tabs and newer sub-page navigation patterns (login_tools_section, addon_section, block_section, docs_section).
+ * - Refreshed tab reference cards and About > Feature List entries so current navigation routes and section naming are documented in one place.
+ *
+ * 2.5.43 - April 3, 2026
+ * - Email Log now includes an "Auto-delete log entries after X days" setting (0 = keep forever).
+ * - Added automatic Email Log retention cleanup (daily scheduled event + request fallback) to purge rows older than the configured number of days.
+ * - Preserved and clarified the manual "Clear Email Log History" action so all log entries can be wiped immediately.
+ *
+ * 2.5.42 - April 3, 2026
+ * - Added new Add-on: Email Log.
+ * - When activated, Email Log captures outgoing wp_mail payloads into a dedicated database table and tracks sent/failed status updates.
+ * - Added Email Log UI in tab=addons with status/search filters, email header columns, HTML/source preview, resend + forward actions, clear-history action, and hour/day/week/month stats cards.
+ *
+ * 2.5.41 - April 3, 2026
+ * - Add-ons filter tags now include two new top-level options: Email and SMS.
+ * - Added keyword matching so Email/SMS-related add-ons are grouped under those new filter tags in tab=addons.
+ *
+ * 2.5.40 - April 3, 2026
+ * - Fixed Add-ons/Blocks save routing so normal "Save" actions can deactivate individual add-ons/blocks again.
+ * - Tightened temporary-disable-only detection to run only from main index context, preventing false matches while editing a specific add-on/block section.
+ *
+ * 2.5.39 - April 3, 2026
+ * - Fixed Add-ons temporary-disable toggle save flow: turning off "Temporarily disable all add-ons runtime functionality" now preserves existing add-on active checkbox states.
+ * - Settings save now reads persisted raw settings (not runtime-overridden settings) to prevent accidental add-on deactivation when temporary runtime disable had been enabled.
+ *
+ * 2.5.38 - April 3, 2026
+ * - Invoice Approval invoice view now shows an item summary directly under "Products & Services": "Total Line Items: X (Total Quantity: Y)".
+ * - Added order quantity aggregation from invoice line items so both line-count and quantity totals are visible before the items table.
+ *
+ * 2.5.37 - April 3, 2026
+ * - Fixed fatal error on Add-ons/Blocks screens by adding missing User_Manager_Core::get_raw_settings() compatibility method.
+ * - get_raw_settings() now returns persisted plugin options without runtime temporary-disable overrides, restoring admin screen rendering.
+ *
+ * 2.5.36 - April 3, 2026
+ * - Updated AI Notes/rules for Documentation > Versions updates so new changelog entries must use the real current date at edit time.
+ * - Prevents stale hardcoded changelog dates from being reused for future docs_section=versions updates.
+ *
+ * 2.5.35 - March 16, 2026
+ * - Split temporary runtime overrides into independent controls: Add-ons has its own "Temporarily Disable All" toggle and Blocks has its own separate toggle.
+ * - Add-ons/Blocks screens now read persisted (raw) settings so active modules stay checked/highlighted while temporary runtime disable is enabled.
+ * - Added temporary-disable status badges/icons in Add-ons and Blocks index views to clearly indicate runtime-disabled mode.
+ *
+ * 2.5.33 - March 16, 2026
+ * - Blocks tab: the "Temporarily Disable All" card now appears only on the main Blocks index view and is hidden when viewing a specific block section.
+ *
+ * 2.5.32 - March 16, 2026
+ * - WP-Admin Bar Quick Search add-on now includes "Priority Post Types to Display Before All Remaining Post Types" with a checkbox per available post type.
+ * - Checked priority post types are shown first in the quick-search dropdown, while all remaining post types still appear after them.
+ *
+ * 2.5.31 - March 16, 2026
+ * - Add-ons tab: the "Temporarily Disable All" card now appears only on the main Add-ons index view and is hidden when viewing a specific add-on section.
+ *
+ * 2.5.30 - March 16, 2026
+ * - Added a new Settings > User Experience checkbox to control the "User Experience Manager" WP-Admin top-bar shortcut.
+ * - The top-bar shortcut is now disabled by default and only appears when that setting is enabled.
+ *
+ * 2.5.29 - March 16, 2026
+ * - Add-ons tab and Blocks tab now include a new bottom card: "Temporarily Disable All" with a checkbox and Save button.
+ * - The new temporary override disables all add-ons and blocks runtime behavior individually when enabled, and restores normal behavior when unchecked and saved.
+ *
+ * 2.5.27 - March 16, 2026
+ * - Product Notification: updated the default placeholder text for "Display a Woocommerce Notification Above Product at All Times?" to "Customers have reported that this item runs small".
+ *
+ * 2.5.26 - March 16, 2026
+ * - Added new Add-on: Product Notification.
+ * - When activated, WooCommerce products get new Product Data > General fields: "Display a Woocommerce Notification Above Product at All Times?", "Optional Button Title", and "Optional Button URL".
+ * - If the product notification field has content, a persistent WooCommerce-style message now renders above the product page at all times.
+ * - Added Product Notification add-on color override settings for notification background/text and button default/hover colors.
+ *
+ * 2.5.25 - March 16, 2026
+ * - Restricted Access redirect modes now enforce hard redirects for logged-out users across all front-end pages: "Redirect to My Account" and "Redirect to WP-Admin" no longer render the full-screen overlay fallback.
+ * - Prevents redirect targets from showing the overlay page when already on the destination URL; requests now remain on the intended login destination.
+ *
+ * 2.5.24 - March 16, 2026
+ * - Restricted Access add-on description now explicitly includes "Security" terminology so it appears in the Add-ons Security filter/tag view.
+ *
+ * 2.5.23 - March 16, 2026
+ * - Fixed Post Meta Viewer edit mode on high-meta screens (like WooCommerce products): existing meta values now submit only when changed, preventing oversized form submissions that can block core product fields (such as price) from saving.
+ * - Existing meta fields in the Post Meta Viewer now use data-meta-key + lightweight JS mirrors so unchanged rows do not inflate POST payload size.
+ *
+ * 2.5.22 - March 16, 2026
+ * - SEO Basics meta box now shows recommended character targets (Title: 60, Description: 160).
+ * - Added live character countdown indicators for title/description override fields to show how many characters are left.
+ *
+ * 2.5.21 - March 16, 2026
+ * - Added new Add-ons card: "SEO Basics" with activation toggle.
+ * - When active, adds an "SEO Basics" meta box on every page and post with Page Title Override and Page Description Override fields.
+ * - Front-end SEO image now resolves by default to Featured Image first; if no featured image exists, it falls back to the first image found in page/post content.
+ * - Applies title override to browser document titles and outputs description/image meta tags in wp_head.
+ *
+ * 2.5.20 - March 16, 2026
+ * - Fixed Media Library Tag placeholder replacement in the HTML document <title> path by adding fallback context detection when queried object IDs are unavailable at title-filter time.
+ * - [tag-name]/[tag-description] now resolve in browser title tags more reliably, matching page title/body behavior for URL tag override-enabled gallery blocks.
+ *
+ * 2.5.19 - March 16, 2026
+ * - Add-on runtime-gating hardening follow-up: My Account Site Admin hooks now only initialize when its add-on is enabled (including URL temporary-disable support), preventing endpoint/query-var hooks from registering while inactive.
+ * - New User Coupons debug panel hook now only registers when the New User Coupons add-on is active, eliminating debug panel runtime when the add-on is disabled.
+ *
+ * 2.5.18 - March 16, 2026
+ * - Remaining balance checkout + order-received notices now hide currency text when the currency symbol/label is longer than 1 character (example: "Points"), showing numeric-only amounts for cleaner display.
+ * - Applies to classic checkout notice, block checkout notice, and order received remaining-balance confirmation amounts/calculations.
+ *
+ * 2.5.17 - March 16, 2026
+ * - Email Settings defaults: when sender fields are left empty, User Manager now defaults to Site Title for "Send From Name" and noreply@{site-domain} for both "Send From Email Address" and "Reply To Email Address".
+ * - Updated Settings tab field rendering and runtime header generation so defaults are consistent across UI and outgoing email behavior.
+ *
+ * 2.5.16 - March 16, 2026
+ * - Updated "Send automated remaining balance coupon" demo template body to include both Remaining Balance (%COUPONCODEVALUE%) and Coupon Code (%COUPONCODE%).
+ * - Added %COUPONCODEVALUE% placeholder support to coupon email sends and preview rendering, including remainder-coupon workflows.
+ * - Existing default remaining-balance template entries are auto-updated to the new body when unchanged/customization-safe.
+ *
+ * 2.5.15 - March 16, 2026
+ * - Add-ons > User Coupon Remaining Balances: fixed Preview Email button to use delegated click binding so it works reliably when Add-ons cards/toggles are re-rendered or initially hidden.
+ * - Preview now uses the same shared modal invocation pattern as other working preview buttons, restoring consistent behavior for coupon remainder template previews.
+ *
+ * 2.5.14 - March 16, 2026
+ * - Hardened add-on runtime gating so key hook registrations only run when their add-on is active (including URL-based temporary disable support): Checkout Address Selector, New User Coupons, Quick Search, User Coupon Notifications cart-empty coupon cleanup, and Staging/Development Overrides.
+ * - Prevents inactive add-ons from registering related runtime hooks and eliminates lingering side effects when an add-on is turned off.
+ *
+ * 2.5.13 - March 16, 2026
+ * - Fixed staging/dev webhook-delivery filter callback signature to accept WooCommerce versions that pass 3 arguments, preventing fatal "Too few arguments" exceptions during webhook-triggering order flows.
+ *
+ * 2.5.12 - March 16, 2026
+ * - User Coupon Remaining Balances: moved remainder generation off synchronous checkout status transitions and onto a short deferred WP-Cron event to avoid checkout/order-processing interruptions.
+ * - Added per-order processing lock for remainder generation to prevent duplicate processing/race conditions when both thank-you/status hooks can fire close together.
+ *
+ * 2.5.11 - March 16, 2026
+ * - User Coupon Remaining Balances now fully respects add-on activation state before registering front-end/checkout hooks, so notice/debug/runtime output no longer runs when the add-on is turned off.
+ * - Added defensive error handling around remaining-balance coupon generation to prevent checkout/order flow failures from surfacing as generic WooCommerce order-processing errors.
+ *
+ * 2.5.10 - March 16, 2026
+ * - Add-ons > User Coupon Remaining Balances: fixed Preview Email button by rendering the shared email preview modal on the Add-ons page context.
+ * - Preview now correctly opens for the selected template in "Send Email to User when New Remaining Balance Code is Created", including %COUPONCODE% and [coupon_code] placeholder substitution.
+ *
+ * 2.5.9 - March 16, 2026
+ * - Email Templates: added per-template "Recreate" links under Import Demo Email Templates so each demo template can be re-seeded individually.
+ * - Added secure individual template import actions for all demo email templates, including automated coupon and remaining-balance coupon templates.
+ *
+ * 2.5.8 - March 16, 2026
+ * - Import Demo Email Templates now includes a new "Send automated remaining balance coupon" template.
+ * - Added default subject/body for the new template with %COUPONCODE% support ("You have a remaining balance").
+ *
+ * 2.5.7 - March 16, 2026
+ * - Added new Restricted Access add-on with controls for logged-out behavior (My Account redirect, WP-Admin redirect, or full-screen overlay), shared password access, appended URL-string access, timed re-authentication, and role-based blocking for logged-in users.
+ * - Added configurable restricted-access overlay options for custom no-access message, background color, text color, and optional background image with centered layout.
+ *
+ * 2.5.6 - March 16, 2026
+ * - Order Received Page Customizer: improved H1 override reliability by adding multiple fallback hooks (page title, checkout thank-you title, template title, and thank-you heading output) to support different WooCommerce/theme rendering paths.
+ * - Existing custom paragraph override remains active via woocommerce_thankyou_order_received_text.
+ *
+ * 2.5.5 - March 16, 2026
+ * - "Edit Email Templates" shortcut links now open Add-ons > Send Email with the Email Templates panel auto-expanded.
+ *
+ * 2.5.4 - March 16, 2026
+ * - Send Email > Saved Lists table: action buttons (Edit, CSV, Delete) now render one per line for clearer vertical alignment.
+ *
+ * 2.5.3 - March 16, 2026
+ * - Send Email add-on is now hard-pinned on: Add-ons save logic, runtime checks, and add-on URL-disable overrides no longer disable send-email-users.
+ * - Add-ons UI now keeps Send Email fields visible even without an activate checkbox so template tools remain reliably available.
+ *
+ * 2.5.1 - March 16, 2026
+ * - Coupon edit screen: fixed Email List Converter JavaScript to avoid mutating/replacing WooCommerce's native Allowed Emails field, preventing edit-screen loading/spinner conflicts.
+ * - Converter now safely reads/writes both native and select2 customer_email field variants without renaming core inputs.
+ *
+ * 2.4.99 - March 16, 2026
+ * - Reports tab: added a reusable Start Date / End Date filter under the Query summary for reports that include date-based fields.
+ * - Date filters now further narrow matching report results and preserve filter values through pagination and CSV export links.
+ *
+ * 2.4.98 - March 16, 2026
+ * - Reports label update: retitled "Coupon Audit" to "Coupons Audit" in report naming/documentation copy.
+ *
+ * 2.4.97 - March 16, 2026
+ * - Reports tab: added a dynamic "Query summary" description panel under the Select report dropdown.
+ * - Every General Report now has a human-readable query description shown when selected, clarifying what records/conditions each report uses.
+ *
+ * 2.4.96 - March 16, 2026
+ * - Login Tools > Login As now includes a note that temporary passwords are automatically restored after 15 minutes if not manually restored.
+ * - Added automatic Login As session expiry restoration on normal page loads, so original user password hashes are reinstated after the 15-minute window.
+ *
+ * 2.4.95 - March 16, 2026
+ * - Documentation tab was refreshed to match current product structure, including the Login Tools grouping, dedicated Blocks tab, and updated add-on/block references.
+ * - Added separate Blocks Reference documentation cards and updated installation/about feature lists to reflect active tabs, add-ons, and blocks.
+ *
+ * 2.4.94 - March 16, 2026
+ * - Renamed "Media Library Tags & Photo Gallery" to "Dynamic Photo Gallery with Media Library Tags".
+ * - Moved this gallery/tag add-on from Add-ons into the dedicated Blocks tab.
+ *
+ * 2.4.93 - March 16, 2026
+ * - Added a new top-level Blocks tab (page=user-manager&tab=blocks) next to Add-ons and moved the four Page Block add-ons into this dedicated content-block area.
+ * - Blocks now use content-focused labels/tags/descriptions (for example Icons, Grids, Tabs, Navigation, Content) to improve discoverability.
+ *
+ * 2.4.92 - March 16, 2026
+ * - [tag-description] placeholder output now appends an "Edit Tag Description" link for WordPress administrators, linking directly to the active Library Tag edit screen.
+ * - The admin edit link is added only to front-end content placeholder output; title and document title placeholder replacements remain plain text.
+ *
+ * 2.4.91 - March 16, 2026
+ * - [tag-name]/[tag-description] placeholder replacement now also runs for the HTML document title (<title>) via WordPress title filters.
+ * - URL-resolved Library Tag placeholders now stay consistent across page headers, page body content, and browser/page title output.
+ *
+ * 2.4.90 - March 16, 2026
+ * - Media Library Tag Gallery "Style" options are now sorted A-Z in the Add-ons settings section.
+ * - Added gallery "Accent Color (frames/backgrounds)" setting to control white frame/background surfaces (for example Polaroid layout and split-screen panels) for dark mode compatibility.
+ *
+ * 2.4.88 - March 16, 2026
+ * - Rebuilt Mosaic Grid into a deterministic repeat pattern (large, tall, wide, standard) with consistent auto-row sizing for cleaner alignment.
+ * - Mosaic now uses dense packing with controlled spans and full-height image fill to reduce dead space and improve vertical rhythm.
+ *
+ * 2.4.87 - March 16, 2026
+ * - URL tag override now supports multi-tag logic in the gallery query: ?tag=tag+tag2 requires BOTH tags (AND), while ?tag=tag_tag2 matches EITHER tag (OR).
+ * - Multi-tag expressions are also supported for "Allow Any URL Parameter..." mode via query keys (for example: ?tag+tag2 or ?tag_tag2).
+ * - [tag-name] and [tag-description] placeholders continue to resolve from the first matched tag in multi-tag URL expressions.
+ *
+ * 2.4.86 - March 16, 2026
+ * - Lightbox (front end): administrators now see an "Edit image" shortcut when opening a gallery image in lightbox mode.
+ * - The shortcut links directly to that attachment's edit screen in Media Library for faster image data updates.
+ *
+ * 2.4.85 - March 16, 2026
+ * - Refined Mosaic Grid tile-span pattern to reduce stranded gaps where smaller square items should backfill open spaces.
+ * - Mosaic span behavior is now column-aware and avoids complex row/column spanning on mobile for more reliable packing.
+ *
+ * 2.4.84 - March 16, 2026
+ * - Simplified Media Library Tag Gallery pagination markup to basic links without button-like styling.
+ * - Current gallery page number now renders as bold text.
+ *
+ * 2.4.83 - March 16, 2026
+ * - Added a front-end wp-admin top bar shortcut ("Edit Library Tag") when a Media Library Tag Gallery URL tag is active.
+ * - Shortcut links directly to the matching Library Tag edit screen and is shown only to users allowed to edit that term.
+ *
+ * 2.4.82 - March 16, 2026
+ * - Media Library Tag Gallery defaults: added desktop column threshold settings for albums with fewer than 50, 25, and 10 photos.
+ * - Gallery rendering now auto-adjusts desktop columns by attachment count thresholds (<50, <25, <10), while existing Number of Columns (Desktop) remains the default for 50+ photos.
+ *
+ * 2.4.81 - March 16, 2026
+ * - Added [tag-description] placeholder support for post title/content replacement when Media Library gallery URL tag override is active.
+ * - [tag-description] resolves from the matched Library Tag description and falls back to empty text when no valid URL tag is present.
+ * - Updated the "Allow Any URL Parameter..." setting note to include both [tag-name] and [tag-description] behavior.
+ *
+ * 2.4.80 - March 16, 2026
+ * - Fixed [tag-name] replacement in post title/content by ensuring block config detection does not cache too early before singular query context is available.
+ * - Treat the "Allow Any URL Parameter..." toggle as enabling URL tag placeholder replacement behavior (including when ?tag= is not explicitly enabled).
+ *
+ * 2.4.79 - March 16, 2026
+ * - Media Library Tag Gallery URL override: [tag-name] placeholder now supported in post title/content when URL override is enabled on the page's gallery block.
+ * - [tag-name] resolves to the active URL tag name and safely falls back to empty text when no valid URL tag is present.
+ * - Added this behavior note under the "Allow Any URL Parameter..." block setting help text.
+ *
+ * 2.4.78 - March 16, 2026
+ * - Media Library Tag Gallery block: added "Allow Any URL Parameter to Be Used as a Tag Identifier such as ?tag-name for Shorter URLs" under URL override controls.
+ * - When enabled, URL query keys that match Library Tag slugs (e.g. ?my-tag) can act as tag overrides, in addition to the standard ?tag=... parameter.
+ *
+ * 2.4.77 - March 16, 2026
+ * - Media Library Tag Gallery block: added "Do Not Allow Empty Tag / Do Not Load without Tag Value" toggle under URL tag override settings.
+ * - When enabled, the block returns no gallery output unless a tag is provided (from block setting or URL override).
+ *
+ * 2.4.76 - March 16, 2026
+ * - Media Library "No tags" filter fix: remove conflicting Library Tags tax clauses/query vars before applying the no-tags filter.
+ * - This ensures "No tags" returns untagged media items instead of "No media items found." in list and grid views.
+ *
+ * 2.4.75 - March 16, 2026
+ * - Media Library Tags gallery Sort Order: added "Random" option in add-on defaults and block-level controls.
+ * - Gallery rendering now supports random ordering when Sort Order is set to Random.
+ *
+ * 2.4.74 - March 16, 2026
+ * - Media Library filter copy update: changed "No Tags" label to "No tags".
+ * - Fixed the "No tags" filter query so it reliably returns only attachments without any Library Tags (instead of empty results).
+ *
+ * 2.4.73 - March 16, 2026
+ * - Media Library Tags add-on: added setting to keep the Media Library bulk-tools header visible on mobile while scrolling.
+ * - When enabled, Media Library mobile toolbar/router stays sticky so Bulk Select controls remain accessible without scrolling back to the top.
+ *
+ * 2.4.72 - March 16, 2026
+ * - Media Library tag filter: added a new "No Tags" option to show only attachments that do not have any Library Tags.
+ * - "No Tags" filter now works in both list view and media grid/ajax view using a taxonomy NOT EXISTS query.
+ *
+ * 2.4.71 - March 16, 2026
+ * - Settings tab: added "Show profile/edit user helper notice" checkbox under User Experience.
+ * - Profile/Edit User notice is now hidden by default unless this new setting is enabled.
+ *
+ * 2.4.70 - March 16, 2026
+ * - Media Library Tags add-on: added "Show Tags on Thumbnails when Bulk Selecting" setting to display existing tag labels on media thumbnails while bulk-select mode is active.
+ * - Media Library Tags add-on: added "Tags to hide from front end gallery" (comma-separated) to exclude matching Library Tag slugs from all front-end gallery output.
+ * - Added help example for using a tag slug like "hide" to keep tagged images from appearing in front-end galleries.
+ *
+ * 2.4.69 - March 16, 2026
+ * - Media Library Tags & Photo Gallery: added gallery defaults for "Description Display" (none, centered under photo, lightbox under photo, both) and "Description Value" (caption, filename, title, description, alt text, slug, date).
+ * - Media Library Tag Gallery block: added matching block-level controls with per-setting "Use add-on default" toggles for Description Display and Description Value.
+ * - Gallery rendering now supports descriptions under photos and/or in lightbox captions using the selected description source value.
+ *
+ * 2.4.68 - March 16, 2026
+ * - Media Library bulk tag input placeholder updated from "enter tag" to "or enter tag" in list and grid bulk-apply controls.
+ * - Adjusted Media Library bulk-select toolbar alignment so Apply Tag select/input/button sit slightly lower and align better with Delete/Cancel controls.
+ *
+ * 2.4.67 - March 16, 2026
+ * - Media Library Tags copy updates: changed "All Library Tags" to "All tags", "Bulk apply: choose Library Tag" to "Apply Tag", "or enter new Library Tag" to "enter tag", and "Apply Library Tag" to "Apply Tag(s)".
+ * - Media Library bulk-apply tag controls are now hidden until Bulk Select mode is active (list and grid views), then shown while selecting media.
+ *
+ * 2.4.66 - March 16, 2026
+ * - Media Library Tag Gallery block editor: added per-setting "Use add-on default" toggles for columns (desktop/mobile), sort order, file size, style, page limit, and link target.
+ * - When enabled for a setting, that block option now inherits the configured add-on default value and disables local override in the inspector.
+ * - Front-end rendering now honors each per-setting default toggle, so defaults can be centrally updated without editing every block.
+ *
+ * 2.4.65 - March 16, 2026
+ * - Media Library Tags (grid/select mode): kept custom bulk controls visible in the media toolbar by using dedicated classes/styles instead of hidden default attachment-filters styling.
+ * - Bulk apply dropdown and "or enter new Library Tag" text input now stay visible and usable while selecting media items in grid view.
+ *
+ * 2.4.64 - March 16, 2026
+ * - Media Library Tags: in the media-item Library Tags editor, added clickable quick-link tags above the description text.
+ * - Clicking a tag link auto-inserts it into that media item's Library Tags field (without duplicating existing tags).
+ *
+ * 2.4.63 - March 16, 2026
+ * - Media Library Tags: fixed bulk-assign controls visibility on Media Library "All items" views where post_type can be empty.
+ * - Bulk apply dropdown/button now render in list view when browsing upload.php with no explicit post_type, matching the tag filter behavior.
+ *
+ * 2.4.62 - March 16, 2026
+ * - Media Library Tags: fixed Library Tag filter visibility on Media Library "All items" views by allowing empty post_type contexts on upload.php.
+ * - Tag filter dropdown and bulk controls now reliably render on upload.php list views even when WordPress does not pass post_type=attachment.
+ *
+ * 2.4.61 - March 16, 2026
+ * - Media Library Tags & Photo Gallery: added legacy style options back into Style dropdown: Standard, Square CSS Crop, Wide Rectangle CSS Crop, Tall Rectangle CSS Crop, and Circle CSS Crop.
+ * - Restored save validation and render support for these legacy style keys so previously configured galleries continue to work as expected.
+ *
+ * 2.4.60 - March 16, 2026
+ * - Fixed Bulk Add to Cart shortcode warnings by initializing missing variables before output/render use:
+ *   - $product_id_column_header
+ *   - $show_sample_csv
+ *   - $show_sample_with_data
+ * - Prevents undefined variable warnings on frontend shortcode rendering.
+ *
+ * 2.4.59 - March 16, 2026
+ * - Media Library Tag Gallery block: added a block-level setting to allow URL parameter override via ?tag=[tag_name].
+ * - When enabled on a block instance, the URL tag parameter overrides the block-selected Library Tag (if the tag exists); when disabled, block tag selection remains unchanged.
+ *
+ * 2.4.58 - March 16, 2026
+ * - Media Library Tags & Photo Gallery: updated Style options to 12 layouts: Mosaic Grid (Irregular Tiles), Masonry / Pinterest, Uniform Grid, Justified Row, Carousel / Slider, Fullscreen Lightbox Grid, Horizontal Scroll, Polaroid / Scrapbook, Split Screen Feature, Infinite Scroll, 3D Perspective, and Timeline / Story.
+ * - Added matching front-end rendering/CSS/JS behaviors for each of these gallery styles, including carousel navigation, split-screen thumbnail switching, infinite reveal-on-scroll, timeline metadata layout, and fullscreen/lightbox interactions.
+ *
+ * 2.4.57 - March 16, 2026
+ * - Renamed add-on to "Media Library Tags & Photo Gallery".
+ * - Added new setting: "Activate Media Library Tag Gallery Block".
+ * - Added gallery default settings for all gallery blocks: desktop/mobile columns, sort order, file size, style, page limit, and link target.
+ * - Added new block for posts/pages to display images filtered by Library Tag (or All by default) using these defaults.
+ *
+ * 2.4.56 - March 16, 2026
+ * - Added new Add-on: "Media Library Tags" with Activate checkbox and description.
+ * - Adds a "Library Tags" taxonomy menu under Media, media-library filter dropdown (list/grid), bulk tag assignment, and per-item tag edit controls in attachment details.
+ *
+ * 2.4.55 - March 16, 2026
+ * - Product Search by SKU add-on is now OFF by default on fresh installs (requires explicit activation).
+ *
+ * 2.4.54 - March 16, 2026
+ * - Staging & Development non-production front-end notice now renders at the top of the page (via wp_body_open) and no longer appears as a footer bar.
+ * - Added a footer fallback injector that inserts the same notice at the top of <body> for themes that do not call wp_body_open.
+ *
+ * 2.4.53 - March 16, 2026
+ * - Data Anonymizer > Exceptions to Above: added "Exclude All WP Administrators" checkbox (checked by default).
+ * - Data Anonymizer > Exceptions to Above: added "Exclude User if Email Address Matches Administration Email Address" checkbox (checked by default).
+ * - Users anonymization now skips matching users when these new exception options are enabled and logs skip counts in run notes/history.
+ *
+ * 2.4.52 - March 16, 2026
+ * - Hotfix: prevented duplicate WordPress block registration for custom/tabbed-content-area by guarding block registration with WP_Block_Type_Registry checks.
+ * - Added the same duplicate-registration guard for the legacy alias custom/legacy-tabbed-content-area.
+ *
+ * 2.4.51 - March 16, 2026
+ * - Hotfix: removed duplicate declaration of User_Manager_Core::$staging_dev_notice_rendered that caused a fatal redeclare error.
+ *
+ * 2.4.50 - March 16, 2026
+ * - Add-ons tag filter: added a new "Security" tag in the sub-navigation and positioned it directly after "Users".
+ * - Reviewed and updated security-related add-on descriptions so they are discoverable via the Security filter.
+ *
+ * 2.4.49 - March 16, 2026
+ * - Edit User/Profile notice: added a new "Login As This User" button next to Reset Password.
+ * - The new button opens Login Tools > Login As, auto-fills the current user's email, and auto-triggers "Generate Temporary Password".
+ *
+ * 2.4.48 - March 16, 2026
+ * - Added new Add-on: "Staging & Development Environment Overrides" with Activate toggle and default-on safety settings.
+ * - Added non-production overrides to disable emails, payment gateways, webhooks, and external API/JSON requests (configurable by checkbox).
+ * - Added configurable non-production notices for front-end and WP-Admin, with optional Data Anonymized timestamp suffix based on Data Anonymizer history.
+ *
+ * 2.4.47 - March 16, 2026
+ * - Added new Add-on: "Data Anonymizer" with Activate toggle and configurable anonymization settings for Orders, Users, and Form Submissions.
+ * - Added "Run Data Anonymizer" card with three run actions (Orders, Users, Forms) that execute using the currently checked settings.
+ * - Added "Data Anonymizer History" card that logs runner, run type, settings snapshot, affected counts, notes, and supported form-plugin table mappings.
+ *
+ * 2.4.46 - March 16, 2026
+ * - Add-ons > User Coupon Remaining Balances: added new "Send Email to User when New Remaining Balance Code is Created" setting.
+ * - Added template controls under that setting: Select Email Template (+ shortcut), a default-template option, and Preview Email.
+ * - New remaining-balance emails now support both %COUPONCODE% and [coupon_code] variables and use Email Settings sender headers (From/Reply-To).
+ *
+ * 2.4.45 - March 16, 2026
+ * - Tabbed Content Area editor: each tab now supports both a Page/Post selection dropdown and a manual Page/Post ID field.
+ * - Rendering now prioritizes manual Page/Post ID when both manual ID and dropdown selection are saved.
+ * - Added editor-side option loading for pages/posts so tab content can be selected without manually typing IDs.
+ *
+ * 2.4.44 - March 16, 2026
+ * - Settings > User Experience: retitled "Legacy/Broken Shortcodes to No-op (comma-separated)" to "Legacy/Broken Shortcodes (comma-separated)".
+ *
+ * 2.4.43 - March 16, 2026
+ * - Settings > User Experience: added "Legacy/Broken Shortcodes to No-op (comma-separated)" as a normal setting with help text.
+ * - Reintroduced runtime registration of empty handlers for configured legacy shortcode tags so removed shortcode sources do not break old content.
+ *
+ * 2.4.42 - March 16, 2026
+ * - Removed the "Legacy/Broken Shortcodes to No-op (comma-separated)" setting from Page Block: Tile Grid for Subpages.
+ * - Removed legacy no-op shortcode registration code and related saved-setting handling.
+ *
+ * 2.4.41 - March 16, 2026
+ * - Removed all "mybrand" references from the new Page Block add-ons and updated related block/shortcode identifiers accordingly.
+ * - Updated identifiers to neutral names (for example: custom/subpages-grid, custom/tabbed-content-area, custom/simple-icon, custom/menu-tiles, and [subpages_grid]).
+ * - Kept legacy tabbed-content block compatibility while avoiding duplicate registrations.
+ *
+ * 2.4.40 - March 16, 2026
+ * - Added four new add-ons with Activate toggles for Page Blocks: Tile Grid for Subpages, Tabs with Content from Other Pages, Simple Icons, and Tile Grid for Menu.
+ * - Added runtime-gated block registrations for custom/subpages-grid, custom/tabbed-content-area (+ legacy custom/tabbed-content-area), custom/simple-icon, and custom/menu-tiles.
+ * - Added the [subpages_grid] shortcode and optional legacy shortcode no-op setting, plus block-editor UI script hooks for each new page-block add-on.
+ *
+ * 2.4.39 - March 16, 2026
+ * - My Account Admin Orders: added two new settings under "Hide Order Status" to optionally add WebToffee invoice action buttons.
+ * - Added "Add WebToffee WooCommerce PDF Invoices Print Invoice Button" and "Add WebToffee WooCommerce PDF Invoices Download Invoice Button" toggles.
+ * - When enabled, Admin Orders rows now pull WebToffee invoice action URLs from WooCommerce account-order actions and render Print Invoice / Download Invoice buttons in the custom button area.
+ *
+ * 2.4.38 - March 16, 2026
+ * - My Account Admin Orders search now supports direct order IDs, order numbers with/without "#" prefixes, and partial order-number matching.
+ * - Added sequential-order-number meta search support (including common "_order_number" style meta keys) for "Sequential Order Numbers Pro" style values.
+ * - Expanded Admin Orders search matching to include order-number meta fields and normalized search variants for better partial matching.
+ *
+ * 2.4.37 - March 16, 2026
+ * - Fixed early translation loading notice by hardening add-on runtime label translation to never run before the init hook.
+ * - Added explicit plugin textdomain loading on init for the user-manager domain.
+ *
+ * 2.4.36 - March 16, 2026
+ * - Added new Add-on: "Add to Cart Min/Max Quantities" with an Activate toggle in Add-ons.
+ * - Adds WooCommerce product Inventory fields for "Minimum quantity" and "Maximum quantity" (per product).
+ * - Enforces min/max quantity rules during add-to-cart validation and cart/checkout quantity validation notices.
+ *
+ * 2.4.35 - March 16, 2026
+ * - Post Meta Viewer add-on: added role-based access controls ("Allowed Roles") to decide which roles can view the meta box.
+ * - Post Meta Viewer add-on: added username/email allow-list ("Allowed Usernames/Emails"), one per line.
+ * - Access matching now supports role OR username/email logic, and defaults to allow all post editors when both lists are empty.
+ *
+ * 2.4.34 - March 16, 2026
+ * - Post Meta Viewer add-on: added a post type checkbox list so admins can limit the meta box to selected post types.
+ * - Default behavior remains enabled for all post types when no specific selections are saved.
+ *
+ * 2.4.33 - March 16, 2026
+ * - Reports > Admin Log: removed the "Add-ons Connected to Admin Log" card.
+ * - The Activity Log table and filters remain available; only the add-ons summary panel was removed.
+ *
+ * 2.4.32 - March 16, 2026
+ * - Deactivate User(s): added a new "Deactivated Users History" card under the deactivated users list.
+ * - The new history keeps a persistent running log of deactivation and reactivation events (with date, action, user, identifier, before/after values, and actor).
+ * - Deactivate and Reactivate actions now append entries to this history so previous status changes remain visible even after reactivation.
+ *
+ * 2.4.31 - March 16, 2026
+ * - Deactivate User(s): input now accepts usernames in addition to email addresses.
+ * - Deactivate User(s): added a per-user Reactivate button in the "Deactivated Users" table.
+ * - Reactivation now clears deactivation flags and restores login/email values (with uniqueness safeguards) so accounts can sign in again.
+ *
+ * 2.4.30 - March 16, 2026
+ * - Added a sub-navigation spacing override so cards/layout wrappers directly under `.subsubsub` no longer add extra top gap.
+ * - This includes wrappers like `.um-admin-grid`, `.um-admin-card`, `.um-create-user-layout`, and `.um-email-templates-layout` when they appear immediately below sub-navigation.
+ *
+ * 2.4.29 - March 16, 2026
+ * - Add-ons tab: removed extra top spacing beneath the add-on tag sub-navigation by clearing top margin on the top-level add-on grids/cards.
+ *
+ * 2.4.28 - March 16, 2026
+ * - Retitled the throttle count label from "Texts Per Batch" to "Emails/Texts Per Batch" in Settings.
+ *
+ * 2.4.27 - March 16, 2026
+ * - Removed the standalone "Import Automated Coupon Email" card from Send Email.
+ * - Merged coupon template imports into "Import Demo Email Templates" so one import now includes both coupon templates.
+ * - Updated the demo email import list to show all 6 templates, including coupon-focused entries with %COUPONCODE% support.
+ *
+ * 2.4.26 - March 16, 2026
+ * - Moved "Import Demo SMS Text Templates" into the SMS Text Templates manager and placed it at the bottom of that panel.
+ * - Removed the duplicate "Import Demo SMS Text Templates" card from the surrounding Send SMS Text add-on wrapper.
+ *
+ * 2.4.25 - March 16, 2026
+ * - Moved "Import Demo Email Templates" into the Email Templates manager and placed it at the bottom of that panel.
+ * - Removed the duplicate "Import Demo Email Templates" card from the surrounding Send Email add-on wrapper.
+ *
+ * 2.4.24 - March 16, 2026
+ * - Removed the legacy top-level "Send Email" navigation tab (`tab=email-users`) now that Send Email is managed as an add-on.
+ * - Send Email remains available from Add-ons and optional add-on main-navigation shortcuts.
+ *
+ * 2.4.23 - March 16, 2026
+ * - Moved "Import Demo SMS Text Templates" from Tools into the Send SMS Text add-on area.
+ * - SMS demo template imports now include automated coupon + $10 apology coupon SMS templates (with %COUPONCODE% support).
+ * - SMS import actions submitted from the Send SMS Text add-on now redirect back to that same add-on context with success notices.
+ *
+ * 2.4.22 - March 16, 2026
+ * - Moved "Import Demo Email Templates" and "Import Automated Coupon Email" into the Send Email add-on area.
+ * - Import actions posted from the Send Email add-on now redirect back to that same add-on context with success notices.
+ * - Removed those two email import cards from Tools to avoid duplicate management locations.
+ *
+ * 2.4.21 - March 16, 2026
+ * - Removed "Email Templates" and "SMS Text Templates" sub-links from Settings after moving both template managers into their add-ons.
+ * - Legacy Settings template URLs now redirect to the relevant add-on cards (Send Email or Send SMS Text).
+ * - Template shortcut links now open the add-on template managers directly from Email/SMS template selector fields.
+ *
+ * 2.4.20 - March 16, 2026
+ * - Added a new "Send Email" add-on card with Activate toggle and description, so Send Email is no longer shown by default unless enabled.
+ * - Main navigation now shows the Send Email tab only when the Send Email add-on is active.
+ * - Added an "Email Templates" manager card at the top of the Send Email add-on, collapsed by default and auto-expanded when editing a specific template.
+ * - Added an "SMS Text Templates" manager card at the top of the Send SMS Text add-on, collapsed by default and auto-expanded when editing a specific SMS template.
+ * - Template manager forms now preserve add-on context so save/edit/delete/reorder actions return to the corresponding add-on card.
+ *
+ * 2.4.19 - March 16, 2026
+ * - Retitled add-on shortcut checkbox label from "Add as Man Navigation Tab" to "Add to Main Navigation".
+ *
+ * 2.4.18 - March 16, 2026
+ * - Added shortcut edit links next to Email Template selectors so admins can jump directly to Settings → Email Templates.
+ * - Added shortcut edit links next to SMS Text Template selectors so admins can jump directly to Settings → SMS Text Templates.
+ * - Applied template-editor shortcut links across Create, Bulk Create, Reset Password, Email Users, coupon-email template selectors, and SMS texting template selectors.
+ *
+ * 2.4.17 - March 16, 2026
+ * - Add-ons: each add-on now shows an "Add to Main Navigation" checkbox next to Activate when the add-on is enabled.
+ * - Main navigation: selected + active add-ons now appear as shortcut tabs to the right of Docs, linking directly to each add-on settings screen.
+ * - Add-on shortcut choices are now saved in plugin settings and automatically hidden when an add-on is not active.
+ *
+ * 2.4.16 - March 16, 2026
+ * - Order Invoice & Approval: on front-end invoice pages, logged-in WordPress administrators now see an "Edit this order in WP Admin" link at the bottom.
+ * - The edit-order link opens in a new browser tab/window and is hidden for non-administrator viewers.
+ *
+ * 2.4.15 - March 16, 2026
+ * - Send SMS Text: removed "skip on no user match" behavior so valid phone numbers are still sent even when no user is found.
+ * - Send SMS Text: improved user lookup by phone using flexible format matching (e.g. 952-200-7732, 9522007732, +19522007732).
+ * - Updated SMS send notices to report "Sent without user match" rather than "Skipped (no user match)".
+ *
+ * 2.4.14 - March 16, 2026
+ * - Tools: added a new "Import Demo SMS Text Templates" card next to "Import Demo Email Templates".
+ * - Added backend import handler and action for demo SMS templates with nonce and capability checks.
+ * - Added success notice feedback after importing demo SMS text templates.
+ *
+ * 2.4.13 - March 16, 2026
+ * - Login Tools: added a new "Deactivate User(s)" sub-menu next to Remove User(s) with bulk email-based deactivation workflow.
+ * - Deactivate User(s): preserves account/history data while blocking future logins via a deactivated-user authentication guard.
+ * - Deactivate User(s): added optional quiet password reset + optional [YYYYMMDD]-deactivated- login/email prefix behavior (both configurable in Settings).
+ * - Deactivate User(s): added a new "Deactivated Users" card with a paginated table of all deactivated accounts.
+ *
+ * 2.4.12 - March 16, 2026
+ * - Login Tools sub-navigation labels were updated for clarity: Create Single User, Create Multiple Users, Reset Password(s), Remove User(s), and Login As a User.
+ *
+ * 2.4.11 - March 16, 2026
+ * - Fixed an early translation-loading notice by preventing add-on runtime labels from being translated during pre-init settings bootstrap.
+ * - Add-on runtime toggle labels are now translated only when needed in UI contexts, avoiding _load_textdomain_just_in_time warnings.
+ *
+ * 2.4.10 - March 16, 2026
+ * - Settings > API Keys: added a new "Simple Texting API Token" setting for SMS sending.
+ * - Settings sub-navigation: added "SMS Text Templates" next to Email Templates, including full SMS template management.
+ * - Add-ons: added a new "Send SMS Text" add-on with Activate toggle and a texting workflow modeled after Email Users (phone numbers, template selection, login URL, coupon code, preview, recent texts, and shared custom lists).
+ * - Added SMS send + next-batch handlers with support for "Send to all phone numbers even if they are not users."
+ * - Updated throttling labels to include texting and enabled throttle/batch behavior for SMS sends using the same throttle settings.
+ *
+ * 2.4.9 - March 16, 2026
+ * - Email Users > Saved Lists: added a CSV button in each list row to download that entire saved list as a CSV file.
+ * - Added a secure admin-post export handler for Saved Lists CSV downloads (capability check + nonce validation).
+ *
+ * 2.4.8 - March 16, 2026
+ * - Navigation: added a new top-level "Login Tools" tab and moved Create, Bulk Create, Reset Pass, Remove, and Login As into a sub-navigation under it.
+ * - Login Tools now defaults to the Create screen when opening the plugin (Login Tools -> Create).
+ * - Added two Login Tools sub-links at the end: "Recent Logins" and "More Reports", both linking to Reports > User Logins.
+ *
+ * 2.4.7 - March 16, 2026
+ * - Reports: added a new "Orders Still Processing but have a Tracking Number" report in tab=reports.
+ * - New report filters order notes to only processing orders whose notes contain "with tracking number", helping surface potentially stuck orders that already have tracking details.
+ * - Added CSV export support for the new processing-with-tracking-number report.
+ *
+ * 2.4.6 - March 16, 2026
+ * - View Website by Role Permission: changed "Default Roles" to a single-selection "Default Role" dropdown on user profile permissions.
+ * - View Website by Role Permission: added a new per-user "Roles to Hide" checkbox list so selected roles are hidden from that user's front-end role switcher.
+ * - Role Switching enforcement: hidden roles are now blocked in both switcher display and POST handling (including reset-to-default behavior).
+ *
+ * 2.4.5 - March 16, 2026
+ * - Documentation: added a new Troubleshooting sub-link with practical isolation steps and URL-parameter guidance.
+ * - Added temporary URL overrides to disable add-ons per request: ?um_disable_all_addons=1 for all add-ons, or ?um_disable_addons=slug1,slug2 for specific add-ons.
+ * - Documentation > Troubleshooting now includes a checkbox URL builder to generate disable-all and comma-separated add-on-disable test URLs.
+ *
+ * 2.4.4 - March 16, 2026
+ * - Add to Cart Variation Table: added minimum total quantity validation with customizable JavaScript alert messaging and optional success alert before continuing.
+ * - Added new "Cart Total Items" add-on with Activate toggle, customizable copy, cart/checkout visibility controls, and above/below placement settings for each area.
+ * - Added new "Order Received Page Customizer" add-on with Activate toggle and settings to override the Order Received heading and success paragraph text.
+ *
  * 2.4.3 - March 15, 2026
  * - Add-ons tile list: removed green active-state text, border, and shadow styling in the "Choose an Add-on" area.
  *

@@ -105,12 +105,21 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		}
 
 		$title = (string) get_post_meta($post->ID, '_um_invoice_title', true);
+		$downpayment = (string) get_post_meta($post->ID, '_um_invoice_downpayment', true);
+		$remaining_amount = (string) get_post_meta($post->ID, '_um_invoice_remaining', true);
+		$remaining_due = (string) get_post_meta($post->ID, '_um_invoice_remaining_due', true);
 		$order_header_note = (string) get_post_meta($post->ID, '_um_invoice_header_note', true);
 		$order_footer_note = (string) get_post_meta($post->ID, '_um_invoice_footer_note', true);
 
 		echo '<p><label for="um_invoice_title"><strong>' . esc_html__('Invoice Title', 'user-manager') . '</strong></label>';
 		echo '<input type="text" style="width:100%;" id="um_invoice_title" name="um_invoice_title" value="' . esc_attr($title) . '" /></p>';
 		echo '<p class="description">' . esc_html__('Optional title shown on the invoice page.', 'user-manager') . '</p>';
+		echo '<p><label for="um_invoice_downpayment"><strong>' . esc_html__('Deposit Amount', 'user-manager') . '</strong></label>';
+		echo '<input type="text" style="width:100%;" id="um_invoice_downpayment" name="um_invoice_downpayment" value="' . esc_attr($downpayment) . '" /></p>';
+		echo '<p><label for="um_invoice_remaining"><strong>' . esc_html__('Remaining Amount', 'user-manager') . '</strong></label>';
+		echo '<input type="text" style="width:100%;" id="um_invoice_remaining" name="um_invoice_remaining" value="' . esc_attr($remaining_amount) . '" /></p>';
+		echo '<p><label for="um_invoice_remaining_due"><strong>' . esc_html__('Remaining Amount Due Date', 'user-manager') . '</strong></label>';
+		echo '<input type="text" style="width:100%;" id="um_invoice_remaining_due" name="um_invoice_remaining_due" value="' . esc_attr($remaining_due) . '" /></p>';
 
 		echo '<p><label for="um_invoice_header_note"><strong>' . esc_html__('Order Header Note', 'user-manager') . '</strong></label><br />';
 		echo '<textarea id="um_invoice_header_note" name="um_invoice_header_note" rows="3" style="width:100%;">' . esc_textarea($order_header_note) . '</textarea></p>';
@@ -146,10 +155,16 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		}
 
 		$title = isset($_POST['um_invoice_title']) ? sanitize_text_field(wp_unslash($_POST['um_invoice_title'])) : '';
+		$downpayment = isset($_POST['um_invoice_downpayment']) ? sanitize_text_field(wp_unslash($_POST['um_invoice_downpayment'])) : '';
+		$remaining_amount = isset($_POST['um_invoice_remaining']) ? sanitize_text_field(wp_unslash($_POST['um_invoice_remaining'])) : '';
+		$remaining_due = isset($_POST['um_invoice_remaining_due']) ? sanitize_text_field(wp_unslash($_POST['um_invoice_remaining_due'])) : '';
 		$header_note = isset($_POST['um_invoice_header_note']) ? wp_kses_post(wp_unslash($_POST['um_invoice_header_note'])) : '';
 		$footer_note = isset($_POST['um_invoice_footer_note']) ? wp_kses_post(wp_unslash($_POST['um_invoice_footer_note'])) : '';
 
 		update_post_meta($post_id, '_um_invoice_title', $title);
+		update_post_meta($post_id, '_um_invoice_downpayment', $downpayment);
+		update_post_meta($post_id, '_um_invoice_remaining', $remaining_amount);
+		update_post_meta($post_id, '_um_invoice_remaining_due', $remaining_due);
 		update_post_meta($post_id, '_um_invoice_header_note', $header_note);
 		update_post_meta($post_id, '_um_invoice_footer_note', $footer_note);
 	}
@@ -474,8 +489,32 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		$invoice_title = (string) get_post_meta($order->get_id(), '_um_invoice_title', true);
 		$order_header_note = (string) get_post_meta($order->get_id(), '_um_invoice_header_note', true);
 		$order_footer_note = (string) get_post_meta($order->get_id(), '_um_invoice_footer_note', true);
+		$invoice_downpayment = (string) get_post_meta($order->get_id(), '_um_invoice_downpayment', true);
+		$invoice_remaining = (string) get_post_meta($order->get_id(), '_um_invoice_remaining', true);
+		$invoice_remaining_due = (string) get_post_meta($order->get_id(), '_um_invoice_remaining_due', true);
 		$approval_data = $order->get_meta('_um_invoice_approval');
 		$has_approval = is_array($approval_data) && !empty($approval_data);
+		$is_paid = method_exists($order, 'is_paid') ? (bool) $order->is_paid() : false;
+		$payment_method_title = method_exists($order, 'get_payment_method_title')
+			? trim((string) $order->get_payment_method_title())
+			: '';
+		if ($payment_method_title === '' && method_exists($order, 'get_payment_method')) {
+			$payment_method_title = trim((string) $order->get_payment_method());
+		}
+		$paid_datetime = method_exists($order, 'get_date_paid') ? $order->get_date_paid() : null;
+		$paid_on = '';
+		if (is_object($paid_datetime) && method_exists($paid_datetime, 'getTimestamp')) {
+			$timestamp = (int) $paid_datetime->getTimestamp();
+			if ($timestamp > 0) {
+				$paid_on = wc_format_datetime(
+					$paid_datetime,
+					get_option('date_format') . ' ' . get_option('time_format')
+				);
+			}
+		}
+		if (!$is_paid && $paid_on !== '') {
+			$is_paid = true;
+		}
 
 		$billing_email = $order->get_billing_email();
 		$approval_enabled = self::invoice_is_approval_enabled_for_email((string) $billing_email, $settings);
@@ -484,6 +523,13 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		$issued_date = wc_format_datetime($order->get_date_created(), get_option('date_format'));
 		$items = $order->get_items();
 		$item_count = count($items);
+		$total_quantity = 0;
+		foreach ($items as $invoice_item) {
+			if (!is_object($invoice_item) || !method_exists($invoice_item, 'get_quantity')) {
+				continue;
+			}
+			$total_quantity += (int) $invoice_item->get_quantity();
+		}
 		$currency = $order->get_currency();
 
 		$checkout_base = remove_query_arg(['store', 'brand'], wc_get_checkout_url());
@@ -498,6 +544,13 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 			'invoice' => rawurlencode(self::invoice_get_trimmed_order_key($order)),
 			'pdf' => '1',
 		], home_url('/'));
+		$edit_order_url = '';
+		if (
+			!$pdf_mode &&
+			self::invoice_current_user_is_wordpress_administrator()
+		) {
+			$edit_order_url = (string) get_edit_post_link($order->get_id(), 'raw');
+		}
 
 		$billing_name = $order->get_formatted_billing_full_name();
 		$billing_phone = $order->get_billing_phone();
@@ -544,12 +597,21 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 		.invoice-approval-form{margin:24px 0;padding:18px;border:2px solid #ddd;border-radius:6px;background:#f9f9f9;}
 		.invoice-approval-form input[type="text"], .invoice-approval-form input[type="email"]{width:100%;max-width:420px;padding:8px;border:1px solid #ccc;border-radius:4px;}
 		.invoice-approval-notification{background:#d4edda;border:1px solid #c3e6cb;border-radius:6px;padding:14px;margin:16px 0;color:#155724;}
+		.invoice-payment-notification{background:#e8f4fd;border-color:#b6def8;color:#0b3f63;}
 		.invoice-address-edit{margin:16px 0 20px;}
 		.invoice-address-edit__panel{display:none;margin-top:8px;padding:12px;border:1px solid #ddd;border-radius:6px;background:#fcfcfc;}
 		.invoice-address-edit__grid{display:flex;gap:16px;flex-wrap:wrap;}
 		.invoice-address-edit__column{flex:1 1 320px;}
 		.invoice-address-edit__field{margin-bottom:8px;}
 		.invoice-address-edit__field input{width:100%;padding:7px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;}
+		.invoice-items-table img.um-invoice-lightboxable{cursor:zoom-in;}
+		.um-invoice-lightbox[hidden]{display:none !important;}
+		.um-invoice-lightbox{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;}
+		.um-invoice-lightbox__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.8);}
+		.um-invoice-lightbox__dialog{position:relative;z-index:2;max-width:min(1200px,95vw);max-height:90vh;display:flex;align-items:center;justify-content:center;}
+		.um-invoice-lightbox__image{max-width:100%;max-height:88vh;display:block;background:#fff;border-radius:6px;box-shadow:0 12px 30px rgba(0,0,0,.35);}
+		.um-invoice-lightbox__close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border:0;border-radius:999px;background:#fff;color:#111;font-size:24px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+		@media print{.um-invoice-lightbox{display:none !important;}}
 		@media (max-width:700px){.content,.header{padding:18px;}.info-grid{display:block;}}
 		</style>
 		</head>
@@ -565,6 +627,22 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 				</div>
 			</div>
 			<div class="content">
+				<?php if ($is_paid && !$pdf_mode) : ?>
+					<div class="invoice-approval-notification invoice-payment-notification">
+						<strong>✓ <?php esc_html_e('Paid:', 'user-manager'); ?></strong>
+						<?php
+						$paid_on_display = $paid_on !== '' ? $paid_on : __('Unknown date/time', 'user-manager');
+						$paid_method_display = $payment_method_title !== '' ? $payment_method_title : __('Unknown payment method', 'user-manager');
+						echo esc_html(
+							sprintf(
+								__('This order was paid on %1$s via %2$s.', 'user-manager'),
+								$paid_on_display,
+								$paid_method_display
+							)
+						);
+						?>
+					</div>
+				<?php endif; ?>
 				<?php if ($has_approval && !$pdf_mode) : ?>
 					<div class="invoice-approval-notification">
 						<strong>✓ <?php esc_html_e('Approved:', 'user-manager'); ?></strong>
@@ -610,8 +688,20 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 				<?php endif; ?>
 
 				<h3><?php esc_html_e('Products & Services', 'user-manager'); ?></h3>
+				<p style="margin:-4px 0 12px; color:#555; font-size:0.95em;">
+					<?php
+					echo esc_html(
+						sprintf(
+							/* translators: 1: total line items count, 2: total order quantity */
+							__('Total Line Items: %1$d (Total Quantity: %2$d)', 'user-manager'),
+							$item_count,
+							$total_quantity
+						)
+					);
+					?>
+				</p>
 				<?php if ($scroll_threshold > 0 && $item_count > $scroll_threshold) : ?><div class="invoice-items-scrollable"><?php endif; ?>
-				<table>
+				<table class="invoice-items-table">
 					<thead>
 						<tr>
 							<th><?php esc_html_e('Item & Description', 'user-manager'); ?></th>
@@ -637,10 +727,12 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 						}
 						$thumb = $product ? wp_get_attachment_image_src($product->get_image_id(), 'thumbnail') : [];
 						$thumb_url = !empty($thumb[0]) ? $thumb[0] : '';
+						$thumb_full = $product ? wp_get_attachment_image_src($product->get_image_id(), 'full') : [];
+						$thumb_full_url = !empty($thumb_full[0]) ? (string) $thumb_full[0] : $thumb_url;
 						?>
 						<tr>
 							<td>
-								<?php if ($thumb_url !== '') : ?><img src="<?php echo esc_url($thumb_url); ?>" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #ddd;float:left;margin-right:10px;" alt=""><?php endif; ?>
+								<?php if ($thumb_url !== '') : ?><img src="<?php echo esc_url($thumb_url); ?>" data-full-src="<?php echo esc_url($thumb_full_url); ?>" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #ddd;float:left;margin-right:10px;" alt="<?php echo esc_attr($name); ?>"><?php endif; ?>
 								<div style="overflow:hidden;"><?php echo esc_html($name); ?></div>
 								<?php if (!empty($formatted_meta)) : ?>
 									<div style="font-size:0.86em;color:#555;margin-top:4px;">
@@ -673,6 +765,9 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 						<?php $shipping_total = (float) $order->get_shipping_total(); ?>
 						<?php if ($shipping_total > 0) : ?><tr><td colspan="3" class="text-right"><?php esc_html_e('Shipping', 'user-manager'); ?></td><td class="text-right"><?php echo wp_kses_post(wc_price($shipping_total, ['currency' => $currency])); ?></td></tr><?php endif; ?>
 						<tr><td colspan="3" class="text-right total"><?php esc_html_e('Total', 'user-manager'); ?></td><td class="text-right total"><?php echo wp_kses_post(wc_price($order->get_total(), ['currency' => $currency])); ?></td></tr>
+						<?php if ($invoice_downpayment !== '') : ?><tr><td colspan="3" class="text-right"><?php esc_html_e('Down Payment', 'user-manager'); ?></td><td class="text-right"><?php echo esc_html($invoice_downpayment); ?></td></tr><?php endif; ?>
+						<?php if ($invoice_remaining !== '') : ?><tr><td colspan="3" class="text-right"><?php esc_html_e('Remaining Payment', 'user-manager'); ?></td><td class="text-right"><?php echo esc_html($invoice_remaining); ?></td></tr><?php endif; ?>
+						<?php if ($invoice_remaining_due !== '') : ?><tr><td colspan="3" class="text-right"><?php esc_html_e('Remaining Payment Due', 'user-manager'); ?></td><td class="text-right"><?php echo esc_html($invoice_remaining_due); ?></td></tr><?php endif; ?>
 					</tbody>
 				</table>
 
@@ -707,6 +802,20 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 					<?php endif; ?>
 					<?php if ($footer_below !== '') : ?><p><?php echo nl2br(esc_html($footer_below)); ?></p><?php endif; ?>
 				</div>
+				<?php if ($edit_order_url !== '') : ?>
+					<div style="margin-top:16px; font-size:12px;">
+						<a href="<?php echo esc_url($edit_order_url); ?>" target="_blank" rel="noopener noreferrer">
+							<?php esc_html_e('Edit this order in WP Admin', 'user-manager'); ?>
+						</a>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
+		<div id="um-invoice-lightbox" class="um-invoice-lightbox" hidden aria-hidden="true">
+			<div class="um-invoice-lightbox__backdrop" data-um-invoice-lightbox-close="1"></div>
+			<div class="um-invoice-lightbox__dialog" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e('Product image preview', 'user-manager'); ?>">
+				<button type="button" class="um-invoice-lightbox__close" data-um-invoice-lightbox-close="1" aria-label="<?php esc_attr_e('Close image preview', 'user-manager'); ?>">&times;</button>
+				<img id="um-invoice-lightbox-image" class="um-invoice-lightbox__image" src="" alt="">
 			</div>
 		</div>
 		<script>
@@ -715,6 +824,70 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 			var panel = document.getElementById('um-invoice-edit-panel');
 			var shipSame = document.querySelector('input[name="shipping_same_as_billing"]');
 			var shippingFields = document.getElementById('um-shipping-fields');
+			var lightbox = document.getElementById('um-invoice-lightbox');
+			var lightboxImage = document.getElementById('um-invoice-lightbox-image');
+			var lastActiveImage = null;
+
+			function openImageLightbox(src, altText, sourceEl) {
+				if (!lightbox || !lightboxImage || !src) {
+					return;
+				}
+				lastActiveImage = sourceEl || null;
+				lightboxImage.setAttribute('src', src);
+				lightboxImage.setAttribute('alt', altText || '');
+				lightbox.removeAttribute('hidden');
+				lightbox.setAttribute('aria-hidden', 'false');
+				document.body.style.overflow = 'hidden';
+			}
+
+			function closeImageLightbox() {
+				if (!lightbox || !lightboxImage) {
+					return;
+				}
+				lightbox.setAttribute('hidden', 'hidden');
+				lightbox.setAttribute('aria-hidden', 'true');
+				lightboxImage.setAttribute('src', '');
+				lightboxImage.setAttribute('alt', '');
+				document.body.style.overflow = '';
+				if (lastActiveImage && typeof lastActiveImage.focus === 'function') {
+					lastActiveImage.focus();
+				}
+			}
+
+			function resolveImageSource(imgEl) {
+				if (!imgEl) {
+					return '';
+				}
+				var fullSrc = imgEl.getAttribute('data-full-src') || '';
+				if (fullSrc) {
+					return fullSrc;
+				}
+				return imgEl.getAttribute('src') || '';
+			}
+
+			var invoiceImages = document.querySelectorAll('.invoice-items-table img');
+			invoiceImages.forEach(function(imgEl) {
+				if (!imgEl || !imgEl.getAttribute('src')) {
+					return;
+				}
+				imgEl.classList.add('um-invoice-lightboxable');
+				imgEl.setAttribute('tabindex', '0');
+				imgEl.setAttribute('role', 'button');
+				imgEl.addEventListener('click', function(event) {
+					event.preventDefault();
+					var src = resolveImageSource(imgEl);
+					openImageLightbox(src, imgEl.getAttribute('alt') || '', imgEl);
+				});
+				imgEl.addEventListener('keydown', function(event) {
+					if (event.key !== 'Enter' && event.key !== ' ') {
+						return;
+					}
+					event.preventDefault();
+					var src = resolveImageSource(imgEl);
+					openImageLightbox(src, imgEl.getAttribute('alt') || '', imgEl);
+				});
+			});
+
 			if (toggle && panel) {
 				toggle.addEventListener('click', function(e) {
 					e.preventDefault();
@@ -726,6 +899,24 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 					shippingFields.style.display = this.checked ? 'none' : 'block';
 				});
 			}
+
+			if (lightbox) {
+				lightbox.addEventListener('click', function(event) {
+					var closeTarget = event.target.closest('[data-um-invoice-lightbox-close="1"]');
+					if (!closeTarget) {
+						return;
+					}
+					event.preventDefault();
+					closeImageLightbox();
+				});
+			}
+
+			document.addEventListener('keydown', function(event) {
+				if (event.key === 'Escape' && lightbox && lightbox.getAttribute('aria-hidden') === 'false') {
+					event.preventDefault();
+					closeImageLightbox();
+				}
+			});
 		});
 		</script>
 		</body>
@@ -887,6 +1078,20 @@ trait User_Manager_Core_Invoice_Approval_Trait {
 	private static function invoice_get_trimmed_order_key($order): string {
 		$order_key = method_exists($order, 'get_order_key') ? (string) $order->get_order_key() : '';
 		return preg_replace('/^wc_order_/', '', $order_key) ?: $order_key;
+	}
+
+	/**
+	 * Determine whether current front-end viewer is a WP administrator role user.
+	 */
+	private static function invoice_current_user_is_wordpress_administrator(): bool {
+		if (!is_user_logged_in()) {
+			return false;
+		}
+		$user = wp_get_current_user();
+		if (!($user instanceof WP_User)) {
+			return false;
+		}
+		return in_array('administrator', (array) $user->roles, true);
 	}
 }
 

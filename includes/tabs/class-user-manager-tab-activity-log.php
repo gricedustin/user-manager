@@ -40,76 +40,8 @@ class User_Manager_Tab_Activity_Log {
 		// Get all unique actions for filter dropdown
 		$table = $wpdb->prefix . 'um_admin_activity';
 		$all_actions = $wpdb->get_col("SELECT DISTINCT action FROM {$table} ORDER BY action ASC");
-		$tool_counts = $wpdb->get_results("SELECT tool, COUNT(*) AS total FROM {$table} GROUP BY tool", ARRAY_A);
-		$tool_count_map = [];
-		if (is_array($tool_counts)) {
-			foreach ($tool_counts as $tool_count_row) {
-				$tool_name = isset($tool_count_row['tool']) ? trim((string) $tool_count_row['tool']) : '';
-				if ($tool_name === '') {
-					continue;
-				}
-				$tool_count_map[strtolower($tool_name)] = isset($tool_count_row['total']) ? (int) $tool_count_row['total'] : 0;
-			}
-		}
-		
 		?>
 		<div class="um-admin-grid">
-			<div class="um-admin-card um-admin-card-full">
-				<div class="um-admin-card-header">
-					<span class="dashicons dashicons-admin-plugins"></span>
-					<h2><?php esc_html_e('Add-ons Connected to Admin Log', 'user-manager'); ?></h2>
-				</div>
-				<div class="um-admin-card-body">
-					<p><?php esc_html_e('Every add-on is listed here with its active status and quick links to both Add-ons settings and filtered Admin Log results.', 'user-manager'); ?></p>
-					<?php if (empty($addon_sections)) : ?>
-						<p><?php esc_html_e('No add-ons metadata found.', 'user-manager'); ?></p>
-					<?php else : ?>
-						<table class="widefat striped">
-							<thead>
-								<tr>
-									<th><?php esc_html_e('Add-on', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Status', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Tool Matches', 'user-manager'); ?></th>
-									<th><?php esc_html_e('Links', 'user-manager'); ?></th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($addon_sections as $addon_key => $addon_meta) : ?>
-									<?php
-									$addon_label = isset($addon_meta['label']) ? (string) $addon_meta['label'] : '';
-									$addon_active = !empty($addon_meta['active']);
-									$addon_settings_url = add_query_arg('addon_section', sanitize_key((string) $addon_key), User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS));
-									$addon_log_url = add_query_arg(
-										[
-											'tool_filter' => $addon_label,
-											'action_filter' => '',
-											'paged' => 1,
-										],
-										$current_url
-									);
-									$tool_match_total = isset($tool_count_map[strtolower($addon_label)]) ? (int) $tool_count_map[strtolower($addon_label)] : 0;
-									?>
-									<tr>
-										<td><strong><?php echo esc_html($addon_label); ?></strong></td>
-										<td>
-											<?php if ($addon_active) : ?>
-												<span class="um-status-badge um-status-success"><?php esc_html_e('Active', 'user-manager'); ?></span>
-											<?php else : ?>
-												<span class="um-status-badge um-status-secondary"><?php esc_html_e('Inactive', 'user-manager'); ?></span>
-											<?php endif; ?>
-										</td>
-										<td><?php echo esc_html(number_format_i18n($tool_match_total)); ?></td>
-										<td>
-											<a class="button button-small" href="<?php echo esc_url($addon_settings_url); ?>"><?php esc_html_e('Open Add-on', 'user-manager'); ?></a>
-											<a class="button button-small" href="<?php echo esc_url($addon_log_url); ?>"><?php esc_html_e('View in Admin Log', 'user-manager'); ?></a>
-										</td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					<?php endif; ?>
-				</div>
-			</div>
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-list-view"></span>
@@ -213,6 +145,21 @@ class User_Manager_Tab_Activity_Log {
 												case 'user_remove_failed':
 													echo '<span class="um-status-badge um-status-error">' . esc_html__('Remove Failed', 'user-manager') . '</span>';
 													break;
+												case 'user_deactivated':
+													echo '<span class="um-status-badge um-status-warning">' . esc_html__('User Deactivated', 'user-manager') . '</span>';
+													break;
+												case 'user_reactivated':
+													echo '<span class="um-status-badge um-status-success">' . esc_html__('User Reactivated', 'user-manager') . '</span>';
+													break;
+												case 'user_deactivate_failed':
+													echo '<span class="um-status-badge um-status-error">' . esc_html__('Deactivate Failed', 'user-manager') . '</span>';
+													break;
+												case 'user_reactivate_failed':
+													echo '<span class="um-status-badge um-status-error">' . esc_html__('Reactivate Failed', 'user-manager') . '</span>';
+													break;
+												case 'user_deactivated_already':
+													echo '<span class="um-status-badge um-status-secondary">' . esc_html__('Already Deactivated', 'user-manager') . '</span>';
+													break;
 												case 'user_skipped':
 													echo '<span class="um-status-badge um-status-info">' . esc_html__('Skipped', 'user-manager') . '</span>';
 													break;
@@ -257,6 +204,7 @@ class User_Manager_Tab_Activity_Log {
 											<?php 
 											$extra = isset($entry['extra']) ? $entry['extra'] : [];
 											$attempted_email = isset($extra['attempted_email']) ? $extra['attempted_email'] : '';
+											$attempted_identifier = isset($extra['attempted_identifier']) ? $extra['attempted_identifier'] : $attempted_email;
 											$user_email = isset($extra['user_email']) ? $extra['user_email'] : '';
 											$error_msg = isset($extra['error']) ? $extra['error'] : '';
 											
@@ -295,11 +243,11 @@ class User_Manager_Tab_Activity_Log {
 												<a href="<?php echo esc_url(get_edit_user_link($user->ID)); ?>"><?php echo esc_html($user->user_email); ?></a>
 											<?php elseif (!empty($user_email)) : ?>
 												<span><?php echo esc_html($user_email); ?></span>
-												<?php if (in_array($entry['action'], ['user_removed', 'user_deleted'], true)) : ?>
-													<br><small style="color: #646970;"><?php esc_html_e('User removed', 'user-manager'); ?></small>
+												<?php if (in_array($entry['action'], ['user_removed', 'user_deleted', 'user_deactivated'], true)) : ?>
+													<br><small style="color: #646970;"><?php esc_html_e('User removed/deactivated', 'user-manager'); ?></small>
 												<?php endif; ?>
-											<?php elseif (!empty($attempted_email)) : ?>
-												<span style="color: #d63638;"><?php echo esc_html($attempted_email); ?></span>
+											<?php elseif (!empty($attempted_identifier)) : ?>
+												<span style="color: #d63638;"><?php echo esc_html($attempted_identifier); ?></span>
 												<?php if (!empty($error_msg)) : ?>
 													<br><small style="color: #646970;"><?php echo esc_html($error_msg); ?></small>
 												<?php endif; ?>
@@ -479,6 +427,11 @@ class User_Manager_Tab_Activity_Log {
 			'user_removed' => __('User Removed', 'user-manager'),
 			'user_deleted' => __('User Deleted', 'user-manager'),
 			'user_remove_failed' => __('User Remove Failed', 'user-manager'),
+			'user_deactivated' => __('User Deactivated', 'user-manager'),
+			'user_reactivated' => __('User Reactivated', 'user-manager'),
+			'user_deactivate_failed' => __('User Deactivate Failed', 'user-manager'),
+			'user_reactivate_failed' => __('User Reactivate Failed', 'user-manager'),
+			'user_deactivated_already' => __('User Already Deactivated', 'user-manager'),
 			'user_skipped' => __('User Skipped', 'user-manager'),
 			'email_sent' => __('Email Sent', 'user-manager'),
 			'email_failed' => __('Email Failed', 'user-manager'),

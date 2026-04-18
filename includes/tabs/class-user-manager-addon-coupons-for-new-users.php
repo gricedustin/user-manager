@@ -125,7 +125,10 @@ class User_Manager_Addon_Coupons_For_New_Users {
 					</div>
 
 					<div id="nuc-email-template-select" style="margin-top:12px;<?php echo !empty($settings['nuc_send_email']) ? '' : 'display:none;'; ?>">
-						<label for="nuc_email_template"><?php esc_html_e('Email Template', 'user-manager'); ?></label>
+						<label for="nuc_email_template">
+							<?php esc_html_e('Email Template', 'user-manager'); ?>
+							<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+						</label>
 						<select name="nuc_email_template" id="nuc_email_template" class="regular-text" style="margin-top:6px;">
 							<option value=""><?php esc_html_e('- Select Template -', 'user-manager'); ?></option>
 							<?php foreach ($templates as $id => $template) : ?>

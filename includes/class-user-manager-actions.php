@@ -10,9 +10,12 @@ if (!defined('ABSPATH')) {
 
 require_once __DIR__ . '/actions/trait-user-manager-actions-content-generator.php';
 require_once __DIR__ . '/actions/trait-user-manager-actions-bulk-page-creator.php';
+require_once __DIR__ . '/actions/trait-user-manager-actions-data-anonymizer.php';
+require_once __DIR__ . '/class-user-manager-sms.php';
 class User_Manager_Actions {
 	use User_Manager_Actions_Content_Generator_Trait;
 	use User_Manager_Actions_Bulk_Page_Creator_Trait;
+	use User_Manager_Actions_Data_Anonymizer_Trait;
 
 	/**
 	 * Initialize action hooks.
@@ -21,29 +24,47 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_create_user', [__CLASS__, 'handle_create_user']);
 		add_action('admin_post_user_manager_reset_password', [__CLASS__, 'handle_reset_password']);
 		add_action('admin_post_user_manager_remove_user', [__CLASS__, 'handle_remove_user']);
+		add_action('admin_post_user_manager_deactivate_user', [__CLASS__, 'handle_deactivate_user']);
+		add_action('admin_post_user_manager_reactivate_user', [__CLASS__, 'handle_reactivate_user']);
 		add_action('admin_post_user_manager_bulk_create', [__CLASS__, 'handle_bulk_create']);
 		add_action('admin_post_user_manager_bulk_coupons', [__CLASS__, 'handle_bulk_coupons']);
 		add_action('admin_post_user_manager_save_template', [__CLASS__, 'handle_save_template']);
 		add_action('admin_post_user_manager_delete_template', [__CLASS__, 'handle_delete_template']);
 		add_action('admin_post_user_manager_duplicate_template', [__CLASS__, 'handle_duplicate_template']);
+		add_action('admin_post_user_manager_save_sms_text_template', [__CLASS__, 'handle_save_sms_text_template']);
+		add_action('admin_post_user_manager_delete_sms_text_template', [__CLASS__, 'handle_delete_sms_text_template']);
+		add_action('admin_post_user_manager_duplicate_sms_text_template', [__CLASS__, 'handle_duplicate_sms_text_template']);
+		add_action('admin_post_user_manager_move_sms_text_template', [__CLASS__, 'handle_move_sms_text_template']);
 		add_action('admin_post_user_manager_save_settings', [__CLASS__, 'handle_save_settings']);
 		add_action('admin_post_user_manager_import_sftp_file', [__CLASS__, 'handle_import_sftp_file']);
 		add_action('admin_post_user_manager_email_users', [__CLASS__, 'handle_email_users']);
 		add_action('admin_post_user_manager_email_users_next_batch', [__CLASS__, 'handle_email_users_next_batch']);
+		add_action('admin_post_user_manager_send_sms_texts', [__CLASS__, 'handle_send_sms_texts']);
+		add_action('admin_post_user_manager_send_sms_texts_next_batch', [__CLASS__, 'handle_send_sms_texts_next_batch']);
 		add_action('admin_post_user_manager_save_email_list', [__CLASS__, 'handle_save_email_list']);
 		add_action('admin_post_user_manager_delete_email_list', [__CLASS__, 'handle_delete_email_list']);
+		add_action('admin_post_user_manager_download_email_list_csv', [__CLASS__, 'handle_download_email_list_csv']);
 		add_action('admin_post_user_manager_create_directory', [__CLASS__, 'handle_create_directory']);
 		add_action('admin_post_user_manager_download_sample_csv', [__CLASS__, 'handle_download_sample_csv']);
 		add_action('admin_post_user_manager_import_demo_templates', [__CLASS__, 'handle_import_demo_templates']);
+		add_action('admin_post_user_manager_recreate_demo_template', [__CLASS__, 'handle_recreate_demo_template']);
+		add_action('admin_post_user_manager_import_demo_sms_text_templates', [__CLASS__, 'handle_import_demo_sms_text_templates']);
 		add_action('admin_post_user_manager_clear_activity_log', [__CLASS__, 'handle_clear_activity_log']);
 		add_action('admin_post_user_manager_clear_user_activity_log', [__CLASS__, 'handle_clear_user_activity_log']);
+		add_action('admin_post_user_manager_emali_log_resend', [__CLASS__, 'handle_emali_log_resend']);
+		add_action('admin_post_user_manager_emali_log_forward', [__CLASS__, 'handle_emali_log_forward']);
+		add_action('admin_post_user_manager_emali_log_clear', [__CLASS__, 'handle_emali_log_clear']);
 		add_action('admin_post_user_manager_move_template', [__CLASS__, 'handle_move_template']);
 		add_action('admin_post_user_manager_import_coupon_template', [__CLASS__, 'handle_import_coupon_template']);
 		add_action('admin_post_user_manager_migrate_store_credit_coupons', [__CLASS__, 'handle_migrate_store_credit_coupons']);
 		add_action('admin_post_user_manager_create_basic_coupon_template', [__CLASS__, 'handle_create_basic_coupon_template']);
 		add_action('admin_post_user_manager_reset_view_reports', [__CLASS__, 'handle_reset_view_reports']);
+		add_action('admin_post_user_manager_reset_text_file_line_count_cache', [__CLASS__, 'handle_reset_text_file_line_count_cache']);
 		add_action('admin_post_user_manager_blog_post_importer', [__CLASS__, 'handle_blog_post_importer']);
 		add_action('admin_post_user_manager_bulk_page_creator', [__CLASS__, 'handle_bulk_page_creator']);
+		add_action('admin_post_user_manager_run_data_anonymizer_orders', [__CLASS__, 'handle_run_data_anonymizer_orders']);
+		add_action('admin_post_user_manager_run_data_anonymizer_users', [__CLASS__, 'handle_run_data_anonymizer_users']);
+		add_action('admin_post_user_manager_run_data_anonymizer_forms', [__CLASS__, 'handle_run_data_anonymizer_forms']);
 		add_action('wp_ajax_user_manager_blog_chatgpt', [__CLASS__, 'ajax_blog_chatgpt']);
 		add_action('wp_ajax_user_manager_set_post_thumbnail', [__CLASS__, 'ajax_set_post_thumbnail']);
 		add_action('wp_ajax_user_manager_set_post_date', [__CLASS__, 'ajax_set_post_date']);
@@ -90,6 +111,45 @@ class User_Manager_Actions {
 		);
 
 		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'view_reports_reset'));
+		exit;
+	}
+
+	/**
+	 * Reset cached per-order text-file line counts used by My Account Admin meta fields.
+	 */
+	public static function handle_reset_text_file_line_count_cache(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_save_settings');
+
+		$deleted_count = 0;
+		$message_key = 'text_file_line_count_cache_reset';
+		if (!class_exists('User_Manager_My_Account_Site_Admin') || !method_exists('User_Manager_My_Account_Site_Admin', 'reset_all_cached_text_file_line_counts')) {
+			$message_key = 'text_file_line_count_cache_reset_error';
+		} else {
+			$deleted_count = max(0, (int) User_Manager_My_Account_Site_Admin::reset_all_cached_text_file_line_counts());
+		}
+
+		$redirect_extra = [
+			'addon_section' => 'my-account-site-admin',
+			'cache_reset_count' => $deleted_count,
+		];
+		if (isset($_POST['addon_tag'])) {
+			$addon_tag = sanitize_title(wp_unslash($_POST['addon_tag']));
+			if ($addon_tag !== '') {
+				$redirect_extra['addon_tag'] = $addon_tag;
+			}
+		}
+
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(
+				User_Manager_Core::TAB_ADDONS,
+				$message_key,
+				$redirect_extra
+			)
+		);
 		exit;
 	}
 
@@ -865,6 +925,363 @@ class User_Manager_Actions {
 	}
 
 	/**
+	 * Handle user deactivation (preserve account/history, block future login).
+	 */
+	public static function handle_deactivate_user(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_deactivate_user');
+
+		$identifiers_raw = isset($_POST['identifiers'])
+			? sanitize_textarea_field(wp_unslash($_POST['identifiers']))
+			: (isset($_POST['emails']) ? sanitize_textarea_field(wp_unslash($_POST['emails'])) : '');
+		$identifiers_raw = str_replace(["\r\n", "\r", ',', ';'], "\n", $identifiers_raw);
+		$identifiers = array_values(array_filter(array_map('trim', explode("\n", $identifiers_raw))));
+
+		if (empty($identifiers)) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'error'));
+			exit;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$log_enabled = $settings['log_activity'] ?? true;
+		$reset_password = array_key_exists('deactivate_users_reset_password', $settings)
+			? !empty($settings['deactivate_users_reset_password'])
+			: true;
+		$prefix_identity = array_key_exists('deactivate_users_prefix_identity', $settings)
+			? !empty($settings['deactivate_users_prefix_identity'])
+			: true;
+
+		$deactivated_count = 0;
+		$already_count = 0;
+		$not_found_count = 0;
+		$failed_count = 0;
+		$prefix = '[' . wp_date('Ymd', current_time('timestamp')) . ']-deactivated-';
+
+		foreach ($identifiers as $identifier) {
+			$user = self::get_user_from_deactivation_identifier($identifier);
+			if (!$user instanceof WP_User) {
+				$not_found_count++;
+				if ($log_enabled) {
+					User_Manager_Core::add_activity_log('user_deactivate_failed', 0, 'Deactivate User', [
+						'error' => __('User not found', 'user-manager'),
+						'attempted_identifier' => $identifier,
+					]);
+				}
+				continue;
+			}
+
+			$user_id = (int) $user->ID;
+			if ($user_id === get_current_user_id()) {
+				$failed_count++;
+				if ($log_enabled) {
+					User_Manager_Core::add_activity_log('user_deactivate_failed', $user_id, 'Deactivate User', [
+						'error' => __('Cannot deactivate your own account', 'user-manager'),
+						'attempted_identifier' => $identifier,
+					]);
+				}
+				continue;
+			}
+
+			if (User_Manager_Core::is_user_deactivated($user_id)) {
+				$already_count++;
+				if ($log_enabled) {
+					User_Manager_Core::add_activity_log('user_deactivated_already', $user_id, 'Deactivate User', [
+						'user_email' => (string) $user->user_email,
+						'attempted_identifier' => $identifier,
+					]);
+				}
+				continue;
+			}
+
+			$original_login = (string) $user->user_login;
+			$original_email = (string) $user->user_email;
+			if (get_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY, true) === '') {
+				update_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY, $original_login);
+			}
+			if (get_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY, true) === '') {
+				update_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY, $original_email);
+			}
+
+			$new_login = $original_login;
+			$new_email = $original_email;
+			if ($prefix_identity) {
+				$new_login = self::build_deactivated_login($original_login, $prefix, $user_id);
+				$new_email = self::build_deactivated_email($original_email, $prefix, $user_id);
+
+				global $wpdb;
+				$updated = $wpdb->update(
+					$wpdb->users,
+					[
+						'user_login' => $new_login,
+						'user_email' => $new_email,
+						'user_status' => 1,
+					],
+					['ID' => $user_id],
+					['%s', '%s', '%d'],
+					['%d']
+				);
+				if ($updated === false) {
+					$failed_count++;
+					if ($log_enabled) {
+						User_Manager_Core::add_activity_log('user_deactivate_failed', $user_id, 'Deactivate User', [
+							'error' => __('Failed to update deactivated login/email values', 'user-manager'),
+							'attempted_identifier' => $identifier,
+						]);
+					}
+					continue;
+				}
+			} else {
+				global $wpdb;
+				$wpdb->update(
+					$wpdb->users,
+					['user_status' => 1],
+					['ID' => $user_id],
+					['%d'],
+					['%d']
+				);
+			}
+
+			if ($reset_password) {
+				$random_password = wp_generate_password(28, true, true);
+				wp_set_password($random_password, $user_id);
+			}
+
+			update_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_META_KEY, 1);
+			update_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_AT_META_KEY, current_time('mysql'));
+			update_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_BY_META_KEY, (int) get_current_user_id());
+			clean_user_cache($user_id);
+
+			$deactivated_count++;
+			User_Manager_Core::add_deactivated_users_history_entry([
+				'action' => 'deactivated',
+				'user_id' => $user_id,
+				'user_login' => $original_login,
+				'user_email' => $original_email,
+				'result_login' => $new_login,
+				'result_email' => $new_email,
+				'attempted_identifier' => $identifier,
+				'performed_by' => (int) get_current_user_id(),
+				'performed_at' => current_time('mysql'),
+			]);
+			if ($log_enabled) {
+				User_Manager_Core::add_activity_log('user_deactivated', $user_id, 'Deactivate User', [
+					'attempted_identifier' => $identifier,
+					'user_email' => $original_email,
+					'original_login' => $original_login,
+					'new_login' => $new_login,
+					'new_email' => $new_email,
+					'password_reset' => $reset_password,
+					'identity_prefixed' => $prefix_identity,
+				]);
+			}
+		}
+
+		if (count($identifiers) > 1) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'bulk_user_deactivated', [
+				'deactivated' => $deactivated_count,
+				'already' => $already_count,
+				'not_found' => $not_found_count,
+				'failed' => $failed_count,
+			]));
+			exit;
+		}
+
+		if ($deactivated_count > 0) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_deactivated'));
+			exit;
+		}
+		if ($already_count > 0) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_already_deactivated'));
+			exit;
+		}
+		if ($not_found_count > 0) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_not_found'));
+			exit;
+		}
+
+		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_deactivate_failed'));
+		exit;
+	}
+
+	/**
+	 * Handle user reactivation.
+	 */
+	public static function handle_reactivate_user(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		$user_id = isset($_POST['user_id']) ? absint($_POST['user_id']) : 0;
+		if ($user_id <= 0) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_reactivate_failed'));
+			exit;
+		}
+
+		check_admin_referer('user_manager_reactivate_user_' . $user_id, 'user_manager_reactivate_user_nonce');
+
+		$paged = isset($_POST['deactivate_users_paged']) ? max(1, absint($_POST['deactivate_users_paged'])) : 1;
+		$redirect_extra = ['deactivate_users_paged' => $paged];
+		$settings = User_Manager_Core::get_settings();
+		$log_enabled = $settings['log_activity'] ?? true;
+
+		$user = get_user_by('ID', $user_id);
+		if (!$user instanceof WP_User) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_not_found', $redirect_extra));
+			exit;
+		}
+
+		if (!User_Manager_Core::is_user_deactivated($user_id)) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_not_deactivated', $redirect_extra));
+			exit;
+		}
+
+		$original_login = (string) get_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY, true);
+		$original_email = (string) get_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY, true);
+
+		$restored_login = self::build_deactivated_login($original_login !== '' ? $original_login : (string) $user->user_login, '', $user_id);
+		$restored_email = self::build_deactivated_email($original_email !== '' ? $original_email : (string) $user->user_email, '', $user_id);
+
+		global $wpdb;
+		$updated = $wpdb->update(
+			$wpdb->users,
+			[
+				'user_login' => $restored_login,
+				'user_email' => $restored_email,
+				'user_status' => 0,
+			],
+			['ID' => $user_id],
+			['%s', '%s', '%d'],
+			['%d']
+		);
+
+		if ($updated === false) {
+			if ($log_enabled) {
+				User_Manager_Core::add_activity_log('user_reactivate_failed', $user_id, 'Deactivate User', [
+					'error' => __('Failed to restore login/email values during reactivation', 'user-manager'),
+					'restored_login' => $restored_login,
+					'restored_email' => $restored_email,
+				]);
+			}
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_reactivate_failed', $redirect_extra));
+			exit;
+		}
+
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_META_KEY);
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_AT_META_KEY);
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_BY_META_KEY);
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY);
+		delete_user_meta($user_id, User_Manager_Core::USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY);
+		clean_user_cache($user_id);
+
+		if ($log_enabled) {
+			User_Manager_Core::add_activity_log('user_reactivated', $user_id, 'Deactivate User', [
+				'restored_login' => $restored_login,
+				'restored_email' => $restored_email,
+			]);
+		}
+		User_Manager_Core::add_deactivated_users_history_entry([
+			'action' => 'reactivated',
+			'user_id' => $user_id,
+			'user_login' => (string) $user->user_login,
+			'user_email' => (string) $user->user_email,
+			'result_login' => $restored_login,
+			'result_email' => $restored_email,
+			'performed_by' => (int) get_current_user_id(),
+			'performed_at' => current_time('mysql'),
+		]);
+
+		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_DEACTIVATE_USER, 'user_reactivated', $redirect_extra));
+		exit;
+	}
+
+	/**
+	 * Resolve a deactivation identifier (email or username) to a user object.
+	 */
+	private static function get_user_from_deactivation_identifier(string $identifier): ?WP_User {
+		$identifier = trim($identifier);
+		if ($identifier === '') {
+			return null;
+		}
+
+		if (is_email($identifier)) {
+			$email = sanitize_email($identifier);
+			$user_by_email = $email !== '' ? get_user_by('email', $email) : false;
+			if ($user_by_email instanceof WP_User) {
+				return $user_by_email;
+			}
+		}
+
+		$login = sanitize_user($identifier, true);
+		if ($login === '') {
+			return null;
+		}
+
+		$user_by_login = get_user_by('login', $login);
+		return $user_by_login instanceof WP_User ? $user_by_login : null;
+	}
+
+	/**
+	 * Build a unique deactivated username value.
+	 */
+	private static function build_deactivated_login(string $existing_login, string $prefix, int $user_id): string {
+		global $wpdb;
+		$max_len = 60;
+		$base = substr($prefix . $existing_login, 0, $max_len);
+		if ($base === '') {
+			$base = substr($prefix . 'user-' . $user_id, 0, $max_len);
+		}
+
+		$candidate = $base;
+		$counter = 2;
+		while (true) {
+			$existing_id = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT ID FROM {$wpdb->users} WHERE user_login = %s LIMIT 1",
+					$candidate
+				)
+			);
+			if ($existing_id === 0 || $existing_id === $user_id) {
+				return $candidate;
+			}
+			$suffix = '-' . $counter;
+			$candidate = substr($base, 0, max(1, $max_len - strlen($suffix))) . $suffix;
+			$counter++;
+		}
+	}
+
+	/**
+	 * Build a unique deactivated user_email value.
+	 */
+	private static function build_deactivated_email(string $existing_email, string $prefix, int $user_id): string {
+		global $wpdb;
+		$max_len = 100;
+		$base = substr($prefix . $existing_email, 0, $max_len);
+		if ($base === '') {
+			$base = substr($prefix . 'user-' . $user_id . '@example.invalid', 0, $max_len);
+		}
+
+		$candidate = $base;
+		$counter = 2;
+		while (true) {
+			$existing_id = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT ID FROM {$wpdb->users} WHERE user_email = %s LIMIT 1",
+					$candidate
+				)
+			);
+			if ($existing_id === 0 || $existing_id === $user_id) {
+				return $candidate;
+			}
+			$suffix = '-' . $counter;
+			$candidate = substr($base, 0, max(1, $max_len - strlen($suffix))) . $suffix;
+			$counter++;
+		}
+	}
+
+	/**
 	 * Handle bulk user creation.
 	 */
 	public static function handle_bulk_create(): void {
@@ -1336,7 +1753,7 @@ class User_Manager_Actions {
 		$bcc = isset($_POST['bcc']) ? sanitize_email(wp_unslash($_POST['bcc'])) : '';
 
 		if (empty($title) || empty($subject) || empty($body)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 
@@ -1373,7 +1790,7 @@ class User_Manager_Actions {
 
 		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
 
-		$redirect_url = User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'template_saved');
+		$redirect_url = self::get_email_templates_redirect_url(['um_msg' => 'template_saved']);
 		if ($saved_id) {
 			$redirect_url = add_query_arg('edit_template', $saved_id, $redirect_url);
 		}
@@ -1394,13 +1811,13 @@ class User_Manager_Actions {
 		$direction = isset($_POST['direction']) ? sanitize_key($_POST['direction']) : '';
 		
 		if (empty($template_id) || !in_array($direction, ['up', 'down'], true)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 		
 		$templates = get_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, []);
 		if (!is_array($templates) || !isset($templates[$template_id])) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 		
@@ -1424,7 +1841,7 @@ class User_Manager_Actions {
 		$ids = array_keys($templates);
 		$index = array_search($template_id, $ids, true);
 		if ($index === false) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 		
@@ -1434,7 +1851,7 @@ class User_Manager_Actions {
 			$swapWith = $index + 1;
 		} else {
 			// nothing to do
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'template_saved'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'template_saved']));
 			exit;
 		}
 		
@@ -1446,7 +1863,7 @@ class User_Manager_Actions {
 		$templates[$idB]['order'] = $tmp;
 		
 		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'template_saved'));
+		wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'template_saved']));
 		exit;
 	}
 
@@ -1463,7 +1880,7 @@ class User_Manager_Actions {
 		$template_id = isset($_POST['template_id']) ? sanitize_key($_POST['template_id']) : '';
 
 		if (empty($template_id)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 
@@ -1474,7 +1891,7 @@ class User_Manager_Actions {
 			update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
 		}
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'template_deleted'));
+		wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'template_deleted']));
 		exit;
 	}
 
@@ -1491,14 +1908,14 @@ class User_Manager_Actions {
 		$template_id = isset($_POST['template_id']) ? sanitize_key($_POST['template_id']) : '';
 
 		if (empty($template_id)) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 
 		$templates = User_Manager_Core::get_email_templates();
 
 		if (!isset($templates[$template_id])) {
-			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_TEMPLATES, 'error'));
+			wp_safe_redirect(self::get_email_templates_redirect_url(['um_msg' => 'error']));
 			exit;
 		}
 
@@ -1519,15 +1936,250 @@ class User_Manager_Actions {
 
 		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
 
-		wp_safe_redirect(
-			add_query_arg(
+		wp_safe_redirect(self::get_email_templates_redirect_url([
+			'edit_template' => $new_id,
+			'message'       => 'template_duplicated',
+		]));
+		exit;
+	}
+
+	/**
+	 * Build URL for Email Templates screen, honoring add-on embedding context.
+	 *
+	 * @param array<string,mixed> $extra Additional query args.
+	 */
+	private static function get_email_templates_redirect_url(array $extra = []): string {
+		$context = isset($_REQUEST['templates_context']) ? sanitize_key(wp_unslash($_REQUEST['templates_context'])) : '';
+		if ($context === 'addon-send-email-users') {
+			$url = add_query_arg(
 				[
-					'edit_template' => $new_id,
-					'message'       => 'template_duplicated',
+					'addon_section'      => 'send-email-users',
+					'templates_context'  => $context,
 				],
-				User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES)
-			)
-		);
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+			);
+		} else {
+			$url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES);
+		}
+		if (!empty($extra)) {
+			$url = add_query_arg($extra, $url);
+		}
+		return $url;
+	}
+
+	/**
+	 * Build URL for Settings > SMS Text Templates section.
+	 */
+	private static function get_sms_text_templates_section_url(array $extra = []): string {
+		$context = isset($_REQUEST['templates_context']) ? sanitize_key(wp_unslash($_REQUEST['templates_context'])) : '';
+		if ($context === 'addon-send-sms-text') {
+			$url = add_query_arg(
+				[
+					'addon_section'      => 'send-sms-text',
+					'templates_context'  => $context,
+				],
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+			);
+		} else {
+			$url = add_query_arg(
+				'settings_section',
+				'sms-text-templates',
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS)
+			);
+		}
+		if (!empty($extra)) {
+			$url = add_query_arg($extra, $url);
+		}
+		return $url;
+	}
+
+	/**
+	 * Handle save SMS text template action.
+	 */
+	public static function handle_save_sms_text_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_save_sms_text_template');
+
+		$template_id = isset($_POST['template_id']) ? sanitize_key(wp_unslash($_POST['template_id'])) : '';
+		$title = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
+		$description = isset($_POST['description']) ? sanitize_textarea_field(wp_unslash($_POST['description'])) : '';
+		$body = isset($_POST['body']) ? sanitize_textarea_field(wp_unslash($_POST['body'])) : '';
+
+		if ($title === '' || $body === '') {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$templates = User_Manager_Core::get_sms_text_templates();
+		$template_data = [
+			'title'       => $title,
+			'description' => $description,
+			'body'        => $body,
+		];
+
+		$saved_id = null;
+		if ($template_id !== '' && isset($templates[$template_id])) {
+			if (isset($templates[$template_id]['order'])) {
+				$template_data['order'] = (int) $templates[$template_id]['order'];
+			}
+			$templates[$template_id] = $template_data;
+			$saved_id = $template_id;
+		} else {
+			$new_id = 'sms_tpl_' . uniqid();
+			$max_order = 0;
+			foreach ($templates as $tpl) {
+				$max_order = max($max_order, isset($tpl['order']) ? (int) $tpl['order'] : 0);
+			}
+			$template_data['order'] = $max_order + 1;
+			$templates[$new_id] = $template_data;
+			$saved_id = $new_id;
+		}
+
+		update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $templates);
+		$redirect_url = self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_saved']);
+		if ($saved_id) {
+			$redirect_url = add_query_arg('edit_sms_template', $saved_id, $redirect_url);
+		}
+
+		wp_safe_redirect($redirect_url);
+		exit;
+	}
+
+	/**
+	 * Handle move SMS text template action.
+	 */
+	public static function handle_move_sms_text_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_move_sms_text_template');
+
+		$template_id = isset($_POST['template_id']) ? sanitize_key(wp_unslash($_POST['template_id'])) : '';
+		$direction = isset($_POST['direction']) ? sanitize_key(wp_unslash($_POST['direction'])) : '';
+		if ($template_id === '' || !in_array($direction, ['up', 'down'], true)) {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$templates = get_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, []);
+		if (!is_array($templates) || !isset($templates[$template_id])) {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$order = 1;
+		foreach ($templates as &$tpl) {
+			if (!is_array($tpl)) {
+				$tpl = [];
+			}
+			if (!isset($tpl['order']) || !is_numeric($tpl['order'])) {
+				$tpl['order'] = $order;
+			}
+			$order++;
+		}
+		unset($tpl);
+
+		uasort($templates, static function ($a, $b) {
+			$oa = isset($a['order']) ? (int) $a['order'] : 0;
+			$ob = isset($b['order']) ? (int) $b['order'] : 0;
+			if ($oa === $ob) {
+				return 0;
+			}
+			return $oa < $ob ? -1 : 1;
+		});
+		$ids = array_keys($templates);
+		$index = array_search($template_id, $ids, true);
+		if ($index === false) {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		if ($direction === 'up' && $index > 0) {
+			$swap_with = $index - 1;
+		} elseif ($direction === 'down' && $index < count($ids) - 1) {
+			$swap_with = $index + 1;
+		} else {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_saved']));
+			exit;
+		}
+
+		$id_a = $ids[$index];
+		$id_b = $ids[$swap_with];
+		$tmp = $templates[$id_a]['order'];
+		$templates[$id_a]['order'] = $templates[$id_b]['order'];
+		$templates[$id_b]['order'] = $tmp;
+
+		update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $templates);
+		wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_saved']));
+		exit;
+	}
+
+	/**
+	 * Handle delete SMS text template action.
+	 */
+	public static function handle_delete_sms_text_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_delete_sms_text_template');
+
+		$template_id = isset($_POST['template_id']) ? sanitize_key(wp_unslash($_POST['template_id'])) : '';
+		if ($template_id === '') {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$templates = User_Manager_Core::get_sms_text_templates();
+		if (isset($templates[$template_id])) {
+			unset($templates[$template_id]);
+			update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $templates);
+		}
+
+		wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_deleted']));
+		exit;
+	}
+
+	/**
+	 * Handle duplicate SMS text template action.
+	 */
+	public static function handle_duplicate_sms_text_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_duplicate_sms_text_template');
+
+		$template_id = isset($_POST['template_id']) ? sanitize_key(wp_unslash($_POST['template_id'])) : '';
+		if ($template_id === '') {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$templates = User_Manager_Core::get_sms_text_templates();
+		if (!isset($templates[$template_id])) {
+			wp_safe_redirect(self::get_sms_text_templates_section_url(['um_msg' => 'sms_template_error']));
+			exit;
+		}
+
+		$source = $templates[$template_id];
+		$max_order = 0;
+		foreach ($templates as $tpl) {
+			$max_order = max($max_order, isset($tpl['order']) ? (int) $tpl['order'] : 0);
+		}
+
+		$new_id = 'sms_tpl_' . uniqid();
+		$copy = is_array($source) ? $source : [];
+		$copy['title'] = ((string) ($copy['title'] ?? 'Template')) . ' (Copy)';
+		$copy['order'] = $max_order + 1;
+		$templates[$new_id] = $copy;
+		update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $templates);
+
+		wp_safe_redirect(self::get_sms_text_templates_section_url([
+			'edit_sms_template' => $new_id,
+			'um_msg'            => 'sms_template_saved',
+		]));
 		exit;
 	}
 
@@ -1542,6 +2194,10 @@ class User_Manager_Actions {
 		check_admin_referer('user_manager_save_settings');
 
 		$section = isset($_POST['settings_section']) ? sanitize_key($_POST['settings_section']) : 'general';
+		// Normal settings saves should use runtime-aware values (matches legacy behavior).
+		// For the dedicated "temporary disable only" save action, we switch to raw
+		// settings later inside the addons/blocks cases to preserve saved activation
+		// states while toggling temporary runtime disable.
 		$settings = User_Manager_Core::get_settings();
 		if (!is_array($settings)) {
 			$settings = [];
@@ -1557,6 +2213,11 @@ class User_Manager_Actions {
 		}
 		$bulk_settings_after = $bulk_settings_before;
 		$role_switch_settings_after = $role_switch_settings_before;
+		$should_reset_media_library_tag_reports = false;
+		$media_library_tag_reports_reset_counts = [
+			'attachments' => 0,
+			'tags' => 0,
+		];
 
 		$redirect_tab = User_Manager_Core::TAB_SETTINGS;
 
@@ -1627,6 +2288,8 @@ class User_Manager_Actions {
 				$settings['coupon_remainder_order_received_notice'] = isset($_POST['coupon_remainder_order_received_notice']) && $_POST['coupon_remainder_order_received_notice'] === '1';
 				$settings['coupon_remainder_copy_expiration'] = isset($_POST['coupon_remainder_copy_expiration']) && $_POST['coupon_remainder_copy_expiration'] === '1';
 				$settings['coupon_remainder_free_shipping'] = isset($_POST['coupon_remainder_free_shipping']) && $_POST['coupon_remainder_free_shipping'] === '1';
+				$settings['coupon_remainder_send_email'] = isset($_POST['coupon_remainder_send_email']) && $_POST['coupon_remainder_send_email'] === '1';
+				$settings['coupon_remainder_email_template'] = isset($_POST['coupon_remainder_email_template']) ? sanitize_key($_POST['coupon_remainder_email_template']) : '__um_default__';
 				break;
 			
 			case 'general':
@@ -1640,13 +2303,25 @@ class User_Manager_Actions {
 					$settings['role_change_alert_roles'] = array_map('sanitize_key', wp_unslash($_POST['role_change_alert_roles']));
 				}
 				$settings['role_change_alert_email'] = isset($_POST['role_change_alert_email']) ? sanitize_email(wp_unslash($_POST['role_change_alert_email'])) : '';
+				$settings['role_change_alert_email_exclusions'] = self::sanitize_email_csv(
+					isset($_POST['role_change_alert_email_exclusions']) ? wp_unslash($_POST['role_change_alert_email_exclusions']) : ''
+				);
 				$settings['log_activity'] = isset($_POST['log_activity']) && $_POST['log_activity'] === '1';
 				$settings['log_activity_debug'] = isset($_POST['log_activity_debug']) && $_POST['log_activity_debug'] === '1';
 				$settings['log_admin_activity'] = isset($_POST['log_admin_activity']) && $_POST['log_admin_activity'] === '1';
 				$settings['enable_view_reports'] = isset($_POST['enable_view_reports']) && $_POST['enable_view_reports'] === '1';
 				$settings['update_existing_users'] = isset($_POST['update_existing_users']) && $_POST['update_existing_users'] === '1';
 				$settings['add_existing_network_user_to_subsite'] = isset($_POST['add_existing_network_user_to_subsite']) && $_POST['add_existing_network_user_to_subsite'] === '1';
+				$settings['deactivate_users_reset_password'] = isset($_POST['deactivate_users_reset_password']) && $_POST['deactivate_users_reset_password'] === '1';
+				$settings['deactivate_users_prefix_identity'] = isset($_POST['deactivate_users_prefix_identity']) && $_POST['deactivate_users_prefix_identity'] === '1';
 				$settings['rebrand_reset_password_copy'] = isset($_POST['rebrand_reset_password_copy']) && $_POST['rebrand_reset_password_copy'] === '1';
+				$settings['show_profile_user_manager_notice'] = isset($_POST['show_profile_user_manager_notice']) && $_POST['show_profile_user_manager_notice'] === '1';
+				$settings['show_user_manager_admin_bar_link'] = isset($_POST['show_user_manager_admin_bar_link']) && $_POST['show_user_manager_admin_bar_link'] === '1';
+				$settings['show_top_level_admin_menu_item'] = isset($_POST['show_top_level_admin_menu_item']) && $_POST['show_top_level_admin_menu_item'] === '1';
+				$settings['plugin_title_override'] = self::sanitize_plugin_title_override(
+					isset($_POST['plugin_title_override']) ? wp_unslash($_POST['plugin_title_override']) : ''
+				);
+				$settings['legacy_broken_shortcodes_noop_list'] = isset($_POST['legacy_broken_shortcodes_noop_list']) ? sanitize_text_field(wp_unslash($_POST['legacy_broken_shortcodes_noop_list'])) : '';
 				$settings['coupon_email_converter'] = isset($_POST['coupon_email_converter']) && $_POST['coupon_email_converter'] === '1';
 				$settings['coupon_show_email_column'] = isset($_POST['coupon_show_email_column']) && $_POST['coupon_show_email_column'] === '1';
 				$settings['coupon_code_url_param_enabled'] = isset($_POST['coupon_code_url_param_enabled']) && $_POST['coupon_code_url_param_enabled'] === '1';
@@ -1654,20 +2329,215 @@ class User_Manager_Actions {
 				$settings['coupon_code_url_param_name'] = $param_name !== '' ? $param_name : 'coupon-code';
 				$settings['sftp_directories'] = isset($_POST['sftp_directories']) ? sanitize_textarea_field(wp_unslash($_POST['sftp_directories'])) : '';
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
+				$settings['simple_texting_api_token'] = isset($_POST['simple_texting_api_token']) ? sanitize_text_field(wp_unslash($_POST['simple_texting_api_token'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';
 				$settings['send_from_email'] = isset($_POST['send_from_email']) ? sanitize_email(wp_unslash($_POST['send_from_email'])) : '';
 				$settings['reply_to_email'] = isset($_POST['reply_to_email']) ? sanitize_email(wp_unslash($_POST['reply_to_email'])) : '';
 				$settings['throttle_emails_enabled'] = isset($_POST['throttle_emails_enabled']) && $_POST['throttle_emails_enabled'] === '1';
 				$settings['throttle_emails_count'] = isset($_POST['throttle_emails_count']) ? max(1, absint($_POST['throttle_emails_count'])) : 50;
+				$settings['dashboard_role_change_alert_email'] = isset($_POST['dashboard_role_change_alert_email']) ? sanitize_email(wp_unslash($_POST['dashboard_role_change_alert_email'])) : '';
+				break;
+
+			case 'blocks':
+				$redirect_tab = User_Manager_Core::TAB_BLOCKS;
+				$is_blocks_temp_disable_only = isset($_POST['um_save_temporary_disable_only'])
+					&& $_POST['um_save_temporary_disable_only'] !== ''
+					&& (
+						!isset($_POST['submit'])
+						|| $_POST['submit'] === ''
+						|| $_POST['submit'] === '0'
+					)
+					&& empty($_POST['block_section']);
+				if ($is_blocks_temp_disable_only) {
+					$settings = User_Manager_Core::get_raw_settings();
+					if (!is_array($settings)) {
+						$settings = [];
+					}
+				}
+				$settings['temporarily_disable_blocks'] = isset($_POST['temporarily_disable_blocks']) && $_POST['temporarily_disable_blocks'] === '1';
+				if ($is_blocks_temp_disable_only) {
+					break;
+				}
+				$settings['page_block_subpages_grid_enabled'] = isset($_POST['page_block_subpages_grid_enabled']) && $_POST['page_block_subpages_grid_enabled'] === '1';
+				$settings['page_block_tabbed_content_area_enabled'] = isset($_POST['page_block_tabbed_content_area_enabled']) && $_POST['page_block_tabbed_content_area_enabled'] === '1';
+				$settings['page_block_simple_icons_enabled'] = isset($_POST['page_block_simple_icons_enabled']) && $_POST['page_block_simple_icons_enabled'] === '1';
+				$settings['page_block_menu_tiles_enabled'] = isset($_POST['page_block_menu_tiles_enabled']) && $_POST['page_block_menu_tiles_enabled'] === '1';
+				$settings['media_library_tags_enabled'] = isset($_POST['media_library_tags_enabled']) && $_POST['media_library_tags_enabled'] === '1';
+				$settings['media_library_tag_gallery_block_enabled'] = isset($_POST['media_library_tag_gallery_block_enabled']) && $_POST['media_library_tag_gallery_block_enabled'] === '1';
+				$settings['media_library_tag_video_library_enabled'] = isset($_POST['media_library_tag_video_library_enabled']) && $_POST['media_library_tag_video_library_enabled'] === '1';
+				$settings['media_library_tag_video_library_display_title'] = isset($_POST['media_library_tag_video_library_display_title']) && $_POST['media_library_tag_video_library_display_title'] === '1';
+				$settings['media_library_tag_video_library_display_description'] = isset($_POST['media_library_tag_video_library_display_description']) && $_POST['media_library_tag_video_library_display_description'] === '1';
+				$settings['media_library_tag_gallery_columns_desktop'] = isset($_POST['media_library_tag_gallery_columns_desktop']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop']))) : 4;
+				$settings['media_library_tag_gallery_columns_desktop_lt_50'] = isset($_POST['media_library_tag_gallery_columns_desktop_lt_50']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop_lt_50']))) : $settings['media_library_tag_gallery_columns_desktop'];
+				$settings['media_library_tag_gallery_columns_desktop_lt_25'] = isset($_POST['media_library_tag_gallery_columns_desktop_lt_25']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop_lt_25']))) : $settings['media_library_tag_gallery_columns_desktop_lt_50'];
+				$settings['media_library_tag_gallery_columns_desktop_lt_10'] = isset($_POST['media_library_tag_gallery_columns_desktop_lt_10']) ? max(1, min(8, absint($_POST['media_library_tag_gallery_columns_desktop_lt_10']))) : $settings['media_library_tag_gallery_columns_desktop_lt_25'];
+				$settings['media_library_tag_gallery_disable_css_crop_under_total'] = isset($_POST['media_library_tag_gallery_disable_css_crop_under_total'])
+					? max(0, absint($_POST['media_library_tag_gallery_disable_css_crop_under_total']))
+					: 0;
+				$settings['media_library_tag_gallery_columns_mobile'] = isset($_POST['media_library_tag_gallery_columns_mobile']) ? max(1, min(4, absint($_POST['media_library_tag_gallery_columns_mobile']))) : 2;
+				$gallery_sort = isset($_POST['media_library_tag_gallery_sort_order']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_sort_order'])) : 'date_desc';
+				$allowed_gallery_sort = ['date_asc', 'date_desc', 'id_asc', 'id_desc', 'filename_asc', 'filename_desc', 'caption_asc', 'caption_desc', 'random'];
+				$settings['media_library_tag_gallery_sort_order'] = in_array($gallery_sort, $allowed_gallery_sort, true) ? $gallery_sort : 'date_desc';
+				$gallery_size = isset($_POST['media_library_tag_gallery_file_size']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_file_size'])) : 'thumbnail';
+				$allowed_gallery_sizes = ['thumbnail', 'medium', 'large', 'full'];
+				if (function_exists('get_intermediate_image_sizes')) {
+					$registered_sizes = get_intermediate_image_sizes();
+					if (is_array($registered_sizes)) {
+						foreach ($registered_sizes as $registered_size) {
+							$registered_size = sanitize_key((string) $registered_size);
+							if ($registered_size !== '' && !in_array($registered_size, $allowed_gallery_sizes, true)) {
+								$allowed_gallery_sizes[] = $registered_size;
+							}
+						}
+					}
+				}
+				$settings['media_library_tag_gallery_file_size'] = in_array($gallery_size, $allowed_gallery_sizes, true) ? $gallery_size : 'thumbnail';
+				$gallery_style = isset($_POST['media_library_tag_gallery_style']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_style'])) : 'uniform_grid';
+				$allowed_gallery_styles = array_keys(User_Manager_Core::get_media_library_gallery_style_options());
+				$settings['media_library_tag_gallery_style'] = in_array($gallery_style, $allowed_gallery_styles, true) ? $gallery_style : 'uniform_grid';
+				$settings['media_library_tag_gallery_accent_color'] = isset($_POST['media_library_tag_gallery_accent_color'])
+					? sanitize_hex_color(wp_unslash($_POST['media_library_tag_gallery_accent_color']))
+					: '';
+				$settings['media_library_tag_gallery_page_limit'] = isset($_POST['media_library_tag_gallery_page_limit']) ? max(0, absint($_POST['media_library_tag_gallery_page_limit'])) : 0;
+				$gallery_link_to = isset($_POST['media_library_tag_gallery_link_to']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_link_to'])) : 'lightbox';
+				$allowed_gallery_link_to = array_keys(User_Manager_Core::get_media_library_gallery_link_to_options());
+				$settings['media_library_tag_gallery_link_to'] = in_array($gallery_link_to, $allowed_gallery_link_to, true) ? $gallery_link_to : 'lightbox';
+				$gallery_album_description_position = isset($_POST['media_library_tag_gallery_album_description_position']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_album_description_position'])) : 'none';
+				$allowed_album_description_positions = array_keys(User_Manager_Core::get_media_library_gallery_album_description_position_options());
+				if (!in_array($gallery_album_description_position, $allowed_album_description_positions, true)) {
+					$gallery_album_description_position = 'none';
+				}
+				$settings['media_library_tag_gallery_album_description_position'] = $gallery_album_description_position;
+				$settings['media_library_tag_gallery_featured_image_separate_column'] = isset($_POST['media_library_tag_gallery_featured_image_separate_column']) && $_POST['media_library_tag_gallery_featured_image_separate_column'] === '1';
+				$settings['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] = isset($_POST['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets']) && $_POST['media_library_tag_gallery_hide_featured_image_if_no_description_or_bullets'] === '1';
+				$single_video_three_column_compact_enabled = false;
+				if (isset($_POST['media_library_tag_gallery_single_video_three_column_combined_row'])) {
+					$single_video_three_column_compact_enabled = $_POST['media_library_tag_gallery_single_video_three_column_combined_row'] === '1';
+				} elseif (isset($_POST['media_library_tag_gallery_single_video_three_column_alternative_layout'])) {
+					$single_video_three_column_compact_enabled = $_POST['media_library_tag_gallery_single_video_three_column_alternative_layout'] === '1';
+				}
+				$settings['media_library_tag_gallery_single_video_three_column_combined_row'] = $single_video_three_column_compact_enabled;
+				// Keep legacy key in sync for backward compatibility with older UI reads.
+				$settings['media_library_tag_gallery_single_video_three_column_alternative_layout'] = $single_video_three_column_compact_enabled;
+				$settings['media_library_tag_gallery_10plus_bullets_li_inline_styles'] = isset($_POST['media_library_tag_gallery_10plus_bullets_li_inline_styles'])
+					? sanitize_text_field(wp_unslash($_POST['media_library_tag_gallery_10plus_bullets_li_inline_styles']))
+					: '';
+				$gallery_description_display = isset($_POST['media_library_tag_gallery_description_display']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_description_display'])) : 'none';
+				$allowed_description_display = array_keys(User_Manager_Core::get_media_library_gallery_description_display_options());
+				if (!in_array($gallery_description_display, $allowed_description_display, true)) {
+					$gallery_description_display = 'none';
+				}
+				$settings['media_library_tag_gallery_description_display'] = $gallery_description_display;
+				$gallery_description_value = isset($_POST['media_library_tag_gallery_description_value']) ? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_description_value'])) : 'caption';
+				$allowed_description_values = array_keys(User_Manager_Core::get_media_library_gallery_description_value_options());
+				if (!in_array($gallery_description_value, $allowed_description_values, true)) {
+					$gallery_description_value = 'caption';
+				}
+				$settings['media_library_tag_gallery_description_value'] = $gallery_description_value;
+				$settings['media_library_tag_gallery_lightbox_prev_next_keyboard'] = isset($_POST['media_library_tag_gallery_lightbox_prev_next_keyboard']) && $_POST['media_library_tag_gallery_lightbox_prev_next_keyboard'] === '1';
+				$settings['media_library_tag_gallery_lightbox_swipe_navigation'] = isset($_POST['media_library_tag_gallery_lightbox_swipe_navigation']) && $_POST['media_library_tag_gallery_lightbox_swipe_navigation'] === '1';
+				$settings['media_library_tag_gallery_lightbox_tap_side_navigation'] = isset($_POST['media_library_tag_gallery_lightbox_tap_side_navigation']) && $_POST['media_library_tag_gallery_lightbox_tap_side_navigation'] === '1';
+				$settings['media_library_tag_gallery_lightbox_slideshow_button'] = isset($_POST['media_library_tag_gallery_lightbox_slideshow_button']) && $_POST['media_library_tag_gallery_lightbox_slideshow_button'] === '1';
+				$settings['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'] = isset($_POST['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])
+					? max(1, min(60, absint($_POST['media_library_tag_gallery_lightbox_slideshow_seconds_per_photo'])))
+					: 3;
+				$lightbox_transition = isset($_POST['media_library_tag_gallery_lightbox_slideshow_transition'])
+					? sanitize_key(wp_unslash($_POST['media_library_tag_gallery_lightbox_slideshow_transition']))
+					: 'none';
+				$allowed_lightbox_transitions = ['none', 'crossfade', 'slide_left'];
+				$settings['media_library_tag_gallery_lightbox_slideshow_transition'] = in_array($lightbox_transition, $allowed_lightbox_transitions, true)
+					? $lightbox_transition
+					: 'none';
+				$settings['media_library_tag_gallery_lightbox_modal_background_color'] = isset($_POST['media_library_tag_gallery_lightbox_modal_background_color'])
+					? sanitize_hex_color(wp_unslash($_POST['media_library_tag_gallery_lightbox_modal_background_color']))
+					: '';
+				$settings['media_library_tag_gallery_lightbox_modal_text_color'] = isset($_POST['media_library_tag_gallery_lightbox_modal_text_color'])
+					? sanitize_hex_color(wp_unslash($_POST['media_library_tag_gallery_lightbox_modal_text_color']))
+					: '';
+				$settings['media_library_tag_gallery_simple_lightbox_thumbnail_click'] = isset($_POST['media_library_tag_gallery_simple_lightbox_thumbnail_click'])
+					&& $_POST['media_library_tag_gallery_simple_lightbox_thumbnail_click'] === '1';
+				$settings['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] = isset($_POST['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'])
+					&& $_POST['media_library_tag_gallery_hide_featured_image_duplicate_in_tagged_images'] === '1';
+				$settings['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] = isset($_POST['media_library_tag_gallery_exclude_logged_in_users_from_tracking'])
+					&& $_POST['media_library_tag_gallery_exclude_logged_in_users_from_tracking'] === '1';
+				$settings['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'] = isset($_POST['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'])
+					&& $_POST['media_library_tag_gallery_exclude_wp_administrator_users_from_tracking'] === '1';
+				$settings['media_library_tag_gallery_featured_image_max_width_px'] = isset($_POST['media_library_tag_gallery_featured_image_max_width_px'])
+					? max(0, min(2000, absint($_POST['media_library_tag_gallery_featured_image_max_width_px'])))
+					: 360;
+				$settings['media_library_tags_show_tags_on_thumbnails_bulk_select'] = isset($_POST['media_library_tags_show_tags_on_thumbnails_bulk_select']) && $_POST['media_library_tags_show_tags_on_thumbnails_bulk_select'] === '1';
+				$settings['media_library_tags_sticky_bulk_toolbar_mobile'] = isset($_POST['media_library_tags_sticky_bulk_toolbar_mobile']) && $_POST['media_library_tags_sticky_bulk_toolbar_mobile'] === '1';
+				$settings['media_library_tag_gallery_hidden_frontend_tags'] = isset($_POST['media_library_tag_gallery_hidden_frontend_tags'])
+					? sanitize_text_field(wp_unslash($_POST['media_library_tag_gallery_hidden_frontend_tags']))
+					: '';
+				$should_reset_media_library_tag_reports = isset($_POST['media_library_tag_reports_reset']) && $_POST['media_library_tag_reports_reset'] === '1';
+				if ($should_reset_media_library_tag_reports) {
+					$media_library_tag_reports_reset_counts = User_Manager_Core::clear_media_library_tag_reports_data();
+				}
 				break;
 
 			case 'addons':
 				$redirect_tab = User_Manager_Core::TAB_ADDONS;
+				$is_addons_temp_disable_only = isset($_POST['um_save_temporary_disable_only'])
+					&& $_POST['um_save_temporary_disable_only'] !== ''
+					&& (
+						!isset($_POST['submit'])
+						|| $_POST['submit'] === ''
+						|| $_POST['submit'] === '0'
+					)
+					&& empty($_POST['addon_section']);
+				if ($is_addons_temp_disable_only) {
+					$settings = User_Manager_Core::get_raw_settings();
+					if (!is_array($settings)) {
+						$settings = [];
+					}
+				}
+				$settings['temporarily_disable_addons'] = isset($_POST['temporarily_disable_addons']) && $_POST['temporarily_disable_addons'] === '1';
+				if ($is_addons_temp_disable_only) {
+					break;
+				}
 				$settings['openai_content_generator_enabled'] = isset($_POST['openai_content_generator_enabled']) && $_POST['openai_content_generator_enabled'] === '1';
 				$settings['openai_blog_post_idea_generator_enabled'] = isset($_POST['openai_blog_post_idea_generator_enabled']) && $_POST['openai_blog_post_idea_generator_enabled'] === '1';
+				$settings['product_notification_enabled'] = isset($_POST['product_notification_enabled']) && $_POST['product_notification_enabled'] === '1';
+				$settings['product_notification_bg_color'] = isset($_POST['product_notification_bg_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_bg_color']))
+					: '';
+				$settings['product_notification_text_color'] = isset($_POST['product_notification_text_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_text_color']))
+					: '';
+				$settings['product_notification_button_bg_color'] = isset($_POST['product_notification_button_bg_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_bg_color']))
+					: '';
+				$settings['product_notification_button_text_color'] = isset($_POST['product_notification_button_text_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_text_color']))
+					: '';
+				$settings['product_notification_button_hover_bg_color'] = isset($_POST['product_notification_button_hover_bg_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_hover_bg_color']))
+					: '';
+				$settings['product_notification_button_hover_text_color'] = isset($_POST['product_notification_button_hover_text_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_button_hover_text_color']))
+					: '';
+				$settings['product_notification_icon_color'] = isset($_POST['product_notification_icon_color'])
+					? sanitize_hex_color(wp_unslash($_POST['product_notification_icon_color']))
+					: '';
+				$settings['emali_log_enabled'] = isset($_POST['emali_log_enabled']) && $_POST['emali_log_enabled'] === '1';
+				$settings['emali_log_auto_delete_days'] = isset($_POST['emali_log_auto_delete_days'])
+					? max(0, absint($_POST['emali_log_auto_delete_days']))
+					: 0;
 				$settings['search_redirect_by_sku'] = isset($_POST['search_redirect_by_sku']) && $_POST['search_redirect_by_sku'] === '1';
 				$settings['plugin_tags_notes_enabled'] = isset($_POST['plugin_tags_notes_enabled']) && $_POST['plugin_tags_notes_enabled'] === '1';
+				$settings['seo_basics_enabled'] = isset($_POST['seo_basics_enabled']) && $_POST['seo_basics_enabled'] === '1';
 				$settings['um_quick_search_enabled'] = isset($_POST['um_quick_search_enabled']) && $_POST['um_quick_search_enabled'] === '1';
+				$settings['um_quick_search_priority_post_types'] = [];
+				if (isset($_POST['um_quick_search_priority_post_types']) && is_array($_POST['um_quick_search_priority_post_types'])) {
+					$allowed_post_types = get_post_types(['show_ui' => true], 'names');
+					$allowed_post_types = is_array($allowed_post_types) ? array_map('sanitize_key', $allowed_post_types) : [];
+					$selected_priority_post_types = array_map(
+						'sanitize_key',
+						array_map('wp_unslash', $_POST['um_quick_search_priority_post_types'])
+					);
+					$settings['um_quick_search_priority_post_types'] = array_values(array_unique(array_intersect($selected_priority_post_types, $allowed_post_types)));
+				}
 				$settings['security_hardening_enabled'] = isset($_POST['security_hardening_enabled']) && $_POST['security_hardening_enabled'] === '1';
 				$settings['security_hardening_block_rest_user_enumeration'] = isset($_POST['security_hardening_block_rest_user_enumeration']) && $_POST['security_hardening_block_rest_user_enumeration'] === '1';
 				$settings['security_hardening_disallow_file_edit'] = isset($_POST['security_hardening_disallow_file_edit']) && $_POST['security_hardening_disallow_file_edit'] === '1';
@@ -1679,6 +2549,52 @@ class User_Manager_Actions {
 				$settings['openai_prompt_append'] = isset($_POST['openai_prompt_append']) ? sanitize_textarea_field(wp_unslash($_POST['openai_prompt_append'])) : '';
 				$settings['openai_page_meta_box'] = isset($_POST['openai_page_meta_box']) && $_POST['openai_page_meta_box'] === '1';
 				$settings['display_post_meta_meta_box'] = isset($_POST['display_post_meta_meta_box']) && $_POST['display_post_meta_meta_box'] === '1';
+				$settings['display_post_meta_post_types'] = [];
+				if (isset($_POST['display_post_meta_post_types']) && is_array($_POST['display_post_meta_post_types'])) {
+					$allowed_post_types = get_post_types(['show_ui' => true], 'names');
+					$allowed_post_types = is_array($allowed_post_types) ? array_map('sanitize_key', $allowed_post_types) : [];
+					$selected_post_types = array_map(
+						'sanitize_key',
+						array_map('wp_unslash', $_POST['display_post_meta_post_types'])
+					);
+					$settings['display_post_meta_post_types'] = array_values(array_unique(array_intersect($selected_post_types, $allowed_post_types)));
+				}
+				$settings['display_post_meta_allowed_roles'] = [];
+				if (isset($_POST['display_post_meta_allowed_roles']) && is_array($_POST['display_post_meta_allowed_roles'])) {
+					$allowed_roles = array_keys(User_Manager_Core::get_user_roles());
+					$allowed_roles = array_map('sanitize_key', $allowed_roles);
+					$selected_roles = array_map(
+						'sanitize_key',
+						array_map('wp_unslash', $_POST['display_post_meta_allowed_roles'])
+					);
+					$settings['display_post_meta_allowed_roles'] = array_values(array_unique(array_intersect($selected_roles, $allowed_roles)));
+				}
+				$settings['display_post_meta_allowed_users'] = [];
+				if (isset($_POST['display_post_meta_allowed_users'])) {
+					$raw_identifiers = sanitize_textarea_field(wp_unslash($_POST['display_post_meta_allowed_users']));
+					$parts = preg_split('/[\r\n,;]+/', $raw_identifiers);
+					$identifiers = [];
+					if (is_array($parts)) {
+						foreach ($parts as $part) {
+							$part = trim((string) $part);
+							if ($part === '') {
+								continue;
+							}
+							if (is_email($part)) {
+								$email = strtolower(sanitize_email($part));
+								if ($email !== '') {
+									$identifiers[] = $email;
+								}
+								continue;
+							}
+							$username = strtolower(sanitize_user($part, false));
+							if ($username !== '') {
+								$identifiers[] = $username;
+							}
+						}
+					}
+					$settings['display_post_meta_allowed_users'] = array_values(array_unique($identifiers));
+				}
 				$settings['allow_edit_post_meta'] = isset($_POST['allow_edit_post_meta']) && $_POST['allow_edit_post_meta'] === '1';
 
 				// Coupons for New Users.
@@ -1742,6 +2658,8 @@ class User_Manager_Actions {
 				$settings['coupon_remainder_order_received_notice'] = isset($_POST['coupon_remainder_order_received_notice']) && $_POST['coupon_remainder_order_received_notice'] === '1';
 				$settings['coupon_remainder_copy_expiration'] = isset($_POST['coupon_remainder_copy_expiration']) && $_POST['coupon_remainder_copy_expiration'] === '1';
 				$settings['coupon_remainder_free_shipping'] = isset($_POST['coupon_remainder_free_shipping']) && $_POST['coupon_remainder_free_shipping'] === '1';
+				$settings['coupon_remainder_send_email'] = isset($_POST['coupon_remainder_send_email']) && $_POST['coupon_remainder_send_email'] === '1';
+				$settings['coupon_remainder_email_template'] = isset($_POST['coupon_remainder_email_template']) ? sanitize_key($_POST['coupon_remainder_email_template']) : '__um_default__';
 
 				// Checkout: Ship To Pre-Defined Addresses
 				$settings['checkout_ship_to_predefined_enabled'] = isset($_POST['checkout_ship_to_predefined_enabled']) && $_POST['checkout_ship_to_predefined_enabled'] === '1';
@@ -1779,7 +2697,12 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_status_filters'] = isset($_POST['my_account_admin_order_status_filters'])
 					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_status_filters']))
 					: '';
+				$settings['my_account_admin_order_status_titles'] = self::sanitize_my_account_order_status_title_overrides(
+					isset($_POST['my_account_admin_order_status_titles']) ? wp_unslash($_POST['my_account_admin_order_status_titles']) : []
+				);
 				$settings['my_account_admin_order_hide_status'] = isset($_POST['my_account_admin_order_hide_status']) && $_POST['my_account_admin_order_hide_status'] === '1';
+				$settings['my_account_admin_order_add_webtoffee_download_invoice_button'] = isset($_POST['my_account_admin_order_add_webtoffee_download_invoice_button']) && $_POST['my_account_admin_order_add_webtoffee_download_invoice_button'] === '1';
+				$settings['my_account_admin_order_add_webtoffee_print_invoice_button'] = isset($_POST['my_account_admin_order_add_webtoffee_print_invoice_button']) && $_POST['my_account_admin_order_add_webtoffee_print_invoice_button'] === '1';
 				$settings['my_account_admin_order_approval_usernames'] = self::sanitize_username_csv(
 					isset($_POST['my_account_admin_order_approval_usernames']) ? wp_unslash($_POST['my_account_admin_order_approval_usernames']) : ''
 				);
@@ -1789,12 +2712,26 @@ class User_Manager_Actions {
 				$settings['my_account_admin_order_approve_button_label'] = isset($_POST['my_account_admin_order_approve_button_label'])
 					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_approve_button_label']))
 					: 'Move to Processing';
+				$approve_button_bg = isset($_POST['my_account_admin_order_approve_button_background_color'])
+					? sanitize_hex_color(wp_unslash($_POST['my_account_admin_order_approve_button_background_color']))
+					: '';
+				$settings['my_account_admin_order_approve_button_background_color'] = $approve_button_bg ? $approve_button_bg : '';
 				$settings['my_account_admin_order_decline_button_label'] = isset($_POST['my_account_admin_order_decline_button_label'])
 					? sanitize_text_field(wp_unslash($_POST['my_account_admin_order_decline_button_label']))
 					: 'Move to Canceled';
+				$decline_button_bg = isset($_POST['my_account_admin_order_decline_button_background_color'])
+					? sanitize_hex_color(wp_unslash($_POST['my_account_admin_order_decline_button_background_color']))
+					: '';
+				$settings['my_account_admin_order_decline_button_background_color'] = $decline_button_bg ? $decline_button_bg : '';
 				$settings['my_account_admin_order_default_pending_enabled'] = isset($_POST['my_account_admin_order_default_pending_enabled']) && $_POST['my_account_admin_order_default_pending_enabled'] === '1';
 				$settings['my_account_admin_order_additional_meta_fields'] = isset($_POST['my_account_admin_order_additional_meta_fields'])
 					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_additional_meta_fields']))
+					: '';
+				$settings['my_account_admin_order_list_additional_meta_fields'] = isset($_POST['my_account_admin_order_list_additional_meta_fields'])
+					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_list_additional_meta_fields']))
+					: '';
+				$settings['my_account_admin_order_list_additional_flag_fields'] = isset($_POST['my_account_admin_order_list_additional_flag_fields'])
+					? sanitize_textarea_field(wp_unslash($_POST['my_account_admin_order_list_additional_flag_fields']))
 					: '';
 				$settings['my_account_admin_order_viewer_show_meta'] = isset($_POST['my_account_admin_order_viewer_show_meta']) && $_POST['my_account_admin_order_viewer_show_meta'] === '1';
 				$settings['my_account_admin_product_viewer_enabled'] = isset($_POST['my_account_admin_product_viewer_enabled']) && $_POST['my_account_admin_product_viewer_enabled'] === '1';
@@ -1821,6 +2758,27 @@ class User_Manager_Actions {
 					isset($_POST['my_account_admin_user_viewer_roles']) ? wp_unslash($_POST['my_account_admin_user_viewer_roles']) : []
 				);
 				$settings['my_account_admin_user_viewer_show_meta'] = isset($_POST['my_account_admin_user_viewer_show_meta']) && $_POST['my_account_admin_user_viewer_show_meta'] === '1';
+				$settings['my_account_admin_activity_viewer_enabled'] = isset($_POST['my_account_admin_activity_viewer_enabled']) && $_POST['my_account_admin_activity_viewer_enabled'] === '1';
+				$settings['my_account_admin_activity_viewer_usernames'] = self::sanitize_username_csv(
+					isset($_POST['my_account_admin_activity_viewer_usernames']) ? wp_unslash($_POST['my_account_admin_activity_viewer_usernames']) : ''
+				);
+				$settings['my_account_admin_activity_viewer_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['my_account_admin_activity_viewer_roles']) ? wp_unslash($_POST['my_account_admin_activity_viewer_roles']) : []
+				);
+				$settings['my_account_admin_activity_viewer_hidden_email_partials'] = self::sanitize_text_partials_csv(
+					isset($_POST['my_account_admin_activity_viewer_hidden_email_partials']) ? wp_unslash($_POST['my_account_admin_activity_viewer_hidden_email_partials']) : ''
+				);
+				$settings['my_account_admin_activity_viewer_actions'] = self::sanitize_text_values_array(
+					isset($_POST['my_account_admin_activity_viewer_actions']) ? wp_unslash($_POST['my_account_admin_activity_viewer_actions']) : []
+				);
+				$settings['my_account_admin_activity_viewer_role_review_enabled'] = isset($_POST['my_account_admin_activity_viewer_role_review_enabled']) && $_POST['my_account_admin_activity_viewer_role_review_enabled'] === '1';
+				$settings['my_account_admin_wp_admin_redirect_list'] = self::sanitize_text_values_csv(
+					isset($_POST['my_account_admin_wp_admin_redirect_list']) ? wp_unslash($_POST['my_account_admin_wp_admin_redirect_list']) : ''
+				);
+				$settings['my_account_admin_items_per_page'] = isset($_POST['my_account_admin_items_per_page'])
+					? max(1, min(200, absint($_POST['my_account_admin_items_per_page'])))
+					: 20;
+				$settings['my_account_admin_enable_csv_export_button'] = isset($_POST['my_account_admin_enable_csv_export_button']) && $_POST['my_account_admin_enable_csv_export_button'] === '1';
 				$settings['my_account_site_admin_enabled'] = isset($_POST['my_account_site_admin_enabled']) && $_POST['my_account_site_admin_enabled'] === '1';
 				$settings['my_account_coupon_screen_enabled'] = isset($_POST['my_account_coupon_screen_enabled']) && $_POST['my_account_coupon_screen_enabled'] === '1';
 				$menu_title = isset($_POST['my_account_coupon_screen_menu_title']) ? sanitize_text_field(wp_unslash($_POST['my_account_coupon_screen_menu_title'])) : 'Coupons';
@@ -1840,6 +2798,14 @@ class User_Manager_Actions {
 				$settings['cart_price_per_piece_font_size'] = in_array($cart_price_per_piece_font_size, $allowed_cart_price_per_piece_font_sizes, true) ? $cart_price_per_piece_font_size : '12px';
 				$cart_price_per_piece_color = isset($_POST['cart_price_per_piece_text_color']) ? sanitize_hex_color(wp_unslash($_POST['cart_price_per_piece_text_color'])) : '#666666';
 				$settings['cart_price_per_piece_text_color'] = $cart_price_per_piece_color ? $cart_price_per_piece_color : '#666666';
+				$settings['cart_total_items_enabled'] = isset($_POST['cart_total_items_enabled']) && $_POST['cart_total_items_enabled'] === '1';
+				$settings['cart_total_items_copy'] = isset($_POST['cart_total_items_copy']) ? sanitize_text_field(wp_unslash($_POST['cart_total_items_copy'])) : 'Total Items:';
+				$settings['cart_total_items_show_on_cart'] = isset($_POST['cart_total_items_show_on_cart']) && $_POST['cart_total_items_show_on_cart'] === '1';
+				$settings['cart_total_items_show_on_checkout'] = isset($_POST['cart_total_items_show_on_checkout']) && $_POST['cart_total_items_show_on_checkout'] === '1';
+				$settings['cart_total_items_cart_above'] = isset($_POST['cart_total_items_cart_above']) && $_POST['cart_total_items_cart_above'] === '1';
+				$settings['cart_total_items_cart_below'] = isset($_POST['cart_total_items_cart_below']) && $_POST['cart_total_items_cart_below'] === '1';
+				$settings['cart_total_items_checkout_above'] = isset($_POST['cart_total_items_checkout_above']) && $_POST['cart_total_items_checkout_above'] === '1';
+				$settings['cart_total_items_checkout_below'] = isset($_POST['cart_total_items_checkout_below']) && $_POST['cart_total_items_checkout_below'] === '1';
 				$settings['bulk_page_creator_enabled'] = isset($_POST['bulk_page_creator_enabled']) && $_POST['bulk_page_creator_enabled'] === '1';
 				$settings['bulk_page_creator_max_tokens'] = isset($_POST['bulk_page_creator_max_tokens']) ? max(100, min(8000, absint($_POST['bulk_page_creator_max_tokens']))) : 2000;
 				$bulk_page_creator_temperature = isset($_POST['bulk_page_creator_temperature']) ? (float) wp_unslash($_POST['bulk_page_creator_temperature']) : 0.7;
@@ -1870,11 +2836,14 @@ class User_Manager_Actions {
 				$settings['webhook_urls_activate_user_password_reset_webhook'] = isset($_POST['webhook_urls_activate_user_password_reset_webhook']) && $_POST['webhook_urls_activate_user_password_reset_webhook'] === '1';
 				$settings['webhook_urls_activate_send_email_webhook'] = isset($_POST['webhook_urls_activate_send_email_webhook']) && $_POST['webhook_urls_activate_send_email_webhook'] === '1';
 				$settings['invoice_approval_enabled'] = isset($_POST['invoice_approval_enabled']) && $_POST['invoice_approval_enabled'] === '1';
-				$settings['invoice_primary_color'] = isset($_POST['invoice_primary_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_primary_color'])) : '#4B2E83';
+				$invoice_primary_color = isset($_POST['invoice_primary_color']) ? sanitize_hex_color(wp_unslash($_POST['invoice_primary_color'])) : '#4B2E83';
+				$settings['invoice_primary_color'] = $invoice_primary_color ? $invoice_primary_color : '#4B2E83';
 				$settings['invoice_hide_logo_in_pdf'] = isset($_POST['invoice_hide_logo_in_pdf']) && $_POST['invoice_hide_logo_in_pdf'] === '1';
 				$settings['invoice_hide_buttons_in_pdf'] = isset($_POST['invoice_hide_buttons_in_pdf']) && $_POST['invoice_hide_buttons_in_pdf'] === '1';
-				$settings['invoice_button_color'] = isset($_POST['invoice_button_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_button_color'])) : '#4B2E83';
-				$settings['invoice_button_text_color'] = isset($_POST['invoice_button_text_color']) ? sanitize_text_field(wp_unslash($_POST['invoice_button_text_color'])) : '#ffffff';
+				$invoice_button_color = isset($_POST['invoice_button_color']) ? sanitize_hex_color(wp_unslash($_POST['invoice_button_color'])) : '#4B2E83';
+				$settings['invoice_button_color'] = $invoice_button_color ? $invoice_button_color : '#4B2E83';
+				$invoice_button_text_color = isset($_POST['invoice_button_text_color']) ? sanitize_hex_color(wp_unslash($_POST['invoice_button_text_color'])) : '#ffffff';
+				$settings['invoice_button_text_color'] = $invoice_button_text_color ? $invoice_button_text_color : '#ffffff';
 				$settings['invoice_font_family'] = isset($_POST['invoice_font_family']) ? sanitize_text_field(wp_unslash($_POST['invoice_font_family'])) : 'Poppins, sans-serif';
 				$settings['invoice_logo_url'] = isset($_POST['invoice_logo_url']) ? esc_url_raw(wp_unslash($_POST['invoice_logo_url'])) : '';
 				$settings['invoice_logo_max_width'] = isset($_POST['invoice_logo_max_width']) ? sanitize_text_field(wp_unslash($_POST['invoice_logo_max_width'])) : '160px';
@@ -1893,10 +2862,107 @@ class User_Manager_Actions {
 				$settings['invoice_approval_title'] = isset($_POST['invoice_approval_title']) ? sanitize_text_field(wp_unslash($_POST['invoice_approval_title'])) : 'Approve & Pay Later';
 				$settings['invoice_approval_checkbox_text'] = isset($_POST['invoice_approval_checkbox_text']) ? sanitize_textarea_field(wp_unslash($_POST['invoice_approval_checkbox_text'])) : '';
 				$settings['invoice_approval_button_text'] = isset($_POST['invoice_approval_button_text']) ? sanitize_text_field(wp_unslash($_POST['invoice_approval_button_text'])) : 'Send to Production';
+				$settings['order_received_page_customizer_enabled'] = isset($_POST['order_received_page_customizer_enabled']) && $_POST['order_received_page_customizer_enabled'] === '1';
+				$settings['order_received_page_customizer_heading_text'] = isset($_POST['order_received_page_customizer_heading_text']) ? sanitize_text_field(wp_unslash($_POST['order_received_page_customizer_heading_text'])) : 'Order received';
+				$settings['order_received_page_customizer_paragraph_text'] = isset($_POST['order_received_page_customizer_paragraph_text']) ? sanitize_textarea_field(wp_unslash($_POST['order_received_page_customizer_paragraph_text'])) : 'Thank you. Your order has been received.';
+				$settings['restricted_access_enabled'] = isset($_POST['restricted_access_enabled']) && $_POST['restricted_access_enabled'] === '1';
+				$restricted_logged_out_behavior = isset($_POST['restricted_access_logged_out_behavior']) ? sanitize_key(wp_unslash($_POST['restricted_access_logged_out_behavior'])) : 'overlay';
+				if ($restricted_logged_out_behavior === 'my-account') {
+					$restricted_logged_out_behavior = 'redirect_my_account';
+				} elseif ($restricted_logged_out_behavior === 'wp-admin') {
+					$restricted_logged_out_behavior = 'redirect_wp_admin';
+				}
+				$allowed_restricted_logged_out_behaviors = ['redirect_my_account', 'redirect_wp_admin', 'overlay'];
+				$settings['restricted_access_logged_out_behavior'] = in_array($restricted_logged_out_behavior, $allowed_restricted_logged_out_behaviors, true) ? $restricted_logged_out_behavior : 'overlay';
+				$settings['restricted_access_shared_password'] = isset($_POST['restricted_access_shared_password']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_shared_password'])) : '';
+				$settings['restricted_access_remember_ip_for_30_days'] = isset($_POST['restricted_access_remember_ip_for_30_days']) && $_POST['restricted_access_remember_ip_for_30_days'] === '1';
+				$settings['restricted_access_url_string'] = isset($_POST['restricted_access_url_string']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_url_string'])) : '';
+				$settings['restricted_access_time_limit_minutes'] = isset($_POST['restricted_access_time_limit_minutes']) ? max(1, absint($_POST['restricted_access_time_limit_minutes'])) : 30;
+				$settings['restricted_access_excluded_roles'] = self::sanitize_role_keys_array(
+					isset($_POST['restricted_access_excluded_roles']) ? wp_unslash($_POST['restricted_access_excluded_roles']) : []
+				);
+				$settings['restricted_access_no_access_message'] = isset($_POST['restricted_access_no_access_message'])
+					? sanitize_textarea_field(wp_unslash($_POST['restricted_access_no_access_message']))
+					: '';
+				$restricted_access_password_button_text = isset($_POST['restricted_access_password_submit_button_text']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_password_submit_button_text'])) : '';
+				$settings['restricted_access_password_submit_button_text'] = $restricted_access_password_button_text !== '' ? $restricted_access_password_button_text : 'Access Website';
+				$restricted_overlay_bg = isset($_POST['restricted_access_overlay_background_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_background_color'])) : '#ffffff';
+				$settings['restricted_access_overlay_background_color'] = $restricted_overlay_bg ? $restricted_overlay_bg : '#ffffff';
+				$restricted_overlay_text = isset($_POST['restricted_access_overlay_text_color']) ? sanitize_hex_color(wp_unslash($_POST['restricted_access_overlay_text_color'])) : '#000000';
+				$settings['restricted_access_overlay_text_color'] = $restricted_overlay_text ? $restricted_overlay_text : '#000000';
+				$settings['restricted_access_overlay_image_url'] = isset($_POST['restricted_access_overlay_image_url']) ? esc_url_raw(wp_unslash($_POST['restricted_access_overlay_image_url'])) : '';
+				$settings['restricted_access_overlay_image_max_width'] = isset($_POST['restricted_access_overlay_image_max_width']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_overlay_image_max_width'])) : '';
+				$settings['restricted_access_overlay_image_display_as_normal_above_message'] = isset($_POST['restricted_access_overlay_image_display_as_normal_above_message']) && $_POST['restricted_access_overlay_image_display_as_normal_above_message'] === '1';
+				$settings['restricted_access_render_background_html_for_social_meta'] = isset($_POST['restricted_access_render_background_html_for_social_meta']) && $_POST['restricted_access_render_background_html_for_social_meta'] === '1';
+				$settings['block_pages_by_url_string_enabled'] = isset($_POST['block_pages_by_url_string_enabled']) && $_POST['block_pages_by_url_string_enabled'] === '1';
+				$block_pages_rules = [];
+				if (isset($_POST['block_pages_by_url_string_rules_json'])) {
+					$decoded_rules = json_decode((string) wp_unslash($_POST['block_pages_by_url_string_rules_json']), true);
+					$block_pages_rules = self::sanitize_block_pages_by_url_string_rules($decoded_rules);
+				}
+				if (empty($block_pages_rules)) {
+					$block_pages_rules = self::sanitize_block_pages_by_url_string_rules(
+						isset($_POST['block_pages_by_url_string_rules']) ? wp_unslash($_POST['block_pages_by_url_string_rules']) : []
+					);
+				}
+				$settings['block_pages_by_url_string_rules'] = $block_pages_rules;
+				$primary_block_pages_rule = isset($block_pages_rules[0]) && is_array($block_pages_rules[0]) ? $block_pages_rules[0] : [];
+				$settings['block_pages_by_url_string_match_urls'] = isset($primary_block_pages_rule['match_urls']) ? (string) $primary_block_pages_rule['match_urls'] : '';
+				$settings['block_pages_by_url_string_exception_urls'] = isset($primary_block_pages_rule['exception_urls']) ? (string) $primary_block_pages_rule['exception_urls'] : '';
+				$block_pages_bg_color = isset($_POST['block_pages_by_url_string_background_color']) ? sanitize_hex_color(wp_unslash($_POST['block_pages_by_url_string_background_color'])) : '#000000';
+				$settings['block_pages_by_url_string_background_color'] = $block_pages_bg_color !== '' ? $block_pages_bg_color : '#000000';
+				$settings['block_pages_by_url_string_background_url'] = isset($_POST['block_pages_by_url_string_background_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_background_url'])) : '';
+				$settings['block_pages_by_url_string_logo_url'] = isset($_POST['block_pages_by_url_string_logo_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_logo_url'])) : '';
+				$settings['block_pages_by_url_string_logo_width'] = isset($_POST['block_pages_by_url_string_logo_width']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_logo_width'])) : '';
+				$settings['block_pages_by_url_string_message'] = isset($_POST['block_pages_by_url_string_message']) ? sanitize_text_field(wp_unslash($_POST['block_pages_by_url_string_message'])) : '';
+				$block_pages_text_color = isset($_POST['block_pages_by_url_string_text_color']) ? sanitize_hex_color(wp_unslash($_POST['block_pages_by_url_string_text_color'])) : '';
+				$settings['block_pages_by_url_string_text_color'] = $block_pages_text_color !== '' ? $block_pages_text_color : '';
+				$settings['block_pages_by_url_string_redirect_url'] = isset($_POST['block_pages_by_url_string_redirect_url']) ? esc_url_raw(wp_unslash($_POST['block_pages_by_url_string_redirect_url'])) : '';
+				// Keep Send Email permanently enabled because Login Tools depend on
+				// shared email templates from this add-on context.
+				$settings['send_email_users_enabled'] = true;
+				$settings['send_sms_text_enabled'] = isset($_POST['send_sms_text_enabled']) && $_POST['send_sms_text_enabled'] === '1';
+				$settings['staging_dev_overrides_enabled'] = isset($_POST['staging_dev_overrides_enabled']) && $_POST['staging_dev_overrides_enabled'] === '1';
+				$settings['staging_dev_disable_all_emails'] = isset($_POST['staging_dev_disable_all_emails']) && $_POST['staging_dev_disable_all_emails'] === '1';
+				$settings['staging_dev_disable_all_payment_gateways'] = isset($_POST['staging_dev_disable_all_payment_gateways']) && $_POST['staging_dev_disable_all_payment_gateways'] === '1';
+				$settings['staging_dev_disable_all_webhooks'] = isset($_POST['staging_dev_disable_all_webhooks']) && $_POST['staging_dev_disable_all_webhooks'] === '1';
+				$settings['staging_dev_disable_all_api_json_requests'] = isset($_POST['staging_dev_disable_all_api_json_requests']) && $_POST['staging_dev_disable_all_api_json_requests'] === '1';
+				$settings['staging_dev_notice_frontend_top_bar'] = isset($_POST['staging_dev_notice_frontend_top_bar']) && $_POST['staging_dev_notice_frontend_top_bar'] === '1';
+				$settings['staging_dev_notice_wp_admin'] = isset($_POST['staging_dev_notice_wp_admin']) && $_POST['staging_dev_notice_wp_admin'] === '1';
+				$settings['staging_dev_notice_include_data_anonymized'] = isset($_POST['staging_dev_notice_include_data_anonymized']) && $_POST['staging_dev_notice_include_data_anonymized'] === '1';
+				$settings['data_anonymizer_enabled'] = isset($_POST['data_anonymizer_enabled']) && $_POST['data_anonymizer_enabled'] === '1';
+				$settings['data_anonymizer_order_address_random'] = isset($_POST['data_anonymizer_order_address_random']) && $_POST['data_anonymizer_order_address_random'] === '1';
+				$settings['data_anonymizer_order_phone_fixed'] = isset($_POST['data_anonymizer_order_phone_fixed']) && $_POST['data_anonymizer_order_phone_fixed'] === '1';
+				$settings['data_anonymizer_order_email_random'] = isset($_POST['data_anonymizer_order_email_random']) && $_POST['data_anonymizer_order_email_random'] === '1';
+				$settings['data_anonymizer_order_notes_random'] = isset($_POST['data_anonymizer_order_notes_random']) && $_POST['data_anonymizer_order_notes_random'] === '1';
+				$settings['data_anonymizer_user_meta_address_random'] = isset($_POST['data_anonymizer_user_meta_address_random']) && $_POST['data_anonymizer_user_meta_address_random'] === '1';
+				$settings['data_anonymizer_user_meta_phone_fixed'] = isset($_POST['data_anonymizer_user_meta_phone_fixed']) && $_POST['data_anonymizer_user_meta_phone_fixed'] === '1';
+				$settings['data_anonymizer_user_email_random'] = isset($_POST['data_anonymizer_user_email_random']) && $_POST['data_anonymizer_user_email_random'] === '1';
+				$settings['data_anonymizer_user_login_random'] = isset($_POST['data_anonymizer_user_login_random']) && $_POST['data_anonymizer_user_login_random'] === '1';
+				$settings['data_anonymizer_forms_random'] = isset($_POST['data_anonymizer_forms_random']) && $_POST['data_anonymizer_forms_random'] === '1';
+				$settings['data_anonymizer_exclude_wp_administrators'] = isset($_POST['data_anonymizer_exclude_wp_administrators']) && $_POST['data_anonymizer_exclude_wp_administrators'] === '1';
+				$settings['data_anonymizer_exclude_if_matches_admin_email'] = isset($_POST['data_anonymizer_exclude_if_matches_admin_email']) && $_POST['data_anonymizer_exclude_if_matches_admin_email'] === '1';
+				$settings['data_anonymizer_excluded_email_domains'] = isset($_POST['data_anonymizer_excluded_email_domains']) ? sanitize_text_field(wp_unslash($_POST['data_anonymizer_excluded_email_domains'])) : '';
+				$settings['addon_main_navigation_tabs'] = [];
+				if (isset($_POST['addon_main_navigation_tabs']) && is_array($_POST['addon_main_navigation_tabs'])) {
+					$allowed_addon_slugs = array_keys(User_Manager_Core::get_addon_runtime_toggle_map(false));
+					$selected_addon_slugs = array_map(
+						'sanitize_key',
+						wp_unslash($_POST['addon_main_navigation_tabs'])
+					);
+					foreach ($selected_addon_slugs as $selected_addon_slug) {
+						if ($selected_addon_slug === '' || !in_array($selected_addon_slug, $allowed_addon_slugs, true)) {
+							continue;
+						}
+						$settings['addon_main_navigation_tabs'][] = $selected_addon_slug;
+					}
+					$settings['addon_main_navigation_tabs'] = array_values(array_unique($settings['addon_main_navigation_tabs']));
+				}
 
 				// Bulk Add to Cart settings (migrated from standalone plugin UI).
 				$settings['bulk_add_to_cart_enabled'] = isset($_POST['bulk_add_to_cart_enabled']) && $_POST['bulk_add_to_cart_enabled'] === '1';
 				$settings['add_to_cart_variation_table_enabled'] = isset($_POST['add_to_cart_variation_table_enabled']) && $_POST['add_to_cart_variation_table_enabled'] === '1';
+				$settings['add_to_cart_min_max_quantities_enabled'] = isset($_POST['add_to_cart_min_max_quantities_enabled']) && $_POST['add_to_cart_min_max_quantities_enabled'] === '1';
 				$variation_table_hook = isset($_POST['add_to_cart_variation_table_hook']) ? sanitize_key(wp_unslash($_POST['add_to_cart_variation_table_hook'])) : 'auto';
 				$allowed_variation_table_hooks = ['auto', 'after_add_to_cart_form', 'single_product_summary', 'after_single_product_summary', 'before_add_to_cart_form'];
 				$settings['add_to_cart_variation_table_hook'] = in_array($variation_table_hook, $allowed_variation_table_hooks, true) ? $variation_table_hook : 'auto';
@@ -1912,6 +2978,9 @@ class User_Manager_Actions {
 					: [];
 				$settings['add_to_cart_variation_table_category_ids'] = $variation_table_category_ids;
 				$settings['add_to_cart_variation_table_empty_cart_button_on_cart'] = isset($_POST['add_to_cart_variation_table_empty_cart_button_on_cart']) && $_POST['add_to_cart_variation_table_empty_cart_button_on_cart'] === '1';
+				$settings['add_to_cart_variation_table_min_total_qty'] = isset($_POST['add_to_cart_variation_table_min_total_qty']) ? max(0, absint($_POST['add_to_cart_variation_table_min_total_qty'])) : 0;
+				$settings['add_to_cart_variation_table_min_total_qty_alert_message'] = isset($_POST['add_to_cart_variation_table_min_total_qty_alert_message']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_min_total_qty_alert_message'])) : '';
+				$settings['add_to_cart_variation_table_success_alert_message'] = isset($_POST['add_to_cart_variation_table_success_alert_message']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_success_alert_message'])) : '';
 				$settings['add_to_cart_variation_table_button_text'] = isset($_POST['add_to_cart_variation_table_button_text']) ? sanitize_text_field(wp_unslash($_POST['add_to_cart_variation_table_button_text'])) : '';
 				$settings['add_to_cart_variation_table_text_above'] = isset($_POST['add_to_cart_variation_table_text_above']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_above'])) : '';
 				$settings['add_to_cart_variation_table_text_below'] = isset($_POST['add_to_cart_variation_table_text_below']) ? wp_kses_post(wp_unslash($_POST['add_to_cart_variation_table_text_below'])) : '';
@@ -1965,9 +3034,16 @@ class User_Manager_Actions {
 				$old_hidden_roles        = isset($role_switch_settings['hidden_roles']) && is_array($role_switch_settings['hidden_roles']) ? $role_switch_settings['hidden_roles'] : [];
 				$old_allow_reset         = !empty($role_switch_settings['allow_reset']);
 
-				$new_role_switch_enabled = isset($_POST['role_switching_enabled']) && $_POST['role_switching_enabled'] === '1';
-				$new_hidden_roles        = isset($_POST['hidden_roles']) ? array_map('sanitize_text_field', (array) wp_unslash($_POST['hidden_roles'])) : [];
-				$new_allow_reset         = isset($_POST['allow_reset']) && $_POST['allow_reset'] === '1';
+				$is_addons_temp_disable_only = isset($is_addons_temp_disable_only) && $is_addons_temp_disable_only;
+				$new_role_switch_enabled = $is_addons_temp_disable_only
+					? $old_role_switch_enabled
+					: (isset($_POST['role_switching_enabled']) && $_POST['role_switching_enabled'] === '1');
+				$new_hidden_roles = $is_addons_temp_disable_only
+					? $old_hidden_roles
+					: (isset($_POST['hidden_roles']) ? array_map('sanitize_text_field', (array) wp_unslash($_POST['hidden_roles'])) : []);
+				$new_allow_reset = $is_addons_temp_disable_only
+					? $old_allow_reset
+					: (isset($_POST['allow_reset']) && $_POST['allow_reset'] === '1');
 
 				$role_switch_settings_after = [
 					'enabled'      => $new_role_switch_enabled,
@@ -2008,7 +3084,7 @@ class User_Manager_Actions {
 						}
 						$title = isset($row['title']) ? sanitize_text_field(wp_unslash($row['title'])) : '';
 						$body  = isset($row['body']) ? sanitize_textarea_field(wp_unslash($row['body'])) : '';
-						$color = isset($row['background_color']) ? sanitize_text_field(wp_unslash($row['background_color'])) : '';
+						$color = isset($row['background_color']) ? sanitize_hex_color(wp_unslash($row['background_color'])) : '';
 						$url   = isset($row['url_string_match']) ? sanitize_text_field(wp_unslash($row['url_string_match'])) : '';
 						$settings['custom_admin_notifications'][] = [
 							'title'             => $title,
@@ -2104,7 +3180,20 @@ class User_Manager_Actions {
 			User_Manager_Core::add_activity_log('settings_updated', get_current_user_id(), 'Settings', $log_extra);
 		}
 
-		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, 'settings_saved');
+		$redirect_message = 'settings_saved';
+		if ($should_reset_media_library_tag_reports) {
+			$redirect_message = 'media_library_tag_reports_cleared';
+		}
+		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, $redirect_message);
+		if ($should_reset_media_library_tag_reports) {
+			$redirect_url = add_query_arg(
+				[
+					'media_library_tag_reports_attachments_cleared' => (string) max(0, (int) ($media_library_tag_reports_reset_counts['attachments'] ?? 0)),
+					'media_library_tag_reports_tags_cleared' => (string) max(0, (int) ($media_library_tag_reports_reset_counts['tags'] ?? 0)),
+				],
+				$redirect_url
+			);
+		}
 		if ($redirect_tab === User_Manager_Core::TAB_ADDONS && isset($_POST['addon_section'])) {
 			$addon_section = sanitize_key(wp_unslash($_POST['addon_section']));
 			if ($addon_section !== '') {
@@ -2117,8 +3206,88 @@ class User_Manager_Actions {
 				}
 			}
 		}
+		if ($redirect_tab === User_Manager_Core::TAB_BLOCKS && isset($_POST['block_section'])) {
+			$block_section = sanitize_key(wp_unslash($_POST['block_section']));
+			if ($block_section !== '') {
+				$redirect_url = add_query_arg('block_section', $block_section, $redirect_url);
+			}
+			if (isset($_POST['block_tag'])) {
+				$block_tag = sanitize_title(wp_unslash($_POST['block_tag']));
+				if ($block_tag !== '') {
+					$redirect_url = add_query_arg('block_tag', $block_tag, $redirect_url);
+				}
+			}
+		}
 
 		wp_safe_redirect($redirect_url);
+		exit;
+	}
+
+	/**
+	 * Handle resend action for an Emali Log row.
+	 */
+	public static function handle_emali_log_resend(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		$log_id = isset($_POST['log_id']) ? absint($_POST['log_id']) : 0;
+		check_admin_referer('user_manager_emali_log_resend_' . $log_id);
+		$ok = User_Manager_Core::resend_emali_log_entry($log_id);
+		$msg = $ok ? 'emali_log_resent' : 'emali_log_resend_failed';
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, $msg, [
+				'addon_section' => 'emali-log',
+				'addon_tag'     => isset($_POST['addon_tag']) ? sanitize_title(wp_unslash($_POST['addon_tag'])) : '',
+				'emali_log_status' => isset($_POST['emali_log_status']) ? sanitize_key(wp_unslash($_POST['emali_log_status'])) : '',
+				'emali_log_search' => isset($_POST['emali_log_search']) ? sanitize_text_field(wp_unslash($_POST['emali_log_search'])) : '',
+				'emali_log_page'   => isset($_POST['emali_log_page']) ? max(1, absint($_POST['emali_log_page'])) : 1,
+			])
+		);
+		exit;
+	}
+
+	/**
+	 * Handle forward action for an Emali Log row.
+	 */
+	public static function handle_emali_log_forward(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		$log_id = isset($_POST['log_id']) ? absint($_POST['log_id']) : 0;
+		check_admin_referer('user_manager_emali_log_forward_' . $log_id);
+		$forward_email = isset($_POST['forward_email']) ? sanitize_email(wp_unslash($_POST['forward_email'])) : '';
+		$ok = User_Manager_Core::forward_emali_log_entry($log_id, $forward_email);
+		$msg = $ok ? 'emali_log_forwarded' : 'emali_log_forward_failed';
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, $msg, [
+				'addon_section' => 'emali-log',
+				'addon_tag'     => isset($_POST['addon_tag']) ? sanitize_title(wp_unslash($_POST['addon_tag'])) : '',
+				'emali_log_status' => isset($_POST['emali_log_status']) ? sanitize_key(wp_unslash($_POST['emali_log_status'])) : '',
+				'emali_log_search' => isset($_POST['emali_log_search']) ? sanitize_text_field(wp_unslash($_POST['emali_log_search'])) : '',
+				'emali_log_page'   => isset($_POST['emali_log_page']) ? max(1, absint($_POST['emali_log_page'])) : 1,
+			])
+		);
+		exit;
+	}
+
+	/**
+	 * Handle clear-all action for Emali Log history.
+	 */
+	public static function handle_emali_log_clear(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+		check_admin_referer('user_manager_emali_log_clear');
+		User_Manager_Core::clear_emali_log_history();
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, 'emali_log_cleared', [
+				'addon_section' => 'emali-log',
+				'addon_tag'     => isset($_POST['addon_tag']) ? sanitize_title(wp_unslash($_POST['addon_tag'])) : '',
+				'emali_log_status' => isset($_POST['emali_log_status']) ? sanitize_key(wp_unslash($_POST['emali_log_status'])) : '',
+				'emali_log_search' => isset($_POST['emali_log_search']) ? sanitize_text_field(wp_unslash($_POST['emali_log_search'])) : '',
+				'emali_log_page'   => isset($_POST['emali_log_page']) ? max(1, absint($_POST['emali_log_page'])) : 1,
+			])
+		);
 		exit;
 	}
 
@@ -2997,6 +4166,382 @@ class User_Manager_Actions {
 	}
 
 	/**
+	 * Build redirect URL back to Add-ons > Send SMS Text section.
+	 */
+	private static function get_send_sms_text_redirect_url(string $message, array $extra = []): string {
+		$extra['addon_section'] = 'send-sms-text';
+		return User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_ADDONS, $message, $extra);
+	}
+
+	/**
+	 * Build a map of normalized phone => user context.
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	private static function get_user_phone_directory(): array {
+		$directory = [];
+		$users = get_users(['fields' => 'all']);
+		foreach ($users as $user) {
+			if (!$user instanceof WP_User) {
+				continue;
+			}
+			$user_id = (int) $user->ID;
+			$phones = User_Manager_SMS::get_user_phone_numbers($user_id);
+			if (empty($phones)) {
+				continue;
+			}
+			$context = [
+				'user_id'    => $user_id,
+				'email'      => (string) $user->user_email,
+				'username'   => (string) $user->user_login,
+				'first_name' => (string) $user->first_name,
+				'last_name'  => (string) $user->last_name,
+			];
+			foreach ($phones as $phone) {
+				foreach (self::get_phone_lookup_keys($phone) as $lookup_key) {
+					if (!isset($directory[$lookup_key])) {
+						$directory[$lookup_key] = $context;
+					}
+				}
+			}
+		}
+
+		return $directory;
+	}
+
+	/**
+	 * Build phone lookup keys so equivalent formats map to the same user.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_phone_lookup_keys(string $phone): array {
+		$keys = [];
+		$normalized = User_Manager_SMS::normalize_phone_number($phone);
+		if ($normalized !== '') {
+			$keys[] = $normalized;
+		}
+
+		$digits = preg_replace('/\D+/', '', $phone);
+		$digits = is_string($digits) ? $digits : '';
+		if ($digits !== '') {
+			$keys[] = $digits;
+			$keys[] = '+' . $digits;
+			if (strlen($digits) === 10) {
+				$keys[] = '+1' . $digits;
+				$keys[] = '1' . $digits;
+			} elseif (strlen($digits) === 11 && strpos($digits, '1') === 0) {
+				$last_ten = substr($digits, 1);
+				if ($last_ten !== '') {
+					$keys[] = $last_ten;
+					$keys[] = '+1' . $last_ten;
+				}
+			}
+		}
+
+		return array_values(array_unique(array_filter($keys)));
+	}
+
+	/**
+	 * Resolve user context from phone directory using flexible phone key matching.
+	 *
+	 * @param array<string,array<string,mixed>> $phone_directory
+	 * @return array<string,mixed>|null
+	 */
+	private static function get_user_context_for_phone(string $phone_number, array $phone_directory): ?array {
+		foreach (self::get_phone_lookup_keys($phone_number) as $lookup_key) {
+			if (isset($phone_directory[$lookup_key]) && is_array($phone_directory[$lookup_key])) {
+				return $phone_directory[$lookup_key];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Handle Send SMS Text action.
+	 */
+	public static function handle_send_sms_texts(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_send_sms_texts');
+
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['send_sms_text_enabled'])) {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('send_sms_disabled'));
+			exit;
+		}
+
+		$api_token = isset($settings['simple_texting_api_token']) ? trim((string) $settings['simple_texting_api_token']) : '';
+		if ($api_token === '') {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('sms_token_missing'));
+			exit;
+		}
+
+		$phone_numbers_raw = isset($_POST['phone_numbers']) ? sanitize_textarea_field(wp_unslash($_POST['phone_numbers'])) : '';
+		$template_id = isset($_POST['sms_template']) ? sanitize_key(wp_unslash($_POST['sms_template'])) : '';
+		$login_url = isset($_POST['login_url']) ? sanitize_text_field(wp_unslash($_POST['login_url'])) : '/my-account/';
+		$coupon_code = isset($_POST['coupon_code_for_template']) ? sanitize_text_field(wp_unslash($_POST['coupon_code_for_template'])) : '';
+		$send_to_all_phone_numbers = isset($_POST['send_to_all_phone_numbers']) && $_POST['send_to_all_phone_numbers'] === '1';
+		$selected_roles = isset($_POST['selected_roles']) ? sanitize_text_field(wp_unslash($_POST['selected_roles'])) : '';
+		$selected_lists = isset($_POST['selected_lists']) ? sanitize_text_field(wp_unslash($_POST['selected_lists'])) : '';
+
+		$phone_numbers = User_Manager_SMS::parse_phone_numbers($phone_numbers_raw);
+		if (empty($phone_numbers)) {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_phone_numbers'));
+			exit;
+		}
+
+		if ($template_id === '') {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_sms_template'));
+			exit;
+		}
+
+		$throttle_enabled = !empty($settings['throttle_emails_enabled']);
+		$throttle_count = !empty($settings['throttle_emails_count']) ? (int) $settings['throttle_emails_count'] : 50;
+		$throttle_count = max(1, $throttle_count);
+
+		$total_original = count($phone_numbers);
+		$batch_phone_numbers = $phone_numbers;
+		$remaining_phone_numbers = [];
+		if ($throttle_enabled && $total_original > $throttle_count) {
+			$batch_phone_numbers = array_slice($phone_numbers, 0, $throttle_count);
+			$remaining_phone_numbers = array_slice($phone_numbers, $throttle_count);
+		}
+
+		$phone_directory = self::get_user_phone_directory();
+		$sent_count = 0;
+		$not_found_count = 0;
+		$failed_count = 0;
+
+		foreach ($batch_phone_numbers as $phone_number) {
+			$phone_number = User_Manager_SMS::normalize_phone_number((string) $phone_number);
+			if (!User_Manager_SMS::is_valid_phone_number($phone_number)) {
+				$failed_count++;
+				continue;
+			}
+
+			$user_context = self::get_user_context_for_phone($phone_number, $phone_directory);
+			if (!is_array($user_context)) {
+				$not_found_count++;
+			}
+
+			if (!is_array($user_context)) {
+				$user_context = [
+					'user_id'    => 0,
+					'email'      => '',
+					'username'   => ltrim($phone_number, '+'),
+					'first_name' => '',
+					'last_name'  => '',
+				];
+			}
+
+			$sent = User_Manager_SMS::send_sms_to_phone($phone_number, $template_id, $login_url, $coupon_code, $user_context);
+			if (!$sent) {
+				$failed_count++;
+				continue;
+			}
+
+			$sent_count++;
+			$user_id = isset($user_context['user_id']) ? (int) $user_context['user_id'] : 0;
+			$log_data = [
+				'sms_template' => $template_id,
+				'login_url'    => $login_url,
+				'phone_number' => $phone_number,
+				'is_non_user'  => $user_id <= 0,
+			];
+			if ($coupon_code !== '') {
+				$log_data['coupon_code'] = $coupon_code;
+			}
+			if ($selected_roles !== '') {
+				$log_data['selected_roles'] = $selected_roles;
+			}
+			if ($selected_lists !== '') {
+				$log_data['selected_lists'] = $selected_lists;
+			}
+			User_Manager_Core::add_activity_log('sms_sent', $user_id, 'Send SMS Text', $log_data);
+		}
+
+		$transient_key = 'um_sms_batch_' . get_current_user_id();
+		if (!empty($remaining_phone_numbers)) {
+			$batch_data = [
+				'phone_numbers'               => $remaining_phone_numbers,
+				'total_original'              => $total_original,
+				'total_sent_so_far'           => $sent_count,
+				'template_id'                 => $template_id,
+				'login_url'                   => $login_url,
+				'coupon_code'                 => $coupon_code,
+				'send_to_all_phone_numbers'   => $send_to_all_phone_numbers,
+				'selected_roles'              => $selected_roles,
+				'selected_lists'              => $selected_lists,
+				'created_at'                  => current_time('mysql'),
+			];
+			set_transient($transient_key, $batch_data, 30 * DAY_IN_SECONDS);
+
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('texts_sent_batch', [
+				'sent'       => $sent_count,
+				'not_found'  => $not_found_count,
+				'failed'     => $failed_count,
+				'remaining'  => count($remaining_phone_numbers),
+				'total'      => $total_original,
+				'total_sent' => $sent_count,
+			]));
+			exit;
+		}
+
+		delete_transient($transient_key);
+		wp_safe_redirect(self::get_send_sms_text_redirect_url('texts_sent', [
+			'sent'      => $sent_count,
+			'not_found' => $not_found_count,
+			'failed'    => $failed_count,
+		]));
+		exit;
+	}
+
+	/**
+	 * Handle Send SMS Text next-batch action.
+	 */
+	public static function handle_send_sms_texts_next_batch(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_send_sms_texts_next_batch');
+
+		$settings = User_Manager_Core::get_settings();
+		if (empty($settings['send_sms_text_enabled'])) {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('send_sms_disabled'));
+			exit;
+		}
+
+		$api_token = isset($settings['simple_texting_api_token']) ? trim((string) $settings['simple_texting_api_token']) : '';
+		if ($api_token === '') {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('sms_token_missing'));
+			exit;
+		}
+
+		$transient_key = 'um_sms_batch_' . get_current_user_id();
+		$batch_data = get_transient($transient_key);
+		if (empty($batch_data) || !is_array($batch_data)) {
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_text_batch'));
+			exit;
+		}
+
+		$phone_numbers = isset($batch_data['phone_numbers']) && is_array($batch_data['phone_numbers']) ? $batch_data['phone_numbers'] : [];
+		if (empty($phone_numbers)) {
+			delete_transient($transient_key);
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_text_batch'));
+			exit;
+		}
+
+		$template_id = isset($batch_data['template_id']) ? sanitize_key((string) $batch_data['template_id']) : '';
+		$login_url = isset($batch_data['login_url']) ? sanitize_text_field((string) $batch_data['login_url']) : '/my-account/';
+		$coupon_code = isset($batch_data['coupon_code']) ? sanitize_text_field((string) $batch_data['coupon_code']) : '';
+		$selected_roles = isset($batch_data['selected_roles']) ? sanitize_text_field((string) $batch_data['selected_roles']) : '';
+		$selected_lists = isset($batch_data['selected_lists']) ? sanitize_text_field((string) $batch_data['selected_lists']) : '';
+
+		if ($template_id === '') {
+			delete_transient($transient_key);
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('no_sms_template'));
+			exit;
+		}
+
+		$throttle_enabled = !empty($settings['throttle_emails_enabled']);
+		$throttle_count = !empty($settings['throttle_emails_count']) ? (int) $settings['throttle_emails_count'] : 50;
+		$throttle_count = max(1, $throttle_count);
+
+		$batch_phone_numbers = $phone_numbers;
+		$remaining_phone_numbers = [];
+		if ($throttle_enabled && count($phone_numbers) > $throttle_count) {
+			$batch_phone_numbers = array_slice($phone_numbers, 0, $throttle_count);
+			$remaining_phone_numbers = array_slice($phone_numbers, $throttle_count);
+		}
+
+		$phone_directory = self::get_user_phone_directory();
+		$sent_count = 0;
+		$not_found_count = 0;
+		$failed_count = 0;
+
+		foreach ($batch_phone_numbers as $phone_number) {
+			$phone_number = User_Manager_SMS::normalize_phone_number((string) $phone_number);
+			if (!User_Manager_SMS::is_valid_phone_number($phone_number)) {
+				$failed_count++;
+				continue;
+			}
+
+			$user_context = self::get_user_context_for_phone($phone_number, $phone_directory);
+			if (!is_array($user_context)) {
+				$not_found_count++;
+			}
+
+			if (!is_array($user_context)) {
+				$user_context = [
+					'user_id'    => 0,
+					'email'      => '',
+					'username'   => ltrim($phone_number, '+'),
+					'first_name' => '',
+					'last_name'  => '',
+				];
+			}
+
+			$sent = User_Manager_SMS::send_sms_to_phone($phone_number, $template_id, $login_url, $coupon_code, $user_context);
+			if (!$sent) {
+				$failed_count++;
+				continue;
+			}
+
+			$sent_count++;
+			$user_id = isset($user_context['user_id']) ? (int) $user_context['user_id'] : 0;
+			$log_data = [
+				'sms_template' => $template_id,
+				'login_url'    => $login_url,
+				'phone_number' => $phone_number,
+				'is_non_user'  => $user_id <= 0,
+				'batch'        => true,
+			];
+			if ($coupon_code !== '') {
+				$log_data['coupon_code'] = $coupon_code;
+			}
+			if ($selected_roles !== '') {
+				$log_data['selected_roles'] = $selected_roles;
+			}
+			if ($selected_lists !== '') {
+				$log_data['selected_lists'] = $selected_lists;
+			}
+			User_Manager_Core::add_activity_log('sms_sent', $user_id, 'Send SMS Text', $log_data);
+		}
+
+		$total_sent_so_far = isset($batch_data['total_sent_so_far']) ? absint($batch_data['total_sent_so_far']) : 0;
+		$total_sent_so_far += $sent_count;
+		$total_original = isset($batch_data['total_original']) ? absint($batch_data['total_original']) : count($batch_phone_numbers);
+
+		if (!empty($remaining_phone_numbers)) {
+			$batch_data['phone_numbers'] = $remaining_phone_numbers;
+			$batch_data['total_sent_so_far'] = $total_sent_so_far;
+			set_transient($transient_key, $batch_data, 30 * DAY_IN_SECONDS);
+
+			wp_safe_redirect(self::get_send_sms_text_redirect_url('texts_sent_batch', [
+				'sent'       => $sent_count,
+				'not_found'  => $not_found_count,
+				'failed'     => $failed_count,
+				'remaining'  => count($remaining_phone_numbers),
+				'total'      => $total_original,
+				'total_sent' => $total_sent_so_far,
+			]));
+			exit;
+		}
+
+		delete_transient($transient_key);
+		wp_safe_redirect(self::get_send_sms_text_redirect_url('text_batch_complete', [
+			'sent'      => $sent_count,
+			'total'     => $total_sent_so_far,
+			'not_found' => $not_found_count,
+			'failed'    => $failed_count,
+		]));
+		exit;
+	}
+
+	/**
 	 * Handle save email list action.
 	 */
 	public static function handle_save_email_list(): void {
@@ -3128,6 +4673,61 @@ class User_Manager_Actions {
 		} else {
 			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_USERS, 'list_not_found'));
 		}
+		exit;
+	}
+
+	/**
+	 * Download a saved custom email list as CSV.
+	 */
+	public static function handle_download_email_list_csv(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		$list_id = isset($_POST['list_id']) ? sanitize_text_field(wp_unslash($_POST['list_id'])) : '';
+		if ($list_id === '') {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_USERS, 'list_not_found'));
+			exit;
+		}
+
+		check_admin_referer('user_manager_download_email_list_csv_' . $list_id);
+
+		$lists = get_option('um_custom_email_lists', []);
+		if (!is_array($lists) || !isset($lists[$list_id]) || !is_array($lists[$list_id])) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_EMAIL_USERS, 'list_not_found'));
+			exit;
+		}
+
+		$list_data = $lists[$list_id];
+		$title     = isset($list_data['title']) ? sanitize_text_field((string) $list_data['title']) : '';
+		$filename_base = sanitize_file_name($title !== '' ? $title : 'email-list');
+		if ($filename_base === '') {
+			$filename_base = 'email-list';
+		}
+
+		$emails = isset($list_data['emails']) && is_array($list_data['emails']) ? $list_data['emails'] : [];
+
+		nocache_headers();
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename="' . $filename_base . '-emails.csv"');
+		header('Pragma: no-cache');
+		header('Expires: 0');
+
+		$output = fopen('php://output', 'w');
+		if ($output === false) {
+			exit;
+		}
+
+		fputcsv($output, ['email']);
+		foreach ($emails as $email_raw) {
+			$email = sanitize_email((string) $email_raw);
+			if ($email === '' || !is_email($email)) {
+				continue;
+			}
+			fputcsv($output, [$email]);
+		}
+
+		fclose($output);
 		exit;
 	}
 
@@ -3476,18 +5076,13 @@ class User_Manager_Actions {
 /**
 	 * AJAX: Insert generated content at the bottom of the page (block format) and log admin activity.
 	 */
-/**
-	 * Import demo templates (core logic, can be called directly).
+	/**
+	 * Get all built-in demo email template presets.
+	 *
+	 * @return array<string,array<string,string>>
 	 */
-	public static function import_demo_templates(): void {
-		// Start with existing templates map (unsorted raw)
-		$existing = get_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, []);
-		if (!is_array($existing)) {
-			$existing = [];
-		}
-		
-		// Define the four desired templates in the required order (1..4)
-		$desired = [
+	private static function get_demo_email_template_presets(): array {
+		return [
 			'tpl_demo_login_info' => [
 				'title' => __('Send login information', 'user-manager'),
 				'description' => __('Send my account link, username and clear text password', 'user-manager'),
@@ -3548,7 +5143,59 @@ class User_Manager_Actions {
 <a href="%SITEURL%/my-account/lost-password/">Click here to set a new password</a></p>',
 			'bcc' => '',
 			],
+			'tpl_auto_coupon' => [
+				'title'       => __('Send automated coupon', 'user-manager'),
+				'description' => __('Configured in settings tab to trigger automated discounts & store credits for new users', 'user-manager'),
+				'subject'     => __('You have a new coupon!', 'user-manager'),
+				'heading'     => __('Login to use your new coupon', 'user-manager'),
+				'body'        => '<p><strong>Coupon Code:</strong><br>
+%COUPONCODE%</p>
+
+<p><strong>Login Page:</strong><br>
+<a href="%SITEURL%%LOGINURL%">%SITEURL%%LOGINURL%</a></p>',
+			],
+			'tpl_auto_coupon_apology_10' => [
+				'title'       => __('Send $10 coupon apology', 'user-manager'),
+				'description' => __('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'),
+				'subject'     => __('You have a new $10 gift code!', 'user-manager'),
+				'heading'     => __('We are so sorry!', 'user-manager'),
+				'body'        => '<p>Here is a $10 one-time use gift code to go towards your next purchase...</p>
+
+<p><strong>Coupon Code:</strong><br>
+%COUPONCODE%</p>',
+			],
+			'tpl_auto_coupon_remaining_balance' => [
+				'title'       => __('Send automated remaining balance coupon', 'user-manager'),
+				'description' => __('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODEVALUE% and %COUPONCODE%.', 'user-manager'),
+				'subject'     => __('You have a remaining balance', 'user-manager'),
+				'heading'     => __('You have a remaining balance', 'user-manager'),
+				'body'        => '<p>Remaining Balance:<br>
+%COUPONCODEVALUE%</p>
+
+<p>Coupon Code:<br>
+%COUPONCODE%</p>',
+			],
 		];
+	}
+
+	/**
+	 * Import demo templates (core logic, can be called directly).
+	 */
+	public static function import_demo_templates(): void {
+		// Start with existing templates map (unsorted raw)
+		$existing = get_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, []);
+		if (!is_array($existing)) {
+			$existing = [];
+		}
+		
+		$all_presets = self::get_demo_email_template_presets();
+		$desired_ids = ['tpl_demo_login_info', 'tpl_demo_activate_account', 'tpl_demo_new_password', 'tpl_demo_password_reset'];
+		$desired = [];
+		foreach ($desired_ids as $desired_id) {
+			if (isset($all_presets[$desired_id])) {
+				$desired[$desired_id] = $all_presets[$desired_id];
+			}
+		}
 		
 		// Merge/overwrite existing with desired content
 		foreach ($desired as $key => $data) {
@@ -3596,6 +5243,37 @@ class User_Manager_Actions {
 	}
 
 	/**
+	 * Recreate a single built-in demo email template by ID.
+	 */
+	public static function recreate_demo_email_template(string $template_id): bool {
+		$template_id = sanitize_key($template_id);
+		$presets = self::get_demo_email_template_presets();
+		if ($template_id === '' || !isset($presets[$template_id])) {
+			return false;
+		}
+
+		$templates = User_Manager_Core::get_email_templates();
+		$existing_order = isset($templates[$template_id]['order']) ? absint($templates[$template_id]['order']) : 0;
+		$templates[$template_id] = array_merge($templates[$template_id] ?? [], $presets[$template_id]);
+
+		if ($existing_order > 0) {
+			$templates[$template_id]['order'] = $existing_order;
+		} else {
+			$max_order = 0;
+			foreach ($templates as $id => $tpl) {
+				if ($id === $template_id) {
+					continue;
+				}
+				$max_order = max($max_order, isset($tpl['order']) ? (int) $tpl['order'] : 0);
+			}
+			$templates[$template_id]['order'] = $max_order + 1;
+		}
+
+		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
+		return true;
+	}
+
+	/**
 	 * Handle import demo templates.
 	 */
 	public static function handle_import_demo_templates(): void {
@@ -3606,9 +5284,175 @@ class User_Manager_Actions {
 		check_admin_referer('user_manager_import_demo_templates');
 
 		self::import_demo_templates();
+		self::import_coupon_template();
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'demo_templates_imported'));
+		wp_safe_redirect(self::get_email_template_import_redirect_url('demo_templates_imported'));
 		exit;
+	}
+
+	/**
+	 * Handle recreating a single built-in demo email template.
+	 */
+	public static function handle_recreate_demo_template(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_recreate_demo_template');
+
+		$template_id = isset($_REQUEST['template_id']) ? sanitize_key(wp_unslash($_REQUEST['template_id'])) : '';
+		$presets = self::get_demo_email_template_presets();
+		$template_title = isset($presets[$template_id]['title']) ? sanitize_text_field((string) $presets[$template_id]['title']) : '';
+		$recreated = self::recreate_demo_email_template($template_id);
+		$message = $recreated ? 'demo_template_recreated' : 'error';
+		$redirect = self::get_email_template_import_redirect_url($message);
+		if ($template_id !== '') {
+			$redirect = add_query_arg('template_id', $template_id, $redirect);
+		}
+		if ($template_title !== '') {
+			$redirect = add_query_arg('template_title', $template_title, $redirect);
+		}
+
+		wp_safe_redirect($redirect);
+		exit;
+	}
+
+	/**
+	 * Build redirect URL after email-template import actions.
+	 */
+	private static function get_email_template_import_redirect_url(string $message): string {
+		$context = isset($_REQUEST['templates_context']) ? sanitize_key(wp_unslash($_REQUEST['templates_context'])) : '';
+		if ($context === 'addon-send-email-users') {
+			return add_query_arg(
+				[
+					'addon_section'     => 'send-email-users',
+					'templates_context' => $context,
+					'um_msg'            => $message,
+				],
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+			);
+		}
+
+		return User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, $message);
+	}
+
+	/**
+	 * Import demo SMS text templates (core logic, can be called directly).
+	 */
+	public static function import_demo_sms_text_templates(): void {
+		$existing = get_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, []);
+		if (!is_array($existing)) {
+			$existing = [];
+		}
+
+		$desired = [
+			'sms_tpl_demo_login_info' => [
+				'title' => __('Send login information', 'user-manager'),
+				'description' => __('Send website login link plus username and clear text password by SMS', 'user-manager'),
+				'body' => "Login: %SITEURL%%LOGINURL%\nEmail: %EMAIL%\nPassword: %PASSWORD%",
+			],
+			'sms_tpl_demo_activate_account' => [
+				'title' => __('Activate your new account', 'user-manager'),
+				'description' => __('Send temporary login details and a direct set-password path by SMS', 'user-manager'),
+				'body' => "Welcome! Login: %SITEURL%%LOGINURL%\nUsername: %EMAIL%\nTemp password: %PASSWORD%\nSet password: %SITEURL%/my-account/edit-account/",
+			],
+			'sms_tpl_demo_new_password' => [
+				'title' => __('Send new password', 'user-manager'),
+				'description' => __('Send updated login credentials after password changes by SMS', 'user-manager'),
+				'body' => "Your password was updated.\nLogin: %SITEURL%%LOGINURL%\nEmail: %EMAIL%\nNew password: %PASSWORD%",
+			],
+			'sms_tpl_demo_password_reset' => [
+				'title' => __('Force password reset', 'user-manager'),
+				'description' => __('Send a password reset link by SMS', 'user-manager'),
+				'body' => "Reset your password here: %PASSWORDRESETURL%\nAccount email: %EMAIL%",
+			],
+			'sms_tpl_auto_coupon' => [
+				'title' => __('Send automated coupon', 'user-manager'),
+				'description' => __('Configured in Settings to trigger automated discounts & store credits for new users. Supports %COUPONCODE%.', 'user-manager'),
+				'body' => "You have a new coupon.\nCoupon code: %COUPONCODE%\nLogin here: %SITEURL%%LOGINURL%",
+			],
+			'sms_tpl_auto_coupon_apology_10' => [
+				'title' => __('Send $10 coupon apology', 'user-manager'),
+				'description' => __('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'),
+				'body' => "We're so sorry! Here is your one-time $10 gift code: %COUPONCODE%",
+			],
+		];
+
+		foreach ($desired as $key => $data) {
+			$existing[$key] = array_merge($existing[$key] ?? [], $data);
+		}
+
+		$remaining = [];
+		$order_seed = 1000;
+		foreach ($existing as $id => &$tpl) {
+			if (!isset($tpl['order']) || !is_numeric($tpl['order'])) {
+				$tpl['order'] = $order_seed++;
+			}
+		}
+		unset($tpl);
+
+		$sorted_existing = $existing;
+		uasort($sorted_existing, static function ($a, $b) {
+			$oa = isset($a['order']) ? (int) $a['order'] : 0;
+			$ob = isset($b['order']) ? (int) $b['order'] : 0;
+			if ($oa === $ob) {
+				return 0;
+			}
+			return $oa < $ob ? -1 : 1;
+		});
+		foreach ($sorted_existing as $id => $tpl) {
+			if (!isset($desired[$id])) {
+				$remaining[$id] = $tpl;
+			}
+		}
+
+		$new = [];
+		$ord = 1;
+		foreach (array_keys($desired) as $id) {
+			$new[$id] = $existing[$id];
+			$new[$id]['order'] = $ord++;
+		}
+		foreach ($remaining as $id => $tpl) {
+			$new[$id] = $tpl;
+			$new[$id]['order'] = $ord++;
+		}
+
+		update_option(User_Manager_Core::SMS_TEXT_TEMPLATES_KEY, $new);
+	}
+
+	/**
+	 * Handle import demo SMS text templates.
+	 */
+	public static function handle_import_demo_sms_text_templates(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_import_demo_sms_text_templates');
+
+		self::import_demo_sms_text_templates();
+
+		wp_safe_redirect(self::get_sms_template_import_redirect_url('demo_sms_templates_imported'));
+		exit;
+	}
+
+	/**
+	 * Build redirect URL after SMS-template import actions.
+	 */
+	private static function get_sms_template_import_redirect_url(string $message): string {
+		$context = isset($_REQUEST['templates_context']) ? sanitize_key(wp_unslash($_REQUEST['templates_context'])) : '';
+		if ($context === 'addon-send-sms-text') {
+			return add_query_arg(
+				[
+					'addon_section'     => 'send-sms-text',
+					'templates_context' => $context,
+					'um_msg'            => $message,
+				],
+				User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)
+			);
+		}
+
+		return User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, $message);
 	}
 	
 	/**
@@ -3616,41 +5460,34 @@ class User_Manager_Actions {
 	 */
 	public static function import_coupon_template(): void {
 		$templates = User_Manager_Core::get_email_templates();
+		$presets = self::get_demo_email_template_presets();
 
 		// Automated coupon template.
 		$auto_id = 'tpl_auto_coupon';
-		$templates[$auto_id] = [
-			'title'       => __('Send automated coupon', 'user-manager'),
-			'description' => __('Configured in settings tab to trigger automated discounts & store credits for new users', 'user-manager'),
-			'subject'     => __('You have a new coupon!', 'user-manager'),
-			'heading'     => __('Login to use your new coupon', 'user-manager'),
-			'body'        => '<p><strong>Coupon Code:</strong><br>
-%COUPONCODE%</p>
-
-<p><strong>Login Page:</strong><br>
-<a href="%SITEURL%%LOGINURL%">%SITEURL%%LOGINURL%</a></p>',
-		];
+		if (isset($presets[$auto_id])) {
+			$templates[$auto_id] = array_merge($templates[$auto_id] ?? [], $presets[$auto_id]);
+		}
 
 		// $10 apology coupon template.
 		$apology_id = 'tpl_auto_coupon_apology_10';
-		$templates[$apology_id] = [
-			'title'       => __('Send $10 coupon apology', 'user-manager'),
-			'description' => __('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'),
-			'subject'     => __('You have a new $10 gift code!', 'user-manager'),
-			'heading'     => __('We are so sorry!', 'user-manager'),
-			'body'        => '<p>Here is a $10 one-time use gift code to go towards your next purchase...</p>
+		if (isset($presets[$apology_id])) {
+			$templates[$apology_id] = array_merge($templates[$apology_id] ?? [], $presets[$apology_id]);
+		}
 
-<p><strong>Coupon Code:</strong><br>
-%COUPONCODE%</p>',
-		];
+		// Automated remaining balance coupon template.
+		$remaining_balance_id = 'tpl_auto_coupon_remaining_balance';
+		if (isset($presets[$remaining_balance_id])) {
+			$templates[$remaining_balance_id] = array_merge($templates[$remaining_balance_id] ?? [], $presets[$remaining_balance_id]);
+		}
 
-		// Assign order after existing ones: auto coupon, then apology coupon.
+		// Assign order after existing ones: auto coupon, apology coupon, then remaining balance coupon.
 		$max_order = 0;
 		foreach ($templates as $tpl) {
 			$max_order = max($max_order, isset($tpl['order']) ? (int) $tpl['order'] : 0);
 		}
-		$templates[$auto_id]['order']    = $max_order + 1;
-		$templates[$apology_id]['order'] = $max_order + 2;
+		$templates[$auto_id]['order']              = $max_order + 1;
+		$templates[$apology_id]['order']           = $max_order + 2;
+		$templates[$remaining_balance_id]['order'] = $max_order + 3;
 
 		update_option(User_Manager_Core::EMAIL_TEMPLATES_KEY, $templates);
 	}
@@ -3666,7 +5503,7 @@ class User_Manager_Actions {
 
 		self::import_coupon_template();
 
-		wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_TOOLS, 'demo_templates_imported'));
+		wp_safe_redirect(self::get_email_template_import_redirect_url('demo_templates_imported'));
 		exit;
 	}
 
@@ -3948,6 +5785,224 @@ class User_Manager_Actions {
 		}
 
 		return $roles;
+	}
+
+	/**
+	 * Normalize and sanitize comma/space/newline separated free-text partials.
+	 */
+	private static function sanitize_text_partials_csv($raw): string {
+		$raw = is_string($raw) ? $raw : '';
+		if ($raw === '') {
+			return '';
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw);
+		if (!is_array($parts)) {
+			return '';
+		}
+
+		$values = [];
+		foreach ($parts as $part) {
+			$part = sanitize_text_field((string) $part);
+			$part = strtolower(trim($part));
+			if ($part === '') {
+				continue;
+			}
+			$values[] = $part;
+		}
+
+		$values = array_values(array_unique($values));
+		return implode(', ', $values);
+	}
+
+	/**
+	 * Sanitize a posted text-values array (e.g. selected actions).
+	 *
+	 * @param mixed $raw Raw posted values.
+	 * @return array<int,string>
+	 */
+	private static function sanitize_text_values_array($raw): array {
+		$parts = is_array($raw) ? $raw : [];
+		$values = [];
+		foreach ($parts as $part) {
+			$value = sanitize_text_field((string) $part);
+			$value = trim($value);
+			if ($value === '') {
+				continue;
+			}
+			$values[] = $value;
+		}
+
+		return array_values(array_unique($values));
+	}
+
+	/**
+	 * Normalize and sanitize comma/newline separated text values.
+	 */
+	private static function sanitize_text_values_csv($raw): string {
+		$raw = is_string($raw) ? $raw : '';
+		if ($raw === '') {
+			return '';
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw);
+		if (!is_array($parts)) {
+			return '';
+		}
+
+		$values = [];
+		foreach ($parts as $part) {
+			$value = sanitize_text_field((string) $part);
+			$value = trim($value);
+			if ($value === '') {
+				continue;
+			}
+			$values[] = $value;
+		}
+
+		$values = array_values(array_unique($values));
+		return implode(', ', $values);
+	}
+
+	/**
+	 * Sanitize posted My Account order status title overrides.
+	 *
+	 * @param mixed $raw Raw posted value.
+	 * @return array<string,string>
+	 */
+	private static function sanitize_my_account_order_status_title_overrides($raw): array {
+		if (!is_array($raw)) {
+			return [];
+		}
+
+		$clean = [];
+		foreach ($raw as $status_key => $label) {
+			$normalized_key = self::normalize_wc_order_status_key((string) $status_key);
+			if ($normalized_key === '') {
+				continue;
+			}
+			$label = sanitize_text_field((string) $label);
+			if ($label === '') {
+				continue;
+			}
+			$clean[$normalized_key] = $label;
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Normalize WooCommerce status keys like pending / wc_pending / wc-pending.
+	 */
+	private static function normalize_wc_order_status_key(string $raw): string {
+		$raw = trim(strtolower($raw));
+		if ($raw === '') {
+			return '';
+		}
+		$raw = str_replace('_', '-', $raw);
+		$raw = sanitize_key($raw);
+		if ($raw === '') {
+			return '';
+		}
+		if (strpos($raw, 'wc-') !== 0) {
+			$raw = 'wc-' . ltrim($raw, '-');
+		}
+		return sanitize_key($raw);
+	}
+
+	/**
+	 * Sanitize plugin title override text.
+	 */
+	private static function sanitize_plugin_title_override($raw): string {
+		$title = sanitize_text_field((string) $raw);
+		return trim($title);
+	}
+
+	/**
+	 * Normalize and sanitize comma/newline separated emails.
+	 */
+	private static function sanitize_email_csv($raw): string {
+		$raw = is_string($raw) ? $raw : '';
+		if ($raw === '') {
+			return '';
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw);
+		if (!is_array($parts)) {
+			return '';
+		}
+
+		$emails = [];
+		foreach ($parts as $part) {
+			$email = sanitize_email((string) $part);
+			$email = strtolower(trim($email));
+			if ($email === '' || !is_email($email)) {
+				continue;
+			}
+			$emails[] = $email;
+		}
+
+		$emails = array_values(array_unique($emails));
+		return implode(', ', $emails);
+	}
+
+	/**
+	 * Normalize and sanitize Block Pages by URL String rule sets.
+	 *
+	 * @param mixed $raw_sets Raw posted value.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function sanitize_block_pages_by_url_string_rules($raw_sets): array {
+		if (!is_array($raw_sets)) {
+			return [];
+		}
+
+		$available_roles = [];
+		if (function_exists('wp_roles')) {
+			$wp_roles = wp_roles();
+			if ($wp_roles && isset($wp_roles->roles) && is_array($wp_roles->roles)) {
+				$available_roles = array_keys($wp_roles->roles);
+			}
+		}
+
+		$sanitized_sets = [];
+		foreach ($raw_sets as $raw_set) {
+			if (!is_array($raw_set)) {
+				continue;
+			}
+
+			$match_urls = isset($raw_set['match_urls']) ? sanitize_textarea_field((string) $raw_set['match_urls']) : '';
+			$exception_urls = isset($raw_set['exception_urls']) ? sanitize_textarea_field((string) $raw_set['exception_urls']) : '';
+			if (trim($match_urls) === '') {
+				continue;
+			}
+
+			$usernames = isset($raw_set['usernames']) ? self::sanitize_username_csv((string) $raw_set['usernames']) : '';
+			$roles = isset($raw_set['roles']) ? self::sanitize_role_keys_array($raw_set['roles']) : [];
+			if (!empty($available_roles)) {
+				$roles = array_values(array_intersect($roles, $available_roles));
+			}
+
+			$redirect_url = isset($raw_set['redirect_url']) ? esc_url_raw((string) $raw_set['redirect_url']) : '';
+			$background_color = isset($raw_set['background_color']) ? sanitize_hex_color((string) $raw_set['background_color']) : '';
+			$text_color = isset($raw_set['text_color']) ? sanitize_hex_color((string) $raw_set['text_color']) : '';
+
+			$sanitized_sets[] = [
+				'match_urls' => $match_urls,
+				'exception_urls' => $exception_urls,
+				'usernames' => $usernames,
+				'roles' => $roles,
+				'background_color' => $background_color ? $background_color : '#000000',
+				'background_url' => isset($raw_set['background_url']) ? esc_url_raw((string) $raw_set['background_url']) : '',
+				'logo_url' => isset($raw_set['logo_url']) ? esc_url_raw((string) $raw_set['logo_url']) : '',
+				'logo_width' => isset($raw_set['logo_width']) ? sanitize_text_field((string) $raw_set['logo_width']) : '',
+				'message' => isset($raw_set['message']) ? sanitize_text_field((string) $raw_set['message']) : '',
+				'text_color' => $text_color ? $text_color : '',
+				'redirect_url' => $redirect_url,
+			];
+		}
+
+		return $sanitized_sets;
 	}
 }
 

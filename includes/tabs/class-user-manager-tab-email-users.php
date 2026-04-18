@@ -9,9 +9,10 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Tab_Email_Users {
 
-	public static function render(): void {
+	public static function render(string $base_url = ''): void {
 		$templates     = User_Manager_Core::get_email_templates();
 		$activity_data = User_Manager_Core::get_activity_log();
+		$page_url = $base_url !== '' ? $base_url : User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_USERS);
 
 		// Normalize activity log structure (supports older flat arrays and newer ['entries' => []] format).
 		$entries = $activity_data['entries'] ?? $activity_data;
@@ -147,7 +148,10 @@ class User_Manager_Tab_Email_Users {
 							</div>
 							
 							<div class="um-form-field">
-								<label for="um-email-users-template"><?php esc_html_e('Email Template', 'user-manager'); ?> <span style="color:red;">*</span></label>
+								<label for="um-email-users-template">
+									<?php esc_html_e('Email Template', 'user-manager'); ?> <span style="color:red;">*</span>
+									<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+								</label>
 								<select name="email_template" id="um-email-users-template" class="regular-text" required>
 									<option value=""><?php esc_html_e('— Select Template —', 'user-manager'); ?></option>
 									<?php foreach ($templates as $id => $template) : ?>
@@ -156,7 +160,7 @@ class User_Manager_Tab_Email_Users {
 								</select>
 								<p class="description um-template-description-note" style="margin-top:6px;"></p>
 								<?php if (empty($templates)) : ?>
-									<p class="description" style="color: #d63638;"><?php esc_html_e('No templates found. Create a template in the Email Templates tab first.', 'user-manager'); ?></p>
+									<p class="description" style="color: #d63638;"><?php esc_html_e('No templates found. Create one in Add-ons → Send Email → Email Templates.', 'user-manager'); ?></p>
 								<?php endif; ?>
 							</div>
 							
@@ -275,7 +279,7 @@ class User_Manager_Tab_Email_Users {
 							<p>
 								<?php submit_button($editing_list ? __('Update List', 'user-manager') : __('Create List', 'user-manager'), 'primary', 'submit', false); ?>
 								<?php if ($editing_list) : ?>
-									<a href="<?php echo esc_url(User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_USERS)); ?>" class="button" style="margin-left: 5px;"><?php esc_html_e('Cancel', 'user-manager'); ?></a>
+									<a href="<?php echo esc_url($page_url); ?>" class="button" style="margin-left: 5px;"><?php esc_html_e('Cancel', 'user-manager'); ?></a>
 								<?php endif; ?>
 							</p>
 						</form>
@@ -306,13 +310,21 @@ class User_Manager_Tab_Email_Users {
 											<td><strong><?php echo esc_html($list_data['title'] ?? ''); ?></strong></td>
 											<td><?php echo esc_html(number_format(count($list_data['emails'] ?? []))); ?></td>
 											<td style="text-align: center;">
-												<a href="<?php echo esc_url(add_query_arg('edit_list', $list_id, User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_USERS))); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
-												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display: inline;" onsubmit="return confirm('<?php echo esc_js(__('Are you sure you want to delete this list?', 'user-manager')); ?>');">
+												<div style="display: inline-flex; flex-direction: column; gap: 6px; align-items: center;">
+													<a href="<?php echo esc_url(add_query_arg('edit_list', $list_id, $page_url)); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
+													<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display: block; margin: 0;">
+													<input type="hidden" name="action" value="user_manager_download_email_list_csv" />
+													<input type="hidden" name="list_id" value="<?php echo esc_attr($list_id); ?>" />
+													<?php wp_nonce_field('user_manager_download_email_list_csv_' . $list_id); ?>
+													<?php submit_button(__('CSV', 'user-manager'), 'button-small', 'submit', false); ?>
+													</form>
+													<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display: block; margin: 0;" onsubmit="return confirm('<?php echo esc_js(__('Are you sure you want to delete this list?', 'user-manager')); ?>');">
 													<input type="hidden" name="action" value="user_manager_delete_email_list" />
 													<input type="hidden" name="list_id" value="<?php echo esc_attr($list_id); ?>" />
 													<?php wp_nonce_field('user_manager_delete_email_list'); ?>
-													<?php submit_button(__('Delete', 'user-manager'), 'button-small', 'submit', false, ['style' => 'margin-left: 5px;']); ?>
-												</form>
+													<?php submit_button(__('Delete', 'user-manager'), 'button-small', 'submit', false); ?>
+													</form>
+												</div>
 											</td>
 										</tr>
 									<?php endforeach; ?>

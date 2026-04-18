@@ -8,27 +8,39 @@ if (!defined('ABSPATH')) {
 }
 
 require_once __DIR__ . '/class-user-manager-addon-my-account-site-admin.php';
+require_once __DIR__ . '/class-user-manager-addon-add-to-cart-min-max-quantities.php';
 require_once __DIR__ . '/class-user-manager-addon-add-to-cart-variation-table.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-add-to-cart.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-coupons.php';
 require_once __DIR__ . '/class-user-manager-addon-bulk-page-creator.php';
 require_once __DIR__ . '/class-user-manager-addon-cart-price-per-piece.php';
+require_once __DIR__ . '/class-user-manager-addon-cart-total-items.php';
 require_once __DIR__ . '/class-user-manager-addon-blog-post-idea-generator.php';
 require_once __DIR__ . '/class-user-manager-addon-checkout-predefined-addresses.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-notifications-for-users-with-coupons.php';
 require_once __DIR__ . '/class-user-manager-addon-coupon-remaining-balances.php';
 require_once __DIR__ . '/class-user-manager-addon-coupons-for-new-users.php';
 require_once __DIR__ . '/class-user-manager-addon-custom-admin-notifications.php';
+require_once __DIR__ . '/class-user-manager-addon-data-anonymizer.php';
 require_once __DIR__ . '/class-user-manager-addon-database-table-browser.php';
+require_once __DIR__ . '/class-user-manager-addon-emali-log.php';
 require_once __DIR__ . '/class-user-manager-addon-fatal-error-debugger.php';
 require_once __DIR__ . '/class-user-manager-addon-invoice-approval.php';
 require_once __DIR__ . '/class-user-manager-addon-plugin-tags-notes.php';
 require_once __DIR__ . '/class-user-manager-addon-security-hardening.php';
+require_once __DIR__ . '/class-user-manager-addon-seo-basics.php';
+require_once __DIR__ . '/class-user-manager-addon-staging-development-environment-overrides.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-coupon-screen.php';
 require_once __DIR__ . '/class-user-manager-addon-my-account-menu-tiles.php';
 require_once __DIR__ . '/class-user-manager-addon-post-meta.php';
+require_once __DIR__ . '/class-user-manager-addon-product-notification.php';
 require_once __DIR__ . '/class-user-manager-addon-product-search-by-sku.php';
 require_once __DIR__ . '/class-user-manager-addon-quick-search.php';
+require_once __DIR__ . '/class-user-manager-addon-order-received-page-customizer.php';
+require_once __DIR__ . '/class-user-manager-addon-restricted-access.php';
+require_once __DIR__ . '/class-user-manager-addon-block-pages-by-url-string.php';
+require_once __DIR__ . '/class-user-manager-addon-send-email.php';
+require_once __DIR__ . '/class-user-manager-addon-send-sms-text.php';
 require_once __DIR__ . '/class-user-manager-addon-webhook-urls.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
@@ -38,8 +50,13 @@ require_once __DIR__ . '/class-user-manager-addon-role-switching.php';
 class User_Manager_Tab_Addons {
 
 	public static function render(): void {
-		$settings      = User_Manager_Core::get_settings();
+		wp_enqueue_style('wp-color-picker');
+		wp_enqueue_script('wp-color-picker');
+
+		$settings      = User_Manager_Core::get_raw_settings();
 		$bulk_settings = get_option('bulk_add_to_cart_settings', []);
+		$email_templates = User_Manager_Core::get_email_templates();
+		$temporarily_disable_addons = !empty($settings['temporarily_disable_addons']);
 		$settings_form_id = 'um-addons-settings-form';
 		$addon_sections = self::get_addon_sections($settings);
 		$sorted_addon_sections = $addon_sections;
@@ -58,6 +75,32 @@ class User_Manager_Tab_Addons {
 			$current_addon_section = '';
 		}
 		$addons_base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS);
+		$addon_runtime_map = User_Manager_Core::get_addon_runtime_toggle_map(false);
+		$addon_main_navigation_fields = [];
+		foreach ($addon_runtime_map as $addon_slug => $addon_meta) {
+			$activate_field_name = '';
+			$settings_keys = isset($addon_meta['settings_keys']) && is_array($addon_meta['settings_keys']) ? $addon_meta['settings_keys'] : [];
+			foreach ($settings_keys as $settings_key) {
+				$settings_key = (string) $settings_key;
+				if ($settings_key !== '' && $settings_key !== '__role_switching_option_enabled') {
+					$activate_field_name = $settings_key;
+					break;
+				}
+			}
+			if ($addon_slug === 'user-role-switching') {
+				$activate_field_name = 'role_switching_enabled';
+			}
+			if ($activate_field_name === '') {
+				continue;
+			}
+			$addon_main_navigation_fields[$addon_slug] = [
+				'activate_field_name' => $activate_field_name,
+			];
+		}
+		$selected_addon_main_navigation_tabs = User_Manager_Core::get_selected_addon_main_navigation_tabs($settings);
+		$temporarily_disabled_badge = !empty($settings['temporarily_disable_addons'])
+			? '<span class="um-temp-disabled-badge" title="' . esc_attr__('Temporarily disabled at runtime', 'user-manager') . '"><span class="dashicons dashicons-hidden" aria-hidden="true"></span> ' . esc_html__('Temporarily disabled', 'user-manager') . '</span>'
+			: '';
 		?>
 		<ul class="subsubsub" style="margin: 12px 0 14px;">
 			<?php $tag_total = count($addon_tags); $tag_index = 0; ?>
@@ -77,12 +120,17 @@ class User_Manager_Tab_Addons {
 		<br class="clear" />
 
 		<?php if ($current_addon_section === '') : ?>
-			<div class="um-admin-card um-admin-card-full" style="margin-top: 20px; margin-bottom: 16px;">
+			<div class="um-admin-card um-admin-card-full" style="margin-bottom: 16px;">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-filter"></span>
 					<h2><?php esc_html_e('Add-ons Filter', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+						<?php if (!empty($settings['temporarily_disable_addons'])) : ?>
+							<p class="description" style="margin-top:0; margin-bottom:10px;">
+								<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+							</p>
+						<?php endif; ?>
 					<div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
 						<div style="min-width:280px; flex:1;">
 							<label for="um-addons-filter-text"><strong><?php esc_html_e('Keyword filter', 'user-manager'); ?></strong></label>
@@ -99,13 +147,69 @@ class User_Manager_Tab_Addons {
 			</div>
 		<?php endif; ?>
 
+		<div class="um-addons-active-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card um-admin-card-full" style="margin-bottom: 16px;">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-yes-alt"></span>
+					<h2><?php esc_html_e('Active Add-ons', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<?php if (!empty($settings['temporarily_disable_addons'])) : ?>
+						<p class="description" style="margin-top:0; margin-bottom:10px;">
+							<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+						</p>
+					<?php endif; ?>
+					<div class="um-addon-tile-grid">
+						<?php
+						$visible_active_tiles = 0;
+						foreach ($sorted_addon_sections as $section_key => $section_meta) :
+							$section_tags = self::get_addon_section_tags($section_meta);
+							if ($current_addon_tag !== '' && !isset($section_tags[$current_addon_tag])) {
+								continue;
+							}
+							$is_active = !empty($section_meta['active']);
+							if (!$is_active) {
+								continue;
+							}
+							$visible_active_tiles++;
+							?>
+							<a
+								class="um-addon-tile um-addon-tile-active"
+								href="<?php echo esc_url(add_query_arg(['addon_section' => $section_key, 'addon_tag' => $current_addon_tag], $addons_base_url)); ?>"
+							>
+								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
+								<span class="um-addon-tile-status"><?php echo esc_html__('Active', 'user-manager'); ?></span>
+								<?php if (!empty($section_meta['description'])) : ?>
+									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
+								<?php endif; ?>
+								<?php if (!empty($section_tags)) : ?>
+									<span class="um-addon-tile-tags">
+										<?php foreach ($section_tags as $section_tag_key => $section_tag_label) : ?>
+											<span class="um-addon-tile-tag um-addon-tile-tag-<?php echo esc_attr($section_tag_key); ?>"><?php echo esc_html($section_tag_label); ?></span>
+										<?php endforeach; ?>
+									</span>
+								<?php endif; ?>
+							</a>
+						<?php endforeach; ?>
+						<?php if ($visible_active_tiles === 0) : ?>
+							<p class="description"><?php esc_html_e('No active add-ons match this tag.', 'user-manager'); ?></p>
+						<?php endif; ?>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div class="um-addons-empty-state" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
 			<div class="um-admin-card um-admin-card-full">
 				<div class="um-admin-card-header">
 					<span class="dashicons dashicons-screenoptions"></span>
-					<h2><?php esc_html_e('Choose an Add-on', 'user-manager'); ?></h2>
+					<h2><?php esc_html_e('Inactive Addons', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
+					<?php if (!empty($settings['temporarily_disable_addons'])) : ?>
+						<p class="description" style="margin-top:0; margin-bottom:10px;">
+							<?php echo wp_kses_post($temporarily_disabled_badge); ?>
+						</p>
+					<?php endif; ?>
 					<div class="um-addon-tile-grid">
 						<?php
 						$visible_tiles = 0;
@@ -114,15 +218,18 @@ class User_Manager_Tab_Addons {
 							if ($current_addon_tag !== '' && !isset($section_tags[$current_addon_tag])) {
 								continue;
 							}
+							$is_active = !empty($section_meta['active']);
+							if ($is_active) {
+								continue;
+							}
 							$visible_tiles++;
 							?>
-							<?php $is_active = !empty($section_meta['active']); ?>
 							<a
-								class="um-addon-tile<?php echo $is_active ? ' um-addon-tile-active' : ''; ?>"
+								class="um-addon-tile"
 								href="<?php echo esc_url(add_query_arg(['addon_section' => $section_key, 'addon_tag' => $current_addon_tag], $addons_base_url)); ?>"
 							>
 								<span class="um-addon-tile-title"><?php echo esc_html((string) $section_meta['label']); ?></span>
-								<span class="um-addon-tile-status"><?php echo $is_active ? esc_html__('Active', 'user-manager') : esc_html__('Inactive', 'user-manager'); ?></span>
+								<span class="um-addon-tile-status"><?php echo esc_html__('Inactive', 'user-manager'); ?></span>
 								<?php if (!empty($section_meta['description'])) : ?>
 									<span class="um-addon-tile-description"><?php echo esc_html((string) $section_meta['description']); ?></span>
 								<?php endif; ?>
@@ -136,9 +243,32 @@ class User_Manager_Tab_Addons {
 							</a>
 						<?php endforeach; ?>
 						<?php if ($visible_tiles === 0) : ?>
-							<p class="description"><?php esc_html_e('No add-ons match this tag.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('No inactive add-ons match this tag.', 'user-manager'); ?></p>
 						<?php endif; ?>
 					</div>
+				</div>
+			</div>
+		</div>
+		<div class="um-admin-grid um-admin-grid-single um-addon-temporary-disable-card" style="<?php echo $current_addon_section === '' ? '' : 'display:none;'; ?>">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-controls-pause"></span>
+					<h2><?php esc_html_e('Temporarily Disable All', 'user-manager'); ?></h2>
+					<?php if ($temporarily_disable_addons) : ?>
+						<span class="um-temp-disabled-chip" title="<?php esc_attr_e('Temporarily disabled', 'user-manager'); ?>">⏸ <?php esc_html_e('Temporarily disabled', 'user-manager'); ?></span>
+					<?php endif; ?>
+				</div>
+				<div class="um-admin-card-body">
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" name="temporarily_disable_addons" value="1" <?php checked($temporarily_disable_addons); ?> form="<?php echo esc_attr($settings_form_id); ?>" />
+							<?php esc_html_e('Temporarily disable all add-ons runtime functionality.', 'user-manager'); ?>
+						</label>
+						<p class="description"><?php esc_html_e('This override temporarily disables add-on runtime features only. Active add-ons stay checked and highlighted.', 'user-manager'); ?></p>
+					</div>
+					<p style="margin:0;">
+						<?php submit_button(__('Save', 'user-manager'), 'primary', 'um_save_temporary_disable_only', false, ['form' => $settings_form_id]); ?>
+					</p>
 				</div>
 			</div>
 		</div>
@@ -149,15 +279,21 @@ class User_Manager_Tab_Addons {
 			<input type="hidden" name="addon_section" value="<?php echo esc_attr($current_addon_section); ?>" />
 			<input type="hidden" name="addon_tag" value="<?php echo esc_attr($current_addon_tag); ?>" />
 			<?php wp_nonce_field('user_manager_save_settings'); ?>
-			<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
+			<div class="um-admin-grid um-admin-grid-single um-addons-main-grid" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 				<div class="um-addon-section" data-addon-section="add-to-cart-bulk-import">
 					<?php User_Manager_Addon_Bulk_Add_To_Cart::render($settings, $bulk_settings); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="add-to-cart-variation-table">
 					<?php User_Manager_Addon_Add_To_Cart_Variation_Table::render($settings, $settings_form_id); ?>
 				</div>
+				<div class="um-addon-section" data-addon-section="add-to-cart-min-max-quantities">
+					<?php User_Manager_Addon_Add_To_Cart_Min_Max_Quantities::render($settings, $settings_form_id); ?>
+				</div>
 				<div class="um-addon-section" data-addon-section="cart-price-per-piece">
 					<?php User_Manager_Addon_Cart_Price_Per_Piece::render($settings, $settings_form_id); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="cart-total-items">
+					<?php User_Manager_Addon_Cart_Total_Items::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="checkout-pre-defined-addresses">
 					<?php User_Manager_Addon_Checkout_Predefined_Addresses::render($settings); ?>
@@ -174,14 +310,26 @@ class User_Manager_Tab_Addons {
 				<div class="um-addon-section" data-addon-section="coupon-remaining-balances">
 					<?php User_Manager_Addon_Coupon_Remaining_Balances::render($settings); ?>
 				</div>
+				<div class="um-addon-section" data-addon-section="data-anonymizer">
+					<?php User_Manager_Addon_Data_Anonymizer::render($settings); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="staging-development-environment-overrides">
+					<?php User_Manager_Addon_Staging_Development_Environment_Overrides::render($settings); ?>
+				</div>
 				<div class="um-addon-section" data-addon-section="bulk-page-creator">
 					<?php User_Manager_Addon_Bulk_Page_Creator::render($settings); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="database-table-browser">
 					<?php User_Manager_Addon_Database_Table_Browser::render($settings); ?>
 				</div>
+				<div class="um-addon-section" data-addon-section="emali-log">
+					<?php User_Manager_Addon_Emali_Log::render($settings, $settings_form_id); ?>
+				</div>
 				<div class="um-addon-section" data-addon-section="security-hardening">
 					<?php User_Manager_Addon_Security_Hardening::render($settings, $settings_form_id); ?>
+				</div>
+				<div class="um-addon-section" data-addon-section="seo-basics">
+					<?php User_Manager_Addon_SEO_Basics::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="fatal-error-debugger">
 					<?php User_Manager_Addon_Fatal_Error_Debugger::render($settings, $settings_form_id); ?>
@@ -193,13 +341,16 @@ class User_Manager_Tab_Addons {
 					<?php User_Manager_Addon_My_Account_Menu_Tiles::render($settings, $settings_form_id); ?>
 				</div>
 				<div class="um-addon-section" data-addon-section="my-account-site-admin">
-					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings); ?>
+					<?php User_Manager_Addon_My_Account_Site_Admin::render($settings, $settings_form_id); ?>
 				</div>
 			</div>
 		</form>
-		<div class="um-admin-grid um-admin-grid-single" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
+		<div class="um-admin-grid um-admin-grid-single um-addons-main-grid" style="<?php echo $current_addon_section === '' ? 'display:none;' : ''; ?>">
 			<div class="um-addon-section" data-addon-section="post-meta">
 				<?php User_Manager_Addon_Post_Meta::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="product-notification">
+				<?php User_Manager_Addon_Product_Notification::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="product-search-by-sku">
 				<?php User_Manager_Addon_Product_Search_By_SKU::render($settings, $settings_form_id); ?>
@@ -231,6 +382,21 @@ class User_Manager_Tab_Addons {
 			<div class="um-addon-section" data-addon-section="invoice-approval">
 				<?php User_Manager_Addon_Invoice_Approval::render($settings, $settings_form_id); ?>
 			</div>
+			<div class="um-addon-section" data-addon-section="order-received-page-customizer">
+				<?php User_Manager_Addon_Order_Received_Page_Customizer::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="restricted-access">
+				<?php User_Manager_Addon_Restricted_Access::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="block-pages-by-url-string">
+				<?php User_Manager_Addon_Block_Pages_By_URL_String::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="send-email-users">
+				<?php User_Manager_Addon_Send_Email::render($settings, $settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="send-sms-text">
+				<?php User_Manager_Addon_Send_SMS_Text::render($settings, $settings_form_id); ?>
+			</div>
 			<div class="um-addon-section" data-addon-section="webhook-urls">
 				<?php User_Manager_Addon_Webhook_URLs::render($settings); ?>
 			</div>
@@ -245,8 +411,12 @@ class User_Manager_Tab_Addons {
 
 		<?php User_Manager_Addon_Custom_Admin_Notifications::render_template($settings_form_id); ?>
 		<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render_template($settings_form_id); ?>
+		<?php User_Manager_Tab_Shared::render_email_preview_modal($email_templates); ?>
 
 		<style>
+		.um-admin-grid.um-addons-main-grid {
+			margin-top: 0;
+		}
 		.um-addon-tile-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(240px, 240px));
@@ -278,6 +448,20 @@ class User_Manager_Tab_Addons {
 		.um-addon-tile.um-addon-tile-active {
 			background: #e7f1ff;
 			border-color: #72aee6;
+		}
+		.um-temp-disabled-chip {
+			margin-left: auto;
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			font-size: 12px;
+			line-height: 1.5;
+			font-weight: 600;
+			background: #fff4e5;
+			border: 1px solid #f2c185;
+			color: #8a4b00;
 		}
 		.um-addon-tile-title {
 			display: block;
@@ -436,18 +620,85 @@ class User_Manager_Tab_Addons {
 			display: inline-block;
 			margin-bottom: 6px;
 		}
+		.um-addon-main-nav-toggle {
+			display: inline-flex;
+			align-items: center;
+			margin-left: 12px;
+			gap: 5px;
+			font-weight: 400;
+		}
+		.um-addon-main-nav-toggle label {
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			margin: 0;
+			font-size: 12px;
+			font-weight: 400;
+		}
+		.um-addon-main-nav-toggle input {
+			margin: 0;
+		}
+		.um-temp-disabled-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			border: 1px solid #dba617;
+			background: #fff8e5;
+			color: #7a5a00;
+			font-size: 12px;
+			font-weight: 600;
+		}
+		.um-temp-disabled-badge .dashicons {
+			font-size: 14px;
+			width: 14px;
+			height: 14px;
+			line-height: 14px;
+		}
 		@media (max-width: 600px) {
 			.um-checkbox-grid {
 				grid-template-columns: 1fr;
+			}
+			.um-addon-main-nav-toggle {
+				display: block;
+				margin-left: 0;
+				margin-top: 6px;
 			}
 		}
 		</style>
 
 		<script>
 		jQuery(document).ready(function($) {
+			var settingsFormId = '<?php echo esc_js($settings_form_id); ?>';
+			var addonMainNavigationLabel = '<?php echo esc_js(__('Add to Main Navigation', 'user-manager')); ?>';
+			var addonMainNavigationFields = <?php echo wp_json_encode($addon_main_navigation_fields); ?> || {};
+			var addonMainNavigationSelected = <?php echo wp_json_encode(array_fill_keys($selected_addon_main_navigation_tabs, true)); ?> || {};
 			var addonActiveText = '<?php echo esc_js(__('Active', 'user-manager')); ?>';
 			var addonInactiveText = '<?php echo esc_js(__('Inactive', 'user-manager')); ?>';
 			var currentAddonSection = '<?php echo esc_js($current_addon_section); ?>';
+			function initUmColorPickers($scope) {
+				if (!$.fn || !$.fn.wpColorPicker) {
+					return;
+				}
+				var $root = $scope && $scope.length ? $scope : $(document);
+				$root.find('.um-color-picker-field').each(function() {
+					var $field = $(this);
+					if ($field.data('wpColorPicker')) {
+						return;
+					}
+					var defaultColor = $field.attr('data-default-color');
+					$field.wpColorPicker({
+						defaultColor: defaultColor ? defaultColor : false,
+						change: function() {
+							$field.trigger('change');
+						},
+						clear: function() {
+							$field.trigger('change');
+						}
+					});
+				});
+			}
 			function normalizeAddonFilterText(str) {
 				return (str || '').toString().toLowerCase().trim();
 			}
@@ -479,6 +730,12 @@ class User_Manager_Tab_Addons {
 							anyVisible = true;
 						}
 					});
+					$('.um-addons-active-state .um-addon-tile').each(function() {
+						var $tile = $(this);
+						var matched = keyword === '' || addonFilterHaystack($tile).indexOf(keyword) !== -1;
+						$tile.toggle(matched);
+					});
+					$('.um-addon-temporary-disable-card').show();
 				} else {
 					$('.um-addon-section[data-addon-section="' + currentAddonSection + '"] .um-admin-card').each(function() {
 						var $card = $(this);
@@ -489,6 +746,7 @@ class User_Manager_Tab_Addons {
 						}
 					});
 					$('.um-addon-save-card').show();
+					$('.um-addon-temporary-disable-card').hide();
 				}
 
 				$('#um-addons-filter-empty').toggle(keyword !== '' && !anyVisible);
@@ -497,14 +755,18 @@ class User_Manager_Tab_Addons {
 			function applyAddonSectionFilter() {
 				if (!currentAddonSection) {
 					$('.um-addons-empty-state').show();
+					$('.um-addons-active-state').show();
 					$('.um-addon-section').hide();
 					$('.um-addon-save-card').hide();
+					$('.um-addon-temporary-disable-card').show();
 					return;
 				}
 				$('.um-addons-empty-state').hide();
+				$('.um-addons-active-state').hide();
 				$('.um-addon-section').hide();
 				$('.um-addon-section[data-addon-section="' + currentAddonSection + '"]').show();
 				$('.um-addon-save-card').show();
+				$('.um-addon-temporary-disable-card').hide();
 			}
 
 			function isAddonCardActive($card) {
@@ -629,6 +891,59 @@ class User_Manager_Tab_Addons {
 				});
 			}
 
+			function syncAddonMainNavigationToggle($activateCheckbox, $mainNavToggle) {
+				var isActive = $activateCheckbox.is(':checked');
+				var $checkbox = $mainNavToggle.find('input[type="checkbox"]').first();
+				if (isActive) {
+					$mainNavToggle.show();
+					$checkbox.prop('disabled', false);
+					return;
+				}
+				$checkbox.prop('checked', false).prop('disabled', true);
+				$mainNavToggle.hide();
+			}
+
+			function initAddonMainNavigationToggles() {
+				$.each(addonMainNavigationFields, function(addonSlug, fieldMeta) {
+					var activateFieldName = (fieldMeta && fieldMeta.activate_field_name) ? String(fieldMeta.activate_field_name) : '';
+					if (!activateFieldName) {
+						return;
+					}
+					var $activateCheckbox = $('input[type="checkbox"][name="' + activateFieldName + '"]').first();
+					if (!$activateCheckbox.length) {
+						return;
+					}
+					var $activateLabel = $activateCheckbox.closest('label');
+					if (!$activateLabel.length) {
+						return;
+					}
+
+					var $mainNavToggle = $activateLabel.find('.um-addon-main-nav-toggle[data-addon-slug="' + addonSlug + '"]');
+					if (!$mainNavToggle.length) {
+						$mainNavToggle = $('<span class="um-addon-main-nav-toggle" data-addon-slug=""></span>');
+						$mainNavToggle.attr('data-addon-slug', addonSlug);
+						var checkboxId = 'um-addon-main-navigation-tab-' + addonSlug;
+						var $toggleLabel = $('<label></label>').attr('for', checkboxId);
+						var $toggleCheckbox = $('<input type="checkbox" />')
+							.attr('id', checkboxId)
+							.attr('name', 'addon_main_navigation_tabs[]')
+							.attr('value', addonSlug)
+							.attr('form', settingsFormId);
+						if (addonMainNavigationSelected[addonSlug]) {
+							$toggleCheckbox.prop('checked', true);
+						}
+						$toggleLabel.append($toggleCheckbox).append($('<span></span>').text(addonMainNavigationLabel));
+						$mainNavToggle.append($toggleLabel);
+						$activateLabel.append($mainNavToggle);
+					}
+
+					syncAddonMainNavigationToggle($activateCheckbox, $mainNavToggle);
+					$activateCheckbox.on('change', function() {
+						syncAddonMainNavigationToggle($activateCheckbox, $mainNavToggle);
+					});
+				});
+			}
+
 			applyAddonSectionFilter();
 			$('#um-addons-filter-text').on('input', applyAddonsFilter);
 			$('#um-addons-filter-clear').on('click', function() {
@@ -636,6 +951,7 @@ class User_Manager_Tab_Addons {
 				applyAddonsFilter();
 			});
 			initAddonCollapsibleCards();
+			initAddonMainNavigationToggles();
 			applyAddonsFilter();
 
 			function umToggleBulkMetaFieldRow() {
@@ -678,6 +994,15 @@ class User_Manager_Tab_Addons {
 					window.umShowEmailPreview('bulk-coupons');
 				}
 			});
+			$('#um-coupon-remainder-send-email').on('change', function() {
+				$('#um-coupon-remainder-email-template-wrap').toggle(this.checked);
+			});
+			$('#um-coupon-remainder-email-template-wrap').toggle($('#um-coupon-remainder-send-email').is(':checked'));
+			$(document).on('click', '#um-preview-coupon-remainder-email-btn', function() {
+				if (typeof window.umShowEmailPreview === 'function') {
+					window.umShowEmailPreview('coupon-remainder');
+				}
+			});
 			function toggleBulkCouponsFields() {
 				$('#um-bulk-coupons-fields').toggle($('#um-bulk-coupons-enabled').is(':checked'));
 			}
@@ -704,6 +1029,14 @@ class User_Manager_Tab_Addons {
 			function toggleCouponRemainderAddonFields() {
 				$('#um-coupon-remainder-fields').toggle($('#um-coupon-remainder-enabled').is(':checked'));
 			}
+			function toggleDataAnonymizerAddonFields() {
+				var enabled = $('#um-data-anonymizer-enabled').is(':checked');
+				$('#um-data-anonymizer-fields').toggle(enabled);
+				$('#um-data-anonymizer-run-card').toggle(enabled);
+			}
+			function toggleStagingDevOverridesAddonFields() {
+				$('#um-staging-dev-overrides-fields').toggle($('#um-staging-dev-overrides-enabled').is(':checked'));
+			}
 			function toggleMyAccountCouponScreenFields() {
 				$('#um-my-account-coupon-screen-fields').toggle($('#um-my-account-coupon-screen-enabled').is(':checked'));
 			}
@@ -712,6 +1045,9 @@ class User_Manager_Tab_Addons {
 			}
 			function toggleCartPricePerPieceFields() {
 				$('#um-cart-price-per-piece-fields').toggle($('#um-cart-price-per-piece-enabled').is(':checked'));
+			}
+			function toggleCartTotalItemsFields() {
+				$('#um-cart-total-items-fields').toggle($('#um-cart-total-items-enabled').is(':checked'));
 			}
 			function toggleBulkPageCreatorFields() {
 				var enabled = $('#um-bulk-page-creator-enabled').is(':checked');
@@ -727,11 +1063,32 @@ class User_Manager_Tab_Addons {
 			function toggleInvoiceApprovalFields() {
 				$('#um-invoice-approval-fields').toggle($('#um-invoice-approval-enabled').is(':checked'));
 			}
+			function toggleOrderReceivedPageCustomizerFields() {
+				$('#um-order-received-page-customizer-fields').toggle($('#um-order-received-page-customizer-enabled').is(':checked'));
+			}
+			function toggleRestrictedAccessFields() {
+				$('#um-restricted-access-fields').toggle($('#um-restricted-access-enabled').is(':checked'));
+			}
+			function toggleBlockPagesByUrlStringFields() {
+				$('#um-block-pages-by-url-string-fields').toggle($('#um-block-pages-by-url-string-enabled').is(':checked'));
+			}
+			function toggleSendSmsTextFields() {
+				$('#um-send-sms-text-fields').toggle($('#um-send-sms-text-enabled').is(':checked'));
+			}
+			function toggleSendEmailUsersFields() {
+				$('#um-send-email-users-fields').show();
+			}
 			function toggleSecurityHardeningFields() {
 				$('#um-security-hardening-fields').toggle($('#um-security-hardening-enabled').is(':checked'));
 			}
 			function toggleFatalErrorDebuggerFields() {
 				$('#um-fatal-error-debugger-fields').toggle($('#um-fatal-error-debugger-enabled').is(':checked'));
+			}
+			function toggleSeoBasicsFields() {
+				$('#um-seo-basics-fields').toggle($('#um-seo-basics-enabled').is(':checked'));
+			}
+			function toggleProductNotificationFields() {
+				$('#um-product-notification-fields').toggle($('#um-product-notification-enabled').is(':checked'));
 			}
 			$('#um-bulk-coupons-enabled').on('change', toggleBulkCouponsFields);
 			toggleBulkCouponsFields();
@@ -740,15 +1097,25 @@ class User_Manager_Tab_Addons {
 			toggleNewUserCouponAddonFields();
 			toggleCouponNotificationsAddonFields();
 			toggleCouponRemainderAddonFields();
+			toggleDataAnonymizerAddonFields();
+			toggleStagingDevOverridesAddonFields();
 			toggleMyAccountCouponScreenFields();
 			toggleMyAccountMenuTilesFields();
 			toggleCartPricePerPieceFields();
+			toggleCartTotalItemsFields();
 			toggleBulkPageCreatorFields();
 			toggleDatabaseTableBrowserFields();
 			toggleWebhookUrlsFields();
 			toggleInvoiceApprovalFields();
+			toggleOrderReceivedPageCustomizerFields();
+			toggleRestrictedAccessFields();
+			toggleBlockPagesByUrlStringFields();
+			toggleSendEmailUsersFields();
+			toggleSendSmsTextFields();
 			toggleSecurityHardeningFields();
 			toggleFatalErrorDebuggerFields();
+			toggleSeoBasicsFields();
+			toggleProductNotificationFields();
 			$('.um-addon-action-submit').on('click', function() {
 				var targetAction = $(this).attr('data-um-target-action') || 'user_manager_save_settings';
 				$('#um-addons-form-action').val(targetAction);
@@ -783,6 +1150,8 @@ class User_Manager_Tab_Addons {
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-approver-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-default-pending-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-additional-meta-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-additional-meta-list-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-additional-flag-list-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-order-viewer-enabled', '#um-my-account-admin-order-meta-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-product-viewer-enabled', '#um-my-account-admin-product-viewer-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-product-viewer-enabled', '#um-my-account-admin-product-meta-field');
@@ -790,6 +1159,9 @@ class User_Manager_Tab_Addons {
 				toggleMyAccountAdminViewerField('#um-my-account-admin-coupon-viewer-enabled', '#um-my-account-admin-coupon-meta-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-user-viewer-enabled', '#um-my-account-admin-user-viewer-users-field');
 				toggleMyAccountAdminViewerField('#um-my-account-admin-user-viewer-enabled', '#um-my-account-admin-user-meta-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-activity-viewer-enabled', '#um-my-account-admin-activity-viewer-users-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-activity-viewer-enabled', '#um-my-account-admin-activity-viewer-actions-field');
+				toggleMyAccountAdminViewerField('#um-my-account-admin-activity-viewer-enabled', '#um-my-account-admin-activity-viewer-role-review-field');
 			}
 
 			function toggleCustomAdminNotificationsFields() {
@@ -810,10 +1182,13 @@ class User_Manager_Tab_Addons {
 			function toggleAddToCartVariationTableFields() {
 				$('#um-add-to-cart-variation-table-fields').toggle($('#um-add-to-cart-variation-table-enabled').is(':checked'));
 			}
+			function toggleAddToCartMinMaxQuantitiesFields() {
+				$('#um-add-to-cart-min-max-quantities-fields').toggle($('#um-add-to-cart-min-max-quantities-enabled').is(':checked'));
+			}
 
-			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
+			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled, #um-my-account-admin-activity-viewer-enabled').on('change', toggleMyAccountAdminViewerFields);
 			toggleMyAccountAdminViewerFields();
-			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled').on('change', function() {
+			$('#um-my-account-site-admin-enabled, #um-my-account-admin-order-viewer-enabled, #um-my-account-admin-product-viewer-enabled, #um-my-account-admin-coupon-viewer-enabled, #um-my-account-admin-user-viewer-enabled, #um-my-account-admin-activity-viewer-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-my-account'));
 			});
 			$("input[name='bulk_add_to_cart_enabled']").on('change', function() {
@@ -830,6 +1205,10 @@ class User_Manager_Tab_Addons {
 			$('#um-add-to-cart-variation-table-enabled').on('change', function() {
 				toggleAddToCartVariationTableFields();
 				refreshAddonCardAutoState($('#um-addon-card-add-to-cart-variation-table'));
+			});
+			$('#um-add-to-cart-min-max-quantities-enabled').on('change', function() {
+				toggleAddToCartMinMaxQuantitiesFields();
+				refreshAddonCardAutoState($('#um-addon-card-add-to-cart-min-max-quantities'));
 			});
 			$('#um-bulk-coupons-enabled').on('change', function() {
 				refreshAddonCardAutoState($('#um-addon-card-bulk-coupons'));
@@ -879,6 +1258,14 @@ class User_Manager_Tab_Addons {
 				toggleCouponRemainderAddonFields();
 				refreshAddonCardAutoState($('#um-addon-card-coupon-remainder'));
 			});
+			$('#um-data-anonymizer-enabled').on('change', function() {
+				toggleDataAnonymizerAddonFields();
+				refreshAddonCardAutoState($('#um-addon-card-data-anonymizer'));
+			});
+			$('#um-staging-dev-overrides-enabled').on('change', function() {
+				toggleStagingDevOverridesAddonFields();
+				refreshAddonCardAutoState($('#um-addon-card-staging-dev-overrides'));
+			});
 			$('#um-security-hardening-enabled').on('change', function() {
 				toggleSecurityHardeningFields();
 				refreshAddonCardAutoState($('#um-addon-card-security-hardening'));
@@ -886,6 +1273,14 @@ class User_Manager_Tab_Addons {
 			$('#um-fatal-error-debugger-enabled').on('change', function() {
 				toggleFatalErrorDebuggerFields();
 				refreshAddonCardAutoState($('#um-addon-card-fatal-error-debugger'));
+			});
+			$('#um-seo-basics-enabled').on('change', function() {
+				toggleSeoBasicsFields();
+				refreshAddonCardAutoState($('#um-addon-card-seo-basics'));
+			});
+			$('#um-product-notification-enabled').on('change', function() {
+				toggleProductNotificationFields();
+				refreshAddonCardAutoState($('#um-addon-card-product-notification'));
 			});
 			$('#um-my-account-coupon-screen-enabled').on('change', function() {
 				toggleMyAccountCouponScreenFields();
@@ -899,6 +1294,10 @@ class User_Manager_Tab_Addons {
 				toggleCartPricePerPieceFields();
 				refreshAddonCardAutoState($('#um-addon-card-cart-price-per-piece'));
 			});
+			$('#um-cart-total-items-enabled').on('change', function() {
+				toggleCartTotalItemsFields();
+				refreshAddonCardAutoState($('#um-addon-card-cart-total-items'));
+			});
 			$('#um-bulk-page-creator-enabled').on('change', function() {
 				toggleBulkPageCreatorFields();
 				refreshAddonCardAutoState($('#um-addon-card-bulk-page-creator'));
@@ -907,6 +1306,10 @@ class User_Manager_Tab_Addons {
 				toggleDatabaseTableBrowserFields();
 				refreshAddonCardAutoState($('#um-addon-card-database-table-browser'));
 			});
+			$('#um-emali-log-enabled').on('change', function() {
+				$('#um-emali-log-fields').toggle($('#um-emali-log-enabled').is(':checked'));
+				refreshAddonCardAutoState($('#um-addon-card-emali-log'));
+			});
 			$('#um-webhook-urls-enabled').on('change', function() {
 				toggleWebhookUrlsFields();
 				refreshAddonCardAutoState($('#um-addon-card-webhook-urls'));
@@ -914,6 +1317,26 @@ class User_Manager_Tab_Addons {
 			$('#um-invoice-approval-enabled').on('change', function() {
 				toggleInvoiceApprovalFields();
 				refreshAddonCardAutoState($('#um-addon-card-invoice-approval'));
+			});
+			$('#um-order-received-page-customizer-enabled').on('change', function() {
+				toggleOrderReceivedPageCustomizerFields();
+				refreshAddonCardAutoState($('#um-addon-card-order-received-page-customizer'));
+			});
+			$('#um-restricted-access-enabled').on('change', function() {
+				toggleRestrictedAccessFields();
+				refreshAddonCardAutoState($('#um-addon-card-restricted-access'));
+			});
+			$('#um-block-pages-by-url-string-enabled').on('change', function() {
+				toggleBlockPagesByUrlStringFields();
+				refreshAddonCardAutoState($('#um-addon-card-block-pages-by-url-string'));
+			});
+			$('#um-send-email-users-enabled').on('change', function() {
+				toggleSendEmailUsersFields();
+				refreshAddonCardAutoState($('#um-addon-card-send-email'));
+			});
+			$('#um-send-sms-text-enabled').on('change', function() {
+				toggleSendSmsTextFields();
+				refreshAddonCardAutoState($('#um-addon-card-send-sms-text'));
 			});
 			$('#um-custom-admin-notifications-enabled').on('change', function() {
 				toggleCustomAdminNotificationsFields();
@@ -927,17 +1350,21 @@ class User_Manager_Tab_Addons {
 				toggleWpAdminCssFields();
 				refreshAddonCardAutoState($('#um-addon-card-admin-css'));
 			});
+			initUmColorPickers($(document));
 			toggleCustomAdminNotificationsFields();
 			toggleAdminBarMenuItemsFields();
 			toggleWpAdminCssFields();
 			toggleRoleSwitchingFields();
 			toggleAddToCartVariationTableFields();
+			toggleAddToCartMinMaxQuantitiesFields();
 
 			$('#um-add-admin-notification').on('click', function() {
 				var count = $('#um-custom-admin-notifications-list .um-admin-notification-block').length;
 				var tpl = $('#um-admin-notification-template').html().replace(/__INDEX__/g, count);
 				$('#um-custom-admin-notifications-list').append(tpl);
-				$('#um-custom-admin-notifications-list .um-admin-notification-block').last().find('.um-admin-notification-number').text('<?php echo esc_js(__('Notification', 'user-manager')); ?> ' + (count + 1));
+				var $newNotification = $('#um-custom-admin-notifications-list .um-admin-notification-block').last();
+				$newNotification.find('.um-admin-notification-number').text('<?php echo esc_js(__('Notification', 'user-manager')); ?> ' + (count + 1));
+				initUmColorPickers($newNotification);
 				refreshAddonCardAutoState($('#um-addon-card-custom-notifications'));
 			});
 			$('#um-custom-admin-notifications-list').on('click', '.um-remove-admin-notification', function() {
@@ -1021,6 +1448,7 @@ class User_Manager_Tab_Addons {
 				|| !empty($settings['my_account_admin_product_viewer_enabled'])
 				|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
 				|| !empty($settings['my_account_admin_user_viewer_enabled'])
+				|| !empty($settings['my_account_admin_activity_viewer_enabled'])
 			);
 
 		return [
@@ -1034,10 +1462,20 @@ class User_Manager_Tab_Addons {
 				'description' => __('Show variable product rows with quantities so multiple variations can be added at once.', 'user-manager'),
 				'active' => !empty($settings['add_to_cart_variation_table_enabled']),
 			],
+			'add-to-cart-min-max-quantities' => [
+				'label'  => __('Add to Cart Min/Max Quantities', 'user-manager'),
+				'description' => __('Add product-level minimum and maximum quantity fields and validate add-to-cart/cart quantity limits.', 'user-manager'),
+				'active' => !empty($settings['add_to_cart_min_max_quantities_enabled']),
+			],
 			'cart-price-per-piece' => [
 				'label'  => __('Cart Price Per-Piece', 'user-manager'),
 				'description' => __('Show per-piece unit pricing on cart, checkout, and order line subtotals when quantities exceed one.', 'user-manager'),
 				'active' => !empty($settings['cart_price_per_piece_enabled']),
+			],
+			'cart-total-items' => [
+				'label'  => __('Cart Total Items', 'user-manager'),
+				'description' => __('Display a centered total-items summary above and/or below cart and checkout review tables.', 'user-manager'),
+				'active' => !empty($settings['cart_total_items_enabled']),
 			],
 			'bulk-page-creator' => [
 				'label'  => __('Page Creator', 'user-manager'),
@@ -1049,15 +1487,45 @@ class User_Manager_Tab_Addons {
 				'description' => __('Browse database tables, review structure, and view paginated row data directly in WP-Admin for troubleshooting and QA.', 'user-manager'),
 				'active' => !empty($settings['database_table_browser_enabled']),
 			],
+			'emali-log' => [
+				'label'  => __('Email Log', 'user-manager'),
+				'description' => __('Capture a history of outgoing emails with header columns, HTML preview, resend/forward tools, and recent volume stats.', 'user-manager'),
+				'active' => !empty($settings['emali_log_enabled']),
+			],
 			'webhook-urls' => [
 				'label'  => __('Webhook URLs', 'user-manager'),
-				'description' => __('Handle create/edit webhook requests for orders, coupons, password resets, and email sending with optional debug responses.', 'user-manager'),
+				'description' => __('Handle secure create/edit webhook requests for orders, coupons, password resets, and email sending with optional debug responses.', 'user-manager'),
 				'active' => !empty($settings['webhook_urls_enabled']),
 			],
 			'invoice-approval' => [
 				'label'  => __('Order Invoice & Approval', 'user-manager'),
 				'description' => __('Render customer-facing invoice pages with optional approvals, PDF download, payment links, and order-level invoice metadata.', 'user-manager'),
 				'active' => !empty($settings['invoice_approval_enabled']),
+			],
+			'order-received-page-customizer' => [
+				'label'  => __('Order Received Page Customizer', 'user-manager'),
+				'description' => __('Customize the Order Received heading and success text after checkout.', 'user-manager'),
+				'active' => !empty($settings['order_received_page_customizer_enabled']),
+			],
+			'restricted-access' => [
+				'label'  => __('Restricted Access', 'user-manager'),
+				'description' => __('Security: gate site access with redirect/overlay behavior, shared password or URL token access, role exclusions, and configurable full-screen lock messaging.', 'user-manager'),
+				'active' => !empty($settings['restricted_access_enabled']),
+			],
+			'block-pages-by-url-string' => [
+				'label'  => __('Block Pages by URL String', 'user-manager'),
+				'description' => __('Security: hide page output by URL-string match rules with exception list, optional redirect, and branded blocked-screen look settings.', 'user-manager'),
+				'active' => !empty($settings['block_pages_by_url_string_enabled']),
+			],
+			'send-email-users' => [
+				'label'  => __('Send Email', 'user-manager'),
+				'description' => __('Send bulk emails using template selection, list/role targeting, preview, and batch sending controls.', 'user-manager'),
+				'active' => true,
+			],
+			'send-sms-text' => [
+				'label'  => __('Send SMS Text', 'user-manager'),
+				'description' => __('Send SMS text messages using shared lists, role filters, SMS templates, and batch throttling.', 'user-manager'),
+				'active' => !empty($settings['send_sms_text_enabled']),
 			],
 			'checkout-pre-defined-addresses' => [
 				'label'  => __('Checkout Address Selector', 'user-manager'),
@@ -1084,14 +1552,29 @@ class User_Manager_Tab_Addons {
 				'description' => __('Create a replacement coupon when a qualifying balance remains after checkout.', 'user-manager'),
 				'active' => !empty($settings['coupon_remainder_enabled']),
 			],
+			'data-anonymizer' => [
+				'label'  => __('Data Anonymizer', 'user-manager'),
+				'description' => __('Anonymize order, user, and supported form-submission data with configurable privacy/security replacement rules and run history.', 'user-manager'),
+				'active' => !empty($settings['data_anonymizer_enabled']),
+			],
+			'staging-development-environment-overrides' => [
+				'label'  => __('Staging & Development Environment Overrides', 'user-manager'),
+				'description' => __('Apply non-production security/safety overrides (email/payment/webhook/API blocking) plus front-end/WP-Admin warning notices.', 'user-manager'),
+				'active' => !empty($settings['staging_dev_overrides_enabled']),
+			],
 			'security-hardening' => [
 				'label'  => __('Security Hardening', 'user-manager'),
 				'description' => __('Apply optional hardening controls for REST, WP-Admin file access, SSL admin, and version visibility.', 'user-manager'),
 				'active' => !empty($settings['security_hardening_enabled']),
 			],
+			'seo-basics' => [
+				'label'  => __('SEO Basics', 'user-manager'),
+				'description' => __('Add simple SEO overrides on pages/posts: title, description, and social image fallback handling.', 'user-manager'),
+				'active' => !empty($settings['seo_basics_enabled']),
+			],
 			'fatal-error-debugger' => [
 				'label'  => __('Fatal Error Debugger', 'user-manager'),
-				'description' => __('Capture front-end fatal errors for WP-Admin administrators and optionally email alerts.', 'user-manager'),
+				'description' => __('Capture front-end fatal errors for WP-Admin administrators with optional security alert emails.', 'user-manager'),
 				'active' => !empty($settings['fatal_error_debugger_enabled']),
 			],
 			'my-account-coupon-screen' => [
@@ -1111,13 +1594,18 @@ class User_Manager_Tab_Addons {
 			],
 			'post-meta' => [
 				'label'  => __('Post Meta Viewer', 'user-manager'),
-				'description' => __('Show all post meta keys and values in a dedicated editor box.', 'user-manager'),
+				'description' => __('Show all post meta keys and values in a dedicated editor box with configurable role/user access controls for security.', 'user-manager'),
 				'active' => !empty($settings['display_post_meta_meta_box']),
+			],
+			'product-notification' => [
+				'label'  => __('Product Notification', 'user-manager'),
+				'description' => __('Display a persistent WooCommerce-style notification above product pages with per-product message/button fields and add-on-level color override controls.', 'user-manager'),
+				'active' => !empty($settings['product_notification_enabled']),
 			],
 			'product-search-by-sku' => [
 				'label'  => __('Product Search by SKU', 'user-manager'),
 				'description' => __('Redirect front-end WooCommerce searches directly to a product when the search term exactly matches a product or variation SKU.', 'user-manager'),
-				'active' => !array_key_exists('search_redirect_by_sku', $settings) || !empty($settings['search_redirect_by_sku']),
+				'active' => !empty($settings['search_redirect_by_sku']),
 			],
 			'post-content-generator' => [
 				'label'  => __('Post Content Generator', 'user-manager'),
@@ -1136,7 +1624,7 @@ class User_Manager_Tab_Addons {
 			],
 			'user-role-switching' => [
 				'label'  => __('User Role Switching', 'user-manager'),
-				'description' => __('Enable front-end role switching controls with profile permission support.', 'user-manager'),
+				'description' => __('Enable front-end role switching controls with profile permission/security support.', 'user-manager'),
 				'active' => !empty($role_switch_settings['enabled']),
 			],
 			'wp-admin-bar-menu-items' => [
@@ -1177,6 +1665,29 @@ class User_Manager_Tab_Addons {
 		}
 
 		asort($tags, SORT_NATURAL | SORT_FLAG_CASE);
+
+		// Keep alphabetical order, but place "Security" directly after "Users".
+		if (isset($tags['security'])) {
+			$security_label = $tags['security'];
+			unset($tags['security']);
+
+			$ordered_tags = [];
+			$inserted = false;
+			foreach ($tags as $tag_key => $tag_label) {
+				$ordered_tags[$tag_key] = $tag_label;
+				if ($tag_key === 'user') {
+					$ordered_tags['security'] = $security_label;
+					$inserted = true;
+				}
+			}
+
+			if (!$inserted) {
+				$ordered_tags['security'] = $security_label;
+			}
+
+			$tags = $ordered_tags;
+		}
+
 		return $tags;
 	}
 
@@ -1209,7 +1720,15 @@ class User_Manager_Tab_Addons {
 			],
 			'page'       => [
 				'label'    => __('Pages', 'user-manager'),
-				'keywords' => ['page creator'],
+				'keywords' => ['page creator', 'page block', 'menu tile', 'tabs'],
+			],
+			'privacy'    => [
+				'label'    => __('Privacy', 'user-manager'),
+				'keywords' => ['anonymizer', 'anonymize', 'privacy', 'gdpr', 'pii', 'data'],
+			],
+			'staging'    => [
+				'label'    => __('Staging/Dev', 'user-manager'),
+				'keywords' => ['staging', 'development', 'non-production', 'non production', 'override'],
 			],
 			'post'       => [
 				'label'    => __('Posts', 'user-manager'),
@@ -1218,6 +1737,18 @@ class User_Manager_Tab_Addons {
 			'user'       => [
 				'label'    => __('Users', 'user-manager'),
 				'keywords' => ['user'],
+			],
+			'security'   => [
+				'label'    => __('Security', 'user-manager'),
+				'keywords' => ['security', 'secure', 'hardening', 'harden', 'permission', 'permissions', 'access control', 'access controls', 'ssl'],
+			],
+			'email'      => [
+				'label'    => __('Email', 'user-manager'),
+				'keywords' => ['email', 'emails', 'template', 'templates', 'smtp'],
+			],
+			'sms'        => [
+				'label'    => __('SMS', 'user-manager'),
+				'keywords' => ['sms', 'text message', 'text messages', 'simple texting', 'twilio'],
 			],
 			'wp-admin'   => [
 				'label'    => __('WP-Admin', 'user-manager'),

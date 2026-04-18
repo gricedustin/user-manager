@@ -182,7 +182,7 @@ class User_Manager_Tab_Shared {
 			umCurrentFormType = formType;
 			umIsConfirmation = isConfirmation || false;
 			
-			var email = '', username = '', firstName = '', lastName = '', loginUrl = '/my-account/', templateId = '', couponCode = '';
+			var email = '', username = '', firstName = '', lastName = '', loginUrl = '/my-account/', templateId = '', couponCode = '', couponCodeValue = '';
 			var subject = umDefaultSubject;
 			
 			if (formType === 'single') {
@@ -249,6 +249,16 @@ class User_Manager_Tab_Shared {
 				loginUrl   = '/my-account/';
 				templateId = jQuery('#nuc_email_template').val();
 				couponCode = 'NEWUSER-123456';
+			} else if (formType === 'coupon-remainder') {
+				// Coupon Remaining Balance: preview the selected/default email template.
+				email      = 'user@example.com';
+				username   = email.split('@')[0] || 'user';
+				firstName  = '';
+				lastName   = '';
+				loginUrl   = '/my-account/';
+				templateId = jQuery('#um-coupon-remainder-email-template').val();
+				couponCode = 'REMAINING-BALANCE-123456';
+				couponCodeValue = '$25.00';
 			} else if (formType === 'email-users') {
 				// Email Users: get values from email-users form
 				var emailsRaw = jQuery('#um-email-users-list').val();
@@ -267,6 +277,8 @@ class User_Manager_Tab_Shared {
 			// Get subject from template
 			if (templateId && umTemplates[templateId]) {
 				subject = umTemplates[templateId].subject;
+			} else if (templateId === '__um_default__') {
+				subject = 'Your Remaining Balance Coupon Code';
 			}
 			
 			// Replace placeholders in subject
@@ -278,7 +290,9 @@ class User_Manager_Tab_Shared {
 				.replace(/%EMAIL%/g, email)
 				.replace(/%FIRSTNAME%/g, firstName)
 				.replace(/%LASTNAME%/g, lastName)
-				.replace(/%COUPONCODE%/g, couponCode || 'SAMPLECOUPON123');
+				.replace(/%COUPONCODEVALUE%/g, couponCodeValue || '')
+				.replace(/%COUPONCODE%/g, couponCode || 'SAMPLECOUPON123')
+				.replace(/\[coupon_code\]/g, couponCode || 'SAMPLECOUPON123');
 			
 			// Update modal content
 			jQuery('#um-preview-to').text(email);
@@ -293,6 +307,7 @@ class User_Manager_Tab_Shared {
 				'&first_name=' + encodeURIComponent(firstName) +
 				'&last_name=' + encodeURIComponent(lastName) +
 				'&login_url=' + encodeURIComponent(loginUrl) +
+				'&coupon_code_value=' + encodeURIComponent(couponCodeValue || '') +
 				'&coupon_code=' + encodeURIComponent(couponCode || 'SAMPLECOUPON123');
 			
 			// Load preview in iframe
@@ -316,6 +331,40 @@ class User_Manager_Tab_Shared {
 			});
 		});
 		</script>
+		<?php
+	}
+
+	/**
+	 * Build settings URL for editing email/sms templates.
+	 *
+	 * @param string $template_type Either "email" or "sms".
+	 */
+	public static function get_template_settings_url(string $template_type = 'email'): string {
+		$addon_section = $template_type === 'sms' ? 'send-sms-text' : 'send-email-users';
+		$query_args = [
+			'addon_section' => $addon_section,
+		];
+		if ($template_type !== 'sms') {
+			$query_args['open_email_templates'] = '1';
+		}
+		return add_query_arg($query_args, User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS));
+	}
+
+	/**
+	 * Render inline shortcut link to the template settings editor screen.
+	 *
+	 * @param string $template_type Either "email" or "sms".
+	 */
+	public static function render_template_settings_shortcut(string $template_type = 'email'): void {
+		$template_type = $template_type === 'sms' ? 'sms' : 'email';
+		$url = self::get_template_settings_url($template_type);
+		$link_label = $template_type === 'sms'
+			? __('Edit SMS Text Templates', 'user-manager')
+			: __('Edit Email Templates', 'user-manager');
+		?>
+		<span class="description" style="margin-left:8px;">
+			<a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($link_label); ?></a>
+		</span>
 		<?php
 	}
 }

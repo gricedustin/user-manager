@@ -9,10 +9,15 @@ if (!defined('ABSPATH')) {
 
 class User_Manager_Tab_Email_Templates {
 
-	public static function render(): void {
+	public static function render(string $base_url = '', string $templates_context = ''): void {
 		// Auto-import templates if none exist and this hasn't been done before
 		$auto_import_done = get_option('user_manager_auto_import_templates_done', false);
 		$templates = User_Manager_Core::get_email_templates();
+		$templates_base_url = $base_url !== '' ? $base_url : User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES);
+		$templates_context = sanitize_key($templates_context);
+		if ($templates_context !== '') {
+			$templates_base_url = add_query_arg('templates_context', $templates_context, $templates_base_url);
+		}
 		
 		if (empty($templates) && !$auto_import_done && current_user_can('manage_options')) {
 			// Import demo templates
@@ -100,6 +105,9 @@ class User_Manager_Tab_Email_Templates {
 													<input type="hidden" name="action" value="user_manager_move_template" />
 													<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
 													<input type="hidden" name="direction" value="up" />
+													<?php if ($templates_context !== '') : ?>
+														<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+													<?php endif; ?>
 													<?php wp_nonce_field('user_manager_move_template'); ?>
 													<button type="submit" class="button button-small" title="<?php esc_attr_e('Move Up', 'user-manager'); ?>">&#9650;</button>
 												</form>
@@ -107,13 +115,19 @@ class User_Manager_Tab_Email_Templates {
 													<input type="hidden" name="action" value="user_manager_move_template" />
 													<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
 													<input type="hidden" name="direction" value="down" />
+													<?php if ($templates_context !== '') : ?>
+														<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+													<?php endif; ?>
 													<?php wp_nonce_field('user_manager_move_template'); ?>
 													<button type="submit" class="button button-small" title="<?php esc_attr_e('Move Down', 'user-manager'); ?>">&#9660;</button>
 												</form>
-												<a href="<?php echo esc_url(add_query_arg('edit_template', $id, User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES))); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
+												<a href="<?php echo esc_url(add_query_arg('edit_template', $id, $templates_base_url)); ?>" class="button button-small"><?php esc_html_e('Edit', 'user-manager'); ?></a>
 												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
 													<input type="hidden" name="action" value="user_manager_duplicate_template" />
 													<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
+													<?php if ($templates_context !== '') : ?>
+														<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+													<?php endif; ?>
 													<?php wp_nonce_field('user_manager_duplicate_template'); ?>
 													<button type="submit" class="button button-small" title="<?php esc_attr_e('Duplicate', 'user-manager'); ?>">
 														<?php esc_html_e('Duplicate', 'user-manager'); ?>
@@ -122,6 +136,9 @@ class User_Manager_Tab_Email_Templates {
 												<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;" onsubmit="return confirm('<?php echo esc_js(__('Delete this template?', 'user-manager')); ?>');">
 													<input type="hidden" name="action" value="user_manager_delete_template" />
 													<input type="hidden" name="template_id" value="<?php echo esc_attr($id); ?>" />
+													<?php if ($templates_context !== '') : ?>
+														<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+													<?php endif; ?>
 													<?php wp_nonce_field('user_manager_delete_template'); ?>
 													<button type="submit" class="button button-small button-link-delete"><?php esc_html_e('Delete', 'user-manager'); ?></button>
 												</form>
@@ -165,6 +182,9 @@ class User_Manager_Tab_Email_Templates {
 					<div class="um-admin-card-body">
 						<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
 							<input type="hidden" name="action" value="user_manager_save_template" />
+							<?php if ($templates_context !== '') : ?>
+								<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+							<?php endif; ?>
 							<?php if ($edit_id) : ?>
 								<input type="hidden" name="template_id" value="<?php echo esc_attr($edit_id); ?>" />
 							<?php endif; ?>
@@ -204,6 +224,7 @@ class User_Manager_Tab_Email_Templates {
 									<code>%LASTNAME%</code>
 									<code>%PASSWORDRESETURL%</code>
 									<code>%COUPONCODE%</code>
+									<code>%COUPONCODEVALUE%</code>
 								</p>
 							</div>
 							
@@ -215,12 +236,60 @@ class User_Manager_Tab_Email_Templates {
 							<p style="margin-top:20px;">
 								<?php submit_button($editing ? __('Update Template', 'user-manager') : __('Save Template', 'user-manager'), 'primary', 'submit', false); ?>
 								<?php if ($editing) : ?>
-									<a href="<?php echo esc_url(User_Manager_Core::get_page_url(User_Manager_Core::TAB_EMAIL_TEMPLATES)); ?>" class="button" style="margin-left:8px;"><?php esc_html_e('Cancel', 'user-manager'); ?></a>
+									<a href="<?php echo esc_url($templates_base_url); ?>" class="button" style="margin-left:8px;"><?php esc_html_e('Cancel', 'user-manager'); ?></a>
 								<?php endif; ?>
 							</p>
 						</form>
 					</div>
 				</div>
+			</div>
+		</div>
+		<div class="um-admin-card" style="margin-top:20px;">
+			<div class="um-admin-card-header">
+				<span class="dashicons dashicons-download"></span>
+				<h2><?php esc_html_e('Import Demo Email Templates', 'user-manager'); ?></h2>
+			</div>
+			<div class="um-admin-card-body">
+				<?php
+				$demo_recreate_base_url = add_query_arg(
+					[
+						'action' => 'user_manager_recreate_demo_template',
+					],
+					admin_url('admin-post.php')
+				);
+				?>
+				<p><?php esc_html_e('Import pre-configured email templates to get started quickly. This will add 7 commonly used templates:', 'user-manager'); ?></p>
+				<ul style="list-style: disc; margin-left: 20px; margin-bottom: 16px;">
+					<li><strong><?php esc_html_e('Send login information', 'user-manager'); ?></strong> — <?php esc_html_e('Send my account link, username and clear text password', 'user-manager'); ?>
+						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_demo_login_info', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
+					</li>
+					<li><strong><?php esc_html_e('Activate your new account', 'user-manager'); ?></strong> — <?php esc_html_e('Send new users a link to the website with a temporary password and a link to change their password in their account', 'user-manager'); ?>
+						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_demo_activate_account', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
+					</li>
+					<li><strong><?php esc_html_e('Send new password', 'user-manager'); ?></strong> — <?php esc_html_e('Sends updated login credentials with clear text password after a password change', 'user-manager'); ?>
+						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_demo_new_password', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
+					</li>
+					<li><strong><?php esc_html_e('Force password reset', 'user-manager'); ?></strong> — <?php esc_html_e('Send a password reset link for users to reset their own password', 'user-manager'); ?>
+						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_demo_password_reset', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
+					</li>
+					<li><strong><?php esc_html_e('Send automated coupon', 'user-manager'); ?></strong> — <?php esc_html_e('Configured in Settings to trigger automated discounts & store credits for new users. Supports %COUPONCODE%.', 'user-manager'); ?>
+						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_auto_coupon', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
+					</li>
+					<li><strong><?php esc_html_e('Send automated remaining balance coupon', 'user-manager'); ?></strong> — <?php esc_html_e('Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE% and %COUPONCODEVALUE%.', 'user-manager'); ?>
+						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_auto_coupon_remaining_balance', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
+					</li>
+					<li><strong><?php esc_html_e('Send $10 coupon apology', 'user-manager'); ?></strong> — <?php esc_html_e('Use when sending a one-time $10 apology coupon that includes the %COUPONCODE% placeholder.', 'user-manager'); ?>
+						<a href="<?php echo esc_url(wp_nonce_url(add_query_arg(['template_id' => 'tpl_auto_coupon_apology_10', 'templates_context' => $templates_context], $demo_recreate_base_url), 'user_manager_recreate_demo_template')); ?>"><?php esc_html_e('Recreate manually', 'user-manager'); ?></a>
+					</li>
+				</ul>
+				<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+					<input type="hidden" name="action" value="user_manager_import_demo_templates" />
+					<?php if ($templates_context !== '') : ?>
+						<input type="hidden" name="templates_context" value="<?php echo esc_attr($templates_context); ?>" />
+					<?php endif; ?>
+					<?php wp_nonce_field('user_manager_import_demo_templates'); ?>
+					<?php submit_button(__('Import Demo Templates', 'user-manager'), 'primary', 'submit', false); ?>
+				</form>
 			</div>
 		</div>
 		

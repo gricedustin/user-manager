@@ -13,13 +13,22 @@ if (!defined('ABSPATH')) {
 		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_SETTINGS);
 		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_SETTINGS;
 		$settings_section = isset($_GET['settings_section']) ? sanitize_key(wp_unslash($_GET['settings_section'])) : '';
-		$valid_sections = ['general', 'email-templates', 'tools'];
+		$valid_sections = ['general', 'tools'];
+
+		// Email/SMS template managers were moved into their add-ons.
+		// Preserve old URLs by redirecting to the relevant add-on card.
+		if ($settings_section === 'email-templates' || $requested_tab === User_Manager_Core::TAB_EMAIL_TEMPLATES) {
+			wp_safe_redirect(add_query_arg('addon_section', 'send-email-users', User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)));
+			exit;
+		}
+		if ($settings_section === 'sms-text-templates') {
+			wp_safe_redirect(add_query_arg('addon_section', 'send-sms-text', User_Manager_Core::get_page_url(User_Manager_Core::TAB_ADDONS)));
+			exit;
+		}
 
 		// Backward compatibility: legacy tabs now live under Settings sub links.
 		if ($settings_section === '') {
-			if ($requested_tab === User_Manager_Core::TAB_EMAIL_TEMPLATES) {
-				$settings_section = 'email-templates';
-			} elseif ($requested_tab === User_Manager_Core::TAB_TOOLS) {
+			if ($requested_tab === User_Manager_Core::TAB_TOOLS) {
 				$settings_section = 'tools';
 			}
 		}
@@ -28,7 +37,6 @@ if (!defined('ABSPATH')) {
 		}
 
 		$general_url = add_query_arg('settings_section', 'general', $base_url);
-		$email_templates_url = add_query_arg('settings_section', 'email-templates', $base_url);
 		$tools_url = add_query_arg('settings_section', 'tools', $base_url);
 
 		?>
@@ -36,11 +44,6 @@ if (!defined('ABSPATH')) {
 			<li>
 				<a href="<?php echo esc_url($general_url); ?>" class="<?php echo $settings_section === 'general' ? 'current' : ''; ?>">
 					<?php esc_html_e('General Settings', 'user-manager'); ?>
-				</a> |
-			</li>
-			<li>
-				<a href="<?php echo esc_url($email_templates_url); ?>" class="<?php echo $settings_section === 'email-templates' ? 'current' : ''; ?>">
-					<?php esc_html_e('Email Templates', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
@@ -52,10 +55,6 @@ if (!defined('ABSPATH')) {
 		<br class="clear" />
 		<?php
 
-		if ($settings_section === 'email-templates') {
-			User_Manager_Tab_Email_Templates::render();
-			return;
-		}
 		if ($settings_section === 'tools') {
 			User_Manager_Tab_Tools::render(true, false, false);
 			return;
@@ -95,32 +94,49 @@ if (!defined('ABSPATH')) {
 						<h2><?php esc_html_e('Email Settings', 'user-manager'); ?></h2>
 					</div>
 					<div class="um-admin-card-body">
+						<?php
+						$default_send_from_name = get_bloginfo('name');
+						if (!is_string($default_send_from_name)) {
+							$default_send_from_name = '';
+						}
+						$default_send_from_name = trim($default_send_from_name);
+						if ($default_send_from_name === '') {
+							$default_send_from_name = 'WordPress';
+						}
+
+						$default_send_from_email = User_Manager_Email::get_default_noreply_email();
+						?>
 						<div class="um-form-field">
 							<label for="um-send-from-name"><?php esc_html_e('Send From Name', 'user-manager'); ?></label>
-							<input type="text" name="send_from_name" id="um-send-from-name" class="regular-text" value="<?php echo esc_attr($settings['send_from_name'] ?? ''); ?>" />
-							<p class="description"><?php esc_html_e('The name that appears in the "From" field of emails sent by User Manager. Leave empty to use WordPress default.', 'user-manager'); ?></p>
+							<input type="text" name="send_from_name" id="um-send-from-name" class="regular-text" value="<?php echo esc_attr($settings['send_from_name'] ?? ''); ?>" placeholder="<?php echo esc_attr($default_send_from_name); ?>" />
+							<p class="description"><?php esc_html_e('The name that appears in the "From" field of emails sent by User Manager. Leave empty to use your website title.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
 							<label for="um-send-from-email"><?php esc_html_e('Send From Email Address', 'user-manager'); ?></label>
-							<input type="email" name="send_from_email" id="um-send-from-email" class="regular-text" value="<?php echo esc_attr($settings['send_from_email'] ?? ''); ?>" />
-							<p class="description"><?php esc_html_e('The email address that appears in the "From" field of emails sent by User Manager. Leave empty to use WordPress default.', 'user-manager'); ?></p>
+							<input type="email" name="send_from_email" id="um-send-from-email" class="regular-text" value="<?php echo esc_attr($settings['send_from_email'] ?? ''); ?>" placeholder="<?php echo esc_attr($default_send_from_email); ?>" />
+							<p class="description"><?php esc_html_e('The email address that appears in the "From" field of emails sent by User Manager. Leave empty to use noreply@your-domain.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
 							<label for="um-reply-to-email"><?php esc_html_e('Reply To Email Address', 'user-manager'); ?></label>
-							<input type="email" name="reply_to_email" id="um-reply-to-email" class="regular-text" value="<?php echo esc_attr($settings['reply_to_email'] ?? ''); ?>" />
-							<p class="description"><?php esc_html_e('The email address that appears in the "Reply-To" field of emails sent by User Manager. Leave empty to use the From address.', 'user-manager'); ?></p>
+							<input type="email" name="reply_to_email" id="um-reply-to-email" class="regular-text" value="<?php echo esc_attr($settings['reply_to_email'] ?? ''); ?>" placeholder="<?php echo esc_attr($default_send_from_email); ?>" />
+							<p class="description"><?php esc_html_e('The email address that appears in the "Reply-To" field of emails sent by User Manager. Leave empty to use noreply@your-domain.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
 							<label>
 								<input type="checkbox" name="throttle_emails_enabled" id="um-throttle-emails-enabled" value="1" <?php checked($settings['throttle_emails_enabled'] ?? false); ?> />
-								<?php esc_html_e('Throttle Sending Emails to X Emails Per Page Load', 'user-manager'); ?>
+								<?php esc_html_e('Throttle Sending Emails to X Emails/Texts Per Page Load', 'user-manager'); ?>
 							</label>
-							<p class="description"><?php esc_html_e('When enabled, only the specified number of emails will be sent per page load to avoid triggering spam filters. Remaining emails will be queued for the next batch.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('When enabled, only the specified number of emails/texts will be sent per page load to avoid provider limits and spam filters. Remaining items are queued for the next batch.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field" id="um-throttle-emails-count-field" style="<?php echo empty($settings['throttle_emails_enabled']) ? 'display:none;' : ''; ?>">
-							<label for="um-throttle-emails-count"><?php esc_html_e('Emails Per Batch', 'user-manager'); ?></label>
+							<label for="um-throttle-emails-count"><?php esc_html_e('Emails/Texts Per Batch', 'user-manager'); ?></label>
 							<input type="number" name="throttle_emails_count" id="um-throttle-emails-count" class="small-text" min="1" value="<?php echo esc_attr($settings['throttle_emails_count'] ?? 50); ?>" />
-							<p class="description"><?php esc_html_e('Number of emails to send per batch. After sending a batch, a button will appear to send the next batch.', 'user-manager'); ?></p>
+							<p class="description"><?php esc_html_e('Number used per batch for both Email Users and Send SMS Texts. After sending a batch, a button appears to send the next batch.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label for="um-dashboard-role-change-alert-email"><?php esc_html_e('Based on User Activity Report, if a user logs in and they have logged in before but had a different role than what they are currently logging in with, send an email notification to', 'user-manager'); ?></label>
+							<input type="email" name="dashboard_role_change_alert_email" id="um-dashboard-role-change-alert-email" class="regular-text" value="<?php echo esc_attr($settings['dashboard_role_change_alert_email'] ?? ''); ?>" placeholder="admin@example.com" />
+							<p class="description"><?php esc_html_e('If this email address is set, User Manager checks role history from Reports > User Activity when the user lands on My Account Dashboard. If previous role(s) differ from current role(s), an email titled "User Role Changed" is sent with helpful role-change details.', 'user-manager'); ?></p>
 						</div>
 					</div>
 				</div>
@@ -189,6 +205,11 @@ if (!defined('ABSPATH')) {
 								<input type="email" name="role_change_alert_email" id="um-role-change-alert-email" class="regular-text" value="<?php echo esc_attr($settings['role_change_alert_email'] ?? ''); ?>" placeholder="admin@example.com" />
 								<p class="description"><?php esc_html_e('Alerts are sent once per role change when the user\'s previous role (from the last User Activity record) was one of the monitored roles.', 'user-manager'); ?></p>
 							</div>
+							<div class="um-form-field">
+								<label for="um-role-change-alert-email-exclude-list"><?php esc_html_e('Emails to EXCLUDE from Admin email address for role change alerts', 'user-manager'); ?></label>
+								<input type="text" name="role_change_alert_email_exclusions" id="um-role-change-alert-email-exclude-list" class="regular-text" value="<?php echo esc_attr($settings['role_change_alert_email_exclusions'] ?? ''); ?>" placeholder="user1@example.com, user2@example.com" />
+								<p class="description"><?php esc_html_e('Comma-separated email addresses. If the user who triggered the role change alert matches one of these emails, no role change alert email is sent.', 'user-manager'); ?></p>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -207,6 +228,37 @@ if (!defined('ABSPATH')) {
 							</label>
 							<p class="description"><?php esc_html_e('Change the reset password copy to set password intended for new users who should set a password when first logging into the site so it doesn\'t look like they are "resetting" for the first time. Also removes the username from the password changed email.', 'user-manager'); ?></p>
 						</div>
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="show_profile_user_manager_notice" value="1" <?php checked($settings['show_profile_user_manager_notice'] ?? false); ?> />
+								<?php esc_html_e('Show User Manager notice on Edit User/Profile screens', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('Disabled by default. Enable to show the top notice with quick links on user-edit.php and profile.php.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="show_user_manager_admin_bar_link" value="1" <?php checked($settings['show_user_manager_admin_bar_link'] ?? false); ?> />
+								<?php esc_html_e('Show UX Manager link in WP-Admin top bar', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('Disabled by default. Enable to show the "UX Manager" shortcut in the admin bar.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label for="um-plugin-title-override"><?php esc_html_e('Plugin Title Override', 'user-manager'); ?></label>
+							<input type="text" name="plugin_title_override" id="um-plugin-title-override" class="regular-text" value="<?php echo esc_attr($settings['plugin_title_override'] ?? ''); ?>" placeholder="<?php esc_attr_e('UX Manager', 'user-manager'); ?>" />
+							<p class="description"><?php esc_html_e('Optional. Overrides the plugin title shown in the Users submenu item, WP-Admin bar shortcut, top-level menu item (if enabled below), and the title at the top of all plugin pages.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label>
+								<input type="checkbox" name="show_top_level_admin_menu_item" value="1" <?php checked($settings['show_top_level_admin_menu_item'] ?? false); ?> />
+								<?php esc_html_e('Show top-level WP-Admin menu item', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('Disabled by default. Adds a new parent-level WP-Admin menu item below Users that opens this plugin screen and uses the Plugin Title Override when set.', 'user-manager'); ?></p>
+						</div>
+					<div class="um-form-field">
+						<label for="um-legacy-noop-shortcodes"><?php esc_html_e('Legacy/Broken Shortcodes (comma-separated)', 'user-manager'); ?></label>
+						<input type="text" name="legacy_noop_shortcodes_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($settings['legacy_noop_shortcodes_list'] ?? ''); ?>" placeholder="old_shortcode_one, old_shortcode_two" />
+						<p class="description"><?php esc_html_e('Optional. Registers empty handlers for legacy shortcodes so old content does not break when those shortcode sources are removed.', 'user-manager'); ?></p>
+					</div>
 					</div>
 				</div>
 
@@ -294,6 +346,30 @@ if (!defined('ABSPATH')) {
 							<p class="description"><?php esc_html_e('Applies to Create User, Bulk Create, and SFTP import. Default is enabled.', 'user-manager'); ?></p>
 						</div>
 						<div class="um-form-field">
+							<?php
+							$deactivate_users_reset_password_enabled = array_key_exists('deactivate_users_reset_password', $settings)
+								? !empty($settings['deactivate_users_reset_password'])
+								: true;
+							?>
+							<label>
+								<input type="checkbox" name="deactivate_users_reset_password" value="1" <?php checked($deactivate_users_reset_password_enabled); ?> />
+								<?php esc_html_e('Deactivate User(s): quiet-reset passwords to random strings', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('When enabled, deactivating users will silently reset their passwords in the background without sending emails.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<?php
+							$deactivate_users_prefix_identity_enabled = array_key_exists('deactivate_users_prefix_identity', $settings)
+								? !empty($settings['deactivate_users_prefix_identity'])
+								: true;
+							?>
+							<label>
+								<input type="checkbox" name="deactivate_users_prefix_identity" value="1" <?php checked($deactivate_users_prefix_identity_enabled); ?> />
+								<?php esc_html_e('Deactivate User(s): prefix login/email with [YYYYMMDD]-deactivated-', 'user-manager'); ?>
+							</label>
+							<p class="description"><?php esc_html_e('When enabled, deactivating users renames both login and email to a date-prefixed deactivated format to prevent normal credential reuse.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
 							<label for="um-sftp-directories"><?php esc_html_e('SFTP/Directory Paths for CSV Import', 'user-manager'); ?></label>
 							<textarea name="sftp_directories" id="um-sftp-directories" rows="5" class="large-text code" placeholder="<?php echo esc_attr("/home/username/imports/\n/var/www/html/wp-content/uploads/user-imports/\n" . WP_CONTENT_DIR . "/uploads/user-imports/"); ?>"><?php echo esc_textarea($settings['sftp_directories'] ?? ''); ?></textarea>
 							<p class="description"><?php esc_html_e('Enter one directory path per line. These directories will be monitored for CSV files in the Bulk Create tool.', 'user-manager'); ?></p>
@@ -318,6 +394,11 @@ if (!defined('ABSPATH')) {
 							<label for="um-openai-api-key"><?php esc_html_e('ChatGPT / OpenAI API Key', 'user-manager'); ?></label>
 							<input type="password" name="openai_api_key" id="um-openai-api-key" class="regular-text" value="<?php echo esc_attr($settings['openai_api_key'] ?? ''); ?>" autocomplete="off" />
 							<p class="description"><?php esc_html_e('Used for ChatGPT-powered content tools. Leave empty to disable ChatGPT requests. Get an API key from platform.openai.com.', 'user-manager'); ?></p>
+						</div>
+						<div class="um-form-field">
+							<label for="um-simple-texting-api-token"><?php esc_html_e('Simple Texting API Token', 'user-manager'); ?></label>
+							<input type="password" name="simple_texting_api_token" id="um-simple-texting-api-token" class="regular-text" value="<?php echo esc_attr($settings['simple_texting_api_token'] ?? ''); ?>" autocomplete="off" />
+							<p class="description"><?php esc_html_e('Used by the Send SMS Text add-on to send SMS messages through SimpleTexting. Store your bearer API token here.', 'user-manager'); ?></p>
 						</div>
 					</div>
 				</div>

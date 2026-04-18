@@ -101,7 +101,7 @@ class User_Manager_Addon_Invoice_Approval {
 				<div id="um-invoice-approval-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
 					<div class="um-form-field">
 						<label for="um-invoice-primary-color"><?php esc_html_e('Primary Color', 'user-manager'); ?></label>
-						<input type="text" id="um-invoice-primary-color" name="invoice_primary_color" class="regular-text" value="<?php echo esc_attr($primary_color); ?>"<?php echo $form_attr; ?> />
+						<input type="text" id="um-invoice-primary-color" name="invoice_primary_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($primary_color); ?>" data-default-color="#4B2E83"<?php echo $form_attr; ?> />
 					</div>
 					<div class="um-form-field">
 						<label>
@@ -118,11 +118,11 @@ class User_Manager_Addon_Invoice_Approval {
 					<div class="um-admin-grid" style="grid-template-columns:1fr 1fr;">
 						<div class="um-form-field">
 							<label for="um-invoice-button-color"><?php esc_html_e('Button Color', 'user-manager'); ?></label>
-							<input type="text" id="um-invoice-button-color" name="invoice_button_color" class="regular-text" value="<?php echo esc_attr($button_color); ?>"<?php echo $form_attr; ?> />
+							<input type="text" id="um-invoice-button-color" name="invoice_button_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($button_color); ?>" data-default-color="#4B2E83"<?php echo $form_attr; ?> />
 						</div>
 						<div class="um-form-field">
 							<label for="um-invoice-button-text-color"><?php esc_html_e('Button Text Color', 'user-manager'); ?></label>
-							<input type="text" id="um-invoice-button-text-color" name="invoice_button_text_color" class="regular-text" value="<?php echo esc_attr($button_text_color); ?>"<?php echo $form_attr; ?> />
+							<input type="text" id="um-invoice-button-text-color" name="invoice_button_text_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($button_text_color); ?>" data-default-color="#ffffff"<?php echo $form_attr; ?> />
 						</div>
 					</div>
 					<div class="um-form-field">

@@ -33,6 +33,9 @@ final class User_Manager_Coupon_Notices {
 			$this->settings = [];
 		}
 		$this->enabled = !empty($this->settings['user_coupon_notifications_enabled']);
+		if (class_exists('User_Manager_Core') && method_exists('User_Manager_Core', 'is_addon_temporarily_disabled')) {
+			$this->enabled = $this->enabled && !User_Manager_Core::is_addon_temporarily_disabled('coupon-notifications-for-users-with-coupons');
+		}
 		$this->options = [
 			'show_cart' => $this->flag('coupon_notifications_show_on_cart'),
 			'show_checkout' => $this->flag('coupon_notifications_show_on_checkout'),
@@ -50,6 +53,9 @@ final class User_Manager_Coupon_Notices {
 			'debug' => !empty($this->settings['coupon_notifications_debug']),
 			'sort_by_expiration' => $this->flag('coupon_notifications_sort_by_expiration'),
 		];
+		if (!$this->enabled) {
+			return;
+		}
 
 		if ($this->options['debug']) {
 			add_action('wp', [$this, 'prime_debug_state'], 5);

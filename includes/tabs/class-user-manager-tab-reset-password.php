@@ -76,7 +76,10 @@ class User_Manager_Tab_Reset_Password {
 							</p>
 							
 							<div id="um-reset-template-select" style="margin-top:12px;display:none;">
-								<label for="um-reset-template"><?php esc_html_e('Select Email Template:', 'user-manager'); ?></label>
+								<label for="um-reset-template">
+									<?php esc_html_e('Select Email Template:', 'user-manager'); ?>
+									<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+								</label>
 								<select name="email_template" id="um-reset-template" class="regular-text" style="margin-top:6px;">
 									<option value=""><?php esc_html_e('— Default Template —', 'user-manager'); ?></option>
 									<?php foreach ($templates as $id => $template) : ?>

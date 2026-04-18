@@ -13,7 +13,7 @@ class User_Manager_Tab_Documentation {
 		$base_url = User_Manager_Core::get_page_url(User_Manager_Core::TAB_DOCUMENTATION);
 		$requested_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : User_Manager_Core::TAB_DOCUMENTATION;
 		$docs_section = isset($_GET['docs_section']) ? sanitize_key(wp_unslash($_GET['docs_section'])) : '';
-		$valid_sections = ['documentation', 'installation', 'about', 'support', 'versions'];
+		$valid_sections = ['documentation', 'installation', 'about', 'troubleshooting', 'support', 'versions'];
 
 		// Backward compatibility: legacy Versions tab now lives under Docs sub links.
 		if ($docs_section === '' && $requested_tab === User_Manager_Core::TAB_VERSIONS) {
@@ -26,6 +26,7 @@ class User_Manager_Tab_Documentation {
 		$documentation_url = add_query_arg('docs_section', 'documentation', $base_url);
 		$installation_url = add_query_arg('docs_section', 'installation', $base_url);
 		$about_url = add_query_arg('docs_section', 'about', $base_url);
+		$troubleshooting_url = add_query_arg('docs_section', 'troubleshooting', $base_url);
 		$support_url = add_query_arg('docs_section', 'support', $base_url);
 		$versions_url = add_query_arg('docs_section', 'versions', $base_url);
 
@@ -44,6 +45,11 @@ class User_Manager_Tab_Documentation {
 			<li>
 				<a href="<?php echo esc_url($about_url); ?>" class="<?php echo $docs_section === 'about' ? 'current' : ''; ?>">
 					<?php esc_html_e('About', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($troubleshooting_url); ?>" class="<?php echo $docs_section === 'troubleshooting' ? 'current' : ''; ?>">
+					<?php esc_html_e('Troubleshooting', 'user-manager'); ?>
 				</a> |
 			</li>
 			<li>
@@ -72,6 +78,10 @@ class User_Manager_Tab_Documentation {
 			self::render_about_section();
 			return;
 		}
+		if ($docs_section === 'troubleshooting') {
+			self::render_troubleshooting_section();
+			return;
+		}
 		if ($docs_section === 'support') {
 			self::render_support_section();
 			return;
@@ -80,56 +90,24 @@ class User_Manager_Tab_Documentation {
 		$tab_cards = [
 			[
 				'icon'    => 'dashicons-admin-users',
-				'title'   => __('Create User Tab', 'user-manager'),
-				'summary' => __('Create one user at a time with full control over role, credentials, login URL, and optional welcome email behavior.', 'user-manager'),
+				'title'   => __('Login Tools Tab', 'user-manager'),
+				'summary' => __('Run day-to-day user lifecycle workflows from one area, including Create Single User, Create Multiple Users, Reset Password(s), Remove User(s), Deactivate User(s), and Login As a User.', 'user-manager'),
 				'details' => [
-					__('Great for manual onboarding, support-assisted account setup, and VIP account creation.', 'user-manager'),
-					__('Can pair with coupon and email template settings to provide a guided first-login experience.', 'user-manager'),
+					__('Navigation path: tab=login-tools with login_tools_section sub-pages.', 'user-manager'),
+					__('Designed for support, onboarding, and account-maintenance teams managing many users quickly.', 'user-manager'),
 				],
 			],
 			[
-				'icon'    => 'dashicons-upload',
-				'title'   => __('Bulk Create Tab', 'user-manager'),
-				'summary' => __('Import users in bulk via CSV, paste-from-spreadsheet, or directory-based workflows for high-volume admin operations.', 'user-manager'),
+				'icon'    => 'dashicons-list-view',
+				'title'   => __('Login Tools Sub-pages', 'user-manager'),
+				'summary' => __('Login Tools now uses section-based sub-page navigation under one tab.', 'user-manager'),
 				'details' => [
-					__('Useful for B2B launches, distributor account imports, and migration projects.', 'user-manager'),
-					__('Supports default column mapping and optional update-existing-user behavior.', 'user-manager'),
-				],
-			],
-			[
-				'icon'    => 'dashicons-lock',
-				'title'   => __('Reset Password Tab', 'user-manager'),
-				'summary' => __('Reset passwords in bulk or individually and optionally send secure reset flows with email templates.', 'user-manager'),
-				'details' => [
-					__('Helpful for account recovery campaigns and post-migration security resets.', 'user-manager'),
-					__('Can reduce support time when multiple users need immediate access restoration.', 'user-manager'),
-				],
-			],
-			[
-				'icon'    => 'dashicons-trash',
-				'title'   => __('Remove User Tab', 'user-manager'),
-				'summary' => __('Remove user accounts safely when offboarding users, cleaning invalid accounts, or processing privacy requests.', 'user-manager'),
-				'details' => [
-					__('Useful for lifecycle management and admin cleanup tasks.', 'user-manager'),
-					__('Designed to help teams process account removals consistently.', 'user-manager'),
-				],
-			],
-			[
-				'icon'    => 'dashicons-admin-network',
-				'title'   => __('Login As Tab', 'user-manager'),
-				'summary' => __('Generate controlled temporary login credentials and links so admins can troubleshoot account-specific issues quickly.', 'user-manager'),
-				'details' => [
-					__('Ideal for support teams resolving checkout, order history, and permission-related issues.', 'user-manager'),
-					__('Works well with admin activity logging for accountability.', 'user-manager'),
-				],
-			],
-			[
-				'icon'    => 'dashicons-email-alt',
-				'title'   => __('Email Users Tab', 'user-manager'),
-				'summary' => __('Send targeted user emails with reusable templates for onboarding, reminders, campaigns, and service communications.', 'user-manager'),
-				'details' => [
-					__('Useful for lifecycle messaging such as welcome, activation, and account-update notices.', 'user-manager'),
-					__('Supports consistent branding via WooCommerce-style email presentation.', 'user-manager'),
+					__('Create Single User', 'user-manager'),
+					__('Create Multiple Users', 'user-manager'),
+					__('Reset Password(s)', 'user-manager'),
+					__('Remove User(s)', 'user-manager'),
+					__('Deactivate User(s)', 'user-manager'),
+					__('Login As a User', 'user-manager'),
 				],
 			],
 			[
@@ -147,7 +125,7 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Configure global behavior across General Settings, Email Templates, and Tools to control defaults, branding, and operational workflows.', 'user-manager'),
 				'details' => [
 					__('Central place for environment-level options used by multiple tabs and add-ons.', 'user-manager'),
-					__('Includes template management and utility actions that support daily admin operations.', 'user-manager'),
+					__('Includes built-in sub-pages via tab=settings, tab=email-templates, and tab=tools.', 'user-manager'),
 				],
 			],
 			[
@@ -156,7 +134,18 @@ class User_Manager_Tab_Documentation {
 				'summary' => __('Activate feature modules only when needed so your site stays focused, modular, and easier to maintain.', 'user-manager'),
 				'details' => [
 					__('Each add-on has its own settings card and activation toggle.', 'user-manager'),
+					__('Use addon_section=... to open a specific add-on sub-page directly.', 'user-manager'),
 					__('Best for gradually rolling out capabilities by business priority.', 'user-manager'),
+				],
+			],
+			[
+				'icon'    => 'dashicons-layout',
+				'title'   => __('Blocks Tab', 'user-manager'),
+				'summary' => __('Manage content-focused block modules and gallery block defaults from a dedicated area separate from operational add-ons.', 'user-manager'),
+				'details' => [
+					__('Includes block features such as Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Media Library Tags with Photo & YouTube Video Gallery.', 'user-manager'),
+					__('Use block_section=... to open a specific block module sub-page directly.', 'user-manager'),
+					__('Useful for content teams building page layouts, visual navigation, and media-rich sections.', 'user-manager'),
 				],
 			],
 			[
@@ -169,12 +158,34 @@ class User_Manager_Tab_Documentation {
 				],
 			],
 			[
+				'icon'    => 'dashicons-index-card',
+				'title'   => __('Documentation Sub-pages', 'user-manager'),
+				'summary' => __('Documentation now includes dedicated sub-pages for setup, support, troubleshooting, and release notes.', 'user-manager'),
+				'details' => [
+					__('documentation', 'user-manager'),
+					__('installation', 'user-manager'),
+					__('about', 'user-manager'),
+					__('troubleshooting', 'user-manager'),
+					__('versions', 'user-manager'),
+					__('support', 'user-manager'),
+				],
+			],
+			[
 				'icon'    => 'dashicons-backup',
 				'title'   => __('Versions Section', 'user-manager'),
 				'summary' => __('Track release history and feature changes using the built-in changelog under Documentation > Versions.', 'user-manager'),
 				'details' => [
 					__('Useful for QA checks, deployment validation, and historical reference.', 'user-manager'),
 					__('Helps teams quickly confirm when a behavior was added or updated.', 'user-manager'),
+				],
+			],
+			[
+				'icon'    => 'dashicons-admin-tools',
+				'title'   => __('Troubleshooting Section', 'user-manager'),
+				'summary' => __('Generate temporary URL overrides to disable all or selected add-ons while diagnosing conflicts or regressions.', 'user-manager'),
+				'details' => [
+					__('Includes direct parameter examples and a checkbox URL builder for single/multi add-on isolation tests.', 'user-manager'),
+					__('Overrides are temporary and only apply while the URL parameters are present.', 'user-manager'),
 				],
 			],
 		];
@@ -192,8 +203,18 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'icon'    => 'dashicons-cart',
+				'title'   => __('Add to Cart Min/Max Quantities', 'user-manager'),
+				'summary' => __('Set product-level minimum/maximum quantity rules and enforce them during add-to-cart and cart updates.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-cart',
 				'title'   => __('Cart Price Per-Piece', 'user-manager'),
 				'summary' => __('Display per-piece unit pricing under line subtotals for multi-quantity items across cart, checkout, and order views.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-cart',
+				'title'   => __('Cart Total Items', 'user-manager'),
+				'summary' => __('Display a centered total item count above and/or below cart and checkout review tables with configurable copy.', 'user-manager'),
 			],
 			[
 				'icon'    => 'dashicons-admin-page',
@@ -214,6 +235,11 @@ class User_Manager_Tab_Documentation {
 				'icon'    => 'dashicons-media-spreadsheet',
 				'title'   => __('Order Invoice & Approval', 'user-manager'),
 				'summary' => __('Render customer-facing invoice links/pages for WooCommerce orders with approval forms, PDF output, payment links, and approval access by email or user-profile checkbox.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-format-status',
+				'title'   => __('Order Received Page Customizer', 'user-manager'),
+				'summary' => __('Override the Order Received page heading and success paragraph message shown after checkout.', 'user-manager'),
 			],
 			[
 				'icon'    => 'dashicons-location-alt',
@@ -247,8 +273,28 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'icon'    => 'dashicons-shield',
+				'title'   => __('Data Anonymizer', 'user-manager'),
+				'summary' => __('Apply configurable anonymization rules to user/order/form data for privacy workflows, testing environments, and compliance support.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-admin-site',
+				'title'   => __('Staging & Development Environment Overrides', 'user-manager'),
+				'summary' => __('Apply non-production safety controls such as email/payment/webhook/API blocking and visible environment warning notices.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-shield',
 				'title'   => __('Security Hardening', 'user-manager'),
 				'summary' => __('Enable optional hardening controls for REST user endpoints, admin file modification restrictions, SSL admin enforcement, and version output reduction.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-email',
+				'title'   => __('Send Email', 'user-manager'),
+				'summary' => __('Activate email-sending workflows used by Email Users and related campaigns with reusable template integration.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-format-chat',
+				'title'   => __('Send SMS Text', 'user-manager'),
+				'summary' => __('Activate SMS messaging workflows for role/list-based communication from WP-Admin.', 'user-manager'),
 			],
 			[
 				'icon'    => 'dashicons-tickets',
@@ -317,6 +363,37 @@ class User_Manager_Tab_Documentation {
 			],
 		];
 
+		$block_cards = [
+			[
+				'icon'    => 'dashicons-screenoptions',
+				'title'   => __('Subpages Grid', 'user-manager'),
+				'summary' => __('Display child pages as a visual tile grid using block or shortcode output for directory-style navigation.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-index-card',
+				'title'   => __('Tabbed Content Area', 'user-manager'),
+				'summary' => __('Build tabbed content layouts by sourcing each panel from selected pages/posts for reusable content architecture.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-star-filled',
+				'title'   => __('Simple Icons', 'user-manager'),
+				'summary' => __('Insert configurable icon callouts for features, links, and quick visual messaging in block-based content.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-grid-view',
+				'title'   => __('Menu Tiles', 'user-manager'),
+				'summary' => __('Render WordPress menu items as tile buttons for dashboard-style or portal-style content navigation.', 'user-manager'),
+			],
+			[
+				'icon'    => 'dashicons-format-gallery',
+				'title'   => __('Media Library Tags with Photo & YouTube Video Gallery', 'user-manager'),
+				'summary' => __('Manage Library Tags taxonomy + media tagging tools and power dynamic front-end galleries with block defaults, styles, URL overrides, and filtering options.', 'user-manager'),
+			],
+		];
+
+		$addon_card_count = count($addon_cards);
+		$block_card_count = count($block_cards);
+
 		$use_cases = [
 			[
 				'title'       => __('Welcome New Users with a One-Time Coupon', 'user-manager'),
@@ -365,7 +442,7 @@ class User_Manager_Tab_Documentation {
 		];
 
 		$general_reports = [
-			__('Coupon Audit', 'user-manager'),
+			__('Coupons Audit', 'user-manager'),
 			__('Coupons Unused', 'user-manager'),
 			__('Coupons Used', 'user-manager'),
 			__('Coupons with Email Addresses', 'user-manager'),
@@ -382,6 +459,7 @@ class User_Manager_Tab_Documentation {
 			__('Order Tracking Number Notes', 'user-manager'),
 			__('Order Tracking Numbers', 'user-manager'),
 			__('Orders Processing by Number of Days', 'user-manager'),
+			__('Orders Still Processing but have a Tracking Number', 'user-manager'),
 			__('Orders with $0 Total', 'user-manager'),
 			__('Orders with Free Shipping', 'user-manager'),
 			__('Page Category Archives Views', 'user-manager'),
@@ -473,7 +551,17 @@ class User_Manager_Tab_Documentation {
 					<h2><?php esc_html_e('Add-ons Reference', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
-					<p><?php esc_html_e('Add-ons are optional feature modules you can activate as needed. These cards explain what each add-on is designed to do.', 'user-manager'); ?></p>
+					<p>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d is the number of add-on cards listed below. */
+								__('Add-ons are optional operational feature modules you can activate as needed. This section currently documents %d add-ons.', 'user-manager'),
+								(int) $addon_card_count
+							)
+						);
+						?>
+					</p>
 				</div>
 			</div>
 
@@ -485,6 +573,38 @@ class User_Manager_Tab_Documentation {
 					</div>
 					<div class="um-admin-card-body">
 						<p><?php echo esc_html($addon_card['summary']); ?></p>
+					</div>
+				</div>
+			<?php endforeach; ?>
+
+			<div class="um-admin-card um-docs-filter-card">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-layout"></span>
+					<h2><?php esc_html_e('Blocks Reference', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p>
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d is the number of block cards listed below. */
+								__('Blocks are content-focused modules managed from the Blocks tab. This section currently documents %d block modules.', 'user-manager'),
+								(int) $block_card_count
+							)
+						);
+						?>
+					</p>
+				</div>
+			</div>
+
+			<?php foreach ($block_cards as $block_card) : ?>
+				<div class="um-admin-card um-docs-filter-card">
+					<div class="um-admin-card-header">
+						<span class="dashicons <?php echo esc_attr($block_card['icon']); ?>"></span>
+						<h2><?php echo esc_html($block_card['title']); ?></h2>
+					</div>
+					<div class="um-admin-card-body">
+						<p><?php echo esc_html($block_card['summary']); ?></p>
 					</div>
 				</div>
 			<?php endforeach; ?>
@@ -590,13 +710,13 @@ class User_Manager_Tab_Documentation {
 					<h2><?php esc_html_e('Installation', 'user-manager'); ?></h2>
 				</div>
 				<div class="um-admin-card-body">
-					<p><?php esc_html_e('Activate User Experience Manager from the WordPress Plugins screen, then open User Manager in wp-admin to begin configuring users, emails, settings, and add-ons.', 'user-manager'); ?></p>
+					<p><?php esc_html_e('Activate User Experience Manager from the WordPress Plugins screen, then open User Manager in wp-admin to begin configuring users, emails, settings, add-ons, and blocks.', 'user-manager'); ?></p>
 					<ol>
 						<li><?php esc_html_e('Activate the plugin under Plugins > Installed Plugins.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Open User Manager and configure core user workflows (Create User, Bulk Create, Reset Password, Remove User).', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Set up email templates and email-sending behavior for each user workflow.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Review Settings for global defaults and operational preferences.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Explore Add-ons and activate only the user-experience features you need.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Explore Add-ons for operational modules and Blocks for content modules; activate only what your site needs.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Use Reports > Admin Log to verify setup actions and ongoing activity.', 'user-manager'); ?></li>
 					</ol>
 				</div>
@@ -645,50 +765,60 @@ class User_Manager_Tab_Documentation {
 					<p><?php echo esc_html(implode(', ', $tags)); ?></p>
 
 					<h3><?php esc_html_e('Short Description', 'user-manager'); ?></h3>
-					<p><?php esc_html_e('User Experience Manager is an all-in-one operational toolkit for improving both admin workflows and customer account experiences in WooCommerce-powered stores. It centralizes user management, email workflows, reporting, and modular add-ons in one scalable interface.', 'user-manager'); ?></p>
+					<p><?php esc_html_e('User Experience Manager is an all-in-one operational toolkit for improving both admin workflows and customer account experiences in WooCommerce-powered stores. It centralizes user management, email workflows, reporting, modular add-ons, and content-focused block modules in one scalable interface.', 'user-manager'); ?></p>
 
 					<h3><?php esc_html_e('Long Description (HTML Supported)', 'user-manager'); ?></h3>
 					<div>
-						<p><?php esc_html_e('User Experience Manager was built to replace fragmented, plugin-by-plugin admin workflows with one centralized operations layer for WordPress and WooCommerce teams. It combines user lifecycle tooling, communication templates, reporting visibility, and modular UX add-ons so support, operations, and growth teams can work from one interface.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('User Experience Manager was built to replace fragmented, plugin-by-plugin admin workflows with one centralized operations layer for WordPress and WooCommerce teams. It combines user lifecycle tooling, communication templates, reporting visibility, modular UX add-ons, and dedicated content blocks so support, operations, and growth teams can work from one interface.', 'user-manager'); ?></p>
 						<p><?php esc_html_e('At the core level, the plugin includes account creation and import workflows, password operations, role and access controls, email communication utilities, and reporting surfaces designed for both day-to-day execution and long-term operational visibility. Teams can onboard users faster, reduce repeated manual admin tasks, and standardize customer/account experiences across storefronts.', 'user-manager'); ?></p>
-						<p><?php esc_html_e('On top of core tooling, User Experience Manager includes an extensive add-on catalog that can be activated feature-by-feature. This allows you to turn on only what your store needs—from cart/checkout enhancements and coupon automation to My Account admin experiences, content-generation workflows, webhooks, invoice approvals, and WP-Admin UX customization—without forcing unnecessary complexity into every environment.', 'user-manager'); ?></p>
+						<p><?php esc_html_e('On top of core tooling, User Experience Manager includes an extensive add-on catalog and a dedicated Blocks catalog that can be activated feature-by-feature. This allows you to turn on only what your store needs—from cart/checkout enhancements and coupon automation to My Account admin experiences, content-generation workflows, dynamic photo galleries, and WP-Admin UX customization—without forcing unnecessary complexity into every environment.', 'user-manager'); ?></p>
 						<p><?php esc_html_e('The result is a scalable in-house operations platform for agencies, internal ecommerce teams, and multi-store organizations that need flexible UX controls, faster support resolution, and cleaner admin execution across thousands of products, users, orders, and customer journeys.', 'user-manager'); ?></p>
 					</div>
 
 					<h3><?php esc_html_e('Feature List', 'user-manager'); ?></h3>
 					<h4><?php esc_html_e('Core Tabs and Platform Features', 'user-manager'); ?></h4>
 					<ul>
-						<li><?php esc_html_e('Create User: create single users with role, password, login URL, coupon placeholders, and optional welcome email template sending.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Bulk Create: import users at scale through CSV/paste workflows with update controls and repeatable mapping defaults.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Reset Password: execute user password resets with optional email flow controls.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Remove User: remove/deactivate users with operational logging visibility.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Login As: generate temporary access workflows for support and troubleshooting.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Email Users: send targeted admin-generated communication using reusable templates.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Login Tools: includes Create User, Bulk Create, Reset Password, Remove User, Deactivate User(s), and Login As in one sectioned workspace.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Login Tools sub-page routing uses tab=login-tools with login_tools_section for each workflow screen.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Reports: includes General Reports, User Activity, Admin Log, and Coupon Lookup by Email.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Settings: global defaults, workflow controls, API keys, template utilities, and system behavior configuration.', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Documentation: internal reference, onboarding, installation, support, marketing/about content, and versions/changelog access.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Settings-related sub-pages include tab=settings, tab=email-templates, and tab=tools.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Add-ons and Blocks support direct deep-link sub-pages using addon_section and block_section URL parameters.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Blocks: dedicated content module management for Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles, and Media Library Tags with Photo & YouTube Video Gallery.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Documentation: internal reference, onboarding, installation, support, troubleshooting tools, and versions/changelog access via docs_section sub-pages.', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Admin logging and diagnostics: operational event logging with detailed row-level drill-down and filter controls.', 'user-manager'); ?></li>
 					</ul>
 					<h4><?php esc_html_e('Add-on Catalog (All Current Add-ons)', 'user-manager'); ?></h4>
 					<ul>
 						<li><?php esc_html_e('Add to Cart Bulk Import', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Add to Cart Variation Table', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Add to Cart Min/Max Quantities', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Cart Price Per-Piece', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Cart Total Items', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Page Creator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Database Table Browser', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Email Log', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Webhook URLs', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Order Invoice & Approval', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Order Received Page Customizer', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Restricted Access', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Send Email', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Send SMS Text', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Checkout Address Selector', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Coupon Creator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('New User Coupons', 'user-manager'); ?></li>
 						<li><?php esc_html_e('User Coupon Notifications', 'user-manager'); ?></li>
 						<li><?php esc_html_e('User Coupon Remaining Balances', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Data Anonymizer', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Fatal Error Debugger', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Staging & Development Environment Overrides', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Security Hardening', 'user-manager'); ?></li>
+						<li><?php esc_html_e('SEO Basics', 'user-manager'); ?></li>
 						<li><?php esc_html_e('My Account Coupons Page', 'user-manager'); ?></li>
 						<li><?php esc_html_e('My Account Menu Tiles', 'user-manager'); ?></li>
 						<li><?php esc_html_e('My Account Admin', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Post Meta Viewer', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Product Notification', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Product Search by SKU', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Post Content Generator', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Post Idea Generator', 'user-manager'); ?></li>
@@ -698,6 +828,14 @@ class User_Manager_Tab_Documentation {
 						<li><?php esc_html_e('WP-Admin Bar Quick Search', 'user-manager'); ?></li>
 						<li><?php esc_html_e('WP-Admin CSS', 'user-manager'); ?></li>
 						<li><?php esc_html_e('WP-Admin Notifications', 'user-manager'); ?></li>
+					</ul>
+					<h4><?php esc_html_e('Blocks Catalog (All Current Blocks)', 'user-manager'); ?></h4>
+					<ul>
+						<li><?php esc_html_e('Subpages Grid', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Tabbed Content Area', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Simple Icons', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Menu Tiles', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Media Library Tags with Photo & YouTube Video Gallery', 'user-manager'); ?></li>
 					</ul>
 
 					<h3><?php esc_html_e('Screenshots', 'user-manager'); ?></h3>
@@ -730,6 +868,203 @@ class User_Manager_Tab_Documentation {
 				</div>
 			</div>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Render Troubleshooting subsection.
+	 */
+	private static function render_troubleshooting_section(): void {
+		$addon_map = User_Manager_Core::get_addon_runtime_toggle_map();
+		uasort($addon_map, static function (array $a, array $b): int {
+			$a_label = isset($a['label']) ? (string) $a['label'] : '';
+			$b_label = isset($b['label']) ? (string) $b['label'] : '';
+			return strcasecmp($a_label, $b_label);
+		});
+
+		$disable_all_param = User_Manager_Core::URL_PARAM_DISABLE_ALL_ADDONS;
+		$disable_addons_param = User_Manager_Core::URL_PARAM_DISABLE_ADDONS;
+		$disabled_slugs = User_Manager_Core::get_temporarily_disabled_addons_from_url();
+		$raw_disable_all = isset($_GET[$disable_all_param]) ? strtolower(trim(sanitize_text_field(wp_unslash($_GET[$disable_all_param])))) : '';
+		$raw_disable_addons = isset($_GET[$disable_addons_param]) ? strtolower(trim(sanitize_text_field(wp_unslash($_GET[$disable_addons_param])))) : '';
+		$disable_all_requested = in_array($raw_disable_all, ['1', 'true', 'yes', 'on', 'all'], true) || $raw_disable_addons === 'all';
+
+		$disabled_labels = [];
+		foreach ($disabled_slugs as $disabled_slug) {
+			if (!isset($addon_map[$disabled_slug]['label'])) {
+				continue;
+			}
+			$disabled_labels[] = (string) $addon_map[$disabled_slug]['label'];
+		}
+
+		$default_target_url = home_url('/');
+		?>
+		<div class="um-admin-grid um-admin-grid-single">
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-admin-tools"></span>
+					<h2><?php esc_html_e('Troubleshooting', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<p><?php esc_html_e('Use this section to quickly isolate add-on conflicts by temporarily disabling all add-ons (or specific add-ons) using URL parameters.', 'user-manager'); ?></p>
+					<ol>
+						<li><?php esc_html_e('Test with all add-ons disabled to confirm whether an add-on is involved.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('If the issue clears, re-enable add-ons one-by-one (or in small groups) until the issue returns.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Use the Versions section to confirm recent changes and release notes.', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Use Reports > Admin Log and other debug add-ons as needed for deeper diagnostics.', 'user-manager'); ?></li>
+					</ol>
+
+					<h3><?php esc_html_e('URL Parameters', 'user-manager'); ?></h3>
+					<ul>
+						<li>
+							<code><?php echo esc_html($disable_all_param); ?>=1</code>
+							— <?php esc_html_e('Temporarily disable all add-ons for the current request URL.', 'user-manager'); ?>
+						</li>
+						<li>
+							<code><?php echo esc_html($disable_addons_param); ?>=add-to-cart-variation-table</code>
+							— <?php esc_html_e('Temporarily disable one specific add-on for the current request URL.', 'user-manager'); ?>
+						</li>
+						<li>
+							<code><?php echo esc_html($disable_addons_param); ?>=add-to-cart-variation-table,cart-total-items</code>
+							— <?php esc_html_e('Temporarily disable multiple add-ons using a comma-separated list.', 'user-manager'); ?>
+						</li>
+					</ul>
+					<p class="description">
+						<?php esc_html_e('These URL overrides are temporary and only apply while those parameters are present in the URL.', 'user-manager'); ?>
+					</p>
+
+					<?php if (!empty($disabled_labels)) : ?>
+						<div class="notice notice-warning inline" style="margin:12px 0 0; padding:8px 12px;">
+							<p style="margin:0;">
+								<strong><?php esc_html_e('Active URL override detected:', 'user-manager'); ?></strong>
+								<?php
+								if ($disable_all_requested) {
+									esc_html_e('All add-ons are currently disabled for this URL.', 'user-manager');
+								} else {
+									echo esc_html(implode(', ', $disabled_labels));
+								}
+								?>
+							</p>
+						</div>
+					<?php endif; ?>
+				</div>
+			</div>
+
+			<div class="um-admin-card um-admin-card-full">
+				<div class="um-admin-card-header">
+					<span class="dashicons dashicons-admin-links"></span>
+					<h2><?php esc_html_e('Troubleshooting URL Builder', 'user-manager'); ?></h2>
+				</div>
+				<div class="um-admin-card-body">
+					<div class="um-form-field">
+						<label for="um-troubleshooting-target-url"><strong><?php esc_html_e('Target URL', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-troubleshooting-target-url" class="large-text" value="<?php echo esc_attr($default_target_url); ?>" placeholder="<?php echo esc_attr($default_target_url); ?>" />
+						<p class="description"><?php esc_html_e('Enter the front-end/admin URL you want to test, then choose disable options below.', 'user-manager'); ?></p>
+					</div>
+
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-troubleshooting-disable-all" <?php checked($disable_all_requested); ?> />
+							<?php esc_html_e('Disable all add-ons for this URL', 'user-manager'); ?>
+						</label>
+					</div>
+
+					<div class="um-form-field">
+						<label><strong><?php esc_html_e('Disable specific add-ons', 'user-manager'); ?></strong></label>
+						<div id="um-troubleshooting-addon-list" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:6px; margin-top:8px;">
+							<?php foreach ($addon_map as $addon_slug => $addon_meta) : ?>
+								<?php
+								$addon_label = isset($addon_meta['label']) ? (string) $addon_meta['label'] : $addon_slug;
+								$is_checked = in_array($addon_slug, $disabled_slugs, true);
+								?>
+								<label style="display:flex; gap:8px; align-items:flex-start; padding:6px 8px; border:1px solid #dcdcde; border-radius:4px; background:#fff;">
+									<input
+										type="checkbox"
+										class="um-troubleshooting-addon-checkbox"
+										value="<?php echo esc_attr($addon_slug); ?>"
+										<?php checked($is_checked); ?>
+									/>
+									<span>
+										<strong><?php echo esc_html($addon_label); ?></strong><br />
+										<code style="font-size:11px;"><?php echo esc_html($addon_slug); ?></code>
+									</span>
+								</label>
+							<?php endforeach; ?>
+						</div>
+					</div>
+
+					<div class="um-form-field" style="margin-top:12px;">
+						<label for="um-troubleshooting-generated-url"><strong><?php esc_html_e('Generated URL', 'user-manager'); ?></strong></label>
+						<input type="text" id="um-troubleshooting-generated-url" class="large-text code" readonly value="" />
+						<p style="margin-top:8px;">
+							<button type="button" class="button" id="um-troubleshooting-copy-url"><?php esc_html_e('Copy URL', 'user-manager'); ?></button>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script>
+		jQuery(document).ready(function($) {
+			var disableAllParam = '<?php echo esc_js($disable_all_param); ?>';
+			var disableAddonsParam = '<?php echo esc_js($disable_addons_param); ?>';
+			var fallbackTarget = '<?php echo esc_js($default_target_url); ?>';
+
+			function buildTroubleshootingUrl() {
+				var rawTarget = ($.trim($('#um-troubleshooting-target-url').val()) || fallbackTarget);
+				var parsed;
+				try {
+					parsed = new URL(rawTarget);
+				} catch (e) {
+					parsed = new URL(rawTarget, window.location.origin);
+				}
+
+				parsed.searchParams.delete(disableAllParam);
+				parsed.searchParams.delete(disableAddonsParam);
+
+				var disableAll = $('#um-troubleshooting-disable-all').is(':checked');
+				if (disableAll) {
+					parsed.searchParams.set(disableAllParam, '1');
+				} else {
+					var selected = [];
+					$('.um-troubleshooting-addon-checkbox:checked').each(function() {
+						selected.push($(this).val());
+					});
+					if (selected.length > 0) {
+						parsed.searchParams.set(disableAddonsParam, selected.join(','));
+					}
+				}
+
+				$('#um-troubleshooting-generated-url').val(parsed.toString());
+			}
+
+			function toggleAddonCheckboxState() {
+				var disableAll = $('#um-troubleshooting-disable-all').is(':checked');
+				$('.um-troubleshooting-addon-checkbox').prop('disabled', disableAll);
+			}
+
+			$('#um-troubleshooting-target-url').on('input change', buildTroubleshootingUrl);
+			$('#um-troubleshooting-disable-all').on('change', function() {
+				toggleAddonCheckboxState();
+				buildTroubleshootingUrl();
+			});
+			$('.um-troubleshooting-addon-checkbox').on('change', buildTroubleshootingUrl);
+			$('#um-troubleshooting-copy-url').on('click', function() {
+				var value = $('#um-troubleshooting-generated-url').val();
+				if (!value) {
+					return;
+				}
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(value);
+				} else {
+					$('#um-troubleshooting-generated-url').trigger('focus').trigger('select');
+					document.execCommand('copy');
+				}
+			});
+
+			toggleAddonCheckboxState();
+			buildTroubleshootingUrl();
+		});
+		</script>
 		<?php
 	}
 

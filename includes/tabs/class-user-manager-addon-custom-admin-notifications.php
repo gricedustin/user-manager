@@ -61,8 +61,8 @@ class User_Manager_Addon_Custom_Admin_Notifications {
 							</div>
 							<div class="um-form-field">
 								<label><?php esc_html_e('Background Color', 'user-manager'); ?></label>
-								<input type="text" name="custom_admin_notification[<?php echo (int) $idx; ?>][background_color]" class="regular-text" value="<?php echo esc_attr($n['background_color'] ?? ''); ?>" placeholder="red or #202020"<?php echo $form_attr; ?> />
-								<p class="description"><?php esc_html_e('CSS values only (e.g. #202020 or red).', 'user-manager'); ?></p>
+								<input type="text" name="custom_admin_notification[<?php echo (int) $idx; ?>][background_color]" class="regular-text um-color-picker-field um-admin-notification-color-field" value="<?php echo esc_attr($n['background_color'] ?? ''); ?>" data-default-color="#202020" placeholder="#202020"<?php echo $form_attr; ?> />
+								<p class="description"><?php esc_html_e('Use the color picker or enter a hex value (e.g. #202020).', 'user-manager'); ?></p>
 							</div>
 							<div class="um-form-field">
 								<label><?php esc_html_e('URL String Match', 'user-manager'); ?></label>
@@ -98,8 +98,8 @@ class User_Manager_Addon_Custom_Admin_Notifications {
 				</div>
 				<div class="um-form-field">
 					<label><?php esc_html_e('Background Color', 'user-manager'); ?></label>
-					<input type="text" name="custom_admin_notification[__INDEX__][background_color]" class="regular-text" value="" placeholder="red or #202020"<?php echo $form_attr; ?> />
-					<p class="description"><?php esc_html_e('CSS values only (e.g. #202020 or red).', 'user-manager'); ?></p>
+					<input type="text" name="custom_admin_notification[__INDEX__][background_color]" class="regular-text um-color-picker-field um-admin-notification-color-field" value="" data-default-color="#202020" placeholder="#202020"<?php echo $form_attr; ?> />
+					<p class="description"><?php esc_html_e('Use the color picker or enter a hex value (e.g. #202020).', 'user-manager'); ?></p>
 				</div>
 				<div class="um-form-field">
 					<label><?php esc_html_e('URL String Match', 'user-manager'); ?></label>

@@ -11,8 +11,12 @@ if (!defined('ABSPATH')) {
 require_once __DIR__ . '/my-account/trait-user-manager-my-account-site-admin-renderers.php';
 final class User_Manager_My_Account_Site_Admin {
 	use User_Manager_My_Account_Site_Admin_Renderers_Trait;
-	private const PER_PAGE = 20;
+	private const DEFAULT_PER_PAGE = 20;
+	private const MIN_PER_PAGE = 1;
+	private const MAX_PER_PAGE = 200;
 	private const DEBUG_PARAM = 'um_my_account_admin_debug';
+	private const LINE_COUNT_CACHE_META_KEY = '_um_text_file_line_count_cache';
+	private const LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY = '_um_text_file_line_count_cache_number_only';
 
 	/**
 	 * Prevent duplicate style output when multiple endpoints render.
@@ -42,6 +46,14 @@ final class User_Manager_My_Account_Site_Admin {
 		if (self::$initialized) {
 			return;
 		}
+
+		if (!class_exists('User_Manager_Core') || !method_exists('User_Manager_Core', 'get_settings')) {
+			return;
+		}
+		$settings = User_Manager_Core::get_settings();
+		if (!self::is_addon_enabled($settings)) {
+			return;
+		}
 		self::$initialized = true;
 
 		add_action('init', [__CLASS__, 'register_rewrite_endpoints'], 20, 0);
@@ -55,6 +67,7 @@ final class User_Manager_My_Account_Site_Admin {
 		add_action('woocommerce_account_admin_products_endpoint', [__CLASS__, 'render_admin_products_endpoint']);
 		add_action('woocommerce_account_admin_coupons_endpoint', [__CLASS__, 'render_admin_coupons_endpoint']);
 		add_action('woocommerce_account_admin_users_endpoint', [__CLASS__, 'render_admin_users_endpoint']);
+		add_action('woocommerce_account_admin_activity_endpoint', [__CLASS__, 'render_admin_activity_endpoint']);
 	}
 
 	/**
@@ -456,6 +469,28 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Resolve approve button background color from settings.
+	 */
+	private static function get_order_approve_button_background_color(): string {
+		$settings = User_Manager_Core::get_settings();
+		$color = isset($settings['my_account_admin_order_approve_button_background_color'])
+			? sanitize_hex_color((string) $settings['my_account_admin_order_approve_button_background_color'])
+			: '';
+		return $color ? $color : '';
+	}
+
+	/**
+	 * Resolve decline button background color from settings.
+	 */
+	private static function get_order_decline_button_background_color(): string {
+		$settings = User_Manager_Core::get_settings();
+		$color = isset($settings['my_account_admin_order_decline_button_background_color'])
+			? sanitize_hex_color((string) $settings['my_account_admin_order_decline_button_background_color'])
+			: '';
+		return $color ? $color : '';
+	}
+
+	/**
 	 * Check whether the current user can approve pending orders.
 	 *
 	 * @return bool
@@ -468,11 +503,11 @@ final class User_Manager_My_Account_Site_Admin {
 		if (!self::is_addon_enabled($settings)) {
 			return false;
 		}
-		if (current_user_can('manage_options')) {
-			return true;
-		}
 		$allowed  = self::parse_username_list((string) ($settings['my_account_admin_order_approval_usernames'] ?? ''));
 		$role_allow = self::parse_role_list($settings['my_account_admin_order_approval_roles'] ?? []);
+		if (empty($allowed) && empty($role_allow)) {
+			return false;
+		}
 
 		$current = wp_get_current_user();
 		$login   = strtolower((string) ($current->user_login ?? ''));
@@ -710,6 +745,125 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Whether to show WebToffee "Download Invoice" button in Admin: Orders rows.
+	 */
+	private static function should_add_webtoffee_download_invoice_button(): bool {
+		$settings = User_Manager_Core::get_settings();
+		return !empty($settings['my_account_admin_order_add_webtoffee_download_invoice_button']);
+	}
+
+	/**
+	 * Whether to show WebToffee "Print Invoice" button in Admin: Orders rows.
+	 */
+	private static function should_add_webtoffee_print_invoice_button(): bool {
+		$settings = User_Manager_Core::get_settings();
+		return !empty($settings['my_account_admin_order_add_webtoffee_print_invoice_button']);
+	}
+
+	/**
+	 * Resolve display label for a WooCommerce order status.
+	 */
+	private static function get_order_status_display_label(string $status): string {
+		$status_key = self::normalize_wc_order_status_key($status);
+		$default_label = function_exists('wc_get_order_status_name')
+			? wc_get_order_status_name($status)
+			: ucwords(str_replace(['-', '_'], ' ', $status));
+		$default_label = wp_strip_all_tags((string) $default_label);
+
+		if ($status_key === '') {
+			return $default_label;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$overrides = isset($settings['my_account_admin_order_status_titles']) && is_array($settings['my_account_admin_order_status_titles'])
+			? $settings['my_account_admin_order_status_titles']
+			: [];
+		if (!isset($overrides[$status_key])) {
+			return $default_label;
+		}
+
+		$override_label = sanitize_text_field((string) $overrides[$status_key]);
+		return $override_label !== '' ? $override_label : $default_label;
+	}
+
+	/**
+	 * Normalize order status keys like pending / wc_pending / wc-pending to wc-pending.
+	 */
+	private static function normalize_wc_order_status_key(string $raw): string {
+		$raw = trim(strtolower($raw));
+		if ($raw === '') {
+			return '';
+		}
+		$raw = str_replace('_', '-', $raw);
+		$raw = sanitize_key($raw);
+		if ($raw === '') {
+			return '';
+		}
+		if (strpos($raw, 'wc-') !== 0) {
+			$raw = 'wc-' . ltrim($raw, '-');
+		}
+		return sanitize_key($raw);
+	}
+
+	/**
+	 * Resolve WebToffee invoice action URLs from My Account order actions.
+	 *
+	 * @param WC_Order $order Order object.
+	 * @return array{download:string,print:string}
+	 */
+	private static function get_webtoffee_invoice_action_urls($order): array {
+		$resolved = [
+			'download' => '',
+			'print' => '',
+		];
+		if (!$order instanceof WC_Order) {
+			return $resolved;
+		}
+
+		$actions = [];
+		if (function_exists('wc_get_account_orders_actions')) {
+			$actions = wc_get_account_orders_actions($order);
+		} else {
+			$actions = apply_filters('woocommerce_my_account_my_orders_actions', [], $order);
+		}
+		if (!is_array($actions) || empty($actions)) {
+			return $resolved;
+		}
+
+		foreach ($actions as $action_key => $action) {
+			if (!is_array($action)) {
+				continue;
+			}
+			$url = isset($action['url']) ? esc_url_raw((string) $action['url']) : '';
+			if ($url === '') {
+				continue;
+			}
+			$name = strtolower(wp_strip_all_tags((string) ($action['name'] ?? '')));
+			$class = strtolower((string) ($action['class'] ?? ''));
+			$key = strtolower((string) $action_key);
+			$url_lc = strtolower($url);
+
+			$is_download = strpos($key, 'download_invoice') !== false
+				|| strpos($class, 'wt_pklist_invoice_download') !== false
+				|| strpos($name, 'download invoice') !== false
+				|| strpos($url_lc, 'type=download_invoice') !== false;
+			$is_print = strpos($key, 'print_invoice') !== false
+				|| strpos($class, 'wt_pklist_invoice_print') !== false
+				|| strpos($name, 'print invoice') !== false
+				|| strpos($url_lc, 'type=print_invoice') !== false;
+
+			if ($is_download && $resolved['download'] === '') {
+				$resolved['download'] = $url;
+			}
+			if ($is_print && $resolved['print'] === '') {
+				$resolved['print'] = $url;
+			}
+		}
+
+		return $resolved;
+	}
+
+	/**
 	 * Render order status filters above the orders table.
 	 *
 	 * @param string                                                       $endpoint Endpoint slug.
@@ -775,34 +929,57 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @return array<int,WC_Order>
 	 */
 	private static function search_orders(string $search, string $status_key = ''): array {
-		$needle = strtolower(trim($search));
-		if ($needle === '') {
+		$search = trim($search);
+		$needles = self::get_order_search_needles($search);
+		if (empty($needles)) {
 			return [];
 		}
 
 		$orders = [];
 		$queries = [];
+		$status_slug = preg_replace('/^wc-/', '', $status_key);
+		$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+		$has_status_filter = $status_slug !== '';
 
-		if (is_numeric($search)) {
-			$single = wc_get_order(absint($search));
+		foreach ($needles as $needle) {
+			if (!ctype_digit($needle)) {
+				continue;
+			}
+			$single = wc_get_order(absint($needle));
 			if ($single instanceof WC_Order && self::order_matches_status_filter($single, $status_key)) {
 				$orders[(int) $single->get_id()] = $single;
 			}
 		}
 
+		$seen_search_fragments = [];
+		foreach ($needles as $needle) {
+			if (isset($seen_search_fragments[$needle])) {
+				continue;
+			}
+			$seen_search_fragments[$needle] = true;
+			$query_args = [
+				'limit'    => 300,
+				'paginate' => false,
+				'orderby'  => 'date',
+				'order'    => 'DESC',
+				'search'   => '*' . $needle . '*',
+			];
+			if ($has_status_filter) {
+				$query_args['status'] = [$status_slug];
+			}
+			$queries[] = $query_args;
+		}
+
 		$queries[] = [
-			'limit'    => 300,
+			'limit'    => 800,
 			'paginate' => false,
 			'orderby'  => 'date',
 			'order'    => 'DESC',
-			'search'   => '*' . $search . '*',
 		];
-		$queries[] = [
-			'limit'    => 400,
-			'paginate' => false,
-			'orderby'  => 'date',
-			'order'    => 'DESC',
-		];
+		if ($has_status_filter) {
+			$queries[count($queries) - 1]['status'] = [$status_slug];
+		}
+
 		if (strpos($search, '@') !== false) {
 			$queries[] = [
 				'limit'         => 300,
@@ -811,15 +988,35 @@ final class User_Manager_My_Account_Site_Admin {
 				'order'         => 'DESC',
 				'billing_email' => $search,
 			];
-		}
-		if ($status_key !== '') {
-			$status_slug = preg_replace('/^wc-/', '', $status_key);
-			$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
-			if ($status_slug !== '') {
-				foreach ($queries as $query_index => $query_args) {
-					$queries[$query_index]['status'] = [$status_slug];
-				}
+			if ($has_status_filter) {
+				$queries[count($queries) - 1]['status'] = [$status_slug];
 			}
+		}
+
+		$meta_keys = self::get_order_number_search_meta_keys();
+		foreach ($needles as $needle) {
+			if ($needle === '') {
+				continue;
+			}
+			$meta_query = ['relation' => 'OR'];
+			foreach ($meta_keys as $meta_key) {
+				$meta_query[] = [
+					'key'     => $meta_key,
+					'value'   => $needle,
+					'compare' => 'LIKE',
+				];
+			}
+			$query_args = [
+				'limit'      => 300,
+				'paginate'   => false,
+				'orderby'    => 'date',
+				'order'      => 'DESC',
+				'meta_query' => $meta_query,
+			];
+			if ($has_status_filter) {
+				$query_args['status'] = [$status_slug];
+			}
+			$queries[] = $query_args;
 		}
 
 		foreach ($queries as $query_args) {
@@ -831,7 +1028,7 @@ final class User_Manager_My_Account_Site_Admin {
 				if (!$order instanceof WC_Order) {
 					continue;
 				}
-				if (!self::order_matches_search($order, $needle)) {
+				if (!self::order_matches_search($order, $needles)) {
 					continue;
 				}
 				if (!self::order_matches_status_filter($order, $status_key)) {
@@ -854,12 +1051,15 @@ final class User_Manager_My_Account_Site_Admin {
 	/**
 	 * Determine if an order matches a search term.
 	 *
-	 * @param WC_Order $order Order.
-	 * @param string   $needle Lowercased search query.
+	 * @param WC_Order          $order Order.
+	 * @param array<int,string> $needles Lowercased search query variants.
 	 * @return bool
 	 */
-	private static function order_matches_search($order, string $needle): bool {
+	private static function order_matches_search($order, array $needles): bool {
 		if (!$order instanceof WC_Order) {
+			return false;
+		}
+		if (empty($needles)) {
 			return false;
 		}
 
@@ -868,7 +1068,9 @@ final class User_Manager_My_Account_Site_Admin {
 		$fields = [
 			(string) $order->get_id(),
 			(string) $order->get_order_number(),
+			'#' . (string) $order->get_order_number(),
 			(string) $order->get_status(),
+			(string) $order->get_order_key(),
 			(string) $order->get_billing_email(),
 			(string) $order->get_billing_first_name(),
 			(string) $order->get_billing_last_name(),
@@ -877,9 +1079,69 @@ final class User_Manager_My_Account_Site_Admin {
 			implode(' ', array_map('strval', (array) $billing)),
 			implode(' ', array_map('strval', (array) $shipping)),
 		];
+		foreach (self::get_order_number_search_meta_keys() as $meta_key) {
+			$fields[] = (string) $order->get_meta($meta_key, true);
+		}
 
 		$haystack = strtolower(implode(' | ', $fields));
-		return strpos($haystack, $needle) !== false;
+		foreach ($needles as $needle) {
+			$needle = trim(strtolower((string) $needle));
+			if ($needle === '') {
+				continue;
+			}
+			if (strpos($haystack, $needle) !== false) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Generate normalized order-search needle variants.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_order_search_needles(string $search): array {
+		$search = trim((string) $search);
+		if ($search === '') {
+			return [];
+		}
+
+		$variants = [];
+		$variants[] = strtolower($search);
+		$variants[] = strtolower(ltrim($search, '#'));
+		$variants[] = strtolower(preg_replace('/^order[\s#:.\-]*/i', '', $search) ?? '');
+
+		$compact = preg_replace('/\s+/', '', $search);
+		if (is_string($compact)) {
+			$variants[] = strtolower($compact);
+			$variants[] = strtolower(ltrim($compact, '#'));
+		}
+
+		$digits = preg_replace('/\D+/', '', $search);
+		if (is_string($digits) && $digits !== '') {
+			$variants[] = strtolower($digits);
+		}
+
+		$variants = array_values(array_unique(array_filter(array_map('trim', $variants))));
+		return $variants;
+	}
+
+	/**
+	 * Order-number meta keys checked for sequential order number plugins.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_order_number_search_meta_keys(): array {
+		return [
+			'_order_number',
+			'_order_number_formatted',
+			'_wc_order_number',
+			'_alg_wc_order_number',
+			'_alg_wc_custom_order_number',
+			'_ywsonp_order_number',
+		];
 	}
 
 	/**
@@ -1213,10 +1475,6 @@ final class User_Manager_My_Account_Site_Admin {
 			return false;
 		}
 
-		if (current_user_can('manage_options')) {
-			return true;
-		}
-
 		$allowed_usernames = self::parse_username_list((string) ($settings[ $list_key ] ?? ''));
 		$allowed_roles     = $roles_key !== '' ? self::parse_role_list($settings[ $roles_key ] ?? []) : [];
 		if (empty($allowed_usernames) && empty($allowed_roles)) {
@@ -1245,6 +1503,10 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @return bool
 	 */
 	private static function is_addon_enabled(array $settings): bool {
+		if (class_exists('User_Manager_Core') && method_exists('User_Manager_Core', 'is_addon_temporarily_disabled')
+			&& User_Manager_Core::is_addon_temporarily_disabled('my-account-site-admin')) {
+			return false;
+		}
 		if (array_key_exists('my_account_site_admin_enabled', $settings)) {
 			return !empty($settings['my_account_site_admin_enabled']);
 		}
@@ -1252,7 +1514,8 @@ final class User_Manager_My_Account_Site_Admin {
 		return !empty($settings['my_account_admin_order_viewer_enabled'])
 			|| !empty($settings['my_account_admin_product_viewer_enabled'])
 			|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
-			|| !empty($settings['my_account_admin_user_viewer_enabled']);
+			|| !empty($settings['my_account_admin_user_viewer_enabled'])
+			|| !empty($settings['my_account_admin_activity_viewer_enabled']);
 	}
 
 	/**
@@ -1324,6 +1587,190 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Parse CSV list of user identifiers (username/email/user ID).
+	 *
+	 * @param string $raw Raw CSV list.
+	 * @return array{user_ids:array<int,int>, usernames:array<int,string>, emails:array<int,string>}
+	 */
+	private static function parse_user_identifier_list(string $raw): array {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return [
+				'user_ids'  => [],
+				'usernames' => [],
+				'emails'    => [],
+			];
+		}
+
+		$parts = preg_split('/[\s,]+/', $raw);
+		if (!is_array($parts)) {
+			return [
+				'user_ids'  => [],
+				'usernames' => [],
+				'emails'    => [],
+			];
+		}
+
+		$user_ids = [];
+		$usernames = [];
+		$emails = [];
+
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+
+			if (ctype_digit($part)) {
+				$user_id = absint($part);
+				if ($user_id > 0) {
+					$user_ids[] = $user_id;
+				}
+				continue;
+			}
+
+			if (strpos($part, '@') !== false) {
+				$email = sanitize_email($part);
+				if ($email !== '') {
+					$emails[] = strtolower($email);
+					continue;
+				}
+			}
+
+			$username = sanitize_user($part, false);
+			if ($username !== '') {
+				$usernames[] = strtolower($username);
+			}
+		}
+
+		return [
+			'user_ids'  => array_values(array_unique($user_ids)),
+			'usernames' => array_values(array_unique($usernames)),
+			'emails'    => array_values(array_unique($emails)),
+		];
+	}
+
+	/**
+	 * Redirect selected WP administrators away from wp-admin to My Account.
+	 */
+	public static function maybe_redirect_selected_wp_admin_users_to_my_account(): void {
+		if (!is_admin() || wp_doing_ajax()) {
+			return;
+		}
+
+		if (!is_user_logged_in()) {
+			return;
+		}
+
+		if (defined('DOING_CRON') && DOING_CRON) {
+			return;
+		}
+
+		$current_user = wp_get_current_user();
+		if (!$current_user instanceof WP_User || empty($current_user->ID)) {
+			return;
+		}
+
+		// This redirect rule is only for WP Administrators.
+		$current_roles = is_array($current_user->roles) ? array_map('sanitize_key', $current_user->roles) : [];
+		$is_wp_administrator = in_array('administrator', $current_roles, true) || current_user_can('manage_options');
+		if (!$is_wp_administrator) {
+			return;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$raw_list = isset($settings['my_account_admin_wp_admin_redirect_list'])
+			? (string) $settings['my_account_admin_wp_admin_redirect_list']
+			: '';
+		if ($raw_list === '' && isset($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'])) {
+			// Backward compatibility for previously saved key.
+			$raw_list = (string) $settings['my_account_admin_activity_viewer_wp_admin_redirect_list'];
+		}
+		$targets = self::parse_user_identifier_list($raw_list);
+
+		if (empty($targets['user_ids']) && empty($targets['usernames']) && empty($targets['emails'])) {
+			return;
+		}
+
+		$current_user_id = (int) $current_user->ID;
+		$current_login = strtolower((string) ($current_user->user_login ?? ''));
+		$current_email = strtolower((string) ($current_user->user_email ?? ''));
+
+		$should_redirect = in_array($current_user_id, $targets['user_ids'], true)
+			|| ($current_login !== '' && in_array($current_login, $targets['usernames'], true))
+			|| ($current_email !== '' && in_array($current_email, $targets['emails'], true));
+
+		if (!$should_redirect) {
+			return;
+		}
+
+		$my_account_url = function_exists('wc_get_page_permalink')
+			? wc_get_page_permalink('myaccount')
+			: home_url('/my-account/');
+
+		if (!is_string($my_account_url) || $my_account_url === '') {
+			$my_account_url = home_url('/my-account/');
+		}
+
+		wp_safe_redirect($my_account_url);
+		exit;
+	}
+
+	/**
+	 * Hide front-end WP admin bar for configured administrators.
+	 *
+	 * @param bool $show Current show-admin-bar decision.
+	 * @return bool
+	 */
+	public static function maybe_hide_admin_bar_for_redirected_administrators($show): bool {
+		if (!is_user_logged_in()) {
+			return (bool) $show;
+		}
+		if (is_admin()) {
+			return (bool) $show;
+		}
+		if (!self::should_apply_wp_admin_redirect_list_to_current_administrator()) {
+			return (bool) $show;
+		}
+		return false;
+	}
+
+	/**
+	 * Check if current administrator is listed in redirect/remove-admin-bar targets.
+	 */
+	private static function should_apply_wp_admin_redirect_list_to_current_administrator(): bool {
+		$current_user = wp_get_current_user();
+		if (!$current_user instanceof WP_User || empty($current_user->ID)) {
+			return false;
+		}
+		$current_roles = is_array($current_user->roles) ? array_map('sanitize_key', $current_user->roles) : [];
+		$is_wp_administrator = in_array('administrator', $current_roles, true) || current_user_can('manage_options');
+		if (!$is_wp_administrator) {
+			return false;
+		}
+
+		$settings = User_Manager_Core::get_settings();
+		$raw_list = isset($settings['my_account_admin_wp_admin_redirect_list'])
+			? (string) $settings['my_account_admin_wp_admin_redirect_list']
+			: '';
+		if ($raw_list === '' && isset($settings['my_account_admin_activity_viewer_wp_admin_redirect_list'])) {
+			$raw_list = (string) $settings['my_account_admin_activity_viewer_wp_admin_redirect_list'];
+		}
+		$targets = self::parse_user_identifier_list($raw_list);
+		if (empty($targets['user_ids']) && empty($targets['usernames']) && empty($targets['emails'])) {
+			return false;
+		}
+
+		$current_user_id = (int) $current_user->ID;
+		$current_login = strtolower((string) ($current_user->user_login ?? ''));
+		$current_email = strtolower((string) ($current_user->user_email ?? ''));
+
+		return in_array($current_user_id, $targets['user_ids'], true)
+			|| ($current_login !== '' && in_array($current_login, $targets['usernames'], true))
+			|| ($current_email !== '' && in_array($current_email, $targets['emails'], true));
+	}
+
+	/**
 	 * Area configuration map.
 	 *
 	 * @return array<string,array<string,string>>
@@ -1362,6 +1809,13 @@ final class User_Manager_My_Account_Site_Admin {
 				'roles_key'     => 'my_account_admin_user_viewer_roles',
 				'show_meta_key' => 'my_account_admin_user_viewer_show_meta',
 			],
+			'activity' => [
+				'endpoint'      => 'admin_activity',
+				'menu_label'    => __('Admin: Activity', 'user-manager'),
+				'enabled_key'   => 'my_account_admin_activity_viewer_enabled',
+				'usernames_key' => 'my_account_admin_activity_viewer_usernames',
+				'roles_key'     => 'my_account_admin_activity_viewer_roles',
+			],
 		];
 	}
 
@@ -1375,20 +1829,29 @@ final class User_Manager_My_Account_Site_Admin {
 		$search = self::get_search_query();
 		$url    = self::get_endpoint_url($endpoint);
 		$selected_status_key = '';
+		$selected_activity_action = '';
 		if ($endpoint === 'admin_orders') {
 			$status_filters = self::get_configured_order_status_filters();
 			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
+		} elseif ($endpoint === 'admin_activity') {
+			$selected_activity_action = self::get_activity_action_filter_query_arg();
 		}
 		echo '<form class="um-my-account-admin-search-form" method="get" action="' . esc_url($url) . '">';
 		if ($selected_status_key !== '') {
 			echo '<input type="hidden" name="um_order_status" value="' . esc_attr($selected_status_key) . '" />';
 		}
+		if ($selected_activity_action !== '') {
+			echo '<input type="hidden" name="ua_action_filter" value="' . esc_attr($selected_activity_action) . '" />';
+		}
 		echo '<input type="search" name="um_search" value="' . esc_attr($search) . '" placeholder="' . esc_attr($placeholder) . '" />';
-		echo '<button type="submit" class="button">' . esc_html__('Search', 'user-manager') . '</button>';
+		echo '<button type="submit" class="button um-my-account-admin-search-submit">' . esc_html__('Search', 'user-manager') . '</button>';
 		if ($search !== '') {
 			$clear_args = [];
 			if ($selected_status_key !== '') {
 				$clear_args['um_order_status'] = $selected_status_key;
+			}
+			if ($selected_activity_action !== '') {
+				$clear_args['ua_action_filter'] = $selected_activity_action;
 			}
 			$clear_url = self::get_endpoint_url($endpoint, $clear_args);
 			echo ' <a class="button" href="' . esc_url($clear_url) . '">' . esc_html__('Clear', 'user-manager') . '</a>';
@@ -1418,6 +1881,11 @@ final class User_Manager_My_Account_Site_Admin {
 			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
 			if ($selected_status_key !== '') {
 				$base_args['um_order_status'] = $selected_status_key;
+			}
+		} elseif ($endpoint === 'admin_activity') {
+			$selected_activity_action = self::get_activity_action_filter_query_arg();
+			if ($selected_activity_action !== '') {
+				$base_args['ua_action_filter'] = $selected_activity_action;
 			}
 		}
 
@@ -1452,6 +1920,416 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Whether My Account Admin list CSV exports are enabled.
+	 */
+	private static function is_my_account_admin_csv_export_enabled(): bool {
+		$settings = User_Manager_Core::get_settings();
+		return !empty($settings['my_account_admin_enable_csv_export_button']);
+	}
+
+	/**
+	 * Build a CSV export URL for a My Account Admin list endpoint.
+	 *
+	 * @param string $endpoint Endpoint key.
+	 * @param array  $query_args Optional extra query args to preserve.
+	 * @return string
+	 */
+	private static function get_my_account_admin_csv_export_url(string $endpoint, array $query_args = []): string {
+		$args = $query_args;
+		$args['um_export_csv'] = '1';
+		return self::get_endpoint_url($endpoint, $args);
+	}
+
+	/**
+	 * Render the CSV export button below list pagination controls.
+	 *
+	 * @param string $endpoint Endpoint key.
+	 */
+	private static function render_my_account_admin_csv_export_button(string $endpoint): void {
+		if (!self::is_my_account_admin_csv_export_enabled()) {
+			return;
+		}
+		if (!in_array($endpoint, ['admin_orders', 'admin_products', 'admin_coupons', 'admin_users', 'admin_activity'], true)) {
+			return;
+		}
+
+		$args = self::get_list_context_query_args();
+		unset($args['um_page']);
+		$url = self::get_my_account_admin_csv_export_url($endpoint, $args);
+
+		echo '<div class="um-my-account-admin-export-csv-wrap" style="margin-top:12px;">';
+		echo '<a class="button button-secondary um-my-account-admin-export-csv-button" href="' . esc_url($url) . '">' . esc_html__('Export to CSV', 'user-manager') . '</a>';
+		echo '</div>';
+	}
+
+	/**
+	 * Handle My Account Admin CSV export download for an area.
+	 *
+	 * @param string $area_key Area key (orders/products/coupons/users/activity).
+	 */
+	private static function maybe_handle_my_account_admin_csv_export_download(string $area_key): void {
+		if (!self::is_my_account_admin_csv_export_enabled()) {
+			return;
+		}
+		if (!isset($_GET['um_export_csv']) || (string) wp_unslash($_GET['um_export_csv']) !== '1') {
+			return;
+		}
+		if (!in_array($area_key, ['orders', 'products', 'coupons', 'users', 'activity'], true)) {
+			return;
+		}
+
+		if (!self::ensure_area_access($area_key)) {
+			exit;
+		}
+
+		$filename = 'my-account-admin-' . $area_key . '-' . gmdate('Y-m-d-His') . '.csv';
+		nocache_headers();
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename="' . sanitize_file_name($filename) . '"');
+		header('X-Content-Type-Options: nosniff');
+
+		$output = fopen('php://output', 'w');
+		if ($output === false) {
+			exit;
+		}
+
+		$rows = self::get_my_account_admin_csv_rows($area_key);
+		self::stream_my_account_admin_csv_rows($output, $rows);
+
+		fclose($output);
+		exit;
+	}
+
+	/**
+	 * Stream rows as CSV content.
+	 *
+	 * @param resource $output Open output stream.
+	 * @param array<int,array<int,string>> $rows CSV rows.
+	 */
+	private static function stream_my_account_admin_csv_rows($output, array $rows): void {
+		foreach ($rows as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+			fputcsv($output, $row);
+		}
+	}
+
+	/**
+	 * Build CSV rows for a My Account Admin area.
+	 *
+	 * @param string $area_key Area key.
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_csv_rows(string $area_key): array {
+		if ($area_key === 'orders') {
+			return self::get_my_account_admin_orders_csv_rows();
+		}
+		if ($area_key === 'products') {
+			return self::get_my_account_admin_products_csv_rows();
+		}
+		if ($area_key === 'coupons') {
+			return self::get_my_account_admin_coupons_csv_rows();
+		}
+		if ($area_key === 'users') {
+			return self::get_my_account_admin_users_csv_rows();
+		}
+		if ($area_key === 'activity') {
+			return self::get_my_account_admin_activity_csv_rows();
+		}
+		return [];
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_orders_csv_rows(): array {
+		$search = self::get_search_query();
+		$status_filters = self::get_configured_order_status_filters();
+		$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
+		$orders = [];
+
+		if ($search !== '') {
+			$orders = self::search_orders($search, $selected_status_key);
+		} else {
+			$query_args = [
+				'limit'    => -1,
+				'paginate' => false,
+				'orderby'  => 'date',
+				'order'    => 'DESC',
+			];
+			if ($selected_status_key !== '') {
+				$status_slug = preg_replace('/^wc-/', '', $selected_status_key);
+				$status_slug = is_string($status_slug) ? sanitize_key($status_slug) : '';
+				if ($status_slug !== '') {
+					$query_args['status'] = [$status_slug];
+				}
+			}
+			$result = wc_get_orders($query_args);
+			if (is_array($result)) {
+				$orders = $result;
+			}
+		}
+
+		$rows = [];
+		$rows[] = ['Order ID', 'Order Number', 'Date', 'Status', 'Billing Email'];
+		foreach ($orders as $order) {
+			if (!$order instanceof WC_Order) {
+				continue;
+			}
+			$date_created = $order->get_date_created();
+			$rows[] = [
+				(string) $order->get_id(),
+				(string) $order->get_order_number(),
+				$date_created ? (string) $date_created->date_i18n('Y-m-d H:i:s') : '',
+				(string) $order->get_status(),
+				(string) $order->get_billing_email(),
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_products_csv_rows(): array {
+		$search = self::get_search_query();
+		$product_ids = [];
+		if ($search !== '') {
+			$product_ids = self::search_product_ids($search);
+		} else {
+			$query = new WP_Query([
+				'post_type'      => ['product', 'product_variation'],
+				'post_status'    => ['publish', 'private'],
+				'posts_per_page' => -1,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+			]);
+			$product_ids = is_array($query->posts) ? $query->posts : [];
+		}
+
+		$rows = [];
+		$rows[] = ['Product ID', 'Type', 'Product Name', 'Variation', 'SKU', 'Inventory', 'Price', 'Status', 'Created'];
+		foreach ($product_ids as $post_id) {
+			$product = wc_get_product($post_id);
+			if (!$product) {
+				continue;
+			}
+			$is_variation = $product->is_type('variation');
+			$product_name = $is_variation ? (string) get_the_title((int) $product->get_parent_id()) : (string) $product->get_name();
+			$variation = $is_variation ? (string) wp_strip_all_tags(wc_get_formatted_variation($product, true, false, false)) : '';
+			$rows[] = [
+				(string) $product->get_id(),
+				$is_variation ? 'variation' : 'product',
+				$product_name,
+				$variation,
+				(string) $product->get_sku(),
+				(string) self::get_product_stock_display($product),
+				(string) wp_strip_all_tags($product->get_price_html()),
+				(string) $product->get_status(),
+				(string) get_post_time('Y-m-d H:i:s', false, (int) $product->get_id()),
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_coupons_csv_rows(): array {
+		$search = self::get_search_query();
+		$coupon_ids = [];
+		if ($search !== '') {
+			$coupon_ids = self::search_coupon_ids($search);
+		} else {
+			$query = new WP_Query([
+				'post_type'      => 'shop_coupon',
+				'post_status'    => ['publish', 'private', 'draft'],
+				'posts_per_page' => -1,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'fields'         => 'ids',
+			]);
+			$coupon_ids = is_array($query->posts) ? $query->posts : [];
+		}
+
+		$rows = [];
+		$rows[] = ['Coupon ID', 'Coupon Code', 'Amount', 'Type', 'Free Shipping', 'Used', 'Limit', 'Expiration', 'Created'];
+		foreach ($coupon_ids as $coupon_id) {
+			$coupon = new WC_Coupon((int) $coupon_id);
+			if (!$coupon || !$coupon->get_id()) {
+				continue;
+			}
+			$expires = $coupon->get_date_expires();
+			$rows[] = [
+				(string) $coupon->get_id(),
+				(string) $coupon->get_code(),
+				(string) $coupon->get_amount(),
+				(string) $coupon->get_discount_type(),
+				$coupon->get_free_shipping() ? 'yes' : 'no',
+				(string) $coupon->get_usage_count(),
+				(string) $coupon->get_usage_limit(),
+				$expires ? (string) $expires->date_i18n('Y-m-d H:i:s') : '',
+				(string) get_post_time('Y-m-d H:i:s', false, (int) $coupon->get_id()),
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_users_csv_rows(): array {
+		$search = self::get_search_query();
+		$users = [];
+		if ($search !== '') {
+			$users = self::search_users($search);
+		} else {
+			$batch_size = 1000;
+			$offset     = 0;
+			while (true) {
+				$query = new WP_User_Query([
+					'number'      => $batch_size,
+					'offset'      => $offset,
+					'orderby'     => 'registered',
+					'order'       => 'DESC',
+					'count_total' => false,
+				]);
+				$results = $query->get_results();
+				if (!is_array($results) || empty($results)) {
+					break;
+				}
+				foreach ($results as $result_user) {
+					if ($result_user instanceof WP_User) {
+						$users[] = $result_user;
+					}
+				}
+				if (count($results) < $batch_size) {
+					break;
+				}
+				$offset += $batch_size;
+			}
+		}
+
+		$rows = [];
+		$rows[] = ['User ID', 'Login', 'Email', 'Display Name', 'Roles', 'Registered'];
+		foreach ($users as $user) {
+			if (!$user instanceof WP_User) {
+				continue;
+			}
+			$rows[] = [
+				(string) $user->ID,
+				(string) $user->user_login,
+				(string) $user->user_email,
+				(string) $user->display_name,
+				implode(', ', (array) $user->roles),
+				(string) $user->user_registered,
+			];
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * @return array<int,array<int,string>>
+	 */
+	private static function get_my_account_admin_activity_csv_rows(): array {
+		global $wpdb;
+		if (!$wpdb instanceof wpdb) {
+			return [['User ID', 'User', 'Email', 'Roles', 'Timestamp', 'Action']];
+		}
+
+		$search               = self::get_search_query();
+		$action_filter        = trim(self::get_activity_action_filter_query_arg());
+		$allowed_actions      = self::get_activity_allowed_actions_from_settings();
+		$hidden_email_filters = self::get_activity_hidden_email_partials();
+		$table                = $wpdb->prefix . 'um_user_activity';
+		$table_exists         = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table;
+		if (!$table_exists) {
+			return [['User ID', 'User', 'Email', 'Roles', 'Timestamp', 'Action']];
+		}
+
+		if (!empty($allowed_actions) && !in_array($action_filter, $allowed_actions, true)) {
+			$action_filter = '';
+		}
+
+		$where_parts = ['1=1'];
+		$params = [];
+
+		if (!empty($allowed_actions)) {
+			$allowed_placeholders = implode(',', array_fill(0, count($allowed_actions), '%s'));
+			$where_parts[] = "h.action IN ({$allowed_placeholders})";
+			foreach ($allowed_actions as $allowed_action) {
+				$params[] = $allowed_action;
+			}
+		}
+
+		if ($action_filter !== '') {
+			$where_parts[] = 'TRIM(h.action) = %s';
+			$params[] = $action_filter;
+		}
+
+		if ($search !== '') {
+			$like = '%' . $wpdb->esc_like($search) . '%';
+			$where_parts[] = '(h.action LIKE %s OR h.url LIKE %s OR h.ip_address LIKE %s OR h.user_agent LIKE %s OR h.roles LIKE %s OR u.user_login LIKE %s OR u.user_email LIKE %s OR u.display_name LIKE %s OR CAST(h.user_id AS CHAR) LIKE %s)';
+			for ($i = 0; $i < 9; $i++) {
+				$params[] = $like;
+			}
+		}
+
+		if (!empty($hidden_email_filters)) {
+			foreach ($hidden_email_filters as $hidden_email_partial) {
+				$hidden_email_partial = trim((string) $hidden_email_partial);
+				if ($hidden_email_partial === '') {
+					continue;
+				}
+				$where_parts[] = "(u.user_email IS NULL OR u.user_email = '' OR u.user_email NOT LIKE %s)";
+				$params[] = '%' . $wpdb->esc_like($hidden_email_partial) . '%';
+			}
+		}
+
+		$where_sql = implode(' AND ', $where_parts);
+		$query_sql = "
+			SELECT h.user_id, h.action, h.roles, h.created_at, u.user_login, u.user_email, u.display_name
+			  FROM {$table} h
+			  LEFT JOIN {$wpdb->users} u ON h.user_id = u.ID
+			 WHERE {$where_sql}
+		  ORDER BY h.created_at DESC
+		";
+		$rows_raw = !empty($params)
+			? $wpdb->get_results($wpdb->prepare($query_sql, ...$params))
+			: $wpdb->get_results($query_sql);
+
+		$rows = [];
+		$rows[] = ['User ID', 'User', 'Email', 'Roles', 'Timestamp', 'Action'];
+		if (is_array($rows_raw)) {
+			foreach ($rows_raw as $row) {
+				$user_id = isset($row->user_id) ? (int) $row->user_id : 0;
+				$display_name = isset($row->display_name) ? (string) $row->display_name : '';
+				$user_login = isset($row->user_login) ? (string) $row->user_login : '';
+				$user_email = isset($row->user_email) ? (string) $row->user_email : '';
+				if ($display_name === '') {
+					$display_name = $user_email !== '' ? $user_email : $user_login;
+				}
+				$rows[] = [
+					$user_id > 0 ? (string) $user_id : '',
+					$display_name,
+					$user_email,
+					isset($row->roles) ? (string) $row->roles : '',
+					isset($row->created_at) ? (string) $row->created_at : '',
+					isset($row->action) ? (string) $row->action : '',
+				];
+			}
+		}
+
+		return $rows;
+	}
+
+	/**
 	 * Render a shared key/value row.
 	 *
 	 * @param string $label Label.
@@ -1471,7 +2349,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Parse configured additional order meta fields.
 	 *
 	 * @param string $raw Raw setting value.
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
 	 */
 	private static function parse_order_additional_meta_field_definitions(string $raw): array {
 		$raw = trim($raw);
@@ -1495,11 +2373,13 @@ final class User_Manager_My_Account_Site_Admin {
 			$meta_key_raw = $part;
 			$label_raw = $part;
 			$prefix_raw = '';
+			$flags_raw = '';
 			if (strpos($part, ':') !== false) {
 				$pair = explode(':', $part, 3);
 				$meta_key_raw = isset($pair[0]) ? (string) $pair[0] : '';
 				$label_raw    = isset($pair[1]) ? (string) $pair[1] : '';
-				$prefix_raw   = isset($pair[2]) ? (string) $pair[2] : '';
+				$prefix_and_flags_raw = isset($pair[2]) ? (string) $pair[2] : '';
+				[$prefix_raw, $flags_raw] = self::split_prefix_and_flags($prefix_and_flags_raw);
 			}
 
 			$meta_key = sanitize_key(trim($meta_key_raw));
@@ -1515,10 +2395,14 @@ final class User_Manager_My_Account_Site_Admin {
 				$label = $meta_key;
 			}
 
+			$parsed_flags = self::parse_order_additional_meta_flags($flags_raw);
 			$definitions[] = [
-				'key'                 => $meta_key,
-				'label'               => $label,
-				'prefix_before_value' => sanitize_text_field(trim($prefix_raw)),
+				'key'                   => $meta_key,
+				'label'                 => $label,
+				'prefix_before_value'   => self::sanitize_meta_prefix_before_value($prefix_raw),
+				'count_text_file_lines' => $parsed_flags['count_text_file_lines'],
+				'enable_file_preview'   => $parsed_flags['enable_file_preview'],
+				'display_when_empty'    => $parsed_flags['display_when_empty'],
 			];
 			$seen_keys[$meta_key] = true;
 		}
@@ -1527,9 +2411,216 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Split the optional `prefix_before_value[:flags]` segment while preserving URL schemes.
+	 *
+	 * Supports explicit `prefix::flags` and legacy `prefix:flags` when the trailing
+	 * value looks like a supported flags string.
+	 *
+	 * @param string $prefix_and_flags_raw Raw segment after `meta_key:Label:`.
+	 * @return array{0:string,1:string}
+	 */
+	private static function split_prefix_and_flags(string $prefix_and_flags_raw): array {
+		$prefix_and_flags_raw = trim($prefix_and_flags_raw);
+		if ($prefix_and_flags_raw === '') {
+			return ['', ''];
+		}
+
+		$double_colon_pos = strrpos($prefix_and_flags_raw, '::');
+		if ($double_colon_pos !== false) {
+			$prefix_raw = trim(substr($prefix_and_flags_raw, 0, $double_colon_pos));
+			$flags_raw  = trim(substr($prefix_and_flags_raw, $double_colon_pos + 2));
+			return [$prefix_raw, $flags_raw];
+		}
+
+		$single_colon_pos = strrpos($prefix_and_flags_raw, ':');
+		if ($single_colon_pos !== false) {
+			$segments = explode(':', $prefix_and_flags_raw);
+			$segment_count = count($segments);
+			for ($split_index = $segment_count - 1; $split_index >= 1; $split_index--) {
+				$prefix_candidate = trim(implode(':', array_slice($segments, 0, $split_index)));
+				$flags_candidate  = trim(implode(':', array_slice($segments, $split_index)));
+				if (self::is_supported_meta_definition_flags_segment($flags_candidate)) {
+					return [$prefix_candidate, $flags_candidate];
+				}
+			}
+		}
+
+		return [$prefix_and_flags_raw, ''];
+	}
+
+	/**
+	 * Sanitize prefix_before_value while preserving URL separators.
+	 */
+	private static function sanitize_meta_prefix_before_value(string $raw): string {
+		$raw = wp_strip_all_tags($raw);
+		$raw = preg_replace('/[\x00-\x1F\x7F]+/u', '', (string) $raw);
+		return trim((string) $raw);
+	}
+
+	/**
+	 * Parse optional flags from additional-meta definitions.
+	 *
+	 * Supported line-count flags:
+	 * - text_line_count, text-file-line-count, line_count, count_lines
+	 *
+	 * Supported preview flags:
+	 * - preview, preview_file, file_preview, preview-modal, preview_modal
+	 *
+	 * Supported "display when empty" flags:
+	 * - display_when_empty, display-empty, show_empty, show_if_empty, render_if_empty
+	 *
+	 * @return array{count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}
+	 */
+	private static function parse_order_additional_meta_flags(string $flags_raw): array {
+		$flags_raw = trim(strtolower($flags_raw));
+		if ($flags_raw === '') {
+			return [
+				'count_text_file_lines' => false,
+				'enable_file_preview' => false,
+				'display_when_empty' => false,
+			];
+		}
+
+		$parts = preg_split('/[\s,|:]+/', $flags_raw);
+		if (!is_array($parts)) {
+			return [
+				'count_text_file_lines' => false,
+				'enable_file_preview' => false,
+				'display_when_empty' => false,
+			];
+		}
+
+		$line_count_supported = [
+			'text_line_count',
+			'text-file-line-count',
+			'line_count',
+			'count_lines',
+		];
+		$preview_supported = [
+			'preview',
+			'preview_file',
+			'file_preview',
+			'preview-modal',
+			'preview_modal',
+		];
+		$display_when_empty_supported = [
+			'display_when_empty',
+			'display-empty',
+			'show_empty',
+			'show_if_empty',
+			'render_if_empty',
+		];
+		$count_text_file_lines = false;
+		$enable_file_preview = false;
+		$display_when_empty = false;
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+			if (!$count_text_file_lines && in_array($part, $line_count_supported, true)) {
+				$count_text_file_lines = true;
+			}
+			if (!$enable_file_preview && in_array($part, $preview_supported, true)) {
+				$enable_file_preview = true;
+			}
+			if (!$display_when_empty && in_array($part, $display_when_empty_supported, true)) {
+				$display_when_empty = true;
+			}
+			if ($count_text_file_lines && $enable_file_preview && $display_when_empty) {
+				break;
+			}
+		}
+
+		return [
+			'count_text_file_lines' => $count_text_file_lines,
+			'enable_file_preview' => $enable_file_preview,
+			'display_when_empty' => $display_when_empty,
+		];
+	}
+
+	/**
+	 * Determine whether an additional-meta definition should count lines for text files.
+	 */
+	private static function should_count_text_file_lines_for_meta_definition(string $flags_raw): bool {
+		$flags = self::parse_order_additional_meta_flags($flags_raw);
+		return !empty($flags['count_text_file_lines']);
+	}
+
+	/**
+	 * Determine whether an additional-meta definition should render the preview modal trigger.
+	 */
+	private static function should_enable_file_preview_for_meta_definition(string $flags_raw): bool {
+		$flags = self::parse_order_additional_meta_flags($flags_raw);
+		return !empty($flags['enable_file_preview']);
+	}
+
+	/**
+	 * Determine whether an additional-meta definition should display even without value(s).
+	 */
+	private static function should_display_meta_definition_when_empty(string $flags_raw): bool {
+		$flags = self::parse_order_additional_meta_flags($flags_raw);
+		return !empty($flags['display_when_empty']);
+	}
+
+	/**
+	 * Determine whether the provided flag string contains any recognized optional flags.
+	 */
+	private static function contains_supported_meta_definition_flags(string $flags_raw): bool {
+		return self::should_count_text_file_lines_for_meta_definition($flags_raw)
+			|| self::should_enable_file_preview_for_meta_definition($flags_raw)
+			|| self::should_display_meta_definition_when_empty($flags_raw);
+	}
+
+	/**
+	 * Determine whether a flags segment consists solely of supported tokens.
+	 */
+	private static function is_supported_meta_definition_flags_segment(string $flags_raw): bool {
+		$flags_raw = trim(strtolower($flags_raw));
+		if ($flags_raw === '') {
+			return false;
+		}
+
+		$parts = preg_split('/[\s,|:]+/', $flags_raw);
+		if (!is_array($parts)) {
+			return false;
+		}
+
+		$supported = [
+			'text_line_count',
+			'text-file-line-count',
+			'line_count',
+			'count_lines',
+			'preview',
+			'preview_file',
+			'file_preview',
+			'preview-modal',
+			'preview_modal',
+			'display_when_empty',
+			'display-empty',
+			'show_empty',
+			'show_if_empty',
+			'render_if_empty',
+		];
+		$has_supported = false;
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+			if (!in_array($part, $supported, true)) {
+				return false;
+			}
+			$has_supported = true;
+		}
+
+		return $has_supported;
+	}
+
+	/**
 	 * Get additional order meta field definitions from settings.
 	 *
-	 * @return array<int,array{key:string,label:string,prefix_before_value:string}>
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
 	 */
 	private static function get_order_additional_meta_field_definitions(): array {
 		$settings = User_Manager_Core::get_settings();
@@ -1538,6 +2629,258 @@ final class User_Manager_My_Account_Site_Admin {
 			: '';
 
 		return self::parse_order_additional_meta_field_definitions($raw);
+	}
+
+	/**
+	 * Get additional order-list meta field definitions from settings.
+	 *
+	 * @return array<int,array{key:string,label:string,prefix_before_value:string,count_text_file_lines:bool,enable_file_preview:bool,display_when_empty:bool}>
+	 */
+	private static function get_order_list_additional_meta_field_definitions(): array {
+		$settings = User_Manager_Core::get_settings();
+		$raw = isset($settings['my_account_admin_order_list_additional_meta_fields'])
+			? (string) $settings['my_account_admin_order_list_additional_meta_fields']
+			: '';
+
+		return self::parse_order_additional_meta_field_definitions($raw);
+	}
+
+	/**
+	 * Parse configured compare-flags for order-list additional meta rendering.
+	 *
+	 * Format per line:
+	 * - meta_field_a:meta_field_b:are_they_equal:FLAG TITLE[:bgcolor[:textcolor]]
+	 * - meta_field_a:meta_field_b:are_they_equal:grace_value:FLAG TITLE[:bgcolor[:textcolor]]
+	 *
+	 * @param string $raw Raw setting value.
+	 * @return array<int,array{
+	 *   meta_key_a:string,
+	 *   meta_key_b:string,
+	 *   operator:string,
+	 *   grace_value:float|null,
+	 *   title:string,
+	 *   background_color:string,
+	 *   text_color:string
+	 * }>
+	 */
+	private static function parse_order_list_additional_meta_compare_flags(string $raw): array {
+		$raw = trim($raw);
+		if ($raw === '') {
+			return [];
+		}
+
+		$parts = preg_split('/[\r\n]+/', $raw);
+		if (!is_array($parts)) {
+			return [];
+		}
+
+		$flags = [];
+		foreach ($parts as $part) {
+			$part = trim((string) $part);
+			if ($part === '') {
+				continue;
+			}
+
+			$segments = explode(':', $part);
+			if (count($segments) < 4) {
+				continue;
+			}
+
+			$meta_key_a = sanitize_key(trim((string) $segments[0]));
+			$meta_key_b = sanitize_key(trim((string) $segments[1]));
+			$operator_raw = strtolower(trim((string) $segments[2]));
+			$remaining = array_map('trim', array_slice($segments, 3));
+			if (empty($remaining)) {
+				continue;
+			}
+
+			$grace_value = null;
+			if (count($remaining) >= 2 && is_numeric((string) $remaining[0])) {
+				$grace_value = abs((float) $remaining[0]);
+				array_shift($remaining);
+			}
+
+			$bg = '';
+			$text = '';
+			$remaining_count = count($remaining);
+			if ($remaining_count >= 3) {
+				$maybe_bg = sanitize_hex_color((string) $remaining[$remaining_count - 2]);
+				$maybe_text = sanitize_hex_color((string) $remaining[$remaining_count - 1]);
+				if ($maybe_bg && $maybe_text) {
+					$bg = $maybe_bg;
+					$text = $maybe_text;
+					array_pop($remaining);
+					array_pop($remaining);
+				}
+			}
+			if ($bg === '' && $text === '' && count($remaining) >= 2) {
+				$maybe_bg = sanitize_hex_color((string) $remaining[count($remaining) - 1]);
+				if ($maybe_bg) {
+					$bg = $maybe_bg;
+					array_pop($remaining);
+				}
+			}
+
+			$title = sanitize_text_field(trim(implode(':', $remaining)));
+
+			if ($meta_key_a === '' || $meta_key_b === '' || $title === '') {
+				continue;
+			}
+			if ($operator_raw !== 'are_they_equal') {
+				continue;
+			}
+
+			$flags[] = [
+				'meta_key_a' => $meta_key_a,
+				'meta_key_b' => $meta_key_b,
+				'operator' => 'are_they_equal',
+				'grace_value' => $grace_value,
+				'title' => $title,
+				'background_color' => $bg ? $bg : '#000000',
+				'text_color' => $text ? $text : '#ffffff',
+			];
+		}
+
+		return $flags;
+	}
+
+	/**
+	 * Get configured compare-flags for order-list additional meta rendering.
+	 *
+	 * @return array<int,array{
+	 *   meta_key_a:string,
+	 *   meta_key_b:string,
+	 *   operator:string,
+	 *   grace_value:float|null,
+	 *   title:string,
+	 *   background_color:string,
+	 *   text_color:string
+	 * }>
+	 */
+	private static function get_order_list_additional_meta_compare_flags(): array {
+		$settings = User_Manager_Core::get_settings();
+		$raw = isset($settings['my_account_admin_order_list_additional_flag_fields'])
+			? (string) $settings['my_account_admin_order_list_additional_flag_fields']
+			: '';
+		if ($raw === '' && isset($settings['my_account_admin_order_list_additional_meta_compare_flags'])) {
+			$raw = (string) $settings['my_account_admin_order_list_additional_meta_compare_flags'];
+		}
+
+		return self::parse_order_list_additional_meta_compare_flags($raw);
+	}
+
+	/**
+	 * Get the first normalized scalar meta value for a given order/meta key.
+	 */
+	private static function get_first_normalized_order_meta_scalar(int $order_id, string $meta_key): string {
+		if ($order_id <= 0 || $meta_key === '') {
+			return '';
+		}
+		$values = get_post_meta($order_id, $meta_key);
+		if (!is_array($values) || empty($values)) {
+			return '';
+		}
+
+		foreach ($values as $value) {
+			if (is_array($value) || is_object($value)) {
+				$json = wp_json_encode($value);
+				$display_value = is_string($json) ? $json : '';
+			} elseif (is_bool($value)) {
+				$display_value = $value ? '1' : '0';
+			} elseif ($value === null) {
+				$display_value = '';
+			} else {
+				$display_value = (string) $value;
+			}
+
+			$normalized = self::normalize_meta_scalar_for_prefixed_link($display_value);
+			if ($normalized !== '') {
+				return $normalized;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Parse normalized scalar value into a numeric float when possible.
+	 */
+	private static function maybe_parse_order_meta_scalar_as_float(string $value): ?float {
+		$value = trim($value);
+		if ($value === '') {
+			return null;
+		}
+
+		$normalized = str_replace([',', ' '], '', $value);
+		if ($normalized === '' || !is_numeric($normalized)) {
+			return null;
+		}
+
+		return (float) $normalized;
+	}
+
+	/**
+	 * Build badge HTML for configured compare-flags that match this order.
+	 */
+	private static function get_order_list_additional_meta_compare_flags_html($order): string {
+		if (!$order instanceof WC_Order) {
+			return '';
+		}
+
+		$flags = self::get_order_list_additional_meta_compare_flags();
+		if (empty($flags)) {
+			return '';
+		}
+
+		$order_id = (int) $order->get_id();
+		if ($order_id <= 0) {
+			return '';
+		}
+
+		$badges = [];
+		foreach ($flags as $flag) {
+			$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
+			$value_b = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
+			if ($value_a === '' || $value_b === '') {
+				continue;
+			}
+
+			$matches = false;
+			if ((string) $flag['operator'] === 'are_they_equal') {
+				$grace_value = isset($flag['grace_value']) && is_numeric($flag['grace_value'])
+					? max(0, (float) $flag['grace_value'])
+					: null;
+				if ($grace_value !== null) {
+					$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
+					$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+					if ($numeric_a !== null && $numeric_b !== null) {
+						$matches = abs($numeric_a - $numeric_b) > $grace_value;
+					}
+				} else {
+					$matches = (strcasecmp($value_a, $value_b) === 0);
+				}
+			}
+			if (!$matches) {
+				continue;
+			}
+
+			$bg = sanitize_hex_color((string) $flag['background_color']);
+			$text = sanitize_hex_color((string) $flag['text_color']);
+			$bg = $bg ? $bg : '#000000';
+			$text = $text ? $text : '#ffffff';
+			$title = sanitize_text_field((string) $flag['title']);
+			if ($title === '') {
+				continue;
+			}
+
+			$badges[] = '<span class="um-my-account-order-list-flag-badge" style="background-color:' . esc_attr($bg) . ';color:' . esc_attr($text) . ';">' . esc_html($title) . '</span>';
+		}
+
+		if (empty($badges)) {
+			return '';
+		}
+
+		return '<div class="um-my-account-order-list-flag-badges-wrap">' . implode('', $badges) . '</div>';
 	}
 
 	/**
@@ -1558,14 +2901,34 @@ final class User_Manager_My_Account_Site_Admin {
 		$rows_html = '';
 		foreach ($definitions as $definition) {
 			$meta_values = get_post_meta((int) $order->get_id(), $definition['key']);
+			$display_when_empty = !empty($definition['display_when_empty']);
+			if (empty($meta_values) || !is_array($meta_values)) {
+				if ($display_when_empty) {
+					$meta_values = [''];
+				} else {
+					continue;
+				}
+			}
 			if (empty($meta_values) || !is_array($meta_values)) {
 				continue;
 			}
 
 			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
-			$value_html = self::format_meta_values_for_display_with_links($meta_values, $prefix_before_value);
-			if ($value_html === '') {
+			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
+			$enable_file_preview = !empty($definition['enable_file_preview']);
+			$value_html = self::format_meta_values_for_display_with_links(
+				$meta_values,
+				$prefix_before_value,
+				$should_count_text_file_lines,
+				$enable_file_preview,
+				(int) $order->get_id(),
+				(string) $definition['key']
+			);
+			if ($value_html === '' && !$display_when_empty) {
 				continue;
+			}
+			if ($value_html === '' && $display_when_empty) {
+				$value_html = '&mdash;';
 			}
 
 			ob_start();
@@ -1586,15 +2949,83 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Build configured additional order-list meta fields HTML for Admin: Orders table.
+	 *
+	 * @param WC_Order $order Order object.
+	 */
+	private static function get_order_additional_meta_fields_for_orders_list_html($order): string {
+		if (!$order instanceof WC_Order) {
+			return '';
+		}
+
+		$definitions = self::get_order_list_additional_meta_field_definitions();
+		if (empty($definitions)) {
+			return '';
+		}
+
+		$field_rows = [];
+		foreach ($definitions as $definition) {
+			$meta_values = get_post_meta((int) $order->get_id(), $definition['key']);
+			$display_when_empty = !empty($definition['display_when_empty']);
+			if (empty($meta_values) || !is_array($meta_values)) {
+				if ($display_when_empty) {
+					$meta_values = [''];
+				} else {
+					continue;
+				}
+			}
+			if (empty($meta_values) || !is_array($meta_values)) {
+				continue;
+			}
+
+			$prefix_before_value = isset($definition['prefix_before_value']) ? (string) $definition['prefix_before_value'] : '';
+			$should_count_text_file_lines = !empty($definition['count_text_file_lines']);
+			$enable_file_preview = !empty($definition['enable_file_preview']);
+			$value_html = self::format_meta_values_for_display_with_links(
+				$meta_values,
+				$prefix_before_value,
+				$should_count_text_file_lines,
+				$enable_file_preview,
+				(int) $order->get_id(),
+				(string) $definition['key']
+			);
+			if ($value_html === '' && !$display_when_empty) {
+				continue;
+			}
+			if ($value_html === '' && $display_when_empty) {
+				$value_html = '&mdash;';
+			}
+
+			$field_rows[] = '<div class="um-my-account-order-list-meta-item"><strong>' . esc_html($definition['label']) . ':</strong> ' . $value_html . '</div>';
+		}
+
+		if (empty($field_rows)) {
+			return '';
+		}
+		$html = '<div class="um-my-account-order-list-meta-inline">' . implode('', $field_rows) . '</div>';
+		$flags_html = self::get_order_list_additional_meta_compare_flags_html($order);
+		if ($flags_html !== '') {
+			$html .= $flags_html;
+		}
+
+		return $html;
+	}
+
+	/**
 	 * Format metadata values and link http(s) values.
 	 *
 	 * @param array  $values Raw meta values.
 	 * @param string $prefix_before_value Optional prefix to prepend before URL detection.
+	 * @param bool   $count_text_file_lines Whether to include a fetched text-file line count for URL values.
+	 * @param bool   $enable_file_preview Whether to render a modal preview trigger for URL values.
+	 * @param int    $order_id Optional order ID for persistent line-count caching.
+	 * @param string $meta_key Optional source meta key for debug context.
 	 * @return string
 	 */
-	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = ''): string {
+	private static function format_meta_values_for_display_with_links(array $values, string $prefix_before_value = '', bool $count_text_file_lines = false, bool $enable_file_preview = false, int $order_id = 0, string $meta_key = ''): string {
 		$rendered = [];
 		$prefix_before_value = trim($prefix_before_value);
+		$debug_enabled = $count_text_file_lines && self::is_text_file_line_count_debug_enabled();
 		foreach ($values as $value) {
 			if (is_array($value) || is_object($value)) {
 				$json = wp_json_encode($value);
@@ -1607,25 +3038,507 @@ final class User_Manager_My_Account_Site_Admin {
 				$display_value = (string) $value;
 			}
 
+			$normalized_value = self::normalize_meta_scalar_for_prefixed_link($display_value);
 			$value_for_output = $display_value;
 			if ($prefix_before_value !== '') {
-				$normalized_value = self::normalize_meta_scalar_for_prefixed_link($display_value);
-				$value_for_output = $prefix_before_value . ltrim($normalized_value, '/');
+				$value_for_output = self::build_meta_prefixed_url_candidate($normalized_value, $prefix_before_value);
 			}
 
 			$trimmed = trim($value_for_output);
+			$debug_payload = [
+				'raw_meta_value' => $display_value,
+				'normalized_meta_value' => $normalized_value,
+				'prefix_before_value' => $prefix_before_value,
+				'combined_value' => $value_for_output,
+				'order_id' => $order_id,
+				'meta_key' => $meta_key,
+			];
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
-				$url = esc_url($trimmed);
+				$url = esc_url_raw($trimmed);
 				if ($url !== '') {
-					$rendered[] = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>';
+					$link_actions = [
+						'<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>',
+					];
+					if ($enable_file_preview) {
+						$link_actions[] = '<a href="' . esc_url($url) . '" class="um-my-account-file-preview-trigger">' . esc_html__('Preview File', 'user-manager') . '</a>';
+					}
+					$link_html = implode(' <span class="um-my-account-meta-file-link-sep">|</span> ', $link_actions);
+					if ($count_text_file_lines) {
+						$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
+						$line_count = isset($line_count_debug['line_count']) && is_int($line_count_debug['line_count'])
+							? (int) $line_count_debug['line_count']
+							: null;
+						if ($line_count !== null) {
+							$link_html .= ' <span class="um-my-account-order-list-meta-line-count">(' . esc_html((string) $line_count) . ' ' . esc_html__('lines', 'user-manager') . ')</span>';
+						}
+						if ($debug_enabled) {
+							$debug_payload['resolved_url'] = $url;
+							$debug_payload['line_count_debug'] = $line_count_debug;
+							$link_html .= self::render_text_file_line_count_debug_html($debug_payload);
+						}
+					}
+					$rendered[] = $link_html;
 					continue;
 				}
 			}
 
-			$rendered[] = esc_html($value_for_output);
+			$fallback_html = esc_html($value_for_output);
+			if ($debug_enabled) {
+				$debug_payload['resolved_url'] = '';
+				$debug_payload['line_count_debug'] = [
+					'is_valid_url' => false,
+					'requested' => false,
+					'exists' => false,
+					'status_code' => null,
+					'line_count' => null,
+					'error' => 'combined_value_did_not_resolve_to_http_url',
+					'content_type' => '',
+					'body_size' => null,
+				];
+				$fallback_html .= self::render_text_file_line_count_debug_html($debug_payload);
+			}
+
+			$rendered[] = $fallback_html;
 		}
 
 		return implode(' | ', $rendered);
+	}
+
+	/**
+	 * Build candidate output value when prefix_before_value is configured.
+	 */
+	private static function build_meta_prefixed_url_candidate(string $normalized_value, string $prefix_before_value): string {
+		$normalized_value   = trim($normalized_value);
+		$prefix_before_value = trim($prefix_before_value);
+		if ($prefix_before_value === '') {
+			return $normalized_value;
+		}
+
+		if ($normalized_value === '') {
+			return $prefix_before_value;
+		}
+
+		if (preg_match('#^https?://#i', $normalized_value)) {
+			return $normalized_value;
+		}
+
+		if (preg_match('#^https?://#i', $prefix_before_value)) {
+			// Preserve legacy behavior: prefix is prepended as-is.
+			return $prefix_before_value . ltrim($normalized_value, '/');
+		}
+
+		return $prefix_before_value . ltrim($normalized_value, '/');
+	}
+
+	/**
+	 * Fetch a text file and return line count.
+	 *
+	 * @param string $url Fully-qualified URL to a text-based file.
+	 * @param int    $order_id Optional order ID for persistent cache lookup/storage.
+	 * @return int|null Null when unavailable/unreadable.
+	 */
+	private static function get_text_file_line_count_from_url(string $url, int $order_id = 0): ?int {
+		$debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
+		return isset($debug['line_count']) && is_int($debug['line_count'])
+			? (int) $debug['line_count']
+			: null;
+	}
+
+	/**
+	 * Fetch debug diagnostics for text-file line counting.
+	 *
+	 * @param string $url Fully-qualified URL to a text-based file.
+	 * @param int    $order_id Optional order ID used for persistent cache lookup/storage.
+	 * @return array{is_valid_url:bool,requested:bool,exists:bool,status_code:int|null,line_count:int|null,error:string,content_type:string,body_size:int|null,cache_hit:bool}
+	 */
+	private static function get_text_file_line_count_debug_data_from_url(string $url, int $order_id = 0): array {
+		static $cache = [];
+
+		$url = trim((string) $url);
+		$cache_lookup_key = $order_id . '|' . $url;
+		if (isset($cache[$cache_lookup_key])) {
+			return $cache[$cache_lookup_key];
+		}
+
+		$debug = [
+			'is_valid_url' => false,
+			'requested' => false,
+			'exists' => false,
+			'status_code' => null,
+			'line_count' => null,
+			'error' => '',
+			'content_type' => '',
+			'body_size' => null,
+			'cache_hit' => false,
+		];
+
+		$sanitized_url = esc_url_raw($url);
+		if ($sanitized_url === '' || !preg_match('#^https?://#i', $sanitized_url)) {
+			$debug['error'] = 'invalid_or_unsupported_url';
+			$cache[$cache_lookup_key] = $debug;
+			return $debug;
+		}
+
+		$debug['is_valid_url'] = true;
+		if ($order_id > 0) {
+			$cached_line_count = self::get_cached_text_file_line_count_from_order_meta($order_id, $sanitized_url);
+			if ($cached_line_count !== null) {
+				$debug['cache_hit'] = true;
+				$debug['exists'] = true;
+				$debug['line_count'] = $cached_line_count;
+				$debug['error'] = '';
+				$cache[$cache_lookup_key] = $debug;
+				return $debug;
+			}
+		}
+
+		$debug['requested'] = true;
+		$response = wp_remote_get($sanitized_url, [
+			'timeout' => 6,
+			'redirection' => 3,
+			'limit_response_size' => 2 * 1024 * 1024,
+		]);
+		if (is_wp_error($response)) {
+			$debug['error'] = $response->get_error_message();
+			$cache[$cache_lookup_key] = $debug;
+			return $debug;
+		}
+
+		$debug['status_code'] = (int) wp_remote_retrieve_response_code($response);
+		$content_type = wp_remote_retrieve_header($response, 'content-type');
+		$debug['content_type'] = is_string($content_type) ? $content_type : '';
+		if ($debug['status_code'] < 200 || $debug['status_code'] >= 300) {
+			$debug['error'] = 'http_status_' . (string) $debug['status_code'];
+			$cache[$cache_lookup_key] = $debug;
+			return $debug;
+		}
+
+		$debug['exists'] = true;
+		$body = wp_remote_retrieve_body($response);
+		if (!is_string($body)) {
+			$debug['error'] = 'non_string_response_body';
+			$cache[$cache_lookup_key] = $debug;
+			return $debug;
+		}
+
+		$debug['body_size'] = strlen($body);
+		if ($body === '') {
+			$debug['line_count'] = 0;
+			if ($order_id > 0) {
+				self::set_cached_text_file_line_count_on_order_meta($order_id, $sanitized_url, 0);
+			}
+			$cache[$cache_lookup_key] = $debug;
+			return $debug;
+		}
+
+		$debug['line_count'] = self::count_rows_from_remote_file_contents($body, $debug['content_type'], $sanitized_url);
+		if ($order_id > 0 && $debug['line_count'] !== null) {
+			self::set_cached_text_file_line_count_on_order_meta($order_id, $sanitized_url, (int) $debug['line_count']);
+		}
+		$cache[$cache_lookup_key] = $debug;
+
+		return $debug;
+	}
+
+	/**
+	 * Read cached text-file line count for an order/URL combination.
+	 */
+	private static function get_cached_text_file_line_count_from_order_meta(int $order_id, string $url): ?int {
+		if ($order_id <= 0 || $url === '') {
+			return null;
+		}
+
+		$cache = get_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY, true);
+		if (!is_array($cache)) {
+			return null;
+		}
+
+		$cache_key = self::build_text_file_line_count_cache_key($url);
+		if (!isset($cache[$cache_key]) || !is_array($cache[$cache_key])) {
+			return null;
+		}
+
+		$entry = $cache[$cache_key];
+		$entry_url = isset($entry['url']) ? esc_url_raw((string) $entry['url']) : '';
+		if ($entry_url === '' || $entry_url !== esc_url_raw($url)) {
+			return null;
+		}
+
+		if (!isset($entry['line_count']) || !is_numeric($entry['line_count'])) {
+			return null;
+		}
+
+		$line_count = (int) $entry['line_count'];
+		return $line_count >= 0 ? $line_count : null;
+	}
+
+	/**
+	 * Persist text-file line count cache on the order for future requests.
+	 */
+	private static function set_cached_text_file_line_count_on_order_meta(int $order_id, string $url, int $line_count): void {
+		if ($order_id <= 0 || $url === '') {
+			return;
+		}
+
+		$url = esc_url_raw($url);
+		if ($url === '' || !preg_match('#^https?://#i', $url)) {
+			return;
+		}
+		if ($line_count < 0) {
+			return;
+		}
+
+		$cache = get_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY, true);
+		$cache = is_array($cache) ? $cache : [];
+		$cache_key = self::build_text_file_line_count_cache_key($url);
+		$cache[$cache_key] = [
+			'url'        => $url,
+			'line_count' => $line_count,
+			'updated_at' => time(),
+		];
+
+		// Prevent unbounded growth on heavily-edited orders.
+		if (count($cache) > 100) {
+			uasort($cache, static function ($left, $right): int {
+				$left_ts = (is_array($left) && isset($left['updated_at'])) ? (int) $left['updated_at'] : 0;
+				$right_ts = (is_array($right) && isset($right['updated_at'])) ? (int) $right['updated_at'] : 0;
+				return $right_ts <=> $left_ts;
+			});
+			$cache = array_slice($cache, 0, 100, true);
+		}
+
+		update_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY, $cache);
+		update_post_meta($order_id, self::LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY, $line_count);
+	}
+
+	/**
+	 * Build deterministic cache key for text-file URL line count cache.
+	 */
+	private static function build_text_file_line_count_cache_key(string $url): string {
+		return md5(strtolower(trim((string) $url)));
+	}
+
+	/**
+	 * Reset all persisted text-file line-count cache entries.
+	 *
+	 * @return int Number of affected orders.
+	 */
+	public static function reset_all_cached_text_file_line_counts(): int {
+		global $wpdb;
+		if (!isset($wpdb) || !($wpdb instanceof wpdb)) {
+			return 0;
+		}
+
+		$post_meta_table = isset($wpdb->postmeta) ? (string) $wpdb->postmeta : '';
+		if ($post_meta_table === '') {
+			return 0;
+		}
+
+		$meta_keys = [
+			self::LINE_COUNT_CACHE_META_KEY,
+			self::LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY,
+		];
+		$meta_key_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+		$affected_order_ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT post_id FROM {$post_meta_table} WHERE meta_key IN ({$meta_key_placeholders})",
+				$meta_keys
+			)
+		);
+		if (!is_array($affected_order_ids) || empty($affected_order_ids)) {
+			return 0;
+		}
+
+		foreach ($affected_order_ids as $order_id) {
+			$order_id = (int) $order_id;
+			delete_post_meta($order_id, self::LINE_COUNT_CACHE_META_KEY);
+			delete_post_meta($order_id, self::LINE_COUNT_CACHE_NUMBER_ONLY_META_KEY);
+		}
+
+		return count($affected_order_ids);
+	}
+
+	/**
+	 * Count row-like lines from remote file contents.
+	 *
+	 * CSV/TSV counts newline-delimited rows only (never commas/tabs).
+	 * Spreadsheet payloads attempt row-tag parsing before newline fallback.
+	 */
+	private static function count_rows_from_remote_file_contents(string $body, string $content_type, string $url): int {
+		$content = str_replace(["\r\n", "\r"], "\n", $body);
+		$content = trim($content);
+		if ($content === '') {
+			return 0;
+		}
+
+		$lower_type = strtolower(trim($content_type));
+		$lower_url  = strtolower(trim($url));
+		$is_delimited_text = (
+			strpos($lower_type, 'csv') !== false
+			|| strpos($lower_type, 'tab-separated-values') !== false
+			|| preg_match('/\.(csv|tsv|tab|txt)(\?|$)/', $lower_url)
+		);
+		if ($is_delimited_text) {
+			return self::count_non_empty_newline_rows($content);
+		}
+
+		$is_excel_like = (
+			strpos($lower_type, 'spreadsheetml') !== false
+			|| strpos($lower_type, 'ms-excel') !== false
+			|| preg_match('/\.(xlsx|xls|xlsm|xml|html?)(\?|$)/', $lower_url)
+		);
+		if ($is_excel_like) {
+			$xlsx_count = self::count_rows_from_xlsx_binary_contents($body);
+			if ($xlsx_count !== null) {
+				return $xlsx_count;
+			}
+
+			$xml_or_html_row_count = self::count_rows_in_xml_or_html_payload($content);
+			if ($xml_or_html_row_count !== null) {
+				return $xml_or_html_row_count;
+			}
+
+			// Last-resort fallback for spreadsheet-like payloads.
+			return self::count_non_empty_newline_rows($content);
+		}
+
+		return substr_count($content, "\n") + 1;
+	}
+
+	/**
+	 * Count non-empty rows from newline-delimited content.
+	 */
+	private static function count_non_empty_newline_rows(string $content): int {
+		$rows = preg_split('/\n+/', $content);
+		if (!is_array($rows)) {
+			return 0;
+		}
+
+		$rows = array_filter($rows, static function ($row): bool {
+			return trim((string) $row) !== '';
+		});
+
+		return count($rows);
+	}
+
+	/**
+	 * Count row tags in XML/HTML spreadsheet-like payloads.
+	 *
+	 * @return int|null Null when no recognizable row tags are present.
+	 */
+	private static function count_rows_in_xml_or_html_payload(string $content): ?int {
+		$xml_row_count = preg_match_all('/<\s*(?:\w+:)?row\b/i', $content);
+		if (is_int($xml_row_count) && $xml_row_count > 0) {
+			return $xml_row_count;
+		}
+
+		$html_row_count = preg_match_all('/<\s*tr\b/i', $content);
+		if (is_int($html_row_count) && $html_row_count > 0) {
+			return $html_row_count;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Count rows from XLSX binary payload by reading worksheet XML files.
+	 *
+	 * @return int|null Null when payload is not readable as XLSX.
+	 */
+	private static function count_rows_from_xlsx_binary_contents(string $body): ?int {
+		if (!class_exists('ZipArchive')) {
+			return null;
+		}
+		if (strlen($body) < 4 || substr($body, 0, 2) !== 'PK') {
+			return null;
+		}
+
+		$temp_file = wp_tempnam('um_xlsx_row_count');
+		if (!is_string($temp_file) || $temp_file === '') {
+			return null;
+		}
+
+		$written = file_put_contents($temp_file, $body);
+		if ($written === false) {
+			@unlink($temp_file);
+			return null;
+		}
+
+		$zip = new ZipArchive();
+		$open_result = $zip->open($temp_file);
+		if ($open_result !== true) {
+			@unlink($temp_file);
+			return null;
+		}
+
+		$row_count = 0;
+		for ($index = 0; $index < $zip->numFiles; $index++) {
+			$file_name = $zip->getNameIndex($index);
+			if (!is_string($file_name) || !preg_match('#^xl/worksheets/[^/]+\.xml$#i', $file_name)) {
+				continue;
+			}
+			$worksheet_xml = $zip->getFromIndex($index);
+			if (!is_string($worksheet_xml) || $worksheet_xml === '') {
+				continue;
+			}
+			$worksheet_row_count = preg_match_all('/<\s*(?:\w+:)?row\b/i', $worksheet_xml);
+			if (is_int($worksheet_row_count) && $worksheet_row_count > 0) {
+				$row_count += $worksheet_row_count;
+			}
+		}
+
+		$zip->close();
+		@unlink($temp_file);
+
+		return $row_count > 0 ? $row_count : null;
+	}
+
+	/**
+	 * Whether URL-driven debug output for text file line counting is enabled.
+	 *
+	 * Enable with `?um_text_file_line_count_debug=1` on My Account admin endpoints.
+	 * Backward-compatible aliases are also supported.
+	 */
+	private static function is_text_file_line_count_debug_enabled(): bool {
+		$debug_param_keys = [
+			'um_text_file_line_count_debug',
+			'um_debug_text_file_count',
+			'um_debug_text_file_meta',
+			'um_order_meta_debug',
+		];
+		$raw = null;
+		foreach ($debug_param_keys as $debug_param_key) {
+			if (isset($_GET[$debug_param_key])) {
+				$raw = wp_unslash($_GET[$debug_param_key]);
+				break;
+			}
+		}
+		if ($raw === null) {
+			return false;
+		}
+		if (is_array($raw)) {
+			$raw = reset($raw);
+		}
+		$raw = strtolower(trim((string) $raw));
+		if ($raw === '') {
+			return true;
+		}
+
+		return in_array($raw, ['1', 'true', 'yes', 'y', 'on', 'debug'], true);
+	}
+
+	/**
+	 * Render compact debug details for flagged text-file meta values.
+	 *
+	 * @param array<string,mixed> $payload Debug payload.
+	 */
+	private static function render_text_file_line_count_debug_html(array $payload): string {
+		$json = wp_json_encode($payload, JSON_PRETTY_PRINT);
+		if (!is_string($json) || $json === '') {
+			return '';
+		}
+
+		return '<details class="um-my-account-order-list-meta-debug"><summary>' . esc_html__('Text file debug', 'user-manager') . '</summary><pre>' . esc_html($json) . '</pre></details>';
 	}
 
 	/**
@@ -1786,6 +3699,29 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
+	 * Read selected activity action filter query argument.
+	 */
+	private static function get_activity_action_filter_query_arg(): string {
+		return isset($_GET['ua_action_filter']) ? sanitize_text_field(wp_unslash($_GET['ua_action_filter'])) : '';
+	}
+
+	/**
+	 * Resolve per-page limit for My Account Admin list views.
+	 *
+	 * @return int
+	 */
+	private static function get_per_page_limit(): int {
+		$settings = User_Manager_Core::get_settings();
+		$value = isset($settings['my_account_admin_items_per_page'])
+			? absint($settings['my_account_admin_items_per_page'])
+			: self::DEFAULT_PER_PAGE;
+		if ($value < self::MIN_PER_PAGE) {
+			$value = self::DEFAULT_PER_PAGE;
+		}
+		return max(self::MIN_PER_PAGE, min(self::MAX_PER_PAGE, $value));
+	}
+
+	/**
 	 * Build endpoint URL.
 	 *
 	 * @param string $endpoint Endpoint key.
@@ -1834,6 +3770,12 @@ final class User_Manager_My_Account_Site_Admin {
 				$args['um_order_status'] = $selected_status_key;
 			}
 		}
+		if (function_exists('get_query_var') && get_query_var('admin_activity', null) !== null) {
+			$selected_activity_action = self::get_activity_action_filter_query_arg();
+			if ($selected_activity_action !== '') {
+				$args['ua_action_filter'] = $selected_activity_action;
+			}
+		}
 		return $args;
 	}
 
@@ -1845,6 +3787,8 @@ final class User_Manager_My_Account_Site_Admin {
 			return;
 		}
 		self::$styles_rendered = true;
+		$approve_button_bg_color = self::get_order_approve_button_background_color();
+		$decline_button_bg_color = self::get_order_decline_button_background_color();
 		?>
 		<style>
 			.woocommerce-MyAccount-content .um-my-account-admin-search-form {
@@ -1853,12 +3797,66 @@ final class User_Manager_My_Account_Site_Admin {
 				gap: 8px;
 				flex-wrap: wrap;
 				align-items: center;
+				position: relative;
+				z-index: 5;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form,
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form * {
+				pointer-events: auto !important;
 			}
 			.woocommerce-MyAccount-content .um-my-account-admin-search-form input[type="search"] {
 				min-width: 260px;
 				max-width: 420px;
 				width: 100%;
 				padding: 6px 8px;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form .um-my-account-admin-search-submit {
+				cursor: pointer;
+				opacity: 1 !important;
+			}
+			.woocommerce-MyAccount-content .woocommerce_my_account_admin_tools input,
+			.woocommerce-MyAccount-content .woocommerce_my_account_admin_tools select,
+			.woocommerce-MyAccount-content .woocommerce_my_account_admin_tools textarea,
+			.woocommerce-MyAccount-content .woocommerce_my_account_admin_tools button[type="submit"],
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form input,
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form select,
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form textarea,
+			.woocommerce-MyAccount-content .um-my-account-admin-search-form button[type="submit"],
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form input,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form select,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form textarea,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form button[type="submit"] {
+				pointer-events: auto !important;
+				opacity: 1 !important;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-wrap {
+				position: relative;
+				z-index: 5;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form {
+				display: inline-flex !important;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 8px;
+				margin: 0;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form * {
+				pointer-events: auto !important;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form select,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form button,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form .button {
+				opacity: 1 !important;
+				filter: none !important;
+				cursor: pointer;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form select {
+				min-width: 220px;
+			}
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form select:disabled,
+			.woocommerce-MyAccount-content .um-my-account-admin-activity-filter-form button:disabled {
+				cursor: not-allowed;
 			}
 			table.express_checkout_order_approvals {
 				width: 100%;
@@ -1884,6 +3882,88 @@ final class User_Manager_My_Account_Site_Admin {
 			.breathing_room {
 				margin: 5px 0 !important;
 			}
+			table.express_checkout_order_approvals tr.express_checkout_order_approvals_row_meta td.express_checkout_order_approvals_row_meta_cell {
+				padding-top: 0;
+				padding-bottom: 12px;
+				white-space: normal;
+				word-break: break-word;
+				font-size: 13px;
+				line-height: 1.45;
+				background: rgba(0, 0, 0, 0.02);
+			}
+			.um-my-account-order-list-meta-item {
+				margin: 0 0 6px;
+			}
+			.um-my-account-order-list-meta-item:last-child {
+				margin-bottom: 0;
+			}
+			.um-my-account-order-list-meta-item a {
+				word-break: break-all;
+			}
+			.um-my-account-meta-file-link-sep {
+				margin: 0 4px;
+				color: #646970;
+			}
+			.um-my-account-file-preview-trigger {
+				display: inline-block;
+				margin-left: 6px;
+			}
+			.um-my-account-admin-order-meta-block {
+				margin-top: 8px;
+				font-size: 13px;
+				line-height: 1.45;
+			}
+			.um-my-account-admin-order-meta-block:first-child {
+				margin-top: 0;
+			}
+			.um-my-account-admin-order-address-block {
+				margin-top: 0;
+				font-size: 13px;
+				line-height: 1.45;
+			}
+			.um-my-account-order-list-meta-wrap {
+				margin-top: 0;
+				padding-top: 0;
+				border-top: 0;
+				text-align: left;
+			}
+			.um-my-account-order-list-meta-column {
+				min-width: 220px;
+				max-width: 360px;
+			}
+			.um-my-account-order-list-meta-inline .um-my-account-order-list-meta-item {
+				font-size: 12px;
+				line-height: 1.4;
+			}
+			.um-my-account-order-list-flag-badges-wrap {
+				margin-top: 8px;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+			}
+			.um-my-account-order-list-flag-badge {
+				display: inline-block;
+				padding: 3px 8px;
+				border-radius: 999px;
+				font-size: 11px;
+				font-weight: 600;
+				line-height: 1.2;
+				white-space: nowrap;
+			}
+			<?php if ($approve_button_bg_color !== '') : ?>
+			.woocommerce-MyAccount-content .um-my-account-order-button-approve,
+			.woocommerce-MyAccount-content .um-my-account-order-button-approve:hover,
+			.woocommerce-MyAccount-content .um-my-account-order-button-approve:focus {
+				background-color: <?php echo esc_html($approve_button_bg_color); ?> !important;
+			}
+			<?php endif; ?>
+			<?php if ($decline_button_bg_color !== '') : ?>
+			.woocommerce-MyAccount-content .um-my-account-order-button-decline,
+			.woocommerce-MyAccount-content .um-my-account-order-button-decline:hover,
+			.woocommerce-MyAccount-content .um-my-account-order-button-decline:focus {
+				background-color: <?php echo esc_html($decline_button_bg_color); ?> !important;
+			}
+			<?php endif; ?>
 			.um-my-account-admin-status {
 				display: inline-block;
 				margin-top: 2px;
@@ -1903,7 +3983,430 @@ final class User_Manager_My_Account_Site_Admin {
 			.um-my-account-admin-pagination-status {
 				font-weight: 600;
 			}
+			.um-my-account-file-preview-modal[hidden] {
+				display: none !important;
+			}
+			.um-my-account-file-preview-modal {
+				position: fixed;
+				inset: 0;
+				z-index: 999999;
+			}
+			.um-my-account-file-preview-modal-backdrop {
+				position: absolute;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.6);
+			}
+			.um-my-account-file-preview-modal-dialog {
+				position: relative;
+				z-index: 2;
+				max-width: min(1100px, calc(100% - 32px));
+				height: min(85vh, 820px);
+				margin: 4vh auto 0;
+				background: #fff;
+				border-radius: 8px;
+				box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+				display: flex;
+				flex-direction: column;
+				overflow: hidden;
+			}
+			.um-my-account-file-preview-modal-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 12px 16px;
+				border-bottom: 1px solid #dcdcde;
+				background: #f6f7f7;
+			}
+			.um-my-account-file-preview-modal-title {
+				margin: 0;
+				font-size: 16px;
+			}
+			.um-my-account-file-preview-modal-close {
+				border: 0;
+				background: transparent;
+				font-size: 22px;
+				line-height: 1;
+				cursor: pointer;
+				padding: 2px 6px;
+			}
+			.um-my-account-file-preview-meta {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 10px 16px 8px;
+				font-size: 13px;
+				flex-wrap: wrap;
+				border-bottom: 1px solid #f0f0f1;
+			}
+			.um-my-account-file-preview-filename {
+				font-weight: 600;
+				word-break: break-all;
+			}
+			.um-my-account-file-preview-status {
+				padding: 8px 16px;
+				font-size: 12px;
+				color: #50575e;
+				border-bottom: 1px solid #f0f0f1;
+			}
+			.um-my-account-file-preview-status.um-my-account-file-preview-status-error {
+				color: #b32d2e;
+			}
+			.um-my-account-file-preview-content {
+				flex: 1;
+				padding: 0;
+				overflow: auto;
+				background: #fff;
+			}
+			.um-my-account-file-preview-iframe {
+				display: block;
+				width: 100%;
+				height: 100%;
+				min-height: 420px;
+				border: 0;
+				background: #fff;
+			}
+			.um-my-account-file-preview-table-wrap {
+				padding: 12px 16px 16px;
+				overflow: auto;
+			}
+			.um-my-account-file-preview-table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 12px;
+			}
+			.um-my-account-file-preview-table th,
+			.um-my-account-file-preview-table td {
+				border: 1px solid #dcdcde;
+				padding: 5px 7px;
+				vertical-align: top;
+				text-align: left;
+				word-break: break-word;
+				min-width: 80px;
+			}
+			.um-my-account-file-preview-table th {
+				background: #f6f7f7;
+				font-weight: 600;
+			}
+			@media (max-width: 782px) {
+				.um-my-account-file-preview-modal-dialog {
+					max-width: calc(100% - 12px);
+					height: 90vh;
+					margin-top: 2vh;
+				}
+				.um-my-account-file-preview-modal-header {
+					padding: 10px 12px;
+				}
+				.um-my-account-file-preview-meta,
+				.um-my-account-file-preview-status {
+					padding-left: 12px;
+					padding-right: 12px;
+				}
+			}
 		</style>
+		<div id="um-my-account-file-preview-modal" class="um-my-account-file-preview-modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="um-my-account-file-preview-modal-title">
+			<div class="um-my-account-file-preview-modal-backdrop" data-um-close-preview="1"></div>
+			<div class="um-my-account-file-preview-modal-dialog">
+				<div class="um-my-account-file-preview-modal-header">
+					<h3 id="um-my-account-file-preview-modal-title" class="um-my-account-file-preview-modal-title"><?php esc_html_e('File Preview', 'user-manager'); ?></h3>
+					<button type="button" class="um-my-account-file-preview-modal-close" data-um-close-preview="1" aria-label="<?php esc_attr_e('Close preview', 'user-manager'); ?>">&times;</button>
+				</div>
+				<div class="um-my-account-file-preview-meta">
+					<span class="um-my-account-file-preview-filename"></span>
+					<a class="um-my-account-file-preview-open-link" href="#" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Open in new tab', 'user-manager'); ?></a>
+				</div>
+				<div class="um-my-account-file-preview-status" aria-live="polite"></div>
+				<div class="um-my-account-file-preview-content"></div>
+			</div>
+		</div>
+		<script>
+			(function () {
+				if (window.umMyAccountFilePreviewModalInit) {
+					return;
+				}
+				window.umMyAccountFilePreviewModalInit = true;
+
+				var modal = document.getElementById('um-my-account-file-preview-modal');
+				if (!modal) {
+					return;
+				}
+
+				var statusEl = modal.querySelector('.um-my-account-file-preview-status');
+				var contentEl = modal.querySelector('.um-my-account-file-preview-content');
+				var filenameEl = modal.querySelector('.um-my-account-file-preview-filename');
+				var openLinkEl = modal.querySelector('.um-my-account-file-preview-open-link');
+				var lastActiveElement = null;
+				var currentUrl = '';
+				var i18n = {
+					loading: <?php echo wp_json_encode(__('Loading file preview...', 'user-manager')); ?>,
+					noRows: <?php echo wp_json_encode(__('No rows found in this file.', 'user-manager')); ?>,
+					csvFetchFailed: <?php echo wp_json_encode(__('Could not fetch a text preview. Showing an embedded preview instead.', 'user-manager')); ?>,
+					excelHint: <?php echo wp_json_encode(__('Excel preview uses Microsoft Office Web Viewer for supported public files.', 'user-manager')); ?>,
+					unsupported: <?php echo wp_json_encode(__('Preview unavailable for this value.', 'user-manager')); ?>,
+					truncatedRows: <?php echo wp_json_encode(__('Preview limited to first 120 rows.', 'user-manager')); ?>,
+					truncatedCols: <?php echo wp_json_encode(__('Preview limited to first 30 columns.', 'user-manager')); ?>,
+					fetchFailedPrefix: <?php echo wp_json_encode(__('Request failed with status', 'user-manager')); ?>
+				};
+
+				function setStatus(message, isError) {
+					if (!statusEl) {
+						return;
+					}
+					statusEl.textContent = message || '';
+					if (isError) {
+						statusEl.classList.add('um-my-account-file-preview-status-error');
+					} else {
+						statusEl.classList.remove('um-my-account-file-preview-status-error');
+					}
+				}
+
+				function clearContent() {
+					if (contentEl) {
+						contentEl.innerHTML = '';
+					}
+				}
+
+				function getFileExtension(url) {
+					var stripped = (url || '').split('#')[0].split('?')[0];
+					var dotIndex = stripped.lastIndexOf('.');
+					if (dotIndex < 0) {
+						return '';
+					}
+					return stripped.substring(dotIndex + 1).toLowerCase();
+				}
+
+				function getFilename(url) {
+					var stripped = (url || '').split('#')[0];
+					var pathOnly = stripped.split('?')[0];
+					var slashIndex = pathOnly.lastIndexOf('/');
+					var rawName = slashIndex >= 0 ? pathOnly.substring(slashIndex + 1) : pathOnly;
+					if (!rawName) {
+						return 'file';
+					}
+					try {
+						return decodeURIComponent(rawName);
+					} catch (error) {
+						return rawName;
+					}
+				}
+
+				function renderIframePreview(src) {
+					clearContent();
+					if (!contentEl) {
+						return;
+					}
+					var iframe = document.createElement('iframe');
+					iframe.className = 'um-my-account-file-preview-iframe';
+					iframe.src = src;
+					iframe.setAttribute('loading', 'lazy');
+					contentEl.appendChild(iframe);
+				}
+
+				function parseDelimitedRows(content, delimiter) {
+					var rows = [];
+					var row = [];
+					var value = '';
+					var inQuotes = false;
+					for (var index = 0; index < content.length; index++) {
+						var character = content.charAt(index);
+						var nextCharacter = content.charAt(index + 1);
+						if (character === '"') {
+							if (inQuotes && nextCharacter === '"') {
+								value += '"';
+								index++;
+								continue;
+							}
+							inQuotes = !inQuotes;
+							continue;
+						}
+						if (!inQuotes && character === delimiter) {
+							row.push(value);
+							value = '';
+							continue;
+						}
+						if (!inQuotes && (character === '\n' || character === '\r')) {
+							row.push(value);
+							value = '';
+							if (character === '\r' && nextCharacter === '\n') {
+								index++;
+							}
+							rows.push(row);
+							row = [];
+							continue;
+						}
+						value += character;
+					}
+					row.push(value);
+					if (row.length > 1 || (row[0] && row[0].trim() !== '')) {
+						rows.push(row);
+					}
+
+					return rows.filter(function (item) {
+						if (!Array.isArray(item)) {
+							return false;
+						}
+						return item.some(function (cell) {
+							return String(cell || '').trim() !== '';
+						});
+					});
+				}
+
+				function renderDelimitedTable(rows) {
+					clearContent();
+					if (!contentEl) {
+						return;
+					}
+
+					if (!rows.length) {
+						setStatus(i18n.noRows, false);
+						return;
+					}
+
+					var maxRows = 120;
+					var maxCols = 30;
+					var rowOverflow = rows.length > maxRows;
+					var hasColOverflow = false;
+					var limitedRows = rows.slice(0, maxRows).map(function (cells) {
+						if (cells.length > maxCols) {
+							hasColOverflow = true;
+						}
+						return cells.slice(0, maxCols);
+					});
+
+					var wrap = document.createElement('div');
+					wrap.className = 'um-my-account-file-preview-table-wrap';
+					var table = document.createElement('table');
+					table.className = 'um-my-account-file-preview-table';
+					var thead = document.createElement('thead');
+					var tbody = document.createElement('tbody');
+					var headerRow = document.createElement('tr');
+					limitedRows[0].forEach(function (headerCell) {
+						var th = document.createElement('th');
+						th.textContent = String(headerCell || '');
+						headerRow.appendChild(th);
+					});
+					thead.appendChild(headerRow);
+
+					for (var rowIndex = 1; rowIndex < limitedRows.length; rowIndex++) {
+						var tr = document.createElement('tr');
+						limitedRows[rowIndex].forEach(function (cellValue) {
+							var td = document.createElement('td');
+							td.textContent = String(cellValue || '');
+							tr.appendChild(td);
+						});
+						tbody.appendChild(tr);
+					}
+
+					table.appendChild(thead);
+					table.appendChild(tbody);
+					wrap.appendChild(table);
+					contentEl.appendChild(wrap);
+
+					var notices = [];
+					if (rowOverflow) {
+						notices.push(i18n.truncatedRows);
+					}
+					if (hasColOverflow) {
+						notices.push(i18n.truncatedCols);
+					}
+					setStatus(notices.join(' '), false);
+				}
+
+				function renderTextPreview(url, extension) {
+					var delimiter = extension === 'tsv' ? '\t' : ',';
+					setStatus(i18n.loading, false);
+					fetch(url, { credentials: 'same-origin' })
+						.then(function (response) {
+							if (!response.ok) {
+								throw new Error(i18n.fetchFailedPrefix + ' ' + response.status);
+							}
+							return response.text();
+						})
+						.then(function (text) {
+							var rows = parseDelimitedRows(text || '', delimiter);
+							renderDelimitedTable(rows);
+						})
+						.catch(function () {
+							setStatus(i18n.csvFetchFailed, true);
+							renderIframePreview(url);
+						});
+				}
+
+				function renderExcelPreview(url) {
+					setStatus(i18n.excelHint, false);
+					var officeEmbedUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(url);
+					renderIframePreview(officeEmbedUrl);
+				}
+
+				function renderPreview(url) {
+					var extension = getFileExtension(url);
+					if (extension === 'csv' || extension === 'tsv' || extension === 'txt') {
+						renderTextPreview(url, extension);
+						return;
+					}
+					if (extension === 'xls' || extension === 'xlsx' || extension === 'xlsm' || extension === 'xlsb') {
+						renderExcelPreview(url);
+						return;
+					}
+					setStatus('', false);
+					renderIframePreview(url);
+				}
+
+				function closeModal() {
+					modal.setAttribute('aria-hidden', 'true');
+					modal.setAttribute('hidden', 'hidden');
+					document.body.style.overflow = '';
+					clearContent();
+					setStatus('', false);
+					currentUrl = '';
+					if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
+						lastActiveElement.focus();
+					}
+				}
+
+				function openModal(url, trigger) {
+					if (!url) {
+						setStatus(i18n.unsupported, true);
+						return;
+					}
+					currentUrl = url;
+					lastActiveElement = trigger || null;
+					if (filenameEl) {
+						filenameEl.textContent = getFilename(url);
+					}
+					if (openLinkEl) {
+						openLinkEl.href = url;
+					}
+					setStatus(i18n.loading, false);
+					modal.removeAttribute('hidden');
+					modal.setAttribute('aria-hidden', 'false');
+					document.body.style.overflow = 'hidden';
+					renderPreview(url);
+				}
+
+				document.addEventListener('click', function (event) {
+					var previewTrigger = event.target.closest('.um-my-account-file-preview-trigger');
+					if (previewTrigger) {
+						event.preventDefault();
+						var previewUrl = previewTrigger.getAttribute('href') || '';
+						openModal(previewUrl, previewTrigger);
+						return;
+					}
+					var closeTrigger = event.target.closest('[data-um-close-preview="1"]');
+					if (closeTrigger) {
+						event.preventDefault();
+						closeModal();
+					}
+				});
+
+				document.addEventListener('keydown', function (event) {
+					if (event.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') {
+						event.preventDefault();
+						closeModal();
+					}
+				});
+			})();
+		</script>
 		<?php
 	}
 

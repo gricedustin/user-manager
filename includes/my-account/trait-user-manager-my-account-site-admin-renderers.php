@@ -9,10 +9,11 @@ if (!defined('ABSPATH')) {
 
 trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		public static function render_admin_orders_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('orders')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('orders');
+			self::render_shared_styles();
 			self::maybe_handle_order_approval_action();
 			self::render_order_approval_notice();
 	
@@ -28,10 +29,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		
 
 		public static function render_admin_products_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('products')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('products');
+			self::render_shared_styles();
 	
 			$product_id = isset($_GET['id']) ? absint(wp_unslash($_GET['id'])) : 0;
 			if ($product_id > 0) {
@@ -45,10 +47,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		
 
 		public static function render_admin_coupons_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('coupons')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('coupons');
+			self::render_shared_styles();
 	
 			$coupon_id = isset($_GET['id']) ? absint(wp_unslash($_GET['id'])) : 0;
 			if ($coupon_id > 0) {
@@ -62,10 +65,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		
 
 		public static function render_admin_users_endpoint(): void {
-			self::render_shared_styles();
 			if (!self::ensure_area_access('users')) {
 				return;
 			}
+			self::maybe_handle_my_account_admin_csv_export_download('users');
+			self::render_shared_styles();
 	
 			$user_id = isset($_GET['id']) ? absint(wp_unslash($_GET['id'])) : 0;
 			if ($user_id > 0) {
@@ -75,23 +79,34 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			self::render_users_list();
 		}
+
+		public static function render_admin_activity_endpoint(): void {
+			if (!self::ensure_area_access('activity')) {
+				return;
+			}
+			self::maybe_handle_my_account_admin_csv_export_download('activity');
+			self::render_shared_styles();
+
+			self::render_activity_list();
+		}
 	
 		
 
 		private static function render_orders_list(): void {
 			$endpoint     = 'admin_orders';
 			$current_page = self::get_current_page();
+			$per_page     = self::get_per_page_limit();
 			$search       = self::get_search_query();
 			$status_filters = self::get_configured_order_status_filters();
 			$selected_status_key = self::get_selected_order_status_filter_key($status_filters);
 			if ($search !== '') {
 				$all_orders = self::search_orders($search, $selected_status_key);
-				$paged      = self::paginate_items($all_orders, $current_page, self::PER_PAGE);
+				$paged      = self::paginate_items($all_orders, $current_page, $per_page);
 				$orders     = $paged['items'];
 				$pages      = $paged['total_pages'];
 			} else {
 				$query_args = [
-					'limit'    => self::PER_PAGE,
+					'limit'    => $per_page,
 					'page'     => $current_page,
 					'paginate' => true,
 					'orderby'  => 'date',
@@ -119,6 +134,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			$can_approve = self::current_user_can_approve_orders();
 			$hide_order_status = self::should_hide_order_status();
+			$add_webtoffee_download_invoice_button = self::should_add_webtoffee_download_invoice_button();
+			$add_webtoffee_print_invoice_button = self::should_add_webtoffee_print_invoice_button();
 			$approve_label = self::get_order_approve_button_label();
 			$decline_label = self::get_order_decline_button_label();
 	
@@ -130,8 +147,8 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			echo '<table class="express_checkout_order_approvals woocommerce_my_account_admin_tools woocommerce_my_account_admin_tools_orders">';
 			echo '<thead><tr>';
 			echo '<th>' . esc_html__('Order', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('Date', 'user-manager') . '</th>';
-			echo '<th>' . esc_html__('Address', 'user-manager') . '</th>';
+			echo '<th>' . esc_html__('Shipping Address', 'user-manager') . '</th>';
+			echo '<th></th>';
 			echo '<th class="center"></th>';
 			echo '</tr></thead><tbody>';
 	
@@ -147,7 +164,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					$order_number  = $order->get_order_number();
 					$date_created  = $order->get_date_created();
 					$date_display  = $date_created ? $date_created->date_i18n('D M d, Y g:ia') : '';
-					$status_label  = wc_get_order_status_name($order->get_status());
+					$status_label  = self::get_order_status_display_label((string) $order->get_status());
 					$billing_email = $order->get_billing_email();
 					$address_html  = $order->get_formatted_shipping_address();
 					if ($address_html === '') {
@@ -163,10 +180,11 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					$print_args = $view_args;
 					$print_args['print'] = '1';
 					$print_url  = self::get_endpoint_url($endpoint, $print_args);
+					$webtoffee_invoice_urls = self::get_webtoffee_invoice_action_urls($order);
 	
 					echo '<tr class="express_checkout_order_approvals_row">';
-					echo '<td><strong>' . esc_html($order_number) . '</strong></td>';
-					echo '<td>';
+					echo '<td><strong>' . esc_html($order_number) . '</strong>';
+					echo '<div class="um-my-account-admin-order-meta-block">';
 					echo esc_html($date_display);
 					if ($billing_email !== '') {
 						echo '<br />' . esc_html($billing_email);
@@ -174,18 +192,37 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 					if (!$hide_order_status) {
 						echo '<br /><span class="um-my-account-admin-status">' . esc_html($status_label) . '</span>';
 					}
+					echo '</div>';
 					echo '</td>';
-					echo '<td>' . wp_kses_post($address_html) . '</td>';
+					echo '<td>';
+					if ($address_html !== '') {
+						echo '<div class="um-my-account-admin-order-address-block">' . wp_kses_post($address_html) . '</div>';
+					}
+					echo '</td>';
+					echo '<td class="um-my-account-order-list-meta-column">';
+					$order_list_additional_meta_html = self::get_order_additional_meta_fields_for_orders_list_html($order);
+					if ($order_list_additional_meta_html !== '') {
+						echo '<div class="um-my-account-order-list-meta-wrap">' . wp_kses_post($order_list_additional_meta_html) . '</div>';
+					} else {
+						echo '&nbsp;';
+					}
+					echo '</td>';
 					echo '<td class="center">';
-					echo '<a class="button breathing_room full_width" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
-					echo '<a class="button breathing_room full_width" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
+					echo '<a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-view" href="' . esc_url($view_url) . '">' . esc_html__('View Order', 'user-manager') . '</a> ';
+					echo '<a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-print" href="' . esc_url($print_url) . '">' . esc_html__('Print Order', 'user-manager') . '</a>';
+					if ($add_webtoffee_print_invoice_button && $webtoffee_invoice_urls['print'] !== '') {
+						echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-print-invoice" href="' . esc_url($webtoffee_invoice_urls['print']) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Print Invoice', 'user-manager') . '</a>';
+					}
+					if ($add_webtoffee_download_invoice_button && $webtoffee_invoice_urls['download'] !== '') {
+						echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-download-invoice" href="' . esc_url($webtoffee_invoice_urls['download']) . '">' . esc_html__('Download Invoice', 'user-manager') . '</a>';
+					}
 					if ($can_approve && !$order->has_status('completed')) {
 						if (!$order->has_status('processing')) {
 							$approve_url = self::get_approve_order_url($order_id, self::get_list_context_query_args());
-							echo ' <a class="button breathing_room full_width" href="' . esc_url($approve_url) . '">' . esc_html($approve_label) . '</a>';
+							echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-approve" href="' . esc_url($approve_url) . '">' . esc_html($approve_label) . '</a>';
 						}
 						$decline_url = self::get_decline_order_url($order_id, self::get_list_context_query_args());
-						echo ' <a class="button breathing_room full_width" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
+						echo ' <a class="button breathing_room full_width um-my-account-admin-order-btn um-my-account-admin-order-btn-decline" href="' . esc_url($decline_url) . '">' . esc_html($decline_label) . '</a>';
 					}
 					echo '</td>';
 					echo '</tr>';
@@ -194,6 +231,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 	
 		
@@ -229,7 +267,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			$date_created = $order->get_date_created();
 			$date_display = $date_created ? $date_created->date_i18n('D M d, Y g:ia') : '';
-			$status_label = wc_get_order_status_name($order->get_status());
+			$status_label = self::get_order_status_display_label((string) $order->get_status());
 	
 			echo '<p>';
 			echo esc_html__('Order #', 'user-manager');
@@ -309,19 +347,20 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		private static function render_products_list(): void {
 			$endpoint     = 'admin_products';
 			$current_page = self::get_current_page();
+			$per_page     = self::get_per_page_limit();
 			$search       = self::get_search_query();
 			$total_pages = 1;
 	
 			if ($search !== '') {
 				$matching_ids = self::search_product_ids($search);
-				$paged        = self::paginate_items($matching_ids, $current_page, self::PER_PAGE);
+				$paged        = self::paginate_items($matching_ids, $current_page, $per_page);
 				$product_ids  = $paged['items'];
 				$total_pages  = $paged['total_pages'];
 			} else {
 				$query = new WP_Query([
 					'post_type'      => ['product', 'product_variation'],
 					'post_status'    => ['publish', 'private'],
-					'posts_per_page' => self::PER_PAGE,
+					'posts_per_page' => $per_page,
 					'paged'          => $current_page,
 					'orderby'        => 'date',
 					'order'          => 'DESC',
@@ -398,6 +437,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $total_pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 	
 		
@@ -466,18 +506,19 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		private static function render_coupons_list(): void {
 			$endpoint     = 'admin_coupons';
 			$current_page = self::get_current_page();
+			$per_page     = self::get_per_page_limit();
 			$search       = self::get_search_query();
 			$total_pages = 1;
 			if ($search !== '') {
 				$matching_ids = self::search_coupon_ids($search);
-				$paged        = self::paginate_items($matching_ids, $current_page, self::PER_PAGE);
+				$paged        = self::paginate_items($matching_ids, $current_page, $per_page);
 				$coupon_ids   = $paged['items'];
 				$total_pages  = $paged['total_pages'];
 			} else {
 				$query = new WP_Query([
 					'post_type'      => 'shop_coupon',
 					'post_status'    => ['publish', 'private', 'draft'],
-					'posts_per_page' => self::PER_PAGE,
+					'posts_per_page' => $per_page,
 					'paged'          => $current_page,
 					'orderby'        => 'date',
 					'order'          => 'DESC',
@@ -535,6 +576,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $total_pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 	
 		
@@ -591,16 +633,17 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 		private static function render_users_list(): void {
 			$endpoint     = 'admin_users';
 			$current_page = self::get_current_page();
+			$per_page     = self::get_per_page_limit();
 			$search       = self::get_search_query();
 			if ($search !== '') {
 				$matching_users = self::search_users($search);
-				$paged          = self::paginate_items($matching_users, $current_page, self::PER_PAGE);
+				$paged          = self::paginate_items($matching_users, $current_page, $per_page);
 				$users          = $paged['items'];
 				$pages          = $paged['total_pages'];
 			} else {
-				$offset = ($current_page - 1) * self::PER_PAGE;
+				$offset = ($current_page - 1) * $per_page;
 				$query  = new WP_User_Query([
-					'number'      => self::PER_PAGE,
+					'number'      => $per_page,
 					'offset'      => $offset,
 					'orderby'     => 'registered',
 					'order'       => 'DESC',
@@ -608,7 +651,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 				]);
 				$users = $query->get_results();
 				$total = (int) $query->get_total();
-				$pages = (int) ceil($total / self::PER_PAGE);
+				$pages = (int) ceil($total / $per_page);
 				if ($pages < 1) {
 					$pages = 1;
 				}
@@ -655,6 +698,7 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 	
 			echo '</tbody></table>';
 			self::render_pagination($endpoint, $current_page, $pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
 		}
 	
 		
@@ -694,6 +738,353 @@ trait User_Manager_My_Account_Site_Admin_Renderers_Trait {
 			if (self::should_show_meta_for_area('users')) {
 				self::render_meta_table_from_user($user->ID);
 			}
+		}
+
+		private static function render_activity_list(): void {
+			global $wpdb;
+			if (!$wpdb instanceof wpdb) {
+				self::print_error_notice(__('Activity data is unavailable right now.', 'user-manager'));
+				return;
+			}
+
+			$endpoint             = 'admin_activity';
+			$per_page             = self::get_per_page_limit();
+			$current_page         = self::get_current_page();
+			$offset               = ($current_page - 1) * $per_page;
+			$search               = self::get_search_query();
+			$action_filter        = trim(self::get_activity_action_filter_query_arg());
+			$allowed_actions      = self::get_activity_allowed_actions_from_settings();
+			$hidden_email_filters = self::get_activity_hidden_email_partials();
+			$role_review_enabled  = self::is_activity_role_review_enabled();
+
+			if (!empty($allowed_actions) && !in_array($action_filter, $allowed_actions, true)) {
+				$action_filter = '';
+			}
+
+			$table       = $wpdb->prefix . 'um_user_activity';
+			$table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table;
+			$entries     = [];
+			$total       = 0;
+			$all_actions = [];
+			$role_review_user_ids = [];
+
+			if ($table_exists) {
+				if ($role_review_enabled) {
+					$role_review_user_ids = self::get_activity_role_review_user_ids_map($table);
+				}
+
+				$where_parts = ['1=1'];
+				$params = [];
+
+				if (!empty($allowed_actions)) {
+					$allowed_placeholders = implode(',', array_fill(0, count($allowed_actions), '%s'));
+					$where_parts[] = "h.action IN ({$allowed_placeholders})";
+					foreach ($allowed_actions as $allowed_action) {
+						$params[] = $allowed_action;
+					}
+				}
+
+				if ($action_filter !== '') {
+					$where_parts[] = 'TRIM(h.action) = %s';
+					$params[] = $action_filter;
+				}
+
+				if ($search !== '') {
+					$like = '%' . $wpdb->esc_like($search) . '%';
+					$where_parts[] = '(h.action LIKE %s OR h.url LIKE %s OR h.ip_address LIKE %s OR h.user_agent LIKE %s OR h.roles LIKE %s OR u.user_login LIKE %s OR u.user_email LIKE %s OR u.display_name LIKE %s OR CAST(h.user_id AS CHAR) LIKE %s)';
+					for ($i = 0; $i < 9; $i++) {
+						$params[] = $like;
+					}
+				}
+
+				if (!empty($hidden_email_filters)) {
+					foreach ($hidden_email_filters as $hidden_email_partial) {
+						$hidden_email_partial = trim((string) $hidden_email_partial);
+						if ($hidden_email_partial === '') {
+							continue;
+						}
+						$where_parts[] = "(u.user_email IS NULL OR u.user_email = '' OR u.user_email NOT LIKE %s)";
+						$params[] = '%' . $wpdb->esc_like($hidden_email_partial) . '%';
+					}
+				}
+
+				$where_sql = implode(' AND ', $where_parts);
+				$count_sql = "SELECT COUNT(*) FROM {$table} h LEFT JOIN {$wpdb->users} u ON h.user_id = u.ID WHERE {$where_sql}";
+				if (!empty($params)) {
+					$total = (int) $wpdb->get_var($wpdb->prepare($count_sql, ...$params));
+				} else {
+					$total = (int) $wpdb->get_var($count_sql);
+				}
+
+				$query_sql = "
+					SELECT h.id, h.user_id, h.action, h.url, h.ip_address, h.user_agent, h.roles, h.created_at,
+					       u.user_login, u.user_email, u.display_name
+					  FROM {$table} h
+					  LEFT JOIN {$wpdb->users} u ON h.user_id = u.ID
+					 WHERE {$where_sql}
+				  ORDER BY h.created_at DESC
+				  LIMIT %d OFFSET %d
+				";
+				$query_params = $params;
+				$query_params[] = $per_page;
+				$query_params[] = $offset;
+				$query = $wpdb->prepare($query_sql, ...$query_params);
+				$rows = $wpdb->get_results($query);
+				if (is_array($rows)) {
+					foreach ($rows as $row) {
+						$timestamp = $row->created_at ? strtotime((string) $row->created_at) : 0;
+						$user_id = isset($row->user_id) ? (int) $row->user_id : 0;
+						$user_email = isset($row->user_email) ? (string) $row->user_email : '';
+
+						$display_name = isset($row->display_name) ? (string) $row->display_name : '';
+						if ($display_name === '') {
+							$display_name = $user_email !== '' ? $user_email : ((string) ($row->user_login ?? ''));
+						}
+
+						$entries[] = [
+							'user_id'       => $user_id,
+							'user_login'    => isset($row->user_login) ? (string) $row->user_login : '',
+							'user_email'    => $user_email,
+							'display_name'  => $display_name,
+							'action'        => isset($row->action) ? (string) $row->action : '',
+							'url'           => isset($row->url) ? (string) $row->url : '',
+							'ip_address'    => isset($row->ip_address) ? (string) $row->ip_address : '',
+							'user_agent'    => isset($row->user_agent) ? (string) $row->user_agent : '',
+							'roles'         => isset($row->roles) ? (string) $row->roles : '',
+							'timestamp'     => $timestamp > 0 ? $timestamp : 0,
+							'role_review'   => $role_review_enabled && $user_id > 0 && isset($role_review_user_ids[$user_id]),
+						];
+					}
+				}
+
+				if (!empty($allowed_actions)) {
+					$all_actions = $allowed_actions;
+				} else {
+					$actions_where_parts = ["h.action <> ''"];
+					$actions_params = [];
+					if (!empty($hidden_email_filters)) {
+						foreach ($hidden_email_filters as $hidden_email_partial) {
+							$hidden_email_partial = trim((string) $hidden_email_partial);
+							if ($hidden_email_partial === '') {
+								continue;
+							}
+							$actions_where_parts[] = "(u.user_email IS NULL OR u.user_email = '' OR u.user_email NOT LIKE %s)";
+							$actions_params[] = '%' . $wpdb->esc_like($hidden_email_partial) . '%';
+						}
+					}
+					$actions_where_sql = implode(' AND ', $actions_where_parts);
+					$actions_sql = "SELECT DISTINCT h.action FROM {$table} h LEFT JOIN {$wpdb->users} u ON h.user_id = u.ID WHERE {$actions_where_sql} ORDER BY h.action ASC";
+					if (!empty($actions_params)) {
+						$raw_actions = $wpdb->get_col($wpdb->prepare($actions_sql, ...$actions_params));
+					} else {
+						$raw_actions = $wpdb->get_col($actions_sql);
+					}
+					if (is_array($raw_actions)) {
+						foreach ($raw_actions as $raw_action) {
+							$normalized_action = sanitize_text_field((string) $raw_action);
+							if ($normalized_action === '') {
+								continue;
+							}
+							$all_actions[] = $normalized_action;
+						}
+					}
+					$all_actions = array_values(array_unique($all_actions));
+				}
+			}
+
+			$total_pages = max(1, (int) ceil($total / $per_page));
+			echo '<h3 class="swh_users_title">' . esc_html__('Admin: Activity', 'user-manager') . '</h3>';
+			echo '<p class="swh_users_desc"></p>';
+			self::render_search_form($endpoint, __('Search activity...', 'user-manager'));
+			self::render_activity_action_filter_form($endpoint, $all_actions, $action_filter, $search);
+
+			if (!$table_exists) {
+				self::print_error_notice(__('User activity table was not found yet. Activity appears after log entries are created.', 'user-manager'));
+				self::render_my_account_admin_csv_export_button($endpoint);
+				return;
+			}
+
+			if (empty($entries)) {
+				echo '<p class="woocommerce-info">' . esc_html__('No user activity found for the selected filters.', 'user-manager') . '</p>';
+				self::render_my_account_admin_csv_export_button($endpoint);
+				return;
+			}
+
+			echo '<table class="express_checkout_order_approvals woocommerce_my_account_admin_tools woocommerce_my_account_admin_tools_users">';
+			echo '<thead><tr>';
+			echo '<th>' . esc_html__('User', 'user-manager') . '</th>';
+			echo '<th>' . esc_html__('Email', 'user-manager') . '</th>';
+			echo '<th>' . esc_html__('Roles', 'user-manager') . '</th>';
+			echo '<th>' . esc_html__('Timestamp', 'user-manager') . '</th>';
+			echo '<th>' . esc_html__('Action', 'user-manager') . '</th>';
+			echo '</tr></thead><tbody>';
+
+			foreach ($entries as $entry) {
+				$ts = isset($entry['timestamp']) ? (int) $entry['timestamp'] : 0;
+				$roles_text = isset($entry['roles']) ? (string) $entry['roles'] : '';
+				$has_role_review = !empty($entry['role_review']);
+				$user_id = isset($entry['user_id']) ? (int) $entry['user_id'] : 0;
+				echo '<tr class="express_checkout_order_approvals_row">';
+				echo '<td class="middle">';
+				$display_user = (string) ($entry['display_name'] ?? '');
+				if ($display_user === '') {
+					$display_user = (string) ($entry['user_login'] ?? '');
+				}
+				if ($display_user === '') {
+					$display_user = '&mdash;';
+				}
+				if ($user_id > 0) {
+					$edit_user_url = get_edit_user_link($user_id);
+					if (is_string($edit_user_url) && $edit_user_url !== '') {
+						echo '<a href="' . esc_url($edit_user_url) . '">' . esc_html($display_user) . '</a>';
+					} else {
+						echo esc_html($display_user);
+					}
+				} else {
+					echo esc_html($display_user);
+				}
+				echo '</td>';
+				$email = (string) ($entry['user_email'] ?? '');
+				echo '<td class="middle">' . ($email !== '' ? esc_html($email) : '&mdash;') . '</td>';
+				echo '<td class="middle">';
+				echo $roles_text !== '' ? esc_html($roles_text) : '&mdash;';
+				if ($has_role_review) {
+					echo ' <span style="display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:#f0f6ff;color:#0a4b78;font-size:11px;font-weight:600;line-height:1.4;">' . esc_html__('User role change found in past', 'user-manager') . '</span>';
+				}
+				echo '</td>';
+				echo '<td class="middle">';
+				echo $ts > 0 ? esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $ts)) : '&mdash;';
+				echo '</td>';
+				echo '<td class="middle">' . esc_html((string) ($entry['action'] ?? '')) . '</td>';
+				echo '</tr>';
+			}
+
+			echo '</tbody></table>';
+			self::render_pagination($endpoint, $current_page, $total_pages, $search);
+			self::render_my_account_admin_csv_export_button($endpoint);
+		}
+
+		private static function render_activity_action_filter_form(string $endpoint, array $all_actions, string $action_filter, string $search): void {
+			$base_url = self::get_endpoint_url($endpoint);
+			echo '<div class="um-my-account-admin-activity-filter-wrap" style="margin-bottom: 16px;">';
+			echo '<form class="um-my-account-admin-activity-filter-form" method="get" action="' . esc_url($base_url) . '" style="display:inline-block;">';
+			if ($search !== '') {
+				echo '<input type="hidden" name="um_search" value="' . esc_attr($search) . '" />';
+			}
+			echo '<label for="um-my-account-activity-action-filter" style="margin-right:8px;"><strong>' . esc_html__('Filter by Action:', 'user-manager') . '</strong></label>';
+			echo '<select name="ua_action_filter" id="um-my-account-activity-action-filter" style="min-width:220px;">';
+			echo '<option value="">' . esc_html__('All Actions', 'user-manager') . '</option>';
+			foreach ($all_actions as $action_option) {
+				$action_option = trim(sanitize_text_field((string) $action_option));
+				if ($action_option === '') {
+					continue;
+				}
+				echo '<option value="' . esc_attr($action_option) . '" ' . selected($action_filter, $action_option, false) . '>' . esc_html($action_option) . '</option>';
+			}
+			echo '</select>';
+			echo ' <button type="submit" class="button">' . esc_html__('Apply Filter', 'user-manager') . '</button>';
+			if ($action_filter !== '') {
+				$clear_args = [];
+				if ($search !== '') {
+					$clear_args['um_search'] = $search;
+				}
+				$clear_url = self::get_endpoint_url($endpoint, $clear_args);
+				echo ' <a class="button" href="' . esc_url($clear_url) . '">' . esc_html__('Clear Filter', 'user-manager') . '</a>';
+			}
+			echo '</form>';
+			echo '</div>';
+		}
+
+		/**
+		 * @return array<int,string>
+		 */
+		private static function get_activity_allowed_actions_from_settings(): array {
+			$settings = User_Manager_Core::get_settings();
+			$raw_actions = $settings['my_account_admin_activity_viewer_actions'] ?? [];
+			if (!is_array($raw_actions)) {
+				return [];
+			}
+
+			$actions = [];
+			foreach ($raw_actions as $raw_action) {
+				$action = trim(sanitize_text_field((string) $raw_action));
+				if ($action === '') {
+					continue;
+				}
+				$actions[] = $action;
+			}
+
+			return array_values(array_unique($actions));
+		}
+
+		/**
+		 * @return array<int,string>
+		 */
+		private static function get_activity_hidden_email_partials(): array {
+			$settings = User_Manager_Core::get_settings();
+			$raw = isset($settings['my_account_admin_activity_viewer_hidden_email_partials'])
+				? (string) $settings['my_account_admin_activity_viewer_hidden_email_partials']
+				: '';
+			$raw = trim($raw);
+			if ($raw === '') {
+				return [];
+			}
+
+			$parts = preg_split('/[\r\n,]+/', $raw);
+			if (!is_array($parts)) {
+				return [];
+			}
+
+			$values = [];
+			foreach ($parts as $part) {
+				$part = sanitize_text_field((string) $part);
+				$part = strtolower(trim($part));
+				if ($part === '') {
+					continue;
+				}
+				$values[] = $part;
+			}
+
+			return array_values(array_unique($values));
+		}
+
+		private static function is_activity_role_review_enabled(): bool {
+			$settings = User_Manager_Core::get_settings();
+			return !empty($settings['my_account_admin_activity_viewer_role_review_enabled']);
+		}
+
+		/**
+		 * @param string $table Fully-qualified user activity table name.
+		 * @return array<int,bool>
+		 */
+		private static function get_activity_role_review_user_ids_map(string $table): array {
+			global $wpdb;
+			if (!$wpdb instanceof wpdb) {
+				return [];
+			}
+
+			$ids = $wpdb->get_col(
+				"SELECT user_id
+				   FROM {$table}
+				  WHERE user_id > 0
+				    AND roles <> ''
+			   GROUP BY user_id
+				 HAVING COUNT(DISTINCT roles) > 1"
+			);
+			if (!is_array($ids)) {
+				return [];
+			}
+
+			$map = [];
+			foreach ($ids as $id) {
+				$user_id = (int) $id;
+				if ($user_id <= 0) {
+					continue;
+				}
+				$map[$user_id] = true;
+			}
+
+			return $map;
 		}
 	
 		

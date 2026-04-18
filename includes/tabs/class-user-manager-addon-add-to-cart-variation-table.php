@@ -17,6 +17,9 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 		$button_text = isset($settings['add_to_cart_variation_table_button_text']) ? (string) $settings['add_to_cart_variation_table_button_text'] : '';
 		$header_variation_label = isset($settings['add_to_cart_variation_table_header_variation_label']) ? (string) $settings['add_to_cart_variation_table_header_variation_label'] : '';
 		$header_qty_label = isset($settings['add_to_cart_variation_table_header_qty_label']) ? (string) $settings['add_to_cart_variation_table_header_qty_label'] : '';
+		$min_total_qty = isset($settings['add_to_cart_variation_table_min_total_qty']) ? max(0, (int) $settings['add_to_cart_variation_table_min_total_qty']) : 0;
+		$min_total_qty_alert_message = isset($settings['add_to_cart_variation_table_min_total_qty_alert_message']) ? (string) $settings['add_to_cart_variation_table_min_total_qty_alert_message'] : '';
+		$success_alert_message = isset($settings['add_to_cart_variation_table_success_alert_message']) ? (string) $settings['add_to_cart_variation_table_success_alert_message'] : '';
 		$selected_category_ids = isset($settings['add_to_cart_variation_table_category_ids']) && is_array($settings['add_to_cart_variation_table_category_ids'])
 			? array_values(array_unique(array_filter(array_map('absint', $settings['add_to_cart_variation_table_category_ids']))))
 			: [];
@@ -157,6 +160,27 @@ class User_Manager_Addon_Add_To_Cart_Variation_Table {
 						</label>
 						<p class="description">
 							<?php esc_html_e('When enabled, an Empty Cart button is added near cart action buttons (next to Update cart where theme markup allows).', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label for="um-add-to-cart-variation-table-min-total-qty"><?php esc_html_e('Add to Cart Total Quantity Required Minimum', 'user-manager'); ?></label>
+						<input type="number" id="um-add-to-cart-variation-table-min-total-qty" name="add_to_cart_variation_table_min_total_qty" min="0" step="1" class="small-text" value="<?php echo esc_attr((string) $min_total_qty); ?>"<?php echo $form_attr; ?> />
+						<p class="description">
+							<?php esc_html_e('Set a minimum total quantity required across all entered variation rows before submit. Use 0 to disable this requirement.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label for="um-add-to-cart-variation-table-min-alert-message"><?php esc_html_e('Add to Cart Total Quantity Required Minimum Javascript Alert Message', 'user-manager'); ?></label>
+						<input type="text" id="um-add-to-cart-variation-table-min-alert-message" name="add_to_cart_variation_table_min_total_qty_alert_message" class="large-text" value="<?php echo esc_attr($min_total_qty_alert_message); ?>" placeholder="<?php esc_attr_e('Please add at least {min} total items. Current total: {total}.', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<p class="description">
+							<?php esc_html_e('Shown when total quantity is below the minimum. Supports {min} and {total} tokens.', 'user-manager'); ?>
+						</p>
+					</div>
+					<div class="um-form-field">
+						<label for="um-add-to-cart-variation-table-success-alert-message"><?php esc_html_e('Add to Cart Success Javascript Alert Message', 'user-manager'); ?></label>
+						<input type="text" id="um-add-to-cart-variation-table-success-alert-message" name="add_to_cart_variation_table_success_alert_message" class="large-text" value="<?php echo esc_attr($success_alert_message); ?>" placeholder="<?php esc_attr_e('Items added. Continuing...', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<p class="description">
+							<?php esc_html_e('Optional success alert shown before form submission moves to the next screen.', 'user-manager'); ?>
 						</p>
 					</div>
 					<div class="um-form-field">

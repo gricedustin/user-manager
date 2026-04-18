@@ -9,30 +9,63 @@ if (!defined('ABSPATH')) {
 
 
 require_once __DIR__ . '/core/trait-user-manager-core-activity-log.php';
+require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-min-max-quantities.php';
 require_once __DIR__ . '/core/trait-user-manager-core-add-to-cart-variation-table.php';
 require_once __DIR__ . '/core/trait-user-manager-core-cart-price-per-piece.php';
+require_once __DIR__ . '/core/trait-user-manager-core-cart-total-items.php';
+require_once __DIR__ . '/core/trait-user-manager-core-block-pages-by-url-string.php';
+require_once __DIR__ . '/core/trait-user-manager-core-emali-log.php';
 require_once __DIR__ . '/core/trait-user-manager-core-fatal-error-debugger.php';
 require_once __DIR__ . '/core/trait-user-manager-core-invoice-approval.php';
+require_once __DIR__ . '/core/trait-user-manager-core-media-library-tags.php';
+require_once __DIR__ . '/core/trait-user-manager-core-media-library-tags-video-library.php';
+require_once __DIR__ . '/core/trait-user-manager-core-media-library-tags-tag-groups.php';
 require_once __DIR__ . '/core/trait-user-manager-core-my-account-menu-tiles.php';
+require_once __DIR__ . '/core/trait-user-manager-core-order-received-page-customizer.php';
+require_once __DIR__ . '/core/trait-user-manager-core-page-blocks.php';
 require_once __DIR__ . '/core/trait-user-manager-core-plugin-tags-notes.php';
+require_once __DIR__ . '/core/trait-user-manager-core-product-notification.php';
+require_once __DIR__ . '/core/trait-user-manager-core-restricted-access.php';
 require_once __DIR__ . '/core/trait-user-manager-core-security-hardening.php';
+require_once __DIR__ . '/core/trait-user-manager-core-seo-basics.php';
 require_once __DIR__ . '/core/trait-user-manager-core-webhook-urls.php';
 final class User_Manager_Core {
 	use User_Manager_Core_Activity_Log_Trait;
+	use User_Manager_Core_Add_To_Cart_Min_Max_Quantities_Trait;
 	use User_Manager_Core_Add_To_Cart_Variation_Table_Trait;
 	use User_Manager_Core_Cart_Price_Per_Piece_Trait;
+	use User_Manager_Core_Cart_Total_Items_Trait;
+	use User_Manager_Core_Block_Pages_By_URL_String_Trait;
+	use User_Manager_Core_Emali_Log_Trait;
 	use User_Manager_Core_Fatal_Error_Debugger_Trait;
 	use User_Manager_Core_Invoice_Approval_Trait;
+	use User_Manager_Core_Media_Library_Tags_Trait;
+	use User_Manager_Core_Media_Library_Tags_Video_Library_Trait;
+	use User_Manager_Core_Media_Library_Tags_Tag_Groups_Trait;
 	use User_Manager_Core_My_Account_Menu_Tiles_Trait;
+	use User_Manager_Core_Order_Received_Page_Customizer_Trait;
+	use User_Manager_Core_Page_Blocks_Trait;
 	use User_Manager_Core_Plugin_Tags_Notes_Trait;
+	use User_Manager_Core_Product_Notification_Trait;
+	use User_Manager_Core_Restricted_Access_Trait;
 	use User_Manager_Core_Security_Hardening_Trait;
+	use User_Manager_Core_SEO_Basics_Trait;
 	use User_Manager_Core_Webhook_URLs_Trait;
 	const OPTION_KEY = 'user_manager_settings';
 	const ACTIVITY_LOG_KEY = 'user_manager_activity_log';
 	const EMAIL_TEMPLATES_KEY = 'user_manager_email_templates';
+	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.4.3';
+	const VERSION = '2.5.250';
+	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
+	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
+	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
+	const USER_DEACTIVATED_AT_META_KEY = 'um_user_deactivated_at';
+	const USER_DEACTIVATED_BY_META_KEY = 'um_user_deactivated_by';
+	const USER_DEACTIVATED_ORIGINAL_LOGIN_META_KEY = 'um_user_deactivated_original_login';
+	const USER_DEACTIVATED_ORIGINAL_EMAIL_META_KEY = 'um_user_deactivated_original_email';
+	const USER_DEACTIVATION_HISTORY_KEY = 'user_manager_deactivated_users_history';
 
 	/**
 	 * Stores remainder debug messages keyed by order ID.
@@ -40,6 +73,11 @@ final class User_Manager_Core {
 	 * @var array<int,array<int,string>>
 	 */
 	private static array $coupon_remainder_debug_messages = [];
+
+	/**
+	 * Prevent duplicate front-end non-production notice rendering.
+	 */
+	private static bool $staging_dev_notice_rendered = false;
 
 	/**
 	 * Per-request debug trace rows for bulk add to cart uploads.
@@ -55,10 +93,25 @@ final class User_Manager_Core {
 	 */
 	private static array $bulk_add_to_cart_media_upload_info = [];
 
+	/**
+	 * Cached runtime-disabled add-on slugs parsed from URL.
+	 *
+	 * @var array<int,string>|null
+	 */
+	private static ?array $runtime_disabled_addon_slugs = null;
+
+	/**
+	 * Cached runtime "disable all add-ons" URL flag.
+	 */
+	private static ?bool $runtime_disable_all_addons = null;
+
+
 	// Tab constants
+	const TAB_LOGIN_TOOLS     = 'login-tools';
 	const TAB_CREATE_USER     = 'create-user';
 	const TAB_RESET_PASSWORD  = 'reset-password';
 	const TAB_REMOVE_USER     = 'remove-user';
+	const TAB_DEACTIVATE_USER = 'deactivate-user';
 	const TAB_ROLE_SWITCHING  = 'role-switching';
 	const TAB_LOGIN_AS        = 'login-as';
 	const TAB_BULK_CREATE     = 'bulk-create';
@@ -71,6 +124,7 @@ final class User_Manager_Core {
 	const TAB_TOOLS           = 'tools';
 	const TAB_SETTINGS        = 'settings';
 	const TAB_ADDONS         = 'addons';
+	const TAB_BLOCKS         = 'blocks';
 	const TAB_REPORTS         = 'reports';
 	const TAB_DOCUMENTATION   = 'documentation';
 	const TAB_VERSIONS        = 'versions';
@@ -79,6 +133,7 @@ final class User_Manager_Core {
 	 * Boot plugin hooks.
 	 */
 	public static function init(): void {
+		add_action('init', [__CLASS__, 'load_textdomain'], 1);
 		add_action('admin_menu', [__CLASS__, 'register_settings_page']);
 		$main_plugin_basename = self::get_main_plugin_basename();
 		add_filter('plugin_action_links_' . $main_plugin_basename, [__CLASS__, 'add_plugin_action_links']);
@@ -92,6 +147,7 @@ final class User_Manager_Core {
 		add_action('init', [__CLASS__, 'maybe_create_login_history_table']);
 		add_action('init', [__CLASS__, 'maybe_create_user_activity_table']);
 		add_action('init', [__CLASS__, 'maybe_create_admin_activity_table']);
+		add_action('init', [__CLASS__, 'maybe_create_restricted_access_history_table']);
 		// On multisite, the MU logger handles login writes to ensure reliability on central login hosts.
 		if (!is_multisite()) {
 			add_action('wp_login', [__CLASS__, 'handle_wp_login'], 10, 2);
@@ -123,15 +179,32 @@ final class User_Manager_Core {
 		add_action('template_redirect', [__CLASS__, 'maybe_log_myaccount_page']);
 		add_action('woocommerce_save_account_details', [__CLASS__, 'log_password_change_on_save'], 10, 1);
 		add_action('after_password_reset', [__CLASS__, 'log_password_change_after_reset'], 10, 2);
+		add_filter('wp_authenticate_user', [__CLASS__, 'block_deactivated_user_authentication'], 20, 2);
+		add_filter('allow_password_reset', [__CLASS__, 'maybe_block_deactivated_user_password_reset'], 10, 2);
 		
 		// Coupon Email Converter meta box toggle + other settings-based behavior.
 		$settings = self::get_settings();
+		self::maybe_boot_add_to_cart_min_max_quantities($settings);
 		self::maybe_boot_cart_price_per_piece($settings);
+		self::maybe_boot_cart_total_items($settings);
+		self::maybe_boot_emali_log($settings);
 		self::maybe_boot_invoice_approval($settings);
+		if (!self::is_disable_blocks_requested()) {
+			self::maybe_boot_media_library_tags($settings);
+		}
 		self::maybe_boot_my_account_menu_tiles($settings);
+		self::maybe_boot_order_received_page_customizer($settings);
+		self::maybe_boot_product_notification($settings);
+		if (!self::is_disable_blocks_requested()) {
+			self::maybe_boot_page_blocks($settings);
+		}
 		self::maybe_boot_plugin_tags_notes($settings);
+		self::maybe_boot_restricted_access($settings);
+		self::maybe_boot_block_pages_by_url_string($settings);
 		self::maybe_apply_security_hardening($settings);
+		self::maybe_boot_seo_basics($settings);
 		self::maybe_boot_webhook_urls($settings);
+		add_action('user_manager_emali_log_daily_cleanup', [__CLASS__, 'run_emali_log_daily_cleanup']);
 		if (!empty($settings['coupon_email_converter'])) {
 			add_action('add_meta_boxes', [__CLASS__, 'add_coupon_email_converter_meta_box']);
 		}
@@ -141,28 +214,40 @@ final class User_Manager_Core {
 		}
 
 		// User Activity: log WooCommerce orders when available.
-		if (class_exists('WooCommerce')) {
+		// Keep this scoped to the New User Coupons add-on context.
+		$new_user_coupons_enabled = self::is_new_user_coupons_enabled($settings);
+		if (class_exists('WooCommerce') && $new_user_coupons_enabled) {
 			// Fire after order is marked processing or completed.
 			add_action('woocommerce_order_status_processing', [__CLASS__, 'log_user_order_activity'], 20, 1);
 			add_action('woocommerce_order_status_completed', [__CLASS__, 'log_user_order_activity'], 20, 1);
 		}
-		// Checkout: Ship To Pre-Defined Addresses — init after WooCommerce is loaded so class_exists('WooCommerce') is true.
-		add_action('woocommerce_loaded', [__CLASS__, 'init_checkout_ship_to'], 5, 0);
-		// Debug box: show on checkout for admins when "Show debugging info" is on, even if Ship To init returned early.
-		add_action('wp_footer', [__CLASS__, 'maybe_render_checkout_ship_to_debug'], 5, 0);
+		$checkout_ship_to_enabled = !empty($settings['checkout_ship_to_predefined_enabled']) && !self::is_addon_temporarily_disabled('checkout-pre-defined-addresses');
+		$checkout_ship_to_debug_enabled = !empty($settings['checkout_ship_to_show_debug']) && !self::is_addon_temporarily_disabled('checkout-pre-defined-addresses');
+		if ($checkout_ship_to_enabled || $checkout_ship_to_debug_enabled) {
+			// Checkout: Ship To Pre-Defined Addresses — init after WooCommerce is loaded so class_exists('WooCommerce') is true.
+			add_action('woocommerce_loaded', [__CLASS__, 'init_checkout_ship_to'], 5, 0);
+			// Debug box: show on checkout for admins when "Show debugging info" is on.
+			add_action('wp_footer', [__CLASS__, 'maybe_render_checkout_ship_to_debug'], 5, 0);
+		}
 		if (is_admin() && !empty($settings['coupon_show_email_column'])) {
 			// Use a late priority so we can adjust columns after WooCommerce or other plugins.
 			add_filter('manage_edit-shop_coupon_columns', [__CLASS__, 'add_coupon_email_column'], 99);
 			add_action('manage_shop_coupon_posts_custom_column', [__CLASS__, 'render_coupon_email_column'], 10, 2);
 		}
 		if (class_exists('User_Manager_My_Account_Site_Admin')) {
+			// Enforce the wp-admin redirect list even when endpoint viewers are disabled.
+			add_action('admin_init', ['User_Manager_My_Account_Site_Admin', 'maybe_redirect_selected_wp_admin_users_to_my_account'], 1, 0);
+			// Remove front-end admin bar for users listed in My Account Admin redirect/toolbar setting.
+			add_filter('show_admin_bar', ['User_Manager_My_Account_Site_Admin', 'maybe_hide_admin_bar_for_redirected_administrators'], 20, 1);
+		}
+		if (class_exists('User_Manager_My_Account_Site_Admin') && self::is_my_account_site_admin_enabled($settings)) {
 			User_Manager_My_Account_Site_Admin::init();
 		}
 
 		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_admin_bar_link'], 98);
 		add_action('admin_bar_menu', [__CLASS__, 'add_custom_admin_bar_menu_items'], 99);
 		// Quick Search add-on runs only when explicitly activated.
-		$quick_search_enabled = !empty($settings['um_quick_search_enabled']);
+		$quick_search_enabled = !empty($settings['um_quick_search_enabled']) && !self::is_addon_temporarily_disabled('quick-search');
 		if ($quick_search_enabled) {
 			add_action('admin_bar_menu', [__CLASS__, 'add_quick_search_admin_bar_item'], 100);
 			add_action('admin_footer', [__CLASS__, 'render_quick_search_dropdown']);
@@ -173,23 +258,39 @@ final class User_Manager_Core {
 		}
 		
 		// New User Coupons: defer creation to front-end visits.
-		add_action('template_redirect', [__CLASS__, 'maybe_create_new_user_coupon_on_visit'], 9);
+		if ($new_user_coupons_enabled) {
+			add_action('template_redirect', [__CLASS__, 'maybe_create_new_user_coupon_on_visit'], 9);
+		}
 		// View monitoring: log page/post/product and archive views for reporting.
 		add_action('template_redirect', [__CLASS__, 'maybe_log_view_reports'], 19);
 		// 404 monitoring: log front-end 404 hits for reporting.
 		add_action('template_redirect', [__CLASS__, 'maybe_log_404_error'], 20);
 		// Search query monitoring: log front-end search queries (?s=) for reporting.
 		add_action('template_redirect', [__CLASS__, 'maybe_log_search_query'], 20);
-		add_action('woocommerce_order_status_completed', [__CLASS__, 'maybe_generate_fixed_cart_coupon_remainders'], 20, 1);
-		add_action('woocommerce_thankyou', [__CLASS__, 'handle_coupon_remainder_thankyou'], 5, 1);
-		add_action('woocommerce_thankyou', [__CLASS__, 'render_coupon_remainder_debug_notice'], 8, 1);
-		add_action('woocommerce_thankyou', [__CLASS__, 'render_order_received_remaining_balance_notice'], 10, 1);
-		add_action('woocommerce_review_order_after_submit', [__CLASS__, 'render_checkout_coupon_remainder_debug'], 10);
-		add_action('woocommerce_review_order_before_submit', [__CLASS__, 'render_checkout_remaining_balance_notice'], 10);
-		// Block checkout support
-		add_filter('render_block', [__CLASS__, 'maybe_detect_checkout_block'], 10, 2);
-		add_action('wp_footer', [__CLASS__, 'inject_checkout_remaining_balance_notice'], 5);
-		add_action('wp_footer', [__CLASS__, 'render_public_coupon_debug_output'], 999);
+		$coupon_remainder_enabled = self::is_coupon_remainder_feature_enabled($settings);
+		if ($coupon_remainder_enabled) {
+			add_action('woocommerce_order_status_completed', [__CLASS__, 'queue_coupon_remainder_generation'], 20, 1);
+			add_action('user_manager_process_coupon_remainder_async', [__CLASS__, 'maybe_generate_fixed_cart_coupon_remainders'], 10, 1);
+			add_action('woocommerce_thankyou', [__CLASS__, 'handle_coupon_remainder_thankyou'], 5, 1);
+			add_action('woocommerce_thankyou', [__CLASS__, 'render_coupon_remainder_debug_notice'], 8, 1);
+			add_action('woocommerce_thankyou', [__CLASS__, 'render_order_received_remaining_balance_notice'], 10, 1);
+			add_action('woocommerce_review_order_after_submit', [__CLASS__, 'render_checkout_coupon_remainder_debug'], 10);
+			add_action('woocommerce_review_order_before_submit', [__CLASS__, 'render_checkout_remaining_balance_notice'], 10);
+			// Block checkout support
+			add_filter('render_block', [__CLASS__, 'maybe_detect_checkout_block'], 10, 2);
+			add_action('wp_footer', [__CLASS__, 'inject_checkout_remaining_balance_notice'], 5);
+			add_action('wp_footer', [__CLASS__, 'render_public_coupon_debug_output'], 999);
+		}
+		if (self::is_staging_dev_overrides_enabled($settings)) {
+			add_action('admin_notices', [__CLASS__, 'render_non_production_admin_notice'], 6);
+			add_action('wp_footer', [__CLASS__, 'render_non_production_frontend_notice_bar_fallback'], 0);
+			add_action('wp_body_open', [__CLASS__, 'render_non_production_frontend_notice_bar'], 1);
+			add_filter('pre_wp_mail', [__CLASS__, 'maybe_block_staging_dev_wp_mail'], 10, 2);
+			add_filter('woocommerce_available_payment_gateways', [__CLASS__, 'maybe_disable_staging_dev_payment_gateways'], 999);
+			add_filter('pre_http_request', [__CLASS__, 'maybe_block_staging_dev_http_requests'], 10, 3);
+			add_filter('rest_pre_dispatch', [__CLASS__, 'maybe_block_staging_dev_rest_requests'], 10, 3);
+			add_filter('woocommerce_webhook_should_deliver', [__CLASS__, 'maybe_block_staging_dev_woocommerce_webhook'], 10, 4);
+		}
 		
 		// Frontend/site-wide behavior toggles based on settings.
 		$settings = self::get_settings();
@@ -198,18 +299,19 @@ final class User_Manager_Core {
 			add_action('wp_footer', [__CLASS__, 'print_lost_password_rebrand_script']);
 			add_filter('password_change_email', [__CLASS__, 'filter_password_change_email'], 10, 3);
 		}
-		if (!empty($settings['nuc_debug_mode'])) {
+		if (!empty($settings['nuc_debug_mode']) && $new_user_coupons_enabled) {
 			add_action('wp_footer', [__CLASS__, 'render_new_user_coupon_debug_panel'], 1000);
 		}
 
 		// When enabled, clear applied coupons automatically whenever the cart
 		// becomes empty (e.g. quantity changed from 1 to 0 or last item removed).
-		if (!empty($settings['coupon_notifications_clear_coupons_when_cart_empty']) && class_exists('WooCommerce')) {
+		$coupon_notifications_enabled = !empty($settings['user_coupon_notifications_enabled']) && !self::is_addon_temporarily_disabled('coupon-notifications-for-users-with-coupons');
+		if ($coupon_notifications_enabled && !empty($settings['coupon_notifications_clear_coupons_when_cart_empty']) && class_exists('WooCommerce')) {
 			add_action('woocommerce_cart_updated', [__CLASS__, 'maybe_clear_coupons_when_cart_empty']);
 		}
 
 		// Front-end search: when ?s= exactly matches a product/variation SKU, redirect to product.
-		if (!isset($settings['search_redirect_by_sku']) || !empty($settings['search_redirect_by_sku'])) {
+		if (!empty($settings['search_redirect_by_sku'])) {
 			add_action('template_redirect', [__CLASS__, 'maybe_redirect_search_to_product_by_sku'], 5);
 		}
 		// Apply coupon code from URL parameter (e.g. ?coupon-code=SAVE10).
@@ -246,7 +348,7 @@ final class User_Manager_Core {
 		// Role Switching feature (front-end role preview) – only when enabled and
 		// the standalone plugin is not already providing the same functionality.
 		$role_settings = get_option('view_website_by_role_settings', []);
-		$role_enabled  = !empty($role_settings['enabled']);
+		$role_enabled  = !empty($role_settings['enabled']) && !self::is_addon_temporarily_disabled('user-role-switching');
 		if ($role_enabled) {
 			if (!function_exists('view_website_by_role_add_user_profile_fields')) {
 				add_action('show_user_profile', [__CLASS__, 'render_role_switching_profile_fields']);
@@ -273,6 +375,9 @@ final class User_Manager_Core {
 		add_action('wp_ajax_user_manager_get_datalist_options', [__CLASS__, 'ajax_get_datalist_options']);
 		// Login As user search endpoint (username/email lookup).
 		add_action('wp_ajax_user_manager_search_users_for_login_as', [__CLASS__, 'ajax_search_users_for_login_as']);
+		if (class_exists('User_Manager_Tab_Login_As')) {
+			User_Manager_Tab_Login_As::init();
+		}
 		
 		// Register action handlers
 		User_Manager_Actions::init();
@@ -313,6 +418,335 @@ final class User_Manager_Core {
 
 		$cart->calculate_totals();
 	}
+
+	/**
+	 * Whether Staging & Development Environment Overrides add-on is active.
+	 *
+	 * @param array<string,mixed>|null $settings Optional settings cache.
+	 */
+	private static function is_staging_dev_overrides_enabled(?array $settings = null): bool {
+		if ($settings === null) {
+			$settings = self::get_settings();
+		}
+		return !empty($settings['staging_dev_overrides_enabled']) && !self::is_addon_temporarily_disabled('staging-development-environment-overrides');
+	}
+
+	/**
+	 * Whether New User Coupons add-on is active.
+	 *
+	 * @param array<string,mixed>|null $settings Optional settings cache.
+	 */
+	private static function is_new_user_coupons_enabled(?array $settings = null): bool {
+		if ($settings === null) {
+			$settings = self::get_settings();
+		}
+		return !empty($settings['nuc_enabled']) && !self::is_addon_temporarily_disabled('coupon-for-new-user');
+	}
+
+	/**
+	 * Whether My Account Site Admin add-on is active.
+	 *
+	 * @param array<string,mixed>|null $settings Optional settings cache.
+	 */
+	private static function is_my_account_site_admin_enabled(?array $settings = null): bool {
+		if ($settings === null) {
+			$settings = self::get_settings();
+		}
+		$enabled = false;
+		if (array_key_exists('my_account_site_admin_enabled', $settings)) {
+			$enabled = !empty($settings['my_account_site_admin_enabled']);
+		} else {
+			$enabled = !empty($settings['my_account_admin_order_viewer_enabled'])
+				|| !empty($settings['my_account_admin_product_viewer_enabled'])
+				|| !empty($settings['my_account_admin_coupon_viewer_enabled'])
+				|| !empty($settings['my_account_admin_user_viewer_enabled'])
+				|| !empty($settings['my_account_admin_activity_viewer_enabled'])
+				|| !empty($settings['my_account_admin_wp_admin_redirect_list'])
+				|| !empty($settings['my_account_admin_activity_viewer_wp_admin_redirect_list']);
+		}
+		return $enabled && !self::is_addon_temporarily_disabled('my-account-site-admin');
+	}
+
+	/**
+	 * Get a default-true staging/dev setting value.
+	 *
+	 * @param array<string,mixed> $settings
+	 */
+	private static function get_staging_dev_default_true_setting(array $settings, string $key): bool {
+		if (!array_key_exists($key, $settings)) {
+			return true;
+		}
+		return !empty($settings[$key]);
+	}
+
+	/**
+	 * Build data anonymized suffix text based on latest Data Anonymizer history.
+	 */
+	private static function get_staging_dev_data_anonymized_notice_suffix(array $settings): string {
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_notice_include_data_anonymized')) {
+			return '';
+		}
+		$history = get_option('user_manager_data_anonymizer_history', []);
+		if (!is_array($history) || empty($history)) {
+			return __(' | Data anonymized: no runs recorded yet', 'user-manager');
+		}
+		$latest = $history[0];
+		if (!is_array($latest)) {
+			return __(' | Data anonymized: no runs recorded yet', 'user-manager');
+		}
+		$created_at = isset($latest['created_at']) ? (string) $latest['created_at'] : '';
+		if ($created_at === '') {
+			return __(' | Data anonymized: timestamp unavailable', 'user-manager');
+		}
+		$timestamp = strtotime($created_at);
+		if (!$timestamp) {
+			return sprintf(
+				/* translators: %s: timestamp text */
+				__(' | Data anonymized: %s', 'user-manager'),
+				$created_at
+			);
+		}
+		return sprintf(
+			/* translators: %s: timestamp text */
+			__(' | Data anonymized: %s', 'user-manager'),
+			date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $timestamp)
+		);
+	}
+
+	/**
+	 * Render non-production warning notice in WP-Admin.
+	 */
+	public static function render_non_production_admin_notice(): void {
+		if (wp_doing_ajax()) {
+			return;
+		}
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_notice_wp_admin')) {
+			return;
+		}
+		$suffix = self::get_staging_dev_data_anonymized_notice_suffix($settings);
+		?>
+		<div class="notice notice-warning" style="margin:12px 0 16px;">
+			<p>
+				<strong><?php esc_html_e('Non-Production Environment', 'user-manager'); ?></strong>
+				<?php echo esc_html__(' - staging/development overrides are active.', 'user-manager'); ?>
+				<?php echo esc_html($suffix); ?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render non-production warning notice bar on front-end.
+	 */
+	public static function render_non_production_frontend_notice_bar(): void {
+		if (is_admin() || wp_doing_ajax()) {
+			return;
+		}
+		if (self::$staging_dev_notice_rendered) {
+			return;
+		}
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_notice_frontend_top_bar')) {
+			return;
+		}
+		$suffix = self::get_staging_dev_data_anonymized_notice_suffix($settings);
+		$message = __('Non-Production Environment - staging/development overrides are active.', 'user-manager') . $suffix;
+
+		if (current_action() === 'wp_footer') {
+			?>
+			<script>
+			(function() {
+				var barId = 'um-non-production-notice-bar';
+				if (document.getElementById(barId)) {
+					return;
+				}
+				var bar = document.createElement('div');
+				bar.id = barId;
+				bar.className = 'um-non-production-notice-bar';
+				bar.setAttribute('style', 'position:sticky;top:0;left:0;right:0;z-index:99999;background:#d63638;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;');
+				bar.textContent = <?php echo wp_json_encode($message); ?>;
+				if (document.body) {
+					document.body.insertBefore(bar, document.body.firstChild);
+				}
+			})();
+			</script>
+			<?php
+			self::$staging_dev_notice_rendered = true;
+			return;
+		}
+		?>
+		<div id="um-non-production-notice-bar" class="um-non-production-notice-bar" style="position:sticky;top:0;left:0;right:0;z-index:99999;background:#d63638;color:#fff;padding:10px 14px;font-size:13px;font-weight:600;text-align:center;">
+			<?php echo esc_html($message); ?>
+		</div>
+		<?php
+		self::$staging_dev_notice_rendered = true;
+	}
+
+	/**
+	 * Footer fallback for themes that do not call wp_body_open.
+	 * Injects the notice at the top of <body>, not at the visual footer.
+	 */
+	public static function render_non_production_frontend_notice_bar_fallback(): void {
+		if (is_admin() || wp_doing_ajax()) {
+			return;
+		}
+		if (self::$staging_dev_notice_rendered) {
+			return;
+		}
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_notice_frontend_top_bar')) {
+			return;
+		}
+		$suffix = self::get_staging_dev_data_anonymized_notice_suffix($settings);
+		?>
+		<script>
+		(function() {
+			if (!document.body || document.querySelector('.um-non-production-notice-bar')) {
+				return;
+			}
+			var bar = document.createElement('div');
+			bar.className = 'um-non-production-notice-bar';
+			bar.style.position = 'sticky';
+			bar.style.top = '0';
+			bar.style.left = '0';
+			bar.style.right = '0';
+			bar.style.zIndex = '99999';
+			bar.style.background = '#d63638';
+			bar.style.color = '#fff';
+			bar.style.padding = '10px 14px';
+			bar.style.fontSize = '13px';
+			bar.style.fontWeight = '600';
+			bar.style.textAlign = 'center';
+			bar.textContent = <?php echo wp_json_encode(__('Non-Production Environment - staging/development overrides are active.', 'user-manager') . $suffix); ?>;
+			document.body.insertBefore(bar, document.body.firstChild);
+		})();
+		</script>
+		<?php
+		self::$staging_dev_notice_rendered = true;
+	}
+
+	/**
+	 * Block outgoing wp_mail calls when staging/dev email override is enabled.
+	 *
+	 * @param null|bool|WP_Error $return Short-circuit return.
+	 * @param array<string,mixed> $atts Mail attributes.
+	 * @return null|bool|WP_Error
+	 */
+	public static function maybe_block_staging_dev_wp_mail($return, array $atts = []) {
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $return;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_emails')) {
+			return $return;
+		}
+		return false;
+	}
+
+	/**
+	 * Disable all WooCommerce payment gateways when override is active.
+	 *
+	 * @param array<string,mixed> $gateways
+	 * @return array<string,mixed>
+	 */
+	public static function maybe_disable_staging_dev_payment_gateways(array $gateways): array {
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $gateways;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_payment_gateways')) {
+			return $gateways;
+		}
+		return [];
+	}
+
+	/**
+	 * Disable outbound HTTP API requests (except same-host/admin internal requests).
+	 *
+	 * @param false|array|WP_Error $preempt
+	 * @param array<string,mixed> $args
+	 * @param string $url
+	 * @return false|array|WP_Error
+	 */
+	public static function maybe_block_staging_dev_http_requests($preempt, array $args, string $url) {
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $preempt;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_api_json_requests')) {
+			return $preempt;
+		}
+		if (wp_doing_cron() || wp_doing_ajax()) {
+			return $preempt;
+		}
+
+		$target_host = (string) wp_parse_url($url, PHP_URL_HOST);
+		$home_host = (string) wp_parse_url(home_url(), PHP_URL_HOST);
+		if ($target_host !== '' && $home_host !== '' && strtolower($target_host) === strtolower($home_host)) {
+			return $preempt;
+		}
+
+		return new WP_Error(
+			'um_staging_dev_http_blocked',
+			__('Blocked by Staging & Development Environment Overrides: API/JSON requests are disabled.', 'user-manager')
+		);
+	}
+
+	/**
+	 * Disable REST API endpoint dispatch when override is active.
+	 *
+	 * @param mixed $result
+	 * @param WP_REST_Server $server
+	 * @param WP_REST_Request $request
+	 * @return mixed
+	 */
+	public static function maybe_block_staging_dev_rest_requests($result, $server, $request) {
+		if (defined('WP_CLI') && WP_CLI) {
+			return $result;
+		}
+		if (wp_doing_ajax()) {
+			return $result;
+		}
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $result;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_api_json_requests')) {
+			return $result;
+		}
+		return new WP_Error(
+			'um_staging_dev_rest_blocked',
+			__('Blocked by Staging & Development Environment Overrides: REST/API requests are disabled.', 'user-manager'),
+			['status' => 503]
+		);
+	}
+
+	/**
+	 * Disable WooCommerce webhook delivery when override is active.
+	 *
+	 * WooCommerce has used different callback signatures over time (3 or 4 args),
+	 * so keep trailing params optional for compatibility.
+	 */
+	public static function maybe_block_staging_dev_woocommerce_webhook(bool $should_deliver, $webhook = null, $arg = null, $resource = null): bool {
+		$settings = self::get_settings();
+		if (!self::is_staging_dev_overrides_enabled($settings)) {
+			return $should_deliver;
+		}
+		if (!self::get_staging_dev_default_true_setting($settings, 'staging_dev_disable_all_webhooks')) {
+			return $should_deliver;
+		}
+		return false;
+	}
 	
 	/**
 	 * Render Role Switching permissions on user profile screen.
@@ -331,8 +765,10 @@ final class User_Manager_Core {
 			$user_meta = [];
 		}
 
-		$default_roles = $user_meta['default_roles'] ?? [];
-		$roles         = wp_roles()->get_names();
+		$roles                = wp_roles()->get_names();
+		$default_roles        = self::get_user_role_switch_default_roles($user_meta);
+		$default_role         = isset($default_roles[0]) ? (string) $default_roles[0] : '';
+		$user_hidden_roles    = self::normalize_role_list($user_meta['hidden_roles'] ?? []);
 		?>
 		<div class="card" style="max-width:100%;margin-bottom:20px;padding:20px;background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,.04);">
 			<h2 style="margin-top:0;padding-bottom:10px;border-bottom:1px solid #eee;">
@@ -364,17 +800,35 @@ final class User_Manager_Core {
 				</tr>
 				<tr>
 					<th scope="row">
-						<label><?php esc_html_e('Default Roles', 'user-manager'); ?></label>
+						<label for="um_role_switch_default_role"><?php esc_html_e('Default Role', 'user-manager'); ?></label>
+					</th>
+					<td>
+						<select name="um_role_switch_default_role" id="um_role_switch_default_role">
+							<option value=""><?php esc_html_e('— No default role —', 'user-manager'); ?></option>
+							<?php foreach ($roles as $role_key => $role_name) : ?>
+								<option value="<?php echo esc_attr($role_key); ?>" <?php selected($default_role, $role_key); ?>>
+									<?php echo esc_html($role_name); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description">
+							<?php esc_html_e('Select one default role to restore when using the "Reset to Default Roles" button.', 'user-manager'); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label><?php esc_html_e('Roles to Hide', 'user-manager'); ?></label>
 					</th>
 					<td>
 						<?php foreach ($roles as $role_key => $role_name) : ?>
 							<label style="display:block;margin-bottom:5px;">
-								<input type="checkbox" name="um_role_switch_default_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $default_roles, true)); ?> />
+								<input type="checkbox" name="um_role_switch_hidden_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $user_hidden_roles, true)); ?> />
 								<?php echo esc_html($role_name); ?>
 							</label>
 						<?php endforeach; ?>
 						<p class="description">
-							<?php esc_html_e('Select the default roles that will be restored when using the "Reset to Default Roles" button.', 'user-manager'); ?>
+							<?php esc_html_e('Hidden roles are removed from this user\'s front-end role switcher so they cannot view or select them.', 'user-manager'); ?>
 						</p>
 					</td>
 				</tr>
@@ -392,6 +846,7 @@ final class User_Manager_Core {
 		if (!current_user_can('manage_options')) {
 			return;
 		}
+		$roles = wp_roles()->get_names();
 
 		$old_meta = get_user_meta($user_id, 'view_website_by_role_permissions', true);
 		if (!is_array($old_meta)) {
@@ -421,12 +876,28 @@ final class User_Manager_Core {
 			$changes[] = 'Disabled admin role preview';
 		}
 
-		// Default roles.
-		if (!empty($_POST['um_role_switch_default_roles'])) {
-			$user_meta['default_roles'] = array_map('sanitize_text_field', (array) wp_unslash($_POST['um_role_switch_default_roles']));
-			if (empty($old_meta['default_roles']) || $old_meta['default_roles'] !== $user_meta['default_roles']) {
-				$changes[] = 'Updated default roles';
-			}
+		// Default role (single selection).
+		$old_default_roles = self::get_user_role_switch_default_roles($old_meta);
+		$new_default_role = isset($_POST['um_role_switch_default_role']) ? sanitize_key(wp_unslash($_POST['um_role_switch_default_role'])) : '';
+		if ($new_default_role !== '' && isset($roles[$new_default_role])) {
+			$user_meta['default_roles'] = [$new_default_role];
+		}
+		$new_default_roles = self::get_user_role_switch_default_roles($user_meta);
+		if ($old_default_roles !== $new_default_roles) {
+			$changes[] = 'Updated default role';
+		}
+
+		// Roles to hide for this user.
+		$old_hidden_roles = self::normalize_role_list($old_meta['hidden_roles'] ?? []);
+		$new_hidden_roles = isset($_POST['um_role_switch_hidden_roles']) ? self::normalize_role_list(wp_unslash($_POST['um_role_switch_hidden_roles'])) : [];
+		$new_hidden_roles = array_values(array_filter($new_hidden_roles, static function (string $role_key) use ($roles): bool {
+			return isset($roles[$role_key]);
+		}));
+		if (!empty($new_hidden_roles)) {
+			$user_meta['hidden_roles'] = $new_hidden_roles;
+		}
+		if ($old_hidden_roles !== $new_hidden_roles) {
+			$changes[] = 'Updated per-user roles to hide';
 		}
 
 		if (!empty($changes)) {
@@ -461,7 +932,7 @@ final class User_Manager_Core {
 			return;
 		}
 
-		$hidden_roles = $role_settings['hidden_roles'] ?? [];
+		$hidden_roles = self::get_effective_role_switch_hidden_roles($role_settings, $user_meta);
 		$allow_reset  = !empty($role_settings['allow_reset']);
 
 		$roles        = wp_roles()->get_names();
@@ -496,7 +967,21 @@ final class User_Manager_Core {
 		}
 		$current_roles_text = implode(', ', $current_label);
 
-		$has_default_roles = !empty($user_meta['default_roles']) && is_array($user_meta['default_roles']);
+		$default_roles     = self::get_user_role_switch_default_roles($user_meta);
+		$reset_roles       = [];
+		foreach ($default_roles as $default_role_key) {
+			if (!isset($roles[$default_role_key])) {
+				continue;
+			}
+			if (in_array($default_role_key, $hidden_roles, true)) {
+				continue;
+			}
+			if (!self::role_switch_user_can_select_role($default_role_key, $user_meta)) {
+				continue;
+			}
+			$reset_roles[] = $default_role_key;
+		}
+		$has_default_roles = !empty($reset_roles);
 		?>
 		<div id="um-role-switcher-bar" style="position:fixed;bottom:0;left:0;right:0;background:#1d2327;padding:10px 16px;box-shadow:0 -2px 4px rgba(0,0,0,0.2);z-index:999999;">
 			<form method="post" action="" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;max-width:1200px;margin:0 auto;">
@@ -567,21 +1052,39 @@ final class User_Manager_Core {
 		$roles       = wp_roles()->get_names();
 		$old_roles   = (array) $current_user->roles;
 		$old_label   = implode(', ', $old_roles);
+		$hidden_roles = self::get_effective_role_switch_hidden_roles($role_settings, $user_meta);
 
 		// Handle reset to default roles.
-		if (!empty($_POST['um_role_switch_reset']) && !empty($user_meta['default_roles']) && is_array($user_meta['default_roles'])) {
+		$default_roles = self::get_user_role_switch_default_roles($user_meta);
+		if (!empty($_POST['um_role_switch_reset']) && !empty($default_roles)) {
+			$reset_roles = [];
+			foreach ($default_roles as $role) {
+				if (!isset($roles[$role])) {
+					continue;
+				}
+				if (in_array($role, $hidden_roles, true)) {
+					continue;
+				}
+				if (!self::role_switch_user_can_select_role($role, $user_meta)) {
+					continue;
+				}
+				$reset_roles[] = $role;
+			}
+			if (empty($reset_roles)) {
+				return;
+			}
 			// Remove all current roles.
 			foreach ($current_user->roles as $role) {
 				$current_user->remove_role($role);
 			}
 			// Add back default roles.
-			foreach ($user_meta['default_roles'] as $role) {
+			foreach ($reset_roles as $role) {
 				if (isset($roles[$role])) {
 					$current_user->add_role($role);
 				}
 			}
 
-			self::add_role_switch_change('Role Reset', $old_label, implode(', ', (array) $user_meta['default_roles']), $current_user);
+			self::add_role_switch_change('Role Reset', $old_label, implode(', ', $reset_roles), $current_user);
 			return;
 		}
 
@@ -594,17 +1097,72 @@ final class User_Manager_Core {
 		if (!isset($roles[$new_role])) {
 			return;
 		}
-
-		// Permission checks.
-		if ($new_role === 'administrator' && empty($user_meta['admin'])) {
+		if (in_array($new_role, $hidden_roles, true)) {
 			return;
 		}
-		if ($new_role !== 'administrator' && empty($user_meta['active'])) {
+
+		// Permission checks.
+		if (!self::role_switch_user_can_select_role($new_role, $user_meta)) {
 			return;
 		}
 
 		$current_user->set_role($new_role);
 		self::add_role_switch_change('Role Change', $old_label, $new_role, $current_user);
+	}
+
+	/**
+	 * Normalize and dedupe role keys from mixed input.
+	 *
+	 * @param mixed $roles Raw role list.
+	 * @return array<int,string>
+	 */
+	private static function normalize_role_list($roles): array {
+		$roles = is_array($roles) ? $roles : [$roles];
+		$roles = array_map(static function ($role): string {
+			return sanitize_key((string) $role);
+		}, $roles);
+		$roles = array_values(array_unique(array_filter($roles)));
+		return $roles;
+	}
+
+	/**
+	 * Read user default role(s) with backward compatibility support.
+	 *
+	 * @param array<string,mixed> $user_meta Role switch user meta.
+	 * @return array<int,string>
+	 */
+	private static function get_user_role_switch_default_roles(array $user_meta): array {
+		$default_roles = self::normalize_role_list($user_meta['default_roles'] ?? []);
+		// Keep only first role because UI now supports a single default role.
+		if (count($default_roles) > 1) {
+			$default_roles = [reset($default_roles)];
+		}
+		return $default_roles;
+	}
+
+	/**
+	 * Combine global hidden roles with per-user hidden roles.
+	 *
+	 * @param array<string,mixed> $role_settings Global role-switch settings.
+	 * @param array<string,mixed> $user_meta User role-switch meta.
+	 * @return array<int,string>
+	 */
+	private static function get_effective_role_switch_hidden_roles(array $role_settings, array $user_meta): array {
+		$global_hidden_roles = self::normalize_role_list($role_settings['hidden_roles'] ?? []);
+		$user_hidden_roles = self::normalize_role_list($user_meta['hidden_roles'] ?? []);
+		return array_values(array_unique(array_merge($global_hidden_roles, $user_hidden_roles)));
+	}
+
+	/**
+	 * Check whether user permissions allow selecting a role.
+	 *
+	 * @param array<string,mixed> $user_meta User role-switch meta.
+	 */
+	private static function role_switch_user_can_select_role(string $role_key, array $user_meta): bool {
+		if ($role_key === 'administrator') {
+			return !empty($user_meta['admin']);
+		}
+		return !empty($user_meta['active']);
 	}
 
 	/**
@@ -730,8 +1288,12 @@ final class User_Manager_Core {
 	 * @param \WP_Post $post      Post object.
 	 */
 	public static function add_all_post_meta_meta_box(string $post_type, $post): void {
-		$post_types = get_post_types(['show_ui' => true], 'names');
-		if (!in_array($post_type, $post_types, true)) {
+		$settings = self::get_settings();
+		if (!self::can_current_user_access_post_meta_viewer($settings)) {
+			return;
+		}
+		$enabled_post_types = self::get_enabled_post_meta_post_types($settings);
+		if (!in_array($post_type, $enabled_post_types, true)) {
 			return;
 		}
 		add_meta_box(
@@ -775,6 +1337,7 @@ final class User_Manager_Core {
 			.um-all-post-meta-table .um-post-meta-new-sep { background: #f6f7f7; font-weight: 600; }
 			.um-all-post-meta-table .um-post-meta-new-sep td { border-top: 2px solid #c3c4c7; padding-top: 10px; }
 			.um-all-post-meta-table .um-post-meta-add-row td { border-top: 1px solid #c3c4c7; padding-top: 8px; }
+			.um-all-post-meta-table .um-post-meta-unchanged { opacity: 0.6; }
 		</style>
 		<table class="um-all-post-meta-table widefat striped">
 			<thead>
@@ -795,7 +1358,13 @@ final class User_Manager_Core {
 							<td>
 								<?php if ($can_edit) : ?>
 									<label for="um_pm_<?php echo esc_attr(sanitize_html_class($key)); ?>" class="screen-reader-text"><?php echo esc_html($key); ?></label>
-									<textarea name="um_post_meta_edit[<?php echo esc_attr($key); ?>]" id="um_pm_<?php echo esc_attr(sanitize_html_class($key)); ?>" rows="2"><?php echo esc_textarea($display_val); ?></textarea>
+									<textarea
+										name="um_post_meta_edit[<?php echo esc_attr($key); ?>]"
+										id="um_pm_<?php echo esc_attr(sanitize_html_class($key)); ?>"
+										rows="2"
+										data-um-original-value="<?php echo esc_attr($display_val); ?>"
+										class="um-post-meta-edit-field um-post-meta-unchanged"
+									><?php echo esc_textarea($display_val); ?></textarea>
 								<?php else : ?>
 									<pre style="margin:0; white-space: pre-wrap; word-break: break-word; font-size: 12px;"><?php echo esc_html($display_val); ?></pre>
 								<?php endif; ?>
@@ -831,11 +1400,13 @@ final class User_Manager_Core {
 		<?php if ($can_edit) : ?>
 			<?php wp_nonce_field('um_save_post_meta_meta_box', 'um_post_meta_meta_box_nonce'); ?>
 			<p class="description" style="margin-top: 8px;"><?php esc_html_e('Save the post to apply changes. Edit existing meta above or add new key/value pairs below.', 'user-manager'); ?></p>
+			<p class="description" style="margin-top: 4px;"><?php esc_html_e('Performance tip: only changed meta values are submitted to avoid oversized save requests on Products.', 'user-manager'); ?></p>
 			<script>
 			(function() {
 				var template = document.getElementById('um-post-meta-new-template');
 				var addRowTr = document.getElementById('um-post-meta-add-row-tr');
 				var btn = document.getElementById('um-post-meta-add-row');
+				var form = document.getElementById('post');
 				if (!template || !addRowTr || !btn) return;
 				btn.addEventListener('click', function() {
 					var clone = template.cloneNode(true);
@@ -844,6 +1415,35 @@ final class User_Manager_Core {
 					clone.querySelector('textarea').value = '';
 					addRowTr.parentNode.insertBefore(clone, addRowTr);
 				});
+				function syncChangedState(field) {
+					if (!field) { return; }
+					var original = field.getAttribute('data-um-original-value') || '';
+					if (field.value === original) {
+						field.classList.add('um-post-meta-unchanged');
+					} else {
+						field.classList.remove('um-post-meta-unchanged');
+					}
+				}
+				var fields = document.querySelectorAll('.um-post-meta-edit-field');
+				fields.forEach(function(field) {
+					syncChangedState(field);
+					field.addEventListener('input', function() {
+						syncChangedState(field);
+					});
+					field.addEventListener('change', function() {
+						syncChangedState(field);
+					});
+				});
+				if (form) {
+					form.addEventListener('submit', function() {
+						fields.forEach(function(field) {
+							var original = field.getAttribute('data-um-original-value') || '';
+							if (field.value === original) {
+								field.disabled = true;
+							}
+						});
+					});
+				}
 			})();
 			</script>
 		<?php endif;
@@ -859,6 +1459,16 @@ final class User_Manager_Core {
 		$settings = get_option(self::OPTION_KEY, []);
 		if (empty($settings['allow_edit_post_meta']) || empty($settings['display_post_meta_meta_box'])) {
 			return;
+		}
+		if (!self::can_current_user_access_post_meta_viewer(is_array($settings) ? $settings : [])) {
+			return;
+		}
+		$post_type = is_object($post) && isset($post->post_type) ? sanitize_key((string) $post->post_type) : '';
+		if ($post_type !== '') {
+			$enabled_post_types = self::get_enabled_post_meta_post_types(is_array($settings) ? $settings : []);
+			if (!in_array($post_type, $enabled_post_types, true)) {
+				return;
+			}
 		}
 		if (!isset($_POST['um_post_meta_meta_box_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['um_post_meta_meta_box_nonce'])), 'um_save_post_meta_meta_box')) {
 			return;
@@ -896,6 +1506,94 @@ final class User_Manager_Core {
 	}
 
 	/**
+	 * Get enabled post types for Post Meta Viewer.
+	 *
+	 * Default behavior: all UI post types are enabled when no explicit list is saved.
+	 *
+	 * @param array<string,mixed> $settings Settings array.
+	 * @return array<int,string>
+	 */
+	private static function get_enabled_post_meta_post_types(array $settings): array {
+		$post_types = get_post_types(['show_ui' => true], 'names');
+		if (!is_array($post_types)) {
+			return [];
+		}
+		$post_types = array_values(array_map('sanitize_key', $post_types));
+
+		$selected = [];
+		if (!empty($settings['display_post_meta_post_types']) && is_array($settings['display_post_meta_post_types'])) {
+			$selected = array_values(array_map('sanitize_key', $settings['display_post_meta_post_types']));
+			$selected = array_values(array_intersect($selected, $post_types));
+		}
+
+		return !empty($selected) ? $selected : $post_types;
+	}
+
+	/**
+	 * Whether current user can access the Post Meta Viewer.
+	 *
+	 * Access logic:
+	 * - No role/user restrictions configured => allow all users who can edit posts.
+	 * - If restrictions are configured => grant access when role OR username/email matches.
+	 *
+	 * @param array<string,mixed> $settings Settings array.
+	 */
+	private static function can_current_user_access_post_meta_viewer(array $settings): bool {
+		if (!is_user_logged_in()) {
+			return false;
+		}
+
+		$user = wp_get_current_user();
+		if (!$user instanceof WP_User || !$user->ID) {
+			return false;
+		}
+
+		$valid_roles = array_keys(self::get_user_roles());
+		$valid_roles = array_map('sanitize_key', $valid_roles);
+
+		$target_roles = [];
+		if (!empty($settings['display_post_meta_allowed_roles']) && is_array($settings['display_post_meta_allowed_roles'])) {
+			$target_roles = array_values(array_map('sanitize_key', $settings['display_post_meta_allowed_roles']));
+			$target_roles = array_values(array_intersect($target_roles, $valid_roles));
+		}
+
+		$target_users = [];
+		if (!empty($settings['display_post_meta_allowed_users'])) {
+			$raw_users = $settings['display_post_meta_allowed_users'];
+			if (!is_array($raw_users)) {
+				$raw_users = preg_split('/[\r\n,;]+/', (string) $raw_users);
+			}
+			if (is_array($raw_users)) {
+				foreach ($raw_users as $identifier) {
+					$identifier = trim(strtolower((string) $identifier));
+					if ($identifier === '') {
+						continue;
+					}
+					if (is_email($identifier)) {
+						$email = sanitize_email($identifier);
+						if ($email !== '') {
+							$target_users[] = strtolower($email);
+						}
+						continue;
+					}
+					$username = sanitize_user($identifier, false);
+					if ($username !== '') {
+						$target_users[] = strtolower($username);
+					}
+				}
+			}
+			$target_users = array_values(array_unique($target_users));
+		}
+
+		// No specific role/user restrictions: allow everyone who can edit this screen/post.
+		if (empty($target_roles) && empty($target_users)) {
+			return true;
+		}
+
+		return self::wp_admin_css_user_matches_targets($user, (array) $user->roles, $target_users, $target_roles);
+	}
+
+	/**
 	 * Render the email converter meta box content.
 	 */
 	public static function render_coupon_email_converter_meta_box($post): void {
@@ -925,9 +1623,15 @@ final class User_Manager_Core {
 			 * Helper: locate the "Allowed emails" field (textarea preferred).
 			 */
 			function getAllowedEmailField() {
-				var $field = $('textarea[name="customer_email"], textarea#customer_email');
+				var $field = $('#customer_email');
 				if ($field.length === 0) {
-					$field = $('input[name="customer_email"], #customer_email');
+					$field = $('[name="customer_email"]');
+				}
+				if ($field.length > 1) {
+					var $visible = $field.filter(':visible');
+					if ($visible.length) {
+						$field = $visible;
+					}
 				}
 				return $field.first();
 			}
@@ -935,11 +1639,18 @@ final class User_Manager_Core {
 			/**
 			 * Helper: parse a string of emails into a unique, normalized array.
 			 */
-			function parseEmails(str) {
-				var emails = (str || '').split(/[\n,;\s]+/);
+			function parseEmails(raw) {
+				var chunks = [];
+				if (Array.isArray(raw)) {
+					raw.forEach(function(item) {
+						chunks = chunks.concat(String(item || '').split(/[\n,;\s]+/));
+					});
+				} else {
+					chunks = String(raw || '').split(/[\n,;\s]+/);
+				}
 				var valid = [];
 				var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-				emails.forEach(function(email) {
+				chunks.forEach(function(email) {
 					email = (email || '').trim().toLowerCase();
 					if (email && emailRegex.test(email) && valid.indexOf(email) === -1) {
 						valid.push(email);
@@ -958,49 +1669,6 @@ final class User_Manager_Core {
 				}
 				return parseEmails($field.val());
 			}
-
-			/**
-			 * Upgrade a simple input "Allowed emails" field to a larger textarea for easier editing.
-			 * Avoid changing advanced select2 / wc-customer-search fields.
-			 */
-			(function upgradeAllowedEmailsField() {
-				var $input = $('input[name="customer_email"], input#customer_email').first();
-				if (!$input.length) {
-					return;
-				}
-				if ($input.hasClass('wc-customer-search') || $input.data('select2')) {
-					return;
-				}
-
-				var currentVal = $input.val();
-				var textareaId = $input.attr('id') || 'customer_email';
-
-				var $textarea = $('<textarea/>', {
-					id: textareaId,
-					name: 'customer_email',
-					rows: 5,
-					css: {
-						width: '100%',
-						minHeight: '120px',
-						fontFamily: 'monospace',
-						fontSize: '12px'
-					}
-				}).val(currentVal);
-
-				// On keyup, normalize any line-by-line emails into a comma-separated list
-				// by replacing line breaks with ", ".
-				$textarea.on('keyup', function() {
-					var val = $(this).val();
-					if (val.indexOf('\n') !== -1 || val.indexOf('\r') !== -1) {
-						val = val.replace(/\r\n|\r|\n/g, ', ');
-						$(this).val(val);
-					}
-				});
-
-				// Keep original hidden and rename so WooCommerce ignores it on save.
-				$input.attr('name', ($input.attr('name') || 'customer_email') + '_original').hide();
-				$input.after($textarea);
-			})();
 
 			/**
 			 * Update the stats line beneath the converter.
@@ -1069,19 +1737,8 @@ final class User_Manager_Core {
 					return;
 				}
 
-				// Respect select2 / wc-customer-search fields by adding options directly.
-				if ($field.hasClass('wc-customer-search') || $field.data('select2')) {
-					convertedEmails.forEach(function(email) {
-						var option = new Option(email, email, true, true);
-						$field.append(option);
-					});
-					$field.trigger('change');
-					alert('Emails applied! Make sure to save the coupon.');
-					return;
-				}
-
 				var current = parseEmails($field.val());
-				var merged;
+				var merged = [];
 
 				if (mode === 'replace') {
 					merged = convertedEmails.slice();
@@ -1101,7 +1758,20 @@ final class User_Manager_Core {
 					});
 				}
 
-				$field.val(merged.join(', '));
+				// Respect select2 / wc-customer-search fields without replacing
+				// WooCommerce's native field or search behavior.
+				if ($field.hasClass('wc-customer-search') || $field.data('select2')) {
+					merged.forEach(function(email) {
+						if ($field.find('option[value="' + email.replace(/"/g, '\\"') + '"]').length === 0) {
+							$field.append(new Option(email, email, false, false));
+						}
+					});
+					$field.val(merged).trigger('change');
+					alert('Emails applied! Make sure to save the coupon.');
+					return;
+				}
+
+				$field.val(merged.join(', ')).trigger('change');
 				alert('Emails applied! Make sure to save the coupon.');
 			}
 
@@ -1279,6 +1949,9 @@ final class User_Manager_Core {
 		$combined = implode("\n", $to_output);
 		$combined = str_replace(['</style>', '<script'], '', $combined);
 		echo '<style id="um-wp-admin-css">' . "\n" . $combined . "\n" . '</style>' . "\n";
+		if (is_admin_bar_showing()) {
+			echo '<style id="um-wp-admin-bar-color-safeguard">' . "\n" . self::get_wp_admin_bar_color_safeguard_css() . "\n" . '</style>' . "\n";
+		}
 		if ($hide_admin_chrome_applied) {
 			self::render_wp_admin_css_hide_admin_chrome_script();
 		}
@@ -1381,6 +2054,32 @@ html body #wpbody-content {
 
 html body .woocommerce-layout__header {
 	width: 100% !important;
+}
+';
+	}
+
+	/**
+	 * Keep admin bar link colors aligned with WordPress defaults.
+	 *
+	 * This prevents broad custom CSS rules (for example, global a{color:...})
+	 * from unintentionally changing wp-admin bar link colors.
+	 */
+	private static function get_wp_admin_bar_color_safeguard_css(): string {
+		return '
+#wpadminbar a.ab-item,
+#wpadminbar .ab-label,
+#wpadminbar .ab-sub-wrapper a,
+#wpadminbar .ab-sub-wrapper a .ab-label {
+	color: #f0f0f1 !important;
+}
+
+#wpadminbar a.ab-item:hover,
+#wpadminbar a.ab-item:focus,
+#wpadminbar .ab-sub-wrapper a:hover,
+#wpadminbar .ab-sub-wrapper a:focus,
+#wpadminbar .quicklinks .menupop ul li:hover > a,
+#wpadminbar .quicklinks .menupop ul li.hover > a {
+	color: #72aee6 !important;
 }
 ';
 	}
@@ -1492,6 +2191,9 @@ html body .woocommerce-layout__header {
 	 * @return bool
 	 */
 	private static function is_wp_admin_css_addon_enabled(array $settings): bool {
+		if (self::is_addon_temporarily_disabled('wp-admin-css')) {
+			return false;
+		}
 		if (array_key_exists('wp_admin_css_enabled', $settings)) {
 			return !empty($settings['wp_admin_css_enabled']);
 		}
@@ -1517,13 +2219,22 @@ html body .woocommerce-layout__header {
 		if (!current_user_can('manage_options')) {
 			return;
 		}
+		$settings = self::get_settings();
+		if (empty($settings['show_user_manager_admin_bar_link'])) {
+			return;
+		}
+		$plugin_title = self::get_plugin_title_display_text();
 		$wp_admin_bar->add_node([
 			'id'     => 'user-manager-settings',
-			'title'  => __('User Experience Manager', 'user-manager'),
+			'title'  => $plugin_title,
 			'href'   => self::get_page_url(self::TAB_ADDONS),
 			'parent' => 'top-secondary',
 			'meta'   => [
-				'title' => __('User Experience Manager Add-ons', 'user-manager'),
+				'title' => sprintf(
+					/* translators: %s: plugin title */
+					__('%s Add-ons', 'user-manager'),
+					$plugin_title
+				),
 			],
 		]);
 	}
@@ -1614,6 +2325,9 @@ html body .woocommerce-layout__header {
 	 * @return bool
 	 */
 	private static function is_admin_bar_menu_items_addon_enabled(array $settings): bool {
+		if (self::is_addon_temporarily_disabled('wp-admin-bar-menu-items')) {
+			return false;
+		}
 		if (array_key_exists('admin_bar_menu_items_enabled', $settings)) {
 			return !empty($settings['admin_bar_menu_items_enabled']);
 		}
@@ -1641,46 +2355,75 @@ html body .woocommerce-layout__header {
 			return;
 		}
 
+		$settings = self::get_settings();
 		// Build one search field per active post type (show_ui => true) on this site.
 		$post_types     = get_post_types(['show_ui' => true], 'objects');
+		$post_types     = is_array($post_types) ? $post_types : [];
 		$excluded_types = ['attachment']; // Media is handled via its own screen.
+		$priority_post_types = [];
+		if (!empty($settings['um_quick_search_priority_post_types']) && is_array($settings['um_quick_search_priority_post_types'])) {
+			$priority_post_types = array_values(array_unique(array_map('sanitize_key', $settings['um_quick_search_priority_post_types'])));
+		}
+		$priority_rank = array_flip($priority_post_types);
 
-		$search_items = [];
-
-		// Always include a Users search first so it appears before post type fields.
-		$search_items[] = [
+		// Always include a Users search first.
+		$users_item = [
 			'label'       => __('Users', 'user-manager'),
 			'type'        => 'users',
 			'post_type'   => '',
 			'placeholder' => __('Users', 'user-manager'),
 		];
-
+		$post_type_items = [];
 		foreach ($post_types as $post_type) {
-			if (in_array($post_type->name, $excluded_types, true)) {
+			if (!is_object($post_type) || empty($post_type->name)) {
+				continue;
+			}
+			$post_type_slug = sanitize_key((string) $post_type->name);
+			if ($post_type_slug === '' || in_array($post_type_slug, $excluded_types, true)) {
 				continue;
 			}
 
-			$label = $post_type->labels->name;
+			$label = isset($post_type->labels->name) ? (string) $post_type->labels->name : $post_type_slug;
 
 			// Provide friendlier labels for some common core / WooCommerce types.
-			if ($post_type->name === 'shop_order') {
-				$label = 'Orders';
-			} elseif ($post_type->name === 'product') {
-				$label = 'Products';
+			if ($post_type_slug === 'shop_order') {
+				$label = __('Orders', 'user-manager');
+			} elseif ($post_type_slug === 'product') {
+				$label = __('Products', 'user-manager');
 			}
 
-			$search_items[] = [
+			$item = [
 				'label'       => $label,
 				'type'        => 'post_type',
-				'post_type'   => $post_type->name,
+				'post_type'   => $post_type_slug,
 				'placeholder' => $label,
+				'_sort_group' => array_key_exists($post_type_slug, $priority_rank) ? 0 : 1,
+				'_sort_rank'  => array_key_exists($post_type_slug, $priority_rank) ? (int) $priority_rank[$post_type_slug] : PHP_INT_MAX,
 			];
+			$post_type_items[] = $item;
 		}
-
-		// Sort all items alphabetically by label so the grid reflects the active post types cleanly.
-		usort($search_items, static function ($a, $b) {
-			return strcasecmp($a['label'], $b['label']);
+		usort($post_type_items, static function ($a, $b) use ($priority_rank) {
+			$a_group = isset($a['_sort_group']) ? (int) $a['_sort_group'] : 1;
+			$b_group = isset($b['_sort_group']) ? (int) $b['_sort_group'] : 1;
+			if ($a_group !== $b_group) {
+				return $a_group <=> $b_group;
+			}
+			if ($a_group === 0) {
+				$a_rank = isset($a['_sort_rank']) ? (int) $a['_sort_rank'] : PHP_INT_MAX;
+				$b_rank = isset($b['_sort_rank']) ? (int) $b['_sort_rank'] : PHP_INT_MAX;
+				if ($a_rank !== $b_rank) {
+					return $a_rank <=> $b_rank;
+				}
+			}
+			return strcasecmp((string) ($a['label'] ?? ''), (string) ($b['label'] ?? ''));
 		});
+
+		foreach ($post_type_items as &$post_type_item) {
+			unset($post_type_item['_sort_group'], $post_type_item['_sort_rank']);
+		}
+		unset($post_type_item);
+
+		$search_items = array_merge([$users_item], $post_type_items);
 
 		?>
 		<div id="um-admin-search-dropdown" style="display: none; position: fixed; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 999999; min-width: 320px; max-width: 400px; max-height: 80vh; overflow-y: auto;">
@@ -1709,9 +2452,6 @@ html body .woocommerce-layout__header {
 		<style>
 			#wpadminbar #wp-admin-bar-um-admin-search {
 				cursor: pointer;
-			}
-			#wpadminbar #wp-admin-bar-um-admin-search:hover .ab-icon {
-				color: #2271b1;
 			}
 			#wp-admin-bar-um-admin-search .ab-icon {
 				display: inline-block;
@@ -2009,7 +2749,15 @@ html body .woocommerce-layout__header {
 		]);
 
 		if (!is_wp_error($terms) && count($terms) === 1) {
-			$term_id = (int) $terms[0];
+			$first_term = $terms[0];
+			if ($first_term instanceof WP_Term) {
+				$term_id = absint($first_term->term_id);
+			} else {
+				$term_id = absint($first_term);
+			}
+			if ($term_id <= 0) {
+				return;
+			}
 			$url     = add_query_arg(
 				[
 					'action'   => 'edit',
@@ -2109,10 +2857,13 @@ html body .woocommerce-layout__header {
 		$identifier_column = isset($options['identifier_column']) ? (string) $options['identifier_column'] : 'product_id';
 		$identifier_type   = isset($options['identifier_type']) ? (string) $options['identifier_type'] : 'product_id';
 		$product_id_column = self::bulk_add_to_cart_get_product_id_column_header($options);
+		$product_id_column_header = $product_id_column;
 		$sku_column        = self::bulk_add_to_cart_get_sku_column_header($options);
 		$quantity_column   = isset($options['quantity_column']) ? (string) $options['quantity_column'] : 'quantity';
 		$hide_product_id_column = isset($options['hide_product_id_column']) && (string) $options['hide_product_id_column'] === '1';
 		$hide_sku_column = isset($options['hide_sku_column']) && (string) $options['hide_sku_column'] === '1';
+		$show_sample_csv = !array_key_exists('show_sample_csv', $options) || (string) ($options['show_sample_csv'] ?? '1') === '1';
+		$show_sample_with_data = !array_key_exists('show_sample_with_product_data', $options) || (string) ($options['show_sample_with_product_data'] ?? '1') === '1';
 		$force_debug       = self::is_bulk_add_to_cart_debug_requested();
 		$debug_enabled     = (isset($options['debug_mode']) && (string) $options['debug_mode'] === '1') || $force_debug;
 		$sample_csv_url    = add_query_arg('um_bulk_add_to_cart_sample', '1', remove_query_arg(['um_bulk_add_to_cart_sample', 'um_bulk_add_to_cart_sample_data']));
@@ -3018,7 +3769,7 @@ html body .woocommerce-layout__header {
 		if ($quantity_column === '') {
 			$quantity_column = 'quantity';
 		}
-		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column_header);
+		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column);
 
 		$headers = self::bulk_add_to_cart_build_sample_csv_headers($options, $identifier_column, $product_id_column, $sku_column, $quantity_column);
 
@@ -3094,7 +3845,9 @@ html body .woocommerce-layout__header {
 		if ($quantity_column === '') {
 			$quantity_column = 'quantity';
 		}
-		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column_header);
+		$include_identifier_column = self::bulk_add_to_cart_should_include_identifier_column($identifier_column, $product_id_column);
+		$include_private_products = isset($options['sample_with_data_include_private_products']) && (string) $options['sample_with_data_include_private_products'] === '1';
+		$include_draft_products   = isset($options['sample_with_data_include_draft_products']) && (string) $options['sample_with_data_include_draft_products'] === '1';
 		$post_statuses = ['publish'];
 		if ($include_private_products) {
 			$post_statuses[] = 'private';
@@ -4271,11 +5024,11 @@ html body .woocommerce-layout__header {
 	 * Send coupon email using a User Manager email template to a specific user.
 	 */
 	public static function send_coupon_email_to_user(WP_User $user, string $coupon_code, string $template_id): void {
-		$templates = self::get_email_templates();
-		$template = $templates[$template_id] ?? null;
-		if (!$template) {
+		$template = self::resolve_coupon_email_template($template_id);
+		if (!$template || empty($user->user_email) || !is_email($user->user_email)) {
 			return;
 		}
+		$coupon_code_value = self::format_coupon_code_value_for_placeholder($coupon_code);
 		$replacements = [
 			'%SITEURL%' => home_url(),
 			'%LOGINURL%' => '/my-account/',
@@ -4286,6 +5039,8 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%' => $user->last_name,
 			'%PASSWORDRESETURL%' => home_url('/my-account/lost-password/'),
 			'%COUPONCODE%' => $coupon_code,
+			'%COUPONCODEVALUE%' => $coupon_code_value,
+			'[coupon_code]' => $coupon_code,
 		];
 		$subject = str_replace(array_keys($replacements), array_values($replacements), $template['subject'] ?? 'Your Coupon');
 		$heading = str_replace(array_keys($replacements), array_values($replacements), $template['heading'] ?? 'Your Coupon Code');
@@ -4303,18 +5058,18 @@ html body .woocommerce-layout__header {
 	 * Supports %COUPONCODE% and the common placeholders used in templates.
 	 */
 	public static function send_coupon_email_to_address(string $email, string $coupon_code, string $template_id): void {
-		if (!is_email($email) || $template_id === '') {
+		if (!is_email($email)) {
 			return;
 		}
 
-		$templates = self::get_email_templates();
-		$template  = $templates[$template_id] ?? null;
+		$template  = self::resolve_coupon_email_template($template_id);
 		if (!$template) {
 			return;
 		}
 
 		$login_url = '/my-account/';
 		$username  = strstr($email, '@', true) ?: $email;
+		$coupon_code_value = self::format_coupon_code_value_for_placeholder($coupon_code);
 
 		$replacements = [
 			'%SITEURL%'         => home_url(),
@@ -4326,6 +5081,8 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%'        => '',
 			'%PASSWORDRESETURL%' => home_url('/my-account/lost-password/'),
 			'%COUPONCODE%'      => $coupon_code,
+			'%COUPONCODEVALUE%' => $coupon_code_value,
+			'[coupon_code]'     => $coupon_code,
 		];
 
 		$subject = str_replace(array_keys($replacements), array_values($replacements), $template['subject'] ?? __('Your Coupon', 'user-manager'));
@@ -4335,6 +5092,48 @@ html body .woocommerce-layout__header {
 		$email_html = User_Manager_Email::get_preview_html($body, $heading);
 		$headers = User_Manager_Email::build_email_headers();
 		wp_mail($email, $subject, $email_html, $headers);
+	}
+
+	/**
+	 * Resolve coupon email template, with support for default template fallback.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private static function resolve_coupon_email_template(string $template_id): ?array {
+		if ($template_id === '__um_default__') {
+			return [
+				'title' => __('Default Template', 'user-manager'),
+				'subject' => __('Your Remaining Balance Coupon Code', 'user-manager'),
+				'heading' => __('Your Remaining Balance Coupon Code', 'user-manager'),
+				'body' => '<p>' . __('Your new remaining balance code is:', 'user-manager') . ' <strong>[coupon_code]</strong></p>',
+			];
+		}
+		if ($template_id === '') {
+			return null;
+		}
+		$templates = self::get_email_templates();
+		$template = $templates[$template_id] ?? null;
+		return is_array($template) ? $template : null;
+	}
+
+	/**
+	 * Format coupon amount for %COUPONCODEVALUE% placeholder.
+	 */
+	private static function format_coupon_code_value_for_placeholder(string $coupon_code): string {
+		$coupon_code = trim($coupon_code);
+		if ($coupon_code === '' || !class_exists('WC_Coupon')) {
+			return '';
+		}
+		try {
+			$coupon = new WC_Coupon($coupon_code);
+			if (!$coupon || !$coupon->get_id()) {
+				return '';
+			}
+			$amount = (float) $coupon->get_amount();
+			return function_exists('wc_price') ? (string) wc_price($amount) : (string) $amount;
+		} catch (\Throwable $throwable) {
+			return '';
+		}
 	}
 	
 	/**
@@ -4723,6 +5522,46 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
+	 * Whether the Coupon Remaining Balances add-on is active and allowed to run.
+	 */
+	private static function is_coupon_remainder_feature_enabled(?array $settings = null): bool {
+		if ($settings === null) {
+			$settings = self::get_settings();
+		}
+		return !empty($settings['coupon_remainder_enabled']) && !self::is_addon_temporarily_disabled('coupon-remaining-balances');
+	}
+
+	/**
+	 * Queue remainder generation off checkout requests to avoid
+	 * interfering with payment gateway order-processing responses.
+	 */
+	public static function queue_coupon_remainder_generation($order_id): void {
+		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
+		$order_id = absint($order_id);
+		if ($order_id <= 0) {
+			return;
+		}
+
+		$is_checkout_request = function_exists('is_checkout') && is_checkout();
+		$is_wc_checkout_ajax = wp_doing_ajax()
+			&& isset($_REQUEST['wc-ajax'])
+			&& in_array(sanitize_key((string) wp_unslash($_REQUEST['wc-ajax'])), ['checkout', 'update_order_review'], true);
+
+		$hook = 'user_manager_process_coupon_remainder_async';
+		if ($is_checkout_request || $is_wc_checkout_ajax) {
+			if (!wp_next_scheduled($hook, [$order_id])) {
+				wp_schedule_single_event(time() + 15, $hook, [$order_id]);
+			}
+			return;
+		}
+
+		self::maybe_generate_fixed_cart_coupon_remainders($order_id);
+	}
+
+	/**
 	 * Determine if the user has completed at least one WooCommerce order.
 	 */
 	private static function user_has_completed_first_order(int $user_id): bool {
@@ -4741,153 +5580,188 @@ html body .woocommerce-layout__header {
 	 * Create fixed cart remainder coupons after checkout when enabled.
 	 */
 	public static function maybe_generate_fixed_cart_coupon_remainders($order_id): void {
+		$order_id = absint($order_id);
+		if ($order_id <= 0) {
+			return;
+		}
 		$settings = self::get_settings();
-		if (empty($settings['coupon_remainder_enabled'])) {
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
 			return;
 		}
 		if (!function_exists('wc_get_order')) {
 			return;
 		}
-		$order = wc_get_order($order_id);
-		if (!$order || !method_exists($order, 'get_coupon_codes')) {
-			return;
+		$lock_key = '_um_coupon_remainder_processing_lock';
+		$lock_acquired = false;
+		if (add_post_meta($order_id, $lock_key, time(), true)) {
+			$lock_acquired = true;
+		} else {
+			$existing_lock = (int) get_post_meta($order_id, $lock_key, true);
+			// Stale lock recovery (e.g., interrupted request/crash).
+			if ($existing_lock > 0 && (time() - $existing_lock) < 300) {
+				return;
+			}
+			update_post_meta($order_id, $lock_key, time());
+			$lock_acquired = true;
 		}
-		$codes = $order->get_coupon_codes();
-		if (empty($codes)) {
-			return;
-		}
-
-		$processed = get_post_meta($order_id, '_um_coupon_remainder_processed', true);
-		if (!is_array($processed)) {
-			$processed = [];
-		}
-
-		$min_remaining = isset($settings['coupon_remainder_min_amount']) ? max(0, (float) $settings['coupon_remainder_min_amount']) : 0;
-		$generated_prefix = isset($settings['coupon_remainder_generated_prefix']) && $settings['coupon_remainder_generated_prefix'] !== ''
-			? trim((string) $settings['coupon_remainder_generated_prefix'])
-			: 'remaining-balance-';
-
-		// Always use billing email from the order, never fall back to logged-in user email
-		$user_email = $order->get_billing_email();
-		if (empty($user_email)) {
-			// Only use billing email meta as a last resort if get_billing_email() returns empty
-			$user_email = $order->get_meta('_billing_email');
-		}
-
-		$processed_updated = false;
-		$should_debug = !empty($settings['coupon_remainder_debug']) && current_user_can('manage_options');
-		$debug_messages = [];
-
-		foreach ($codes as $code) {
-			$code_key = strtolower($code);
-			if (!empty($processed[$code_key])) {
-				continue;
+		try {
+			$order = wc_get_order($order_id);
+			if (!$order || !method_exists($order, 'get_coupon_codes')) {
+				return;
+			}
+			$codes = $order->get_coupon_codes();
+			if (empty($codes)) {
+				return;
 			}
 
-			$coupon = new WC_Coupon($code);
-			if (!$coupon || $coupon->get_discount_type() !== 'fixed_cart') {
-				continue;
+			$processed = get_post_meta($order_id, '_um_coupon_remainder_processed', true);
+			if (!is_array($processed)) {
+				$processed = [];
 			}
 
-			// Check if coupon code matches source requirements (prefix, contains, suffix)
-			if (!self::coupon_code_matches_source_requirements($code, $settings)) {
-				continue;
+			$min_remaining = isset($settings['coupon_remainder_min_amount']) ? max(0, (float) $settings['coupon_remainder_min_amount']) : 0;
+			$generated_prefix = isset($settings['coupon_remainder_generated_prefix']) && $settings['coupon_remainder_generated_prefix'] !== ''
+				? trim((string) $settings['coupon_remainder_generated_prefix'])
+				: 'remaining-balance-';
+
+			// Always use billing email from the order, never fall back to logged-in user email
+			$user_email = $order->get_billing_email();
+			if (empty($user_email)) {
+				// Only use billing email meta as a last resort if get_billing_email() returns empty
+				$user_email = $order->get_meta('_billing_email');
 			}
 
-			// Calculate remaining amount and get discount details
-			$discount_details = self::get_coupon_discount_details($order, $code);
-			$remaining = self::calculate_coupon_remaining_amount($order, $coupon, $code);
-			if ($remaining <= 0 || $remaining < $min_remaining) {
-				continue;
-			}
+			$processed_updated = false;
+			$should_debug = !empty($settings['coupon_remainder_debug']) && current_user_can('manage_options');
+			$debug_messages = [];
 
-			$new_code = self::create_remainder_coupon_from_source($coupon, $order, $remaining, $generated_prefix, $user_email);
-			if (!$new_code) {
-				continue;
-			}
+			foreach ($codes as $code) {
+				$code_key = strtolower($code);
+				if (!empty($processed[$code_key])) {
+					continue;
+				}
 
-			$processed[$code_key] = $new_code;
-			$processed_updated = true;
+				$coupon = new WC_Coupon($code);
+				if (!$coupon || $coupon->get_discount_type() !== 'fixed_cart') {
+					continue;
+				}
 
-			// Create detailed private order note
-			$original_amount = (float) $coupon->get_amount();
-			$discount_used = $discount_details['discount'];
-			// Only use discount amount, not discount tax (matches how WooCommerce calculates cart totals)
-			
-			$note = sprintf(
-				/* translators: 1: new coupon code, 2: remaining value */
-				__("New Remaining Balance Coupon Code Created: %1\$s with value %2\$s\n\n", 'user-manager'),
-				strtoupper($new_code),
-				wc_price($remaining)
-			);
-			
-			$note .= __('Here is how the remaining balance was calculated:', 'user-manager') . "\n";
-			$note .= sprintf(
-				/* translators: 1: original amount */
-				__('Original Coupon Amount: %s', 'user-manager'),
-				wc_price($original_amount)
-			) . "\n";
-			$note .= sprintf(
-				/* translators: 1: discount amount */
-				__('Discount Applied: %s', 'user-manager'),
-				wc_price($discount_used)
-			) . "\n";
-			$note .= sprintf(
-				/* translators: 1: calculation formula, 2: remaining amount */
-				__('Calculation: %1$s - %2$s = %3$s', 'user-manager'),
-				wc_price($original_amount),
-				wc_price($discount_used),
-				wc_price($remaining)
-			);
-			
-			// Add as private note (second parameter false = private, true = customer-facing)
-			$order->add_order_note($note, false);
+				// Check if coupon code matches source requirements (prefix, contains, suffix)
+				if (!self::coupon_code_matches_source_requirements($code, $settings)) {
+					continue;
+				}
 
-			$user_id = $order->get_user_id() ? (int) $order->get_user_id() : 0;
-			self::add_activity_log('coupon_remainder_created', $user_id, 'Coupons', [
-				'order_id' => (int) $order->get_id(),
-				'source_coupon' => $code,
-				'new_coupon' => $new_code,
-				'remaining' => $remaining,
-			]);
+				// Calculate remaining amount and get discount details
+				$discount_details = self::get_coupon_discount_details($order, $code);
+				$remaining = self::calculate_coupon_remaining_amount($order, $coupon, $code);
+				if ($remaining <= 0 || $remaining < $min_remaining) {
+					continue;
+				}
 
-			if ($should_debug) {
-				$debug_messages[] = sprintf(
-					/* translators: 1: old code, 2: new code, 3: amount */
-					__('Converted %1$s to %2$s with %3$s remaining.', 'user-manager'),
-					strtoupper($code),
-					$new_code,
+				$new_code = self::create_remainder_coupon_from_source($coupon, $order, $remaining, $generated_prefix, $user_email);
+				if (!$new_code) {
+					continue;
+				}
+
+				if (!empty($settings['coupon_remainder_send_email']) && !empty($user_email) && is_email($user_email)) {
+					$template_id = isset($settings['coupon_remainder_email_template']) ? (string) $settings['coupon_remainder_email_template'] : '__um_default__';
+					self::send_coupon_email_to_address((string) $user_email, (string) $new_code, $template_id);
+				}
+
+				$processed[$code_key] = $new_code;
+				$processed_updated = true;
+
+				// Create detailed private order note
+				$original_amount = (float) $coupon->get_amount();
+				$discount_used = $discount_details['discount'];
+				// Only use discount amount, not discount tax (matches how WooCommerce calculates cart totals)
+				
+				$note = sprintf(
+					/* translators: 1: new coupon code, 2: remaining value */
+					__("New Remaining Balance Coupon Code Created: %1\$s with value %2\$s\n\n", 'user-manager'),
+					strtoupper($new_code),
 					wc_price($remaining)
 				);
-			}
-		}
+				
+				$note .= __('Here is how the remaining balance was calculated:', 'user-manager') . "\n";
+				$note .= sprintf(
+					/* translators: 1: original amount */
+					__('Original Coupon Amount: %s', 'user-manager'),
+					wc_price($original_amount)
+				) . "\n";
+				$note .= sprintf(
+					/* translators: 1: discount amount */
+					__('Discount Applied: %s', 'user-manager'),
+					wc_price($discount_used)
+				) . "\n";
+				$note .= sprintf(
+					/* translators: 1: calculation formula, 2: remaining amount */
+					__('Calculation: %1$s - %2$s = %3$s', 'user-manager'),
+					wc_price($original_amount),
+					wc_price($discount_used),
+					wc_price($remaining)
+				);
+				
+				// Add as private note (second parameter false = private, true = customer-facing)
+				$order->add_order_note($note, false);
 
-		if ($processed_updated) {
-			update_post_meta($order_id, '_um_coupon_remainder_processed', $processed);
-			// Record in User Activity (Login History tab) so the user has a visible record when a remaining balance code was created for them.
-			$activity_user_id = $order->get_user_id() ? (int) $order->get_user_id() : 0;
-			if ($activity_user_id <= 0 && !empty($user_email)) {
-				$user_by_email = get_user_by('email', $user_email);
-				if ($user_by_email) {
-					$activity_user_id = (int) $user_by_email->ID;
+				$user_id = $order->get_user_id() ? (int) $order->get_user_id() : 0;
+				self::add_activity_log('coupon_remainder_created', $user_id, 'Coupons', [
+					'order_id' => (int) $order->get_id(),
+					'source_coupon' => $code,
+					'new_coupon' => $new_code,
+					'remaining' => $remaining,
+				]);
+
+				if ($should_debug) {
+					$debug_messages[] = sprintf(
+						/* translators: 1: old code, 2: new code, 3: amount */
+						__('Converted %1$s to %2$s with %3$s remaining.', 'user-manager'),
+						strtoupper($code),
+						$new_code,
+						wc_price($remaining)
+					);
 				}
 			}
-			if ($activity_user_id > 0) {
-				$order_received_url = '';
-				if (function_exists('wc_get_checkout_url')) {
-					$order_received_url = wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url());
-					if (method_exists($order, 'get_order_key')) {
-						$order_received_url = add_query_arg('key', $order->get_order_key(), $order_received_url);
+
+			if ($processed_updated) {
+				update_post_meta($order_id, '_um_coupon_remainder_processed', $processed);
+				// Record in User Activity (Login History tab) so the user has a visible record when a remaining balance code was created for them.
+				$activity_user_id = $order->get_user_id() ? (int) $order->get_user_id() : 0;
+				if ($activity_user_id <= 0 && !empty($user_email)) {
+					$user_by_email = get_user_by('email', $user_email);
+					if ($user_by_email) {
+						$activity_user_id = (int) $user_by_email->ID;
 					}
 				}
-				self::add_user_activity($activity_user_id, __('Remaining balance code created', 'user-manager'), $order_received_url);
+				if ($activity_user_id > 0) {
+					$order_received_url = '';
+					if (function_exists('wc_get_checkout_url')) {
+						$order_received_url = wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url());
+						if (method_exists($order, 'get_order_key')) {
+							$order_received_url = add_query_arg('key', $order->get_order_key(), $order_received_url);
+						}
+					}
+					self::add_user_activity($activity_user_id, __('Remaining balance code created', 'user-manager'), $order_received_url);
+				}
+			} elseif ($should_debug) {
+				$debug_messages[] = __('No remainder coupons were created for this order.', 'user-manager');
 			}
-		} elseif ($should_debug) {
-			$debug_messages[] = __('No remainder coupons were created for this order.', 'user-manager');
-		}
 
-		if ($should_debug) {
-			self::$coupon_remainder_debug_messages[(int) $order_id] = $debug_messages;
+			if ($should_debug) {
+				self::$coupon_remainder_debug_messages[(int) $order_id] = $debug_messages;
+			}
+		} catch (\Throwable $throwable) {
+			self::maybe_debug_log('Coupon remainder processing failed', [
+				'order_id' => (int) $order_id,
+				'message' => $throwable->getMessage(),
+				'file' => $throwable->getFile(),
+				'line' => $throwable->getLine(),
+			]);
+		} finally {
+			if ($lock_acquired) {
+				delete_post_meta($order_id, $lock_key);
+			}
 		}
 	}
 
@@ -5256,6 +6130,9 @@ html body .woocommerce-layout__header {
 	}
 
 	public static function handle_coupon_remainder_thankyou($order_id): void {
+		if (!self::is_coupon_remainder_feature_enabled()) {
+			return;
+		}
 		$order = wc_get_order($order_id);
 		if (!$order) {
 			return;
@@ -5273,6 +6150,9 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		if (empty($settings['coupon_remainder_debug']) || !current_user_can('manage_options')) {
 			return;
 		}
@@ -5300,6 +6180,9 @@ html body .woocommerce-layout__header {
 		}
 		
 		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		if (empty($settings['coupon_remainder_checkout_debug']) || !is_user_logged_in()) {
 			return;
 		}
@@ -5435,6 +6318,10 @@ html body .woocommerce-layout__header {
 	 * Shows all applied coupons and remaining balance calculations.
 	 */
 	public static function render_public_coupon_debug_output(): void {
+		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		// Check for URL parameter
 		if (!isset($_GET['debug_coupons']) || $_GET['debug_coupons'] !== '1') {
 			return;
@@ -5456,7 +6343,6 @@ html body .woocommerce-layout__header {
 
 		$cart = WC()->cart;
 		$applied_coupons = $cart->get_applied_coupons();
-		$settings = self::get_settings();
 		$min_remaining = isset($settings['coupon_remainder_min_amount']) ? max(0, (float) $settings['coupon_remainder_min_amount']) : 0;
 		$generated_prefix = isset($settings['coupon_remainder_generated_prefix']) && $settings['coupon_remainder_generated_prefix'] !== ''
 			? trim((string) $settings['coupon_remainder_generated_prefix'])
@@ -5878,6 +6764,9 @@ html body .woocommerce-layout__header {
 		}
 		
 		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		if (empty($settings['coupon_remainder_checkout_notice'])) {
 			return;
 		}
@@ -5945,17 +6834,17 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		
-		// Format the remaining amount as plain text (no HTML classes)
-		$formatted_remaining = $currency_symbol . number_format($total_remaining, 2, '.', '');
+		// Format amounts; hide long currency labels (e.g. "Points") in checkout notices.
+		$formatted_remaining = self::format_checkout_remainder_amount($total_remaining, $currency_symbol);
 		
 		// Build calculation text
 		$calculation_text = '';
 		if (count($calculations) === 1) {
 			// Single coupon
 			$calc = $calculations[0];
-			$formatted_original = $currency_symbol . number_format($calc['original'], 2, '.', '');
-			$formatted_discount = $currency_symbol . number_format($calc['discount'], 2, '.', '');
-			$formatted_remaining_single = $currency_symbol . number_format($calc['remaining'], 2, '.', '');
+			$formatted_original = self::format_checkout_remainder_amount((float) $calc['original'], $currency_symbol);
+			$formatted_discount = self::format_checkout_remainder_amount((float) $calc['discount'], $currency_symbol);
+			$formatted_remaining_single = self::format_checkout_remainder_amount((float) $calc['remaining'], $currency_symbol);
 			$calculation_text = sprintf(
 				/* translators: 1: original amount, 2: discount used, 3: remaining amount */
 				esc_html__('%1$s (Original) - %2$s (Discount Applied) = %3$s (Remaining)', 'user-manager'),
@@ -5971,8 +6860,8 @@ html body .woocommerce-layout__header {
 				$total_original += $calc['original'];
 				$total_discount += $calc['discount'];
 			}
-			$formatted_original = $currency_symbol . number_format($total_original, 2, '.', '');
-			$formatted_discount = $currency_symbol . number_format($total_discount, 2, '.', '');
+			$formatted_original = self::format_checkout_remainder_amount($total_original, $currency_symbol);
+			$formatted_discount = self::format_checkout_remainder_amount($total_discount, $currency_symbol);
 			$calculation_text = sprintf(
 				/* translators: 1: total original amount, 2: total discount used, 3: total remaining amount */
 				esc_html__('%1$s (Total Original) - %2$s (Total Discount Applied) = %3$s (Total Remaining)', 'user-manager'),
@@ -6005,6 +6894,9 @@ html body .woocommerce-layout__header {
 	 * Detect WooCommerce checkout block for remaining balance notice injection.
 	 */
 	public static function maybe_detect_checkout_block(string $content, array $block): string {
+		if (!self::is_coupon_remainder_feature_enabled()) {
+			return $content;
+		}
 		if (empty($block['blockName']) || is_admin()) {
 			return $content;
 		}
@@ -6018,6 +6910,10 @@ html body .woocommerce-layout__header {
 	 * Inject remaining balance notice into block checkout.
 	 */
 	public static function inject_checkout_remaining_balance_notice(): void {
+		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		// Bail early if WooCommerce's checkout helpers aren't available
 		if (!function_exists('is_checkout') || !is_checkout()) {
 			return;
@@ -6027,7 +6923,6 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		
-		$settings = self::get_settings();
 		if (empty($settings['coupon_remainder_checkout_notice_block'])) {
 			return;
 		}
@@ -6091,17 +6986,17 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		
-		// Format the remaining amount as plain text (no HTML classes)
-		$formatted_remaining = $currency_symbol . number_format($total_remaining, 2, '.', '');
+		// Format amounts; hide long currency labels (e.g. "Points") in checkout notices.
+		$formatted_remaining = self::format_checkout_remainder_amount($total_remaining, $currency_symbol);
 		
 		// Build calculation text
 		$calculation_text = '';
 		if (count($calculations) === 1) {
 			// Single coupon
 			$calc = $calculations[0];
-			$formatted_original = $currency_symbol . number_format($calc['original'], 2, '.', '');
-			$formatted_discount = $currency_symbol . number_format($calc['discount'], 2, '.', '');
-			$formatted_remaining_single = $currency_symbol . number_format($calc['remaining'], 2, '.', '');
+			$formatted_original = self::format_checkout_remainder_amount((float) $calc['original'], $currency_symbol);
+			$formatted_discount = self::format_checkout_remainder_amount((float) $calc['discount'], $currency_symbol);
+			$formatted_remaining_single = self::format_checkout_remainder_amount((float) $calc['remaining'], $currency_symbol);
 			$calculation_text = sprintf(
 				/* translators: 1: original amount, 2: discount used, 3: remaining amount */
 				esc_html__('%1$s (Original) - %2$s (Discount Applied) = %3$s (Remaining)', 'user-manager'),
@@ -6117,8 +7012,8 @@ html body .woocommerce-layout__header {
 				$total_original += $calc['original'];
 				$total_discount += $calc['discount'];
 			}
-			$formatted_original = $currency_symbol . number_format($total_original, 2, '.', '');
-			$formatted_discount = $currency_symbol . number_format($total_discount, 2, '.', '');
+			$formatted_original = self::format_checkout_remainder_amount($total_original, $currency_symbol);
+			$formatted_discount = self::format_checkout_remainder_amount($total_discount, $currency_symbol);
 			$calculation_text = sprintf(
 				/* translators: 1: total original amount, 2: total discount used, 3: total remaining amount */
 				esc_html__('%1$s (Total Original) - %2$s (Total Discount Applied) = %3$s (Total Remaining)', 'user-manager'),
@@ -6275,6 +7170,9 @@ html body .woocommerce-layout__header {
 		}
 		
 		$settings = self::get_settings();
+		if (!self::is_coupon_remainder_feature_enabled($settings)) {
+			return;
+		}
 		if (empty($settings['coupon_remainder_order_received_notice'])) {
 			return;
 		}
@@ -6315,7 +7213,7 @@ html body .woocommerce-layout__header {
 			return;
 		}
 		
-		$formatted_total = $currency_symbol . number_format($total_remaining, 2, '.', '');
+		$formatted_total = self::format_checkout_remainder_amount($total_remaining, $currency_symbol);
 		
 		?>
 		<div class="woocommerce-message um-remainder-notice" role="alert" style="display:block;">
@@ -6338,7 +7236,7 @@ html body .woocommerce-layout__header {
 				echo '<span style="font-weight:600;">' . esc_html__('Coupon codes:', 'user-manager') . '</span>';
 				echo '<ul style="margin:6px 0 0;padding-left:1.25em;list-style:disc;">';
 				foreach ($coupon_codes as $coupon_info) {
-					$formatted_amount = $currency_symbol . number_format($coupon_info['amount'], 2, '.', '');
+					$formatted_amount = self::format_checkout_remainder_amount((float) $coupon_info['amount'], $currency_symbol);
 					echo '<li style="margin-bottom:4px;word-break:break-all;">' . esc_html(strtoupper($coupon_info['code'])) . ' <strong>(' . esc_html($formatted_amount) . ')</strong></li>';
 				}
 				echo '</ul></div>';
@@ -6349,17 +7247,47 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
+	 * Format remainder notice amounts for checkout/order-received UI.
+	 *
+	 * If the currency symbol is longer than 1 character (e.g. "Points"),
+	 * hide it and show numeric-only value in these notices.
+	 */
+	private static function format_checkout_remainder_amount(float $amount, string $currency_symbol): string {
+		$symbol = trim((string) $currency_symbol);
+		$formatted_number = number_format($amount, 2, '.', '');
+		if (strlen($symbol) > 1) {
+			return $formatted_number;
+		}
+		return $symbol . $formatted_number;
+	}
+
+	/**
 	 * Register top-level admin menu.
 	 */
 	public static function register_settings_page(): void {
+		$plugin_title = self::get_plugin_title_display_text();
 		add_submenu_page(
 			'users.php',
-			__('User Experience Manager', 'user-manager'),
-			__('User Experience Manager', 'user-manager'),
+			$plugin_title,
+			$plugin_title,
 			'manage_options',
 			self::SETTINGS_PAGE_SLUG,
 			[__CLASS__, 'render_settings_page']
 		);
+
+		$settings = self::get_settings();
+		$show_top_level_admin_menu_item = !empty($settings['show_top_level_admin_menu_item']);
+		if ($show_top_level_admin_menu_item) {
+			add_menu_page(
+				$plugin_title,
+				$plugin_title,
+				'manage_options',
+				self::SETTINGS_PAGE_SLUG,
+				[__CLASS__, 'render_settings_page'],
+				'dashicons-admin-users',
+				71
+			);
+		}
 		
 		// Keep submenu highlighted on all tabs
 		add_filter('submenu_file', [__CLASS__, 'keep_submenu_current']);
@@ -6414,15 +7342,12 @@ html body .woocommerce-layout__header {
 		}
 
 		$tabs = [
-			self::TAB_CREATE_USER   => __('Create', 'user-manager'),
-			self::TAB_BULK_CREATE   => __('Bulk Create', 'user-manager'),
-			self::TAB_RESET_PASSWORD => __('Reset Password', 'user-manager'),
-			self::TAB_REMOVE_USER   => __('Remove User', 'user-manager'),
-			self::TAB_LOGIN_AS      => __('Login As', 'user-manager'),
+			self::TAB_LOGIN_TOOLS   => __('Login Tools', 'user-manager'),
 			self::TAB_EMAIL_USERS   => __('Email Users', 'user-manager'),
 			self::TAB_SETTINGS      => __('Settings', 'user-manager'),
 			self::TAB_REPORTS       => __('Reports', 'user-manager'),
 			self::TAB_ADDONS        => __('Add-ons', 'user-manager'),
+			self::TAB_BLOCKS        => __('Blocks', 'user-manager'),
 			self::TAB_DOCUMENTATION => __('Documentation', 'user-manager'),
 		];
 
@@ -6498,6 +7423,8 @@ html body .woocommerce-layout__header {
 					User_Manager_Tab_Reports::export_orders_tracking_numbers_csv();
 				} elseif ($report === 'orders-tracking-notes') {
 					User_Manager_Tab_Reports::export_orders_tracking_notes_csv();
+				} elseif ($report === 'orders-still-processing-with-tracking-number') {
+					User_Manager_Tab_Reports::export_orders_still_processing_with_tracking_number_csv();
 				} elseif ($report === 'user-data') {
 					User_Manager_Tab_Reports::export_user_data_csv();
 				} elseif ($report === 'user-total-sales') {
@@ -6542,10 +7469,21 @@ html body .woocommerce-layout__header {
 	 */
 	public static function keep_submenu_current($submenu_file) {
 		$screen = get_current_screen();
-		if ($screen && $screen->id === 'users_page_' . self::SETTINGS_PAGE_SLUG) {
+		$screen_id = ($screen && isset($screen->id)) ? (string) $screen->id : '';
+		if (self::is_user_manager_admin_screen_hook($screen_id)) {
 			return self::SETTINGS_PAGE_SLUG;
 		}
 		return $submenu_file;
+	}
+
+	/**
+	 * Determine whether a wp-admin hook/screen ID belongs to User Manager page.
+	 */
+	private static function is_user_manager_admin_screen_hook(string $hook): bool {
+		return in_array($hook, [
+			'users_page_' . self::SETTINGS_PAGE_SLUG,
+			'toplevel_page_' . self::SETTINGS_PAGE_SLUG,
+		], true);
 	}
 
 	/**
@@ -6555,13 +7493,14 @@ html body .woocommerce-layout__header {
 		register_setting(self::SETTINGS_PAGE_SLUG, self::OPTION_KEY);
 		register_setting(self::SETTINGS_PAGE_SLUG, self::ACTIVITY_LOG_KEY);
 		register_setting(self::SETTINGS_PAGE_SLUG, self::EMAIL_TEMPLATES_KEY);
+		register_setting(self::SETTINGS_PAGE_SLUG, self::SMS_TEXT_TEMPLATES_KEY);
 	}
 
 	/**
 	 * Enqueue admin assets on plugin screen.
 	 */
 	public static function enqueue_admin_assets(string $hook): void {
-		if ('users_page_' . self::SETTINGS_PAGE_SLUG !== $hook) {
+		if (!self::is_user_manager_admin_screen_hook($hook)) {
 			return;
 		}
 
@@ -6850,6 +7789,13 @@ html body .woocommerce-layout__header {
 			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 			gap: 20px;
 			margin-top: 20px;
+		}
+		/* Remove extra first-gap under sub-sub navigation rows */
+		.wrap .subsubsub + .clear + .um-admin-card,
+		.wrap .subsubsub + .clear + .um-admin-grid,
+		.wrap .subsubsub + .clear + .um-create-user-layout,
+		.wrap .subsubsub + .clear + .um-email-templates-layout {
+			margin-top: 0 !important;
 		}
 		/* Two-column variant for pages that want a strict 2-col layout */
 		.um-admin-grid.um-admin-grid-2col {
@@ -7237,34 +8183,32 @@ html body .woocommerce-layout__header {
 		}
 
 		$active_tab = self::get_current_tab();
+		$settings = self::get_settings();
+		$addon_main_navigation_tabs = self::get_enabled_addon_main_navigation_tabs($settings);
+		$current_addon_section = $active_tab === self::TAB_ADDONS && isset($_GET['addon_section'])
+			? sanitize_key(wp_unslash($_GET['addon_section']))
+			: '';
+		$current_block_section = $active_tab === self::TAB_BLOCKS && isset($_GET['block_section'])
+			? sanitize_key(wp_unslash($_GET['block_section']))
+			: '';
+		$current_shortcut_section = $current_addon_section !== '' ? $current_addon_section : $current_block_section;
+		$active_addon_shortcut_slug = '';
+		foreach ($addon_main_navigation_tabs as $addon_tab_meta) {
+			if ($current_shortcut_section === (string) ($addon_tab_meta['slug'] ?? '')) {
+				$active_addon_shortcut_slug = $current_shortcut_section;
+				break;
+			}
+		}
 		$message = isset($_GET['um_msg']) ? sanitize_key(wp_unslash($_GET['um_msg'])) : '';
+		$plugin_title = self::get_plugin_title_display_text();
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('User Experience Manager', 'user-manager'); ?></h1>
+			<h1><?php echo esc_html($plugin_title); ?></h1>
+			<p style="margin-top: -10px; color: #646970; font-size: 14px;"><?php echo esc_html(sprintf(__('Version %s', 'user-manager'), self::VERSION)); ?></p>
 			<h2 class="nav-tab-wrapper">
-				<a class="nav-tab <?php echo $active_tab === self::TAB_CREATE_USER ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_CREATE_USER)); ?>">
+				<a class="nav-tab <?php echo $active_tab === self::TAB_LOGIN_TOOLS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_LOGIN_TOOLS)); ?>">
 					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Create', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_BULK_CREATE ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_BULK_CREATE)); ?>">
-					<span class="dashicons dashicons-upload" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Bulk Create', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_RESET_PASSWORD ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_RESET_PASSWORD)); ?>">
-					<span class="dashicons dashicons-lock" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Reset Pass', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_REMOVE_USER ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_REMOVE_USER)); ?>">
-					<span class="dashicons dashicons-trash" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Remove', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_LOGIN_AS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_LOGIN_AS)); ?>">
-					<span class="dashicons dashicons-admin-users" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Login As', 'user-manager'); ?>
-				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_EMAIL_USERS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_EMAIL_USERS)); ?>">
-					<span class="dashicons dashicons-email-alt" style="font-size:16px;line-height:1.4;"></span>
-					<?php esc_html_e('Send Email', 'user-manager'); ?>
+					<?php esc_html_e('Login Tools', 'user-manager'); ?>
 				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_SETTINGS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_SETTINGS)); ?>">
 					<span class="dashicons dashicons-admin-settings" style="font-size:16px;line-height:1.4;"></span>
@@ -7274,15 +8218,35 @@ html body .woocommerce-layout__header {
 					<span class="dashicons dashicons-chart-bar" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Reports', 'user-manager'); ?>
 				</a>
-				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
+				<a class="nav-tab <?php echo $active_tab === self::TAB_ADDONS && $active_addon_shortcut_slug === '' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_ADDONS)); ?>">
 					<span class="dashicons dashicons-admin-plugins" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Add-ons', 'user-manager'); ?>
+				</a>
+				<a class="nav-tab <?php echo $active_tab === self::TAB_BLOCKS ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_BLOCKS)); ?>">
+					<span class="dashicons dashicons-screenoptions" style="font-size:16px;line-height:1.4;"></span>
+					<?php esc_html_e('Blocks', 'user-manager'); ?>
 				</a>
 				<a class="nav-tab <?php echo $active_tab === self::TAB_DOCUMENTATION ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url(self::get_page_url(self::TAB_DOCUMENTATION)); ?>">
 					<span class="dashicons dashicons-book" style="font-size:16px;line-height:1.4;"></span>
 					<?php esc_html_e('Docs', 'user-manager'); ?>
 				</a>
+				<?php foreach ($addon_main_navigation_tabs as $addon_tab_meta) : ?>
+					<?php
+					$addon_slug = isset($addon_tab_meta['slug']) ? sanitize_key((string) $addon_tab_meta['slug']) : '';
+					$addon_label = isset($addon_tab_meta['label']) ? (string) $addon_tab_meta['label'] : '';
+					$addon_url = isset($addon_tab_meta['url']) ? (string) $addon_tab_meta['url'] : '';
+					if ($addon_slug === '' || $addon_label === '' || $addon_url === '') {
+						continue;
+					}
+					?>
+					<a class="nav-tab <?php echo $active_addon_shortcut_slug === $addon_slug ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url($addon_url); ?>">
+						<?php echo esc_html($addon_label); ?>
+					</a>
+				<?php endforeach; ?>
 			</h2>
+			<?php if ($active_tab === self::TAB_LOGIN_TOOLS) : ?>
+				<?php self::render_login_tools_sub_navigation(); ?>
+			<?php endif; ?>
 			<?php self::render_admin_notice($message); ?>
 			<?php User_Manager_Tabs::render_tab($active_tab); ?>
 		</div>
@@ -7290,10 +8254,28 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
+	 * Resolve plugin title text, honoring optional settings override.
+	 */
+	public static function get_plugin_title_display_text(): string {
+		$settings = self::get_settings();
+		$override = isset($settings['plugin_title_override'])
+			? sanitize_text_field((string) $settings['plugin_title_override'])
+			: '';
+		$override = trim($override);
+		if ($override !== '') {
+			return $override;
+		}
+		return __('UX Manager', 'user-manager');
+	}
+
+	/**
 	 * Get current active tab.
 	 */
 	public static function get_current_tab(): string {
-		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : self::TAB_CREATE_USER;
+		$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : self::TAB_LOGIN_TOOLS;
+		if (in_array($tab, [self::TAB_CREATE_USER, self::TAB_BULK_CREATE, self::TAB_RESET_PASSWORD, self::TAB_REMOVE_USER, self::TAB_DEACTIVATE_USER, self::TAB_LOGIN_AS], true)) {
+			return self::TAB_LOGIN_TOOLS;
+		}
 		if ($tab === self::TAB_ROLE_SWITCHING) {
 			return self::TAB_ADDONS;
 		}
@@ -7312,13 +8294,21 @@ html body .woocommerce-layout__header {
 		if ($tab === self::TAB_EMAIL_TEMPLATES || $tab === self::TAB_TOOLS) {
 			return self::TAB_SETTINGS;
 		}
+		if ($tab === self::TAB_EMAIL_USERS) {
+			$settings = self::get_settings();
+			if (!self::is_send_email_addon_enabled($settings)) {
+				return self::TAB_ADDONS;
+			}
+		}
 		if ($tab === self::TAB_VERSIONS) {
 			return self::TAB_DOCUMENTATION;
 		}
 		$allowed = [
+			self::TAB_LOGIN_TOOLS,
 			self::TAB_CREATE_USER,
 			self::TAB_RESET_PASSWORD,
 			self::TAB_REMOVE_USER,
+			self::TAB_DEACTIVATE_USER,
 			self::TAB_LOGIN_AS,
 			self::TAB_BULK_CREATE,
 			self::TAB_EMAIL_USERS,
@@ -7330,12 +8320,118 @@ html body .woocommerce-layout__header {
 			self::TAB_TOOLS,
 			self::TAB_SETTINGS,
 			self::TAB_ADDONS,
+			self::TAB_BLOCKS,
 			self::TAB_REPORTS,
 			self::TAB_DOCUMENTATION,
 			self::TAB_VERSIONS,
 		];
 
-		return in_array($tab, $allowed, true) ? $tab : self::TAB_CREATE_USER;
+		return in_array($tab, $allowed, true) ? $tab : self::TAB_LOGIN_TOOLS;
+	}
+
+	/**
+	 * Resolve the active child screen for Login Tools.
+	 *
+	 * Supports legacy ?tab=create-user style URLs and the new
+	 * ?tab=login-tools&login_tools_section=create-user format.
+	 */
+	public static function get_current_login_tools_tab(): string {
+		$valid_login_tool_tabs = [
+			self::TAB_CREATE_USER,
+			self::TAB_BULK_CREATE,
+			self::TAB_RESET_PASSWORD,
+			self::TAB_REMOVE_USER,
+			self::TAB_DEACTIVATE_USER,
+			self::TAB_LOGIN_AS,
+		];
+
+		$legacy_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : '';
+		if (in_array($legacy_tab, $valid_login_tool_tabs, true)) {
+			return $legacy_tab;
+		}
+
+		$section = isset($_GET['login_tools_section']) ? sanitize_key(wp_unslash($_GET['login_tools_section'])) : '';
+		if (in_array($section, $valid_login_tool_tabs, true)) {
+			return $section;
+		}
+
+		return self::TAB_CREATE_USER;
+	}
+
+	/**
+	 * Render Login Tools sub navigation.
+	 */
+	private static function render_login_tools_sub_navigation(): void {
+		$active_login_tool_tab = self::get_current_login_tools_tab();
+		$base_login_tools_url  = self::get_page_url(self::TAB_LOGIN_TOOLS);
+
+		$create_url = add_query_arg('login_tools_section', self::TAB_CREATE_USER, $base_login_tools_url);
+		$bulk_create_url = add_query_arg('login_tools_section', self::TAB_BULK_CREATE, $base_login_tools_url);
+		$reset_url = add_query_arg('login_tools_section', self::TAB_RESET_PASSWORD, $base_login_tools_url);
+		$remove_url = add_query_arg('login_tools_section', self::TAB_REMOVE_USER, $base_login_tools_url);
+		$deactivate_url = add_query_arg('login_tools_section', self::TAB_DEACTIVATE_USER, $base_login_tools_url);
+		$login_as_url = add_query_arg('login_tools_section', self::TAB_LOGIN_AS, $base_login_tools_url);
+		$recent_logins_url = add_query_arg(
+			[
+				'page'   => self::SETTINGS_PAGE_SLUG,
+				'tab'    => self::TAB_REPORTS,
+				'report' => 'user-logins',
+			],
+			admin_url('admin.php')
+		);
+		$more_reports_url = add_query_arg(
+			[
+				'page'   => self::SETTINGS_PAGE_SLUG,
+				'tab'    => self::TAB_REPORTS,
+				'report' => 'user-logins',
+			],
+			admin_url('admin.php')
+		);
+		?>
+		<ul class="subsubsub" style="margin: 12px 0 14px;">
+			<li>
+				<a href="<?php echo esc_url($create_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_CREATE_USER ? 'current' : ''; ?>">
+					<?php esc_html_e('Create Single User', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($bulk_create_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_BULK_CREATE ? 'current' : ''; ?>">
+					<?php esc_html_e('Create Multiple Users', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($reset_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_RESET_PASSWORD ? 'current' : ''; ?>">
+					<?php esc_html_e('Reset Password(s)', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($remove_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_REMOVE_USER ? 'current' : ''; ?>">
+					<?php esc_html_e('Remove User(s)', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($deactivate_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_DEACTIVATE_USER ? 'current' : ''; ?>">
+					<?php esc_html_e('Deactivate User(s)', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($login_as_url); ?>" class="<?php echo $active_login_tool_tab === self::TAB_LOGIN_AS ? 'current' : ''; ?>">
+					<?php esc_html_e('Login As a User', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($recent_logins_url); ?>">
+					<?php esc_html_e('Recent Logins', 'user-manager'); ?>
+				</a> |
+			</li>
+			<li>
+				<a href="<?php echo esc_url($more_reports_url); ?>">
+					<?php esc_html_e('More Reports', 'user-manager'); ?>
+				</a>
+			</li>
+		</ul>
+		<br class="clear" />
+		<?php
 	}
 
 	/**
@@ -7391,6 +8487,9 @@ html body .woocommerce-layout__header {
 	 * @return bool
 	 */
 	private static function is_custom_admin_notifications_addon_enabled(array $settings): bool {
+		if (self::is_addon_temporarily_disabled('wp-admin-notifications')) {
+			return false;
+		}
 		if (array_key_exists('custom_admin_notifications_enabled', $settings)) {
 			return !empty($settings['custom_admin_notifications_enabled']);
 		}
@@ -7421,6 +8520,10 @@ html body .woocommerce-layout__header {
 		if (!current_user_can('manage_options')) {
 			return;
 		}
+		$settings = self::get_settings();
+		if (empty($settings['show_profile_user_manager_notice'])) {
+			return;
+		}
 		$profile_user_email = '';
 		if ($pagenow === 'profile.php') {
 			$user = wp_get_current_user();
@@ -7431,8 +8534,23 @@ html body .woocommerce-layout__header {
 		}
 		$url         = self::get_page_url();
 		$reset_url   = self::get_page_url(self::TAB_RESET_PASSWORD);
+		$login_as_url = add_query_arg(
+			[
+				'page' => self::SETTINGS_PAGE_SLUG,
+				'tab' => self::TAB_LOGIN_TOOLS,
+				'login_tools_section' => self::TAB_LOGIN_AS,
+			],
+			admin_url('admin.php')
+		);
 		if ($profile_user_email !== '') {
 			$reset_url = add_query_arg('um_email', rawurlencode($profile_user_email), $reset_url);
+			$login_as_url = add_query_arg(
+				[
+					'um_login_as_email' => $profile_user_email,
+					'um_login_as_auto_generate' => '1',
+				],
+				$login_as_url
+			);
 		}
 		?>
 		<div class="notice notice-info um-profile-notice" style="margin: 15px 0 20px 0; padding: 20px 24px; border-left-width: 4px; font-size: 16px; line-height: 1.5;">
@@ -7446,6 +8564,11 @@ html body .woocommerce-layout__header {
 				<a href="<?php echo esc_url($reset_url); ?>" class="button button-large" style="font-weight: 600; margin-left: 8px;">
 					<?php esc_html_e('Reset Password', 'user-manager'); ?>
 				</a>
+				<?php if ($profile_user_email !== '') : ?>
+					<a href="<?php echo esc_url($login_as_url); ?>" class="button button-large" style="font-weight: 600; margin-left: 8px;">
+						<?php esc_html_e('Login As This User', 'user-manager'); ?>
+					</a>
+				<?php endif; ?>
 			</p>
 		</div>
 		<?php
@@ -7554,7 +8677,7 @@ html body .woocommerce-layout__header {
 	 * Build page URL for tab.
 	 */
 	public static function get_page_url(string $tab = ''): string {
-		$tab = $tab ?: self::TAB_CREATE_USER;
+		$tab = $tab ?: self::TAB_LOGIN_TOOLS;
 		return add_query_arg(
 			[
 				'page' => self::SETTINGS_PAGE_SLUG,
@@ -7562,6 +8685,134 @@ html body .woocommerce-layout__header {
 			],
 			admin_url('admin.php')
 		);
+	}
+
+	/**
+	 * Whether Send Email add-on is enabled.
+	 *
+	 * Send Email is intentionally always enabled because Login Tools
+	 * and other template-dependent flows rely on it.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	public static function is_send_email_addon_enabled(array $settings): bool {
+		return !self::is_addon_temporarily_disabled('send-email-users');
+	}
+
+	/**
+	 * Selected add-on slugs configured as main-navigation shortcuts.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 * @return array<int,string>
+	 */
+	public static function get_selected_addon_main_navigation_tabs(array $settings): array {
+		if (!isset($settings['addon_main_navigation_tabs']) || !is_array($settings['addon_main_navigation_tabs'])) {
+			return [];
+		}
+
+		$map = self::get_addon_runtime_toggle_map(false);
+		$selected = [];
+		foreach ($settings['addon_main_navigation_tabs'] as $slug) {
+			$slug = sanitize_key((string) $slug);
+			if ($slug === '' || !isset($map[$slug])) {
+				continue;
+			}
+			$selected[] = $slug;
+		}
+
+		return array_values(array_unique($selected));
+	}
+
+	/**
+	 * Build enabled add-on shortcuts for the main tab navigation.
+	 *
+	 * @param array<string,mixed> $settings Plugin settings.
+	 * @return array<int,array{slug:string,label:string,url:string}>
+	 */
+	public static function get_enabled_addon_main_navigation_tabs(array $settings): array {
+		$selected_slugs = self::get_selected_addon_main_navigation_tabs($settings);
+		if (empty($selected_slugs)) {
+			return [];
+		}
+
+		$map = self::get_addon_runtime_toggle_map();
+		$tabs = [];
+		foreach ($selected_slugs as $slug) {
+			if (!isset($map[$slug])) {
+				continue;
+			}
+			if (!self::is_addon_enabled_for_main_navigation($slug, $settings)) {
+				continue;
+			}
+			$is_blocks_shortcut = in_array($slug, self::get_blocks_tab_section_slugs(), true);
+			$shortcut_url = $is_blocks_shortcut
+				? add_query_arg('block_section', $slug, self::get_page_url(self::TAB_BLOCKS))
+				: add_query_arg('addon_section', $slug, self::get_page_url(self::TAB_ADDONS));
+			$tabs[] = [
+				'slug'  => $slug,
+				'label' => isset($map[$slug]['label']) ? (string) $map[$slug]['label'] : $slug,
+				'url'   => $shortcut_url,
+			];
+		}
+
+		return $tabs;
+	}
+
+	/**
+	 * Add-on slugs that now render inside the Blocks tab.
+	 *
+	 * @return array<int,string>
+	 */
+	private static function get_blocks_tab_section_slugs(): array {
+		return [
+			'page-block-subpages-grid',
+			'page-block-tabbed-content-area',
+			'page-block-simple-icons',
+			'page-block-menu-tiles',
+			'media-library-tags',
+		];
+	}
+
+	/**
+	 * Determine if an add-on is currently enabled for shortcut rendering.
+	 *
+	 * @param string $addon_slug Add-on slug.
+	 * @param array<string,mixed> $settings Plugin settings.
+	 */
+	private static function is_addon_enabled_for_main_navigation(string $addon_slug, array $settings): bool {
+		$addon_slug = sanitize_key($addon_slug);
+		if ($addon_slug === '' || self::is_addon_temporarily_disabled($addon_slug)) {
+			return false;
+		}
+
+		if ($addon_slug === 'user-role-switching') {
+			$role_settings = get_option('view_website_by_role_settings', []);
+			if (!is_array($role_settings)) {
+				$role_settings = [];
+			}
+			return !empty($role_settings['enabled']);
+		}
+
+		if ($addon_slug === 'product-search-by-sku' && !array_key_exists('search_redirect_by_sku', $settings)) {
+			return true;
+		}
+
+		$map = self::get_addon_runtime_toggle_map(false);
+		if (!isset($map[$addon_slug]['settings_keys']) || !is_array($map[$addon_slug]['settings_keys'])) {
+			return false;
+		}
+
+		foreach ($map[$addon_slug]['settings_keys'] as $settings_key) {
+			$settings_key = (string) $settings_key;
+			if ($settings_key === '' || $settings_key === '__role_switching_option_enabled') {
+				continue;
+			}
+			if (!empty($settings[$settings_key])) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -7687,11 +8938,53 @@ html body .woocommerce-layout__header {
 			case 'template_deleted':
 				$content = __('Email template deleted.', 'user-manager');
 				break;
+			case 'sms_template_saved':
+				$content = __('SMS text template saved successfully.', 'user-manager');
+				break;
+			case 'sms_template_deleted':
+				$content = __('SMS text template deleted.', 'user-manager');
+				break;
+			case 'sms_template_error':
+				$content = __('SMS text template could not be saved. Please make sure required fields are filled.', 'user-manager');
+				$type = 'error';
+				break;
 			case 'settings_saved':
 				$content = __('Settings saved successfully.', 'user-manager');
 				break;
+			case 'text_file_line_count_cache_reset':
+				$cache_reset_count = isset($_GET['cache_reset_count']) ? max(0, absint($_GET['cache_reset_count'])) : 0;
+				/* translators: %d: number of orders whose line-count cache was reset */
+				$content = sprintf(__('Text-file line-count cache reset for %d order(s). Fresh counts will be fetched again as needed.', 'user-manager'), $cache_reset_count);
+				break;
+			case 'text_file_line_count_cache_reset_error':
+				$content = __('Unable to reset text-file line-count cache. Please try again.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'emali_log_resent':
+				$content = __('Email resent successfully from Email Log.', 'user-manager');
+				break;
+			case 'emali_log_resend_failed':
+				$content = __('Unable to resend this Email Log email entry.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'emali_log_forwarded':
+				$content = __('Email forwarded successfully from Email Log.', 'user-manager');
+				break;
+			case 'emali_log_forward_failed':
+				$content = __('Unable to forward this Email Log email entry. Check the forward address and try again.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'emali_log_cleared':
+				$content = __('Email Log history has been cleared.', 'user-manager');
+				break;
+			case 'emali_log_auto_cleanup_saved':
+				$content = __('Email Log auto-delete retention was updated.', 'user-manager');
+				break;
 			case 'view_reports_reset':
 				$content = __('All view-related reports (Page Views, Product Views, 404 Errors, Search Queries) have been reset.', 'user-manager');
+				break;
+			case 'media_library_tag_reports_cleared':
+				$content = __('Media > Tag Reports data has been cleared successfully.', 'user-manager');
 				break;
 			case 'user_exists':
 				$content = __('A user with that email already exists. Enable "Update existing users" in Settings to update instead.', 'user-manager');
@@ -7925,6 +9218,66 @@ html body .woocommerce-layout__header {
 				);
 				$type = 'success';
 				break;
+			case 'texts_sent':
+				$sent = isset($_GET['sent']) ? absint($_GET['sent']) : 0;
+				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
+				$failed = isset($_GET['failed']) ? absint($_GET['failed']) : 0;
+				$content = sprintf(
+					__('SMS texts sent: %1$d. Sent without user match: %2$d. Failed to send: %3$d.', 'user-manager'),
+					$sent,
+					$not_found,
+					$failed
+				);
+				$type = $failed > 0 ? 'warning' : 'success';
+				break;
+			case 'texts_sent_batch':
+				$sent = isset($_GET['sent']) ? absint($_GET['sent']) : 0;
+				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
+				$failed = isset($_GET['failed']) ? absint($_GET['failed']) : 0;
+				$remaining = isset($_GET['remaining']) ? absint($_GET['remaining']) : 0;
+				$total = isset($_GET['total']) ? absint($_GET['total']) : 0;
+				$total_sent = isset($_GET['total_sent']) ? absint($_GET['total_sent']) : $sent;
+				$content = sprintf(
+					__('Text batch sent: %1$d texts in this batch. Total progress: %2$d of %3$d sent. %4$d remaining. Sent without user match: %5$d. Failed to send: %6$d.', 'user-manager'),
+					$sent,
+					$total_sent,
+					$total,
+					$remaining,
+					$not_found,
+					$failed
+				);
+				$type = $failed > 0 ? 'warning' : 'info';
+				break;
+			case 'text_batch_complete':
+				$sent = isset($_GET['sent']) ? absint($_GET['sent']) : 0;
+				$total = isset($_GET['total']) ? absint($_GET['total']) : 0;
+				$content = sprintf(
+					__('All queued texts sent! Final batch: %1$d. Total texts sent: %2$d.', 'user-manager'),
+					$sent,
+					$total
+				);
+				$type = 'success';
+				break;
+			case 'no_text_batch':
+				$content = __('No pending text batch found.', 'user-manager');
+				$type = 'warning';
+				break;
+			case 'no_phone_numbers':
+				$content = __('Please enter at least one phone number.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'no_sms_template':
+				$content = __('Please select an SMS text template.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'send_sms_disabled':
+				$content = __('Send SMS Text add-on is not active.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'sms_token_missing':
+				$content = __('Simple Texting API Token is missing. Add your token in Settings → API Keys.', 'user-manager');
+				$type = 'error';
+				break;
 			case 'no_batch':
 				$content = __('No pending email batch found.', 'user-manager');
 				$type = 'warning';
@@ -7971,6 +9324,21 @@ html body .woocommerce-layout__header {
 			case 'demo_templates_imported':
 				$content = __('Demo email templates imported successfully.', 'user-manager');
 				break;
+			case 'demo_template_recreated':
+				$template_title = isset($_GET['template_title']) ? sanitize_text_field(wp_unslash($_GET['template_title'])) : '';
+				if ($template_title !== '') {
+					$content = sprintf(
+						/* translators: %s: template title */
+						__('Template recreated: %s', 'user-manager'),
+						$template_title
+					);
+				} else {
+					$content = __('Template recreated successfully.', 'user-manager');
+				}
+				break;
+			case 'demo_sms_templates_imported':
+				$content = __('Demo SMS text templates imported successfully.', 'user-manager');
+				break;
 			case 'migration_success':
 				$count = isset($_GET['count']) ? absint($_GET['count']) : 0;
 				$content = sprintf(
@@ -8009,6 +9377,42 @@ html body .woocommerce-layout__header {
 					$removed, $not_found
 				);
 				$type = $not_found > 0 ? 'warning' : 'success';
+				break;
+			case 'user_deactivated':
+				$content = __('User deactivated successfully.', 'user-manager');
+				break;
+			case 'user_reactivated':
+				$content = __('User reactivated successfully.', 'user-manager');
+				break;
+			case 'user_already_deactivated':
+				$content = __('This user is already deactivated.', 'user-manager');
+				$type = 'warning';
+				break;
+			case 'user_not_deactivated':
+				$content = __('This user is not currently deactivated.', 'user-manager');
+				$type = 'warning';
+				break;
+			case 'user_deactivate_failed':
+				$content = __('User could not be deactivated. Please try again.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'user_reactivate_failed':
+				$content = __('User could not be reactivated. Please try again.', 'user-manager');
+				$type = 'error';
+				break;
+			case 'bulk_user_deactivated':
+				$deactivated = isset($_GET['deactivated']) ? absint($_GET['deactivated']) : 0;
+				$already = isset($_GET['already']) ? absint($_GET['already']) : 0;
+				$not_found = isset($_GET['not_found']) ? absint($_GET['not_found']) : 0;
+				$failed = isset($_GET['failed']) ? absint($_GET['failed']) : 0;
+				$content = sprintf(
+					__('Deactivated %1$d user(s). %2$d already deactivated. %3$d identifier(s) not found. %4$d failed.', 'user-manager'),
+					$deactivated,
+					$already,
+					$not_found,
+					$failed
+				);
+				$type = ($not_found > 0 || $failed > 0) ? 'warning' : 'success';
 				break;
 		}
 
@@ -8152,7 +9556,384 @@ html body .woocommerce-layout__header {
 	 */
 	public static function get_settings(): array {
 		$options = get_option(self::OPTION_KEY, []);
+		$options = is_array($options) ? $options : [];
+		$options = self::apply_runtime_addon_disable_overrides($options);
+		// Send Email defaults on unless add-ons temporary disable is requested.
+		if (!self::is_disable_addons_requested()) {
+			$options['send_email_users_enabled'] = true;
+		}
+		return $options;
+	}
+
+	/**
+	 * Get persisted settings without runtime temporary-disable overrides.
+	 *
+	 * This is used by admin UI screens that must reflect saved checkbox state
+	 * even when runtime temporary-disable flags are currently active.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public static function get_raw_settings(): array {
+		$options = get_option(self::OPTION_KEY, []);
 		return is_array($options) ? $options : [];
+	}
+
+	/**
+	 * Runtime add-on map used by docs and URL disable-override support.
+	 *
+	 * @param bool $translate_labels Whether to translate the label values.
+	 * @return array<string,array{label:string,settings_keys:array<int,string>}>
+	 */
+	public static function get_addon_runtime_toggle_map(bool $translate_labels = true): array {
+		$map = [
+			'add-to-cart-bulk-import' => [
+				'label' => 'Add to Cart Bulk Import',
+				'settings_keys' => ['bulk_add_to_cart_enabled'],
+			],
+			'add-to-cart-variation-table' => [
+				'label' => 'Add to Cart Variation Table',
+				'settings_keys' => ['add_to_cart_variation_table_enabled'],
+			],
+			'add-to-cart-min-max-quantities' => [
+				'label' => 'Add to Cart Min/Max Quantities',
+				'settings_keys' => ['add_to_cart_min_max_quantities_enabled'],
+			],
+			'cart-price-per-piece' => [
+				'label' => 'Cart Price Per-Piece',
+				'settings_keys' => ['cart_price_per_piece_enabled'],
+			],
+			'cart-total-items' => [
+				'label' => 'Cart Total Items',
+				'settings_keys' => ['cart_total_items_enabled'],
+			],
+			'checkout-pre-defined-addresses' => [
+				'label' => 'Checkout Address Selector',
+				'settings_keys' => ['checkout_ship_to_predefined_enabled'],
+			],
+			'coupon-creator' => [
+				'label' => 'Coupon Creator',
+				'settings_keys' => ['bulk_coupons_enabled'],
+			],
+			'coupon-for-new-user' => [
+				'label' => 'New User Coupons',
+				'settings_keys' => ['nuc_enabled'],
+			],
+			'coupon-notifications-for-users-with-coupons' => [
+				'label' => 'User Coupon Notifications',
+				'settings_keys' => ['user_coupon_notifications_enabled'],
+			],
+			'coupon-remaining-balances' => [
+				'label' => 'User Coupon Remaining Balances',
+				'settings_keys' => ['coupon_remainder_enabled'],
+			],
+			'data-anonymizer' => [
+				'label' => 'Data Anonymizer',
+				'settings_keys' => ['data_anonymizer_enabled'],
+			],
+			'staging-development-environment-overrides' => [
+				'label' => 'Staging & Development Environment Overrides',
+				'settings_keys' => ['staging_dev_overrides_enabled'],
+			],
+			'bulk-page-creator' => [
+				'label' => 'Page Creator',
+				'settings_keys' => ['bulk_page_creator_enabled'],
+			],
+			'page-block-subpages-grid' => [
+				'label' => 'Page Block: Tile Grid for Subpages',
+				'settings_keys' => ['page_block_subpages_grid_enabled'],
+			],
+			'page-block-tabbed-content-area' => [
+				'label' => 'Page Block: Tabs with Content from Other Pages',
+				'settings_keys' => ['page_block_tabbed_content_area_enabled'],
+			],
+			'page-block-simple-icons' => [
+				'label' => 'Page Block: Simple Icons',
+				'settings_keys' => ['page_block_simple_icons_enabled'],
+			],
+			'page-block-menu-tiles' => [
+				'label' => 'Page Block: Tile Grid for Menu',
+				'settings_keys' => ['page_block_menu_tiles_enabled'],
+			],
+			'database-table-browser' => [
+				'label' => 'Database Table Browser',
+				'settings_keys' => ['database_table_browser_enabled'],
+			],
+			'emali-log' => [
+				'label' => 'Email Log',
+				'settings_keys' => ['emali_log_enabled'],
+			],
+			'security-hardening' => [
+				'label' => 'Security Hardening',
+				'settings_keys' => ['security_hardening_enabled'],
+			],
+			'seo-basics' => [
+				'label' => 'SEO Basics',
+				'settings_keys' => ['seo_basics_enabled'],
+			],
+			'restricted-access' => [
+				'label' => 'Restricted Access',
+				'settings_keys' => ['restricted_access_enabled'],
+			],
+			'block-pages-by-url-string' => [
+				'label' => 'Block Pages by URL String',
+				'settings_keys' => ['block_pages_by_url_string_enabled'],
+			],
+			'fatal-error-debugger' => [
+				'label' => 'Fatal Error Debugger',
+				'settings_keys' => ['fatal_error_debugger_enabled'],
+			],
+			'my-account-coupon-screen' => [
+				'label' => 'My Account Coupons Page',
+				'settings_keys' => ['my_account_coupon_screen_enabled'],
+			],
+			'my-account-menu-tiles' => [
+				'label' => 'My Account Menu Tiles',
+				'settings_keys' => ['my_account_menu_tiles_enabled'],
+			],
+			'my-account-site-admin' => [
+				'label' => 'My Account Admin',
+				'settings_keys' => [
+					'my_account_site_admin_enabled',
+					'my_account_admin_order_viewer_enabled',
+					'my_account_admin_product_viewer_enabled',
+					'my_account_admin_coupon_viewer_enabled',
+					'my_account_admin_user_viewer_enabled',
+					'my_account_admin_activity_viewer_enabled',
+					'my_account_admin_wp_admin_redirect_list',
+					'my_account_admin_activity_viewer_wp_admin_redirect_list', // Legacy compatibility
+				],
+			],
+			'media-library-tags' => [
+				'label' => 'Media Library Tags with Photo & YouTube Video Gallery',
+				'settings_keys' => ['media_library_tags_enabled'],
+			],
+			'post-meta' => [
+				'label' => 'Post Meta Viewer',
+				'settings_keys' => ['display_post_meta_meta_box'],
+			],
+			'product-search-by-sku' => [
+				'label' => 'Product Search by SKU',
+				'settings_keys' => ['search_redirect_by_sku'],
+			],
+			'product-notification' => [
+				'label' => 'Product Notification',
+				'settings_keys' => ['product_notification_enabled'],
+			],
+			'post-content-generator' => [
+				'label' => 'Post Content Generator',
+				'settings_keys' => ['openai_content_generator_enabled'],
+			],
+			'post-idea-generator' => [
+				'label' => 'Post Idea Generator',
+				'settings_keys' => ['openai_blog_post_idea_generator_enabled'],
+			],
+			'plugin-tags-notes' => [
+				'label' => 'Plugin Tags & Notes',
+				'settings_keys' => ['plugin_tags_notes_enabled'],
+			],
+			'user-role-switching' => [
+				'label' => 'User Role Switching',
+				'settings_keys' => ['__role_switching_option_enabled'],
+			],
+			'wp-admin-bar-menu-items' => [
+				'label' => 'WP-Admin Bar Menu Items',
+				'settings_keys' => ['admin_bar_menu_items_enabled'],
+			],
+			'wp-admin-bar-quick-search' => [
+				'label' => 'WP-Admin Bar Quick Search',
+				'settings_keys' => ['um_quick_search_enabled'],
+			],
+			'wp-admin-css' => [
+				'label' => 'WP-Admin CSS',
+				'settings_keys' => ['wp_admin_css_enabled'],
+			],
+			'wp-admin-notifications' => [
+				'label' => 'WP-Admin Notifications',
+				'settings_keys' => ['custom_admin_notifications_enabled'],
+			],
+			'invoice-approval' => [
+				'label' => 'Order Invoice & Approval',
+				'settings_keys' => ['invoice_approval_enabled'],
+			],
+			'order-received-page-customizer' => [
+				'label' => 'Order Received Page Customizer',
+				'settings_keys' => ['order_received_page_customizer_enabled'],
+			],
+			'webhook-urls' => [
+				'label' => 'Webhook URLs',
+				'settings_keys' => ['webhook_urls_enabled'],
+			],
+			'send-sms-text' => [
+				'label' => 'Send SMS Text',
+				'settings_keys' => ['send_sms_text_enabled'],
+			],
+			'send-email-users' => [
+				'label' => 'Send Email',
+				'settings_keys' => ['send_email_users_enabled'],
+			],
+		];
+
+		// Never trigger translations before init; this prevents WP 6.7+
+		// "_load_textdomain_just_in_time called incorrectly" notices.
+		if (!$translate_labels || !did_action('init')) {
+			return $map;
+		}
+
+		foreach ($map as &$meta) {
+			$meta['label'] = __((string) $meta['label'], 'user-manager');
+		}
+		unset($meta);
+
+		return $map;
+	}
+
+	/**
+	 * Load plugin translations.
+	 */
+	public static function load_textdomain(): void {
+		load_plugin_textdomain(
+			'user-manager',
+			false,
+			dirname(plugin_basename(dirname(__DIR__) . '/user-manager.php')) . '/languages'
+		);
+	}
+
+	/**
+	 * Add-on slugs currently disabled by URL/query or add-ons temporary-disable settings override.
+	 *
+	 * @return array<int,string>
+	 */
+	public static function get_temporarily_disabled_addons_from_url(): array {
+		if (self::$runtime_disabled_addon_slugs !== null) {
+			return self::$runtime_disabled_addon_slugs;
+		}
+
+		$map = self::get_addon_runtime_toggle_map(false);
+		$disabled = [];
+		$disable_all = self::is_disable_addons_requested();
+		if ($disable_all) {
+			$disabled = array_keys($map);
+			self::$runtime_disabled_addon_slugs = $disabled;
+			return $disabled;
+		}
+
+		$raw = isset($_GET[self::URL_PARAM_DISABLE_ADDONS]) ? sanitize_text_field(wp_unslash($_GET[self::URL_PARAM_DISABLE_ADDONS])) : '';
+		if ($raw === '') {
+			self::$runtime_disabled_addon_slugs = [];
+			return [];
+		}
+
+		$parts = array_filter(array_map('trim', explode(',', $raw)));
+		foreach ($parts as $slug) {
+			$slug = sanitize_key(str_replace(' ', '-', $slug));
+			if ($slug === '' || !isset($map[$slug])) {
+				continue;
+			}
+			$disabled[] = $slug;
+		}
+		$disabled = array_values(array_unique($disabled));
+		self::$runtime_disabled_addon_slugs = $disabled;
+		return $disabled;
+	}
+
+	/**
+	 * Determine if an add-on is temporarily disabled by URL/query or add-ons settings override.
+	 */
+	public static function is_addon_temporarily_disabled(string $addon_slug): bool {
+		$addon_slug = sanitize_key($addon_slug);
+		if ($addon_slug === '') {
+			return false;
+		}
+		if ($addon_slug === 'send-email-users' && !self::is_disable_addons_requested()) {
+			return false;
+		}
+		return in_array($addon_slug, self::get_temporarily_disabled_addons_from_url(), true);
+	}
+
+	/**
+	 * Apply runtime add-on disable overrides to current settings.
+	 *
+	 * @param array<string,mixed> $settings Settings array from option.
+	 * @return array<string,mixed>
+	 */
+	private static function apply_runtime_addon_disable_overrides(array $settings): array {
+		$disabled = self::get_temporarily_disabled_addons_from_url();
+		if (empty($disabled)) {
+			return $settings;
+		}
+
+		$map = self::get_addon_runtime_toggle_map(false);
+		$disable_all = self::is_disable_addons_requested();
+		foreach ($disabled as $slug) {
+			if (!isset($map[$slug]['settings_keys']) || !is_array($map[$slug]['settings_keys'])) {
+				continue;
+			}
+			foreach ($map[$slug]['settings_keys'] as $settings_key) {
+				$settings_key = (string) $settings_key;
+				if ($settings_key === '') {
+					continue;
+				}
+				if ($settings_key === '__role_switching_option_enabled') {
+					// Role switching state lives in a dedicated option.
+					// Runtime disable is enforced via is_addon_temporarily_disabled()
+					// so we do not mutate persisted role-switch settings here.
+					continue;
+				}
+				$settings[$settings_key] = false;
+			}
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * Whether URL parameter requested "disable all add-ons" mode.
+	 */
+	private static function is_disable_all_addons_requested_from_url(): bool {
+		if (self::$runtime_disable_all_addons !== null) {
+			return self::$runtime_disable_all_addons;
+		}
+
+		$all_flag = isset($_GET[self::URL_PARAM_DISABLE_ALL_ADDONS]) ? sanitize_text_field(wp_unslash($_GET[self::URL_PARAM_DISABLE_ALL_ADDONS])) : '';
+		$list_flag = isset($_GET[self::URL_PARAM_DISABLE_ADDONS]) ? sanitize_text_field(wp_unslash($_GET[self::URL_PARAM_DISABLE_ADDONS])) : '';
+		$all_flag = strtolower(trim($all_flag));
+		$list_flag = strtolower(trim($list_flag));
+		$truthy = ['1', 'true', 'yes', 'on', 'all'];
+
+		self::$runtime_disable_all_addons = in_array($all_flag, $truthy, true) || $list_flag === 'all';
+		return self::$runtime_disable_all_addons;
+	}
+
+	/**
+	 * Whether settings requested temporary disable for add-ons.
+	 */
+	private static function is_disable_addons_requested_from_settings(): bool {
+		$options = get_option(self::OPTION_KEY, []);
+		$options = is_array($options) ? $options : [];
+		return !empty($options['temporarily_disable_addons']);
+	}
+
+	/**
+	 * Whether settings requested temporary disable for blocks.
+	 */
+	public static function is_disable_blocks_requested_from_settings(): bool {
+		$options = get_option(self::OPTION_KEY, []);
+		$options = is_array($options) ? $options : [];
+		return !empty($options['temporarily_disable_blocks']);
+	}
+
+	/**
+	 * Whether add-ons should be temporarily disabled for this request.
+	 */
+	private static function is_disable_addons_requested(): bool {
+		return self::is_disable_all_addons_requested_from_url() || self::is_disable_addons_requested_from_settings();
+	}
+
+	/**
+	 * Whether blocks should be temporarily disabled for this request.
+	 */
+	private static function is_disable_blocks_requested(): bool {
+		return self::is_disable_all_addons_requested_from_url() || self::is_disable_blocks_requested_from_settings();
 	}
 
 	/**
@@ -8173,7 +9954,10 @@ html body .woocommerce-layout__header {
 		if (!current_user_can('manage_options')) {
 			return;
 		}
-		$settings = get_option(self::OPTION_KEY, []);
+		if (self::is_addon_temporarily_disabled('checkout-pre-defined-addresses')) {
+			return;
+		}
+		$settings = self::get_settings();
 		if (empty($settings['checkout_ship_to_show_debug'])) {
 			return;
 		}
@@ -8215,10 +9999,14 @@ html body .woocommerce-layout__header {
 		
 		// Ensure each template has an order; assign sequentially if missing.
 		$needs_persist = false;
+		$needs_template_migration = false;
 		$order = 1;
 		foreach ($templates as $id => &$tpl) {
 			if (!is_array($tpl)) {
 				$tpl = [];
+			}
+			if (self::normalize_legacy_remaining_balance_template($id, $tpl)) {
+				$needs_template_migration = true;
 			}
 			if (!isset($tpl['order']) || !is_numeric($tpl['order'])) {
 				$tpl['order'] = $order;
@@ -8236,11 +10024,99 @@ html body .woocommerce-layout__header {
 			return ($oa < $ob) ? -1 : 1;
 		});
 		
-		// Persist back if we had to assign order
-		if ($needs_persist) {
+		// Persist back if we had to assign order or migrate a legacy template preset body.
+		if ($needs_persist || $needs_template_migration) {
 			update_option(self::EMAIL_TEMPLATES_KEY, $templates);
 		}
 		
+		return $templates;
+	}
+
+	/**
+	 * Normalize legacy default remaining-balance email template content in-place.
+	 *
+	 * Only updates the template when it still matches the old shipped defaults,
+	 * so customized templates are preserved.
+	 *
+	 * @param string              $template_id Template identifier.
+	 * @param array<string,mixed> $template    Template payload (mutated by reference).
+	 */
+	private static function normalize_legacy_remaining_balance_template(string $template_id, array &$template): bool {
+		if ($template_id !== 'tpl_auto_coupon_remaining_balance') {
+			return false;
+		}
+
+		$updated = false;
+		$legacy_description = 'Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODE%.';
+		$new_description = 'Configured in Settings to trigger automated remaining balance coupon for new users. Supports %COUPONCODEVALUE% and %COUPONCODE%.';
+		$legacy_body = '<p>Here is your remaining balance Coupon Code:<br>' . "\n" . '%COUPONCODE%</p>';
+		$new_body = self::get_coupon_remainder_template_default_body();
+
+		$normalize_newlines = static function (string $value): string {
+			return str_replace(["\r\n", "\r"], "\n", trim($value));
+		};
+
+		$current_description = isset($template['description']) && is_string($template['description']) ? $template['description'] : '';
+		if ($normalize_newlines($current_description) === $legacy_description) {
+			$template['description'] = $new_description;
+			$updated = true;
+		}
+
+		$current_body = isset($template['body']) && is_string($template['body']) ? $template['body'] : '';
+		if ($normalize_newlines($current_body) === '' || $normalize_newlines($current_body) === $normalize_newlines($legacy_body)) {
+			$template['body'] = $new_body;
+			$updated = true;
+		}
+
+		return $updated;
+	}
+
+	/**
+	 * Default body for the remaining-balance coupon email template.
+	 */
+	private static function get_coupon_remainder_template_default_body(): string {
+		return '<p>Remaining Balance:<br>' . "\n" .
+			'%COUPONCODEVALUE%</p>' . "\n\n" .
+			'<p>Coupon Code:<br>' . "\n" .
+			'%COUPONCODE%</p>';
+	}
+
+	/**
+	 * Get SMS text templates.
+	 */
+	public static function get_sms_text_templates(): array {
+		$templates = get_option(self::SMS_TEXT_TEMPLATES_KEY, []);
+		if (!is_array($templates)) {
+			return [];
+		}
+
+		$needs_persist = false;
+		$order = 1;
+		foreach ($templates as $id => &$tpl) {
+			if (!is_array($tpl)) {
+				$tpl = [];
+			}
+			if (!isset($tpl['order']) || !is_numeric($tpl['order'])) {
+				$tpl['order'] = $order;
+				$needs_persist = true;
+			}
+			$order++;
+		}
+		unset($tpl);
+
+		uasort($templates, static function ($a, $b) {
+			$oa = isset($a['order']) ? (int) $a['order'] : 0;
+			$ob = isset($b['order']) ? (int) $b['order'] : 0;
+			if ($oa === $ob) {
+				return 0;
+			}
+			return $oa < $ob ? -1 : 1;
+		});
+
+		if ($needs_persist) {
+			update_option(self::SMS_TEXT_TEMPLATES_KEY, $templates);
+		}
+
 		return $templates;
 	}
 
@@ -8513,10 +10389,16 @@ html body .woocommerce-layout__header {
 		$last_name   = isset($_GET['last_name']) ? sanitize_text_field($_GET['last_name']) : '';
 		$login_url   = isset($_GET['login_url']) ? sanitize_text_field($_GET['login_url']) : '/my-account/';
 		$coupon_code = isset($_GET['coupon_code']) ? sanitize_text_field($_GET['coupon_code']) : 'SAMPLECOUPON123';
+		$coupon_code_value = isset($_GET['coupon_code_value']) ? sanitize_text_field($_GET['coupon_code_value']) : '';
+		if ($coupon_code_value === '') {
+			$coupon_code_value = self::format_coupon_code_value_for_placeholder($coupon_code);
+		}
 
-		// Get template
+		// Get template (supports custom "__um_default__" coupon template token).
 		$template = null;
-		if (!empty($template_id)) {
+		if ($template_id === '__um_default__') {
+			$template = self::resolve_coupon_email_template('__um_default__');
+		} elseif (!empty($template_id)) {
 			$templates = self::get_email_templates();
 			if (isset($templates[$template_id])) {
 				$template = $templates[$template_id];
@@ -8552,6 +10434,8 @@ html body .woocommerce-layout__header {
 			'%LASTNAME%'        => $last_name,
 			'%PASSWORDRESETURL%' => $password_reset_url,
 			'%COUPONCODE%'      => $coupon_code,
+			'%COUPONCODEVALUE%' => $coupon_code_value,
+			'[coupon_code]'     => $coupon_code,
 		];
 
 		$heading = str_replace(array_keys($replacements), array_values($replacements), $template['heading']);
@@ -8879,7 +10763,172 @@ html body .woocommerce-layout__header {
 		$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
 		$current_url = $scheme . $host . $uri;
 		
-		self::add_user_activity(get_current_user_id(), 'View My Account: ' . $endpoint_label, $current_url);
+		$current_user_id = get_current_user_id();
+		self::maybe_send_dashboard_role_change_alert((int) $current_user_id, (string) $endpoint_label, (string) $current_url);
+		self::add_user_activity($current_user_id, 'View My Account: ' . $endpoint_label, $current_url);
+	}
+
+	/**
+	 * Send a role-change alert when a user reaches My Account Dashboard and prior activity roles differ.
+	 *
+	 * @param int    $user_id        Current user ID.
+	 * @param string $endpoint_label Current My Account endpoint label.
+	 * @param string $current_url    Current page URL.
+	 */
+	private static function maybe_send_dashboard_role_change_alert(int $user_id, string $endpoint_label, string $current_url): void {
+		if ($user_id <= 0) {
+			return;
+		}
+
+		if (strcasecmp($endpoint_label, 'Dashboard') !== 0) {
+			return;
+		}
+
+		$settings = self::get_settings();
+		$notify_email = isset($settings['dashboard_role_change_alert_email'])
+			? sanitize_email((string) $settings['dashboard_role_change_alert_email'])
+			: '';
+		if ($notify_email === '' || !is_email($notify_email)) {
+			return;
+		}
+
+		$user = get_userdata($user_id);
+		if (!$user instanceof WP_User) {
+			return;
+		}
+
+		global $wpdb;
+		if (!$wpdb instanceof wpdb) {
+			return;
+		}
+
+		$activity_table = $wpdb->prefix . 'um_user_activity';
+		$table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $activity_table)) === $activity_table;
+		if (!$table_exists) {
+			return;
+		}
+
+		$new_roles = self::normalize_role_snapshot_to_array(implode(', ', is_array($user->roles) ? $user->roles : []));
+		$recent_rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, roles, action, created_at
+				 FROM {$activity_table}
+				 WHERE user_id = %d
+				 ORDER BY created_at DESC, id DESC
+				 LIMIT 30",
+				$user_id
+			),
+			ARRAY_A
+		);
+		if (!is_array($recent_rows) || empty($recent_rows)) {
+			return;
+		}
+
+		$last_prior_row = null;
+		$old_roles = [];
+		foreach ($recent_rows as $recent_row) {
+			if (!is_array($recent_row)) {
+				continue;
+			}
+			$recent_roles = self::normalize_role_snapshot_to_array((string) ($recent_row['roles'] ?? ''));
+			if (empty($recent_roles)) {
+				continue;
+			}
+			if ($recent_roles === $new_roles) {
+				continue;
+			}
+			$last_prior_row = $recent_row;
+			$old_roles = $recent_roles;
+			break;
+		}
+
+		if (!is_array($last_prior_row) || empty($last_prior_row)) {
+			return;
+		}
+
+		$old_role_display = !empty($old_roles) ? implode(', ', $old_roles) : __('(none)', 'user-manager');
+		$new_role_display = !empty($new_roles) ? implode(', ', $new_roles) : __('(none)', 'user-manager');
+		$old_action = isset($last_prior_row['action']) ? (string) $last_prior_row['action'] : '';
+		$old_created_at = isset($last_prior_row['created_at']) ? (string) $last_prior_row['created_at'] : '';
+
+		$alert_signature = md5(implode('|', [
+			(string) $user_id,
+			implode(',', $old_roles),
+			implode(',', $new_roles),
+			$old_created_at,
+		]));
+		$alert_meta_key = '_um_role_change_dashboard_alert_signature';
+		$last_signature = (string) get_user_meta($user_id, $alert_meta_key, true);
+		if ($last_signature !== '' && hash_equals($last_signature, $alert_signature)) {
+			return;
+		}
+
+		$user_login = (string) ($user->user_login ?? '');
+		$user_email = (string) ($user->user_email ?? '');
+		$user_display_name = (string) ($user->display_name ?? '');
+		$subject = __('User Role Changed', 'user-manager');
+		$admin_user_edit_url = get_edit_user_link($user_id);
+		$roles_report_url = admin_url('admin.php?page=user-manager&tab=reports&reports_section=user-activity');
+		$ip_address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+		$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+
+		$message_lines = [
+			__('User role change was detected on My Account Dashboard.', 'user-manager'),
+			'',
+			sprintf(__('Timestamp: %s', 'user-manager'), current_time('mysql')),
+			sprintf(__('User ID: %d', 'user-manager'), $user_id),
+			sprintf(__('Current login: %s', 'user-manager'), $user_login !== '' ? $user_login : __('(unknown)', 'user-manager')),
+			sprintf(__('Previous login: %s', 'user-manager'), $user_login !== '' ? $user_login : __('(unknown)', 'user-manager')),
+			sprintf(__('Current email: %s', 'user-manager'), $user_email !== '' ? $user_email : __('(none)', 'user-manager')),
+			sprintf(__('Current display name: %s', 'user-manager'), $user_display_name !== '' ? $user_display_name : __('(none)', 'user-manager')),
+			sprintf(__('Current role(s): %s', 'user-manager'), $new_role_display),
+			sprintf(__('Previous role(s) from User Activity report: %s', 'user-manager'), $old_role_display),
+			sprintf(__('Previous activity action: %s', 'user-manager'), $old_action !== '' ? $old_action : __('(none)', 'user-manager')),
+			sprintf(__('Previous activity timestamp: %s', 'user-manager'), $old_created_at !== '' ? $old_created_at : __('(unknown)', 'user-manager')),
+			sprintf(__('Current page URL: %s', 'user-manager'), $current_url),
+			sprintf(__('IP Address: %s', 'user-manager'), $ip_address !== '' ? $ip_address : __('(unavailable)', 'user-manager')),
+			sprintf(__('User Agent: %s', 'user-manager'), $user_agent !== '' ? $user_agent : __('(unavailable)', 'user-manager')),
+		];
+		if (is_string($admin_user_edit_url) && $admin_user_edit_url !== '') {
+			$message_lines[] = sprintf(__('Edit user: %s', 'user-manager'), $admin_user_edit_url);
+		}
+		$message_lines[] = sprintf(__('User Activity report: %s', 'user-manager'), $roles_report_url);
+
+		$sent = wp_mail($notify_email, $subject, implode("\n", $message_lines));
+		if ($sent) {
+			update_user_meta($user_id, $alert_meta_key, $alert_signature);
+		}
+	}
+
+	/**
+	 * Normalize a roles snapshot string into a sorted unique role array.
+	 *
+	 * @param string $roles_snapshot CSV/pipe role snapshot string.
+	 * @return array<int,string>
+	 */
+	private static function normalize_role_snapshot_to_array(string $roles_snapshot): array {
+		$roles_snapshot = trim($roles_snapshot);
+		if ($roles_snapshot === '') {
+			return [];
+		}
+
+		$parts = preg_split('/[,|]+/', $roles_snapshot);
+		if (!is_array($parts)) {
+			return [];
+		}
+
+		$roles = [];
+		foreach ($parts as $part) {
+			$role = sanitize_key(trim((string) $part));
+			if ($role === '') {
+				continue;
+			}
+			$roles[] = $role;
+		}
+
+		$roles = array_values(array_unique($roles));
+		sort($roles);
+		return $roles;
 	}
 	
 	/**
@@ -9024,6 +11073,125 @@ html body .woocommerce-layout__header {
 	}
 
 	/**
+	 * Determine whether a user has been deactivated.
+	 */
+	public static function is_user_deactivated(int $user_id): bool {
+		if ($user_id <= 0) {
+			return false;
+		}
+		return !empty(get_user_meta($user_id, self::USER_DEACTIVATED_META_KEY, true));
+	}
+
+	/**
+	 * Get deactivation/reactivation history entries.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function get_deactivated_users_history(): array {
+		$history = get_option(self::USER_DEACTIVATION_HISTORY_KEY, []);
+		if (!is_array($history)) {
+			return [];
+		}
+
+		$normalized = [];
+		foreach ($history as $entry) {
+			if (!is_array($entry)) {
+				continue;
+			}
+
+			$action = isset($entry['action']) ? sanitize_key((string) $entry['action']) : '';
+			if (!in_array($action, ['deactivated', 'reactivated'], true)) {
+				$action = 'deactivated';
+			}
+
+			$normalized[] = [
+				'id' => isset($entry['id']) ? sanitize_text_field((string) $entry['id']) : '',
+				'action' => $action,
+				'user_id' => isset($entry['user_id']) ? absint($entry['user_id']) : 0,
+				'user_login' => isset($entry['user_login']) ? sanitize_user((string) $entry['user_login'], true) : '',
+				'user_email' => isset($entry['user_email']) ? sanitize_text_field((string) $entry['user_email']) : '',
+				'result_login' => isset($entry['result_login']) ? sanitize_user((string) $entry['result_login'], true) : '',
+				'result_email' => isset($entry['result_email']) ? sanitize_text_field((string) $entry['result_email']) : '',
+				'attempted_identifier' => isset($entry['attempted_identifier']) ? sanitize_text_field((string) $entry['attempted_identifier']) : '',
+				'performed_by' => isset($entry['performed_by']) ? absint($entry['performed_by']) : 0,
+				'performed_at' => isset($entry['performed_at']) ? sanitize_text_field((string) $entry['performed_at']) : '',
+			];
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * Add one deactivation/reactivation history entry.
+	 *
+	 * @param array<string,mixed> $entry History entry data.
+	 */
+	public static function add_deactivated_users_history_entry(array $entry): void {
+		$history = self::get_deactivated_users_history();
+		$action = isset($entry['action']) ? sanitize_key((string) $entry['action']) : '';
+		if (!in_array($action, ['deactivated', 'reactivated'], true)) {
+			$action = 'deactivated';
+		}
+
+		$history_entry = [
+			'id' => isset($entry['id'])
+				? sanitize_text_field((string) $entry['id'])
+				: (function_exists('wp_generate_uuid4') ? wp_generate_uuid4() : uniqid('um-deactivate-history-', true)),
+			'action' => $action,
+			'user_id' => isset($entry['user_id']) ? absint($entry['user_id']) : 0,
+			'user_login' => isset($entry['user_login']) ? sanitize_user((string) $entry['user_login'], true) : '',
+			'user_email' => isset($entry['user_email']) ? sanitize_text_field((string) $entry['user_email']) : '',
+			'result_login' => isset($entry['result_login']) ? sanitize_user((string) $entry['result_login'], true) : '',
+			'result_email' => isset($entry['result_email']) ? sanitize_text_field((string) $entry['result_email']) : '',
+			'attempted_identifier' => isset($entry['attempted_identifier']) ? sanitize_text_field((string) $entry['attempted_identifier']) : '',
+			'performed_by' => isset($entry['performed_by']) ? absint($entry['performed_by']) : 0,
+			'performed_at' => isset($entry['performed_at']) && (string) $entry['performed_at'] !== ''
+				? sanitize_text_field((string) $entry['performed_at'])
+				: current_time('mysql'),
+		];
+
+		array_unshift($history, $history_entry);
+		update_option(self::USER_DEACTIVATION_HISTORY_KEY, $history);
+	}
+
+	/**
+	 * Block authentication for deactivated users.
+	 *
+	 * @param WP_User|WP_Error $user
+	 * @param string           $password
+	 * @return WP_User|WP_Error
+	 */
+	public static function block_deactivated_user_authentication($user, $password) {
+		if (is_wp_error($user) || !($user instanceof WP_User)) {
+			return $user;
+		}
+		if (!self::is_user_deactivated((int) $user->ID)) {
+			return $user;
+		}
+		return new WP_Error(
+			'um_user_deactivated',
+			__('This account has been deactivated. Please contact the site administrator.', 'user-manager')
+		);
+	}
+
+	/**
+	 * Prevent deactivated users from requesting password resets.
+	 *
+	 * @param bool $allow
+	 * @param int  $user_id
+	 */
+	public static function maybe_block_deactivated_user_password_reset($allow, $user_id): bool {
+		$user_id = absint($user_id);
+		if (!$allow || $user_id <= 0) {
+			return (bool) $allow;
+		}
+		if (self::is_user_deactivated($user_id)) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
 	 * Create login history table if it doesn't exist.
 	 */
 	public static function maybe_create_login_history_table(): void {
@@ -9111,6 +11279,13 @@ html body .woocommerce-layout__header {
 		if (empty($settings['role_change_alert_enabled']) || empty($settings['role_change_alert_email']) || !is_email($settings['role_change_alert_email'])) {
 			return;
 		}
+		$trigger_user_email = sanitize_email((string) ($user->user_email ?? ''));
+		if (
+			$trigger_user_email !== ''
+			&& self::is_role_change_alert_email_excluded($trigger_user_email, (string) ($settings['role_change_alert_email_exclusions'] ?? ''))
+		) {
+			return;
+		}
 		$monitored = isset($settings['role_change_alert_roles']) && is_array($settings['role_change_alert_roles']) ? $settings['role_change_alert_roles'] : [];
 		if (empty($monitored)) {
 			return;
@@ -9163,7 +11338,43 @@ html body .woocommerce-layout__header {
 		);
 		wp_mail($settings['role_change_alert_email'], $subject, $message);
 	}
-	
+
+	/**
+	 * Check if a triggering user email should be excluded from role-change alert sending.
+	 *
+	 * @param string $trigger_user_email Triggering user email.
+	 * @param string $raw_excluded_emails CSV/newline list of excluded emails.
+	 * @return bool
+	 */
+	private static function is_role_change_alert_email_excluded(string $trigger_user_email, string $raw_excluded_emails): bool {
+		$trigger_user_email = strtolower(sanitize_email($trigger_user_email));
+		if ($trigger_user_email === '') {
+			return false;
+		}
+
+		$raw_excluded_emails = trim($raw_excluded_emails);
+		if ($raw_excluded_emails === '') {
+			return false;
+		}
+
+		$parts = preg_split('/[\r\n,]+/', $raw_excluded_emails);
+		if (!is_array($parts) || empty($parts)) {
+			return false;
+		}
+
+		foreach ($parts as $part) {
+			$email = strtolower(sanitize_email((string) $part));
+			if ($email === '') {
+				continue;
+			}
+			if (hash_equals($email, $trigger_user_email)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	/**
 	 * Log wp-admin login to activity log.
 	 * Called on admin_init to detect when user accesses wp-admin after login.

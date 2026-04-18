@@ -39,6 +39,2325 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.5.250 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > Activity & Logging: added new field "Emails to EXCLUDE from Admin email address for role change alerts" beneath the admin alert email setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Role-change alert logic now checks that exclusion list and skips sending the notification when the triggering user email is listed.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.249 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new My Account Admin setting, "Add Download to CSV Button below Paging Buttons," directly beneath the rows-per-page control.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, Admin: Orders, Products, Coupons, Users, and Activity now render an Export to CSV button below pagination controls in My Account.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('CSV exports include all matching rows across all pages and preserve active search and filter selections (including order-status and activity-action filters).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.248 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved the wp-admin redirect-list setting out of the My Account Admin Activity Viewer subsection into its own My Account Admin card-level setting so it applies addon-wide.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated setting label to: "WP Administrators to Redirect to My Account if Accessing WP-Admin and Remove WP-Admin Top Bar on Front End?"', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Listed administrators now have the WP-Admin top bar removed on the front end in addition to being redirected away from wp-admin access.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.247 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new My Account Admin add-on setting: "Items per page in My Account Admin lists" so pagination size can be configured instead of using a fixed default.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('My Account Admin Orders, Products, Coupons, Users, and Activity list queries now use the saved per-page setting for pagination/count calculations.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.246 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed legacy My Account Admin disabled-control styling for `.woocommerce-MyAccount-content input/select/textarea/button[type="submit"]` and added explicit control-enable safeguards so those fields are clickable/fully visible in My Account Admin screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.245 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated default plugin-title fallback used for WP-Admin menu labels from "User Experience Manager" to "UX Manager" when Plugin Title Override is empty.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Settings > User Experience copy to reflect the new default "UX Manager" label in the WP-Admin top-bar toggle text and Plugin Title Override placeholder.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.244 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Settings > Email Settings field under "Emails/Texts Per Batch": "Based on User Activity Report, if a user logs in and they have logged in before but had a different role than what they are currently logging in with, send an email notifiction to".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When that email address is configured, role-change monitoring now runs on My Account Dashboard loads and compares current roles against the latest prior User Activity role snapshot so SSO/non-standard logins are also covered.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Role-change emails use subject "User Role Changed" and include helpful context such as user ID/login/email/display name, previous roles/timestamp/action, current roles, current URL, IP address, and user agent.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.243 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed My Account Admin Activity "Filter by Action" controls rendering as non-clickable/disabled on some front-end themes by adding dedicated filter form wrapper/classes and explicit interactivity CSS (pointer-events, opacity, z-index, and button/select targeting).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Activity filter form markup to use dedicated classes so form-control styles can be scoped safely without affecting other My Account admin tools.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.242 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated My Account Admin Activity Viewer hidden-email behavior so "Partial Match Emails to Hide on Front End" now excludes matching users\' activity rows from the entire front-end query results (instead of only masking email text).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied hidden-email exclusion consistently to activity totals, paginated rows, and available-action option sourcing so filters and counts reflect only visible records.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clarified Activity Viewer settings helper text to state that matching partial emails are excluded from front-end Activity records.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.241 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed WP-Admin redirect enforcement for "WP Administrators to Redirect to My Account if Accessing WP-Admin" by registering the redirect check at core/plugin bootstrap so it runs for wp-admin requests even when My Account endpoint hooks are not initialized.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Hardened administrator detection in the redirect guard to use explicit administrator role matching with a `manage_options` fallback, so listed administrator usernames/emails/user IDs are redirected reliably.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.240 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated My Account Admin Activity Viewer role-change badge copy from "Role Review" to "User role change found in past" in both settings label text and table output badge text.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixed Admin: Activity action filtering by replacing auto-submit-only dropdown behavior with an explicit Apply Filter submit button, preserving selected action values reliably.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Simplified Admin: Activity table columns by removing Username, Time Ago, URL, IP, User Agent, and Edit User button columns; renamed "Login Time" column label to "Timestamp".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.239 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Invoice pages now display a paid-status notice near the top (similar to the approval notice) when an order is paid.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Paid notice includes both the paid date/time and payment method, with safe fallback text when either value is unavailable.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.238 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Bulk Add to Cart sample CSV download handlers to use the resolved Product ID column header variable when checking whether to include a separate identifier column, preventing undefined-variable notices and fatal type errors on `?um_bulk_add_to_cart_sample=1` and sample-with-data downloads.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixed Bulk Add to Cart "sample with product data" CSV export to initialize private/draft inclusion flags from saved settings before building post-status filters, preventing additional undefined-variable warnings during download.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.237 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new My Account Admin Activity Viewer setting: "WP Administrators to Redirect to My Account if Accessing WP-Admin" (comma-separated usernames/emails/user IDs).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added wp-admin redirect enforcement for only the explicitly listed administrator users: matching users are blocked from wp-admin and automatically redirected to My Account without changing their roles.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.236 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new My Account Site Admin area: "My Account Admin Activity Viewer", available as a dedicated Admin: Activity endpoint in WooCommerce My Account for allowed usernames/roles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Admin: Activity mirrors Reports > User Activity data and supports frontend action filtering, search, pagination, partial-email hiding, optional action-whitelist display, and optional "Role Review" flags for users with mixed role history snapshots in activity logs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new My Account Admin Activity Viewer settings under Add-ons > My Account Site Admin: Allowed usernames, Allowed roles for Admin: Activity, Partial Match Emails to Hide on Front End, Only Display Actions, and Display "Role Review" Flag.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.235 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Media Library Tags Block checkbox setting: "Exclude WP Administrator Users from Tracking", placed directly under "Exclude Logged In Users from Tracking".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag-report tracking exclusion now supports an administrator-only mode so WP Administrators can be excluded from album-tag and lightbox view tracking even when other logged-in roles are still tracked.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.234 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Media Library Tags Block setting: "Exclude Logged In Users from Tracking" so admin/testing sessions can be excluded from Tag Reports counters.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new "Clean All Tag Reports Data" action button in Blocks > Media Library Tags that resets image lightbox view metrics and album tag view metrics (including year/month/week/day counters).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.233 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Single-video combined-row layout now falls back to a single stacked column when no featured image is set for the active tag context, preventing empty left columns and right-shifted video output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('In the no-featured-image fallback, description/bullets render above the single video and the video remains centered (same centered single-video behavior as existing cols-1 layout rules).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.232 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed single-video 3-column combined-row output so it now renders exactly one Featured Image + Description/Bullets + Single Video row without duplicate featured images.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When combined-row mode is active, the standard album description block (above/below gallery) is suppressed and group links are rendered once above the combined row.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.231 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled Media Library Tags block/add-on label from "Dynamic Photo Gallery with Media Library Tags" to "Media Library Tags with Photo & YouTube Video Gallery" across active settings cards and documentation references.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.230 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tags single-video 3-column combined-row setting persistence mismatch by aligning checkbox field/save key to `media_library_tag_gallery_single_video_three_column_combined_row`.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added backward-compatible support for the legacy `media_library_tag_gallery_single_video_three_column_alternative_layout` key during settings read/save so existing installs keep behavior without migration steps.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.229 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag video grid card alignment so mixed horizontal and vertical videos are vertically centered within each grid row/column.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied vertical centering in both shared shortcode video CSS and gallery inline CSS for consistent alignment across video layouts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.226 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Order Invoice & Approval (`?invoice=`) product and meta images in the Products & Services table are now clickable and open in an in-page lightbox/modal preview.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox support now covers both the main product thumbnail and image tags rendered inside item meta (for example custom Product Image fields), with keyboard support (Enter/Space to open, Esc to close).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.225 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new optional additional-order-meta flag support for file preview modals (`preview`, `preview_file`, `file_preview`, `preview-modal`, `preview_modal`) in both Order detail and All Orders configured meta fields.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Flagged file URL values now render a "Preview File" action that opens an in-page modal so admins can review uploads without downloading first.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preview modal includes inline delimited table previews for CSV/TSV/TXT and Excel-file preview support via embedded Office web viewer for supported public files.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.224 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Media Library Tag gallery checkbox setting: "If only 1 video is found for a tag, display featured image, description/bullets, and video in 3 separate columns next to each other all on one row".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled and exactly one video is rendered, gallery output switches to a single-row 3-column layout (featured image | description/bullets | video) with responsive stacking on mobile.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.215 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Improved Media > Tag Groups editing so missing/legacy member tag slugs are visible and removable, allowing cleanup of stale tags that no longer exist in Library Tags.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.214 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Album description bullet-list rendering now adds a `10plusbullets` CSS class when more than 10 bullet lines are present, enabling targeted styling for large lists.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.213 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added album-tag view tracking that records whenever one or more Library Tags are loaded for front-end album gallery queries, including URL-parameter-driven tag expressions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Library Tag edit screens now display Album Tag Views totals with year/month/week/day counters, similar to existing Lightbox Views reporting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new Media > Tag Reports screen with tabs for Most Viewed Images and Most Viewed Album Tags.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.212 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Restricted Access shared-password reliability for cached front-end overlays by removing nonce dependency from password submit validation, preventing first-submit failures that caused visitors to enter passwords twice.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.211 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag description rendering for multi-tag contexts to output only the final (last) tag description/bullets block instead of rendering all matched tag description blocks.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.210 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Improved Restricted Access shared-password UX for cached/stale overlay forms: valid passwords now continue to grant access even when the nonce has expired, preventing first-attempt failures followed by second-attempt success.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Invalid nonce submissions now return a clearer message prompting visitors to refresh and try again.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.209 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tag slug-rename sync hook argument handling so Video Library `tagSlugs` now reliably update during standard term edit saves.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Adjusted slug-replacement writes to update raw saved Video Library item rows directly before sanitization, preventing old slugs from being dropped before replacement.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.208 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed a fatal error on environments where trait constants are unsupported by replacing the Restricted Access trusted-IP cookie trait constant with a trait static property.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.207 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('When Library Tag slugs are renamed, Video Library records now update their saved `tagSlugs` references instead of dropping that association.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied slug-sync handling for both single term edits and the Library Tags bulk editor update flow.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.206 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Restricted Access checkbox setting: "Upon Successful Password, Save IP Address and Do Not Ask Again for Next 30 Days".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, successful shared-password submissions now store a signed 30-day IP trust cookie and bypass future password prompts from that same IP until expiry.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.205 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated mobile Media Library Tag video-grid rules so wrappers marked with `um-media-library-tag-videos-wrap-cols-1` render as a single full-width column on mobile, while multi-video wrappers continue rendering as 2 columns.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.204 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated default Media Library Tag front-end video ordering to date/time ascending (oldest-first) when no explicit sort override is provided, while keeping shortcode `sort`/`order` overrides supported.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.203 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Strengthened mobile video grid overrides so Media Library Tag video wrappers with `um-media-library-tag-videos-wrap-cols-3` or `um-media-library-tag-videos-wrap-cols-4` now still render exactly 2 columns on mobile breakpoints.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.202 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag group-links rendering to deduplicate groups when multiple active tags belong to the same group, preventing duplicate group-link rows in a single output block.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.201 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the custom margin rule for `.um-media-library-tag-description-wrap .um-media-library-tag-description-block`, allowing description block spacing to inherit from surrounding layout styles.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.200 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag description block spacing so `.um-media-library-tag-description-wrap .um-media-library-tag-description-block` now uses 25px top and 25px bottom margins (`margin: 25px 0`).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.199 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag gallery video rendering to always apply date+time sorting (default newest-first) so same-day videos are consistently ordered by time even when no shortcode sort attribute is passed.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.198 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated split-column Media Library Tag description layout so columns are vertically centered against each other on desktop, improving alignment between featured image and description/bullets.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.197 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag video wrapper class logic so single-video output can retain desktop column-constrained width instead of always stretching to a full-width single column.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.196 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tag Gallery checkbox: "Hide tag featured image if no description and no bullets exist".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, featured images are automatically suppressed for tag description blocks where both description text and bullets are empty.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.195 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag video grids on mobile to display two columns instead of one for multi-video layouts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.194 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Adjusted mobile split-description layout so the left image column expands to full width and featured images render at full column width on small screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.193 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated `.um-media-library-tag-description-wrap` spacing to use `margin: 0 0 50px;` for larger bottom separation above gallery content.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.192 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting under "Display Album Tag Description(s)": "Display Featured Image in separate column on left, then description and bullets in separate column on right".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, album description output now uses a true two-column layout (image-width left column + remaining-space content column) and automatically stacks on mobile screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.191 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags Bulk Editor (`upload.php?page=um-media-library-tags-bulk-editor`) now includes a third column for Bullets so bullets can be edited in bulk alongside tag details and descriptions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk save now persists each row\'s bullet textarea into tag bullet term meta (`um_media_library_tag_bullets`) using the same line-by-line sanitization as single tag edit.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.190 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new "Bullets" textarea to Media Library Tag add/edit screens so each tag can store optional front-end bullet points (one item per line).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag description output now renders saved bullets as a list below the description paragraph, including placeholder-rendered tag descriptions and edit links.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.189 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('`[um_media_library_tag_videos]` shortcode now supports sort override attributes (`sort` or `order`) so output can be forced to oldest-first (`asc`, `oldest`, `date_asc`) or newest-first (`desc`, `newest`, `date_desc`) using video date+time values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When date/time sort override is provided, unknown date/time entries stay at the end while ties continue to fall back to title ordering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.188 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Video Library now includes a per-video Time field (single edit and Saved Videos bulk editor) stored in HH:MM format.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Saved video ordering now sorts by date first and then by time (newest to oldest), so videos sharing the same date keep precise chronological order.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.187 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag description paragraph spacing increased: `.um-media-library-tag-description-paragraph` now uses a 50px bottom margin for clearer separation before following content/links.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.186 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Video Library now supports a per-video "Vertical (Short)" toggle in both single edit form and Saved Videos bulk editor.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end Media Library Tag video embeds now render vertical-marked videos in a 9:16 frame while standard videos continue using 16:9.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.185 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access runtime now always bypasses front-end overlay enforcement for logged-in administrators (`manage_options`) before role-based exclusion checks.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This prevents administrators from being blocked on pages like the homepage even when Administrator remains checked in the restricted role list.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.184 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Video Library "Saved Videos" table is now fully bulk-editable with inline inputs for title, YouTube link, date, tags, and description on every row.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new "Save All Videos" bulk action that persists all edited rows in one submission while preserving rows whose links are invalid and showing an error notice.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.183 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag front-end YouTube cards now show an administrator-only centered "Edit Video" link below each video item.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new link opens the matching Video Library edit screen for that saved video entry (`Media > Video Library`).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.182 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed top-level WP-Admin User Manager shortcut page asset loading by treating both `users_page_user-manager` and `toplevel_page_user-manager` hook IDs as valid plugin screens for enqueue and submenu highlight logic.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This restores plugin admin styles/scripts when opening the optional top-level menu item (for example custom title overrides like "Starship Enterprise").', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.181 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin compare-flag rules now support optional grace-value format `meta_a:meta_b:are_they_equal:grace_value:FLAG TITLE:bgcolor:textcolor`.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When grace_value is provided, the flag displays only when both compared meta values are numeric and ABS(meta_a - meta_b) is greater than the configured grace threshold; legacy equality-only format remains supported.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.180 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin text-file line-count cache now also saves a companion order meta key `_um_text_file_line_count_cache_number_only` containing only the latest numeric row count value.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reset Cached Line Counts now clears both cache meta keys so future views always recalculate and repopulate both values from fresh fetches.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.179 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin add-on: added a new textarea setting "Additional Flag to Display Below Additional Fields in All Orders Screen" supporting line-by-line compare rules in format `meta_a:meta_b:are_they_equal:FLAG TITLE:bgcolor:textcolor`.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Admin: Orders list now evaluates configured compare flags per order and renders matching badge tags below the existing additional meta fields block, with optional per-flag background/text colors (default black background and white text).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.178 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on: "No access message" now supports and preserves a truly blank value instead of forcing the default fallback text.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated both settings save behavior and runtime message resolution so an intentionally empty no-access message remains empty on front-end overlay output.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.177 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on: swapped the default overlay color values so Full Screen Overlay Background now defaults to white and Full Screen Overlay Text Color now defaults to black.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated both settings UI defaults and save-time fallback defaults so new configurations use the swapped color pairing consistently.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.176 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on: added an "Insert Random URL Parameter String" button under "Allow an appended URL string to grant access".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new button generates a random 32-character alphanumeric token and inserts it into the field in `?token` format for quick secure URL-key setup.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.175 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tab: fixed the "Inactive Addons" card so it only lists inactive add-ons and no longer duplicates active add-ons already shown in the "Active Add-ons" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Blocks tab: fixed the "Inactive Blocks" card so it only lists inactive blocks and no longer duplicates active blocks already shown in the "Active Blocks" card.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.174 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin add-on settings now include a "Reset Cached File Line Counts" button that clears stored per-order line-count cache values so flagged file fields can be re-fetched and recalculated.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Improved flagged file line counting for CSV/TSV/XLS/XLSX-style sources: counts now focus on rows/new lines instead of cell-like delimiters (commas/tabs), and spreadsheet-like payloads attempt row-tag/worksheet-row detection before fallback counting.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.173 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Extended "Additional Meta Fields to Display Under Order" helper guidance to match the All Orders Screen field, including optional flags support (`text_line_count`, `text-file-line-count`, `line_count`, `count_lines`).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added matching example and debug parameter notes for flagged text-file line count troubleshooting on the under-order additional meta field.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.172 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Changed "Additional Meta Fields to Display Under Order" to a textarea so definitions can be entered line-by-line in addition to comma-separated format.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Changed "Additional Meta Fields to Display Under Order in All Orders Screen" to a textarea with support for either line breaks or commas per definition.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.171 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Text-file line counts for My Account Admin order-list flagged file fields now use persistent per-order meta caching keyed by resolved file URL, avoiding repeat remote fetches after the first successful read.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Line-count debug output now includes cache status details so troubleshooting can confirm whether a value came from order-meta cache or from a fresh remote fetch.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.170 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders list column title changed from "Date" to "Shipping Address".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved order timestamp, billing email, and status under the Order number column while keeping Shipping Address in its own column and retaining the dedicated custom-meta column before actions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.169 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders list now renders configured additional order-list meta fields in a dedicated column before the buttons/actions column.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Kept the actions header untitled while moving custom add-on/meta output out of the buttons column for improved readability.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.168 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Additional My Account Admin order-list meta URL handling now preserves and normalizes prefixed file URLs (for example `https://.../path/` + stored token) so flagged file fields render as links and can resolve line counts correctly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added optional URL debug mode for flagged text-file count fields using `?um_text_file_line_count_debug=1`, which outputs source value, normalized value, final URL, and fetch/line-count status to aid troubleshooting.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.167 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders list layout now merges the Address column into the Date column so the table uses a cleaner single data column for order timing/contact/address context.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Additional meta configured for "Display Under Order in All Orders Screen" now renders inline inside the untitled actions column instead of a separate full-width meta row, reducing each order entry to one table row.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.166 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Site Admin access is now strictly controlled by configured usernames/roles for each area; administrator capability alone no longer bypasses empty access lists.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Order approval button access in My Account Admin Orders now follows the same username/role gate rules and no longer auto-allows by manage_options.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.165 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Renamed Add-ons tab card title from "Choose an Add-on" to "Inactive Add-ons" so it clearly pairs with the existing "Active Add-ons" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Renamed Blocks tab card title from "Choose a Block" to "Inactive Blocks" so it clearly pairs with the existing "Active Blocks" card.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.164 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Plugin Title Override now also controls the plugin entry label in the Users submenu.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new Settings checkbox to optionally register a top-level WP-Admin parent menu item below Users that opens this plugin page.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, the top-level menu item title also uses Plugin Title Override when provided.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.163 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Extended "Additional Meta Fields to Display Under Order in All Orders Screen" with optional field flags so specific fields can enable text-file line counting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Supported flags: `text_line_count`, `text-file-line-count`, `line_count`, and `count_lines` using format `meta_field:Label:prefix_before_value:flag` (for example `_volunteer_file:Volunteer File::text_line_count`).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When a flagged field resolves to a URL value, Admin: Orders output now appends a line-count indicator next to the Open File link when the remote text file can be read.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.162 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin now includes a new setting: "Additional Meta Fields to Display Under Order in All Orders Screen" (same field format as the existing detail-screen setting).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Admin: Orders list now renders these configured fields in a dedicated full-width row directly under each order row, making long values/links easier to read and click.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.161 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Product Notification add-on now includes a new "Notification Checkbox/Icon Color Override" setting (default `#ffffff`) to control the WooCommerce notice icon/checkmark color used by `.woocommerce-message::before`.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Product Notification front-end output now applies this setting specifically to `.woocommerce-message.um-product-notification-message::before` so the icon color can be tuned independently from text/background colors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.160 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Converted color-value settings across plugin admin screens to WordPress color pickers for easier visual selection (instead of plain text/manual hex-only entry).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons and Blocks tabs now enqueue wp-color-picker and initialize shared picker behavior for both static fields and dynamically-added settings rows.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated related color setting sanitization to use hex-color validation for My Account Admin button colors, Invoice & Approval colors, and WP-Admin notification background colors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.159 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin access hardening: each Admin area now requires explicit user and/or role allow-list matches; when both lists are empty, non-admin users no longer get implicit access.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('My Account Admin Orders now supports per-status front-end title override inputs so each WooCommerce status label can be customized in the endpoint list/detail views.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Block Pages by URL String now supports multiple scoped rule sets (match + exception + usernames + roles + look/feel + redirect) on one screen, plus WP color picker controls for color fields.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Settings > User Experience > "Plugin Title Override" to retitle both the plugin page heading and optional WP-Admin bar shortcut label.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.158 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tab now includes a new "Active Add-ons" card directly below Add-ons Filter, showing only active add-on tiles in the same clickable tile layout as "Choose an Add-on".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Blocks tab now includes a new "Active Blocks" card directly below Blocks Filter, showing only active block tiles with the same tile behavior as "Choose a Block".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Users submenu label for this plugin from "User Experience Manager" to "UX Manager".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.157 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Tabbed Content Area block mobile tab layout now uses a two-column width override (`47%`) under 768px to support clearer two-column tab rows on smaller screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.156 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders action buttons now include unique class names per action (View, Print, Print Invoice, Download Invoice, Approve, Decline) for easier CSS targeting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new My Account Admin settings: "Approve Button Background Color" and "Decline Button Background Color" to style order action buttons from Add-ons settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.155 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated "Block Pages by URL String" default/placeholder background color to black (`#000000`) for new configurations and fallback rendering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.154 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Block Pages by URL String" with URL match list, exception list, optional redirect URL, and look/feel settings (background color/image, centered logo, logo width, message, and text color).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, matching front-end requests are blocked by URL substring rules (line-by-line), with exception rules taking priority; supports redirect mode or branded blocked-screen output.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.153 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag Group front-end breadcrumb wrapper inline spacing to use a larger bottom margin (`margin: 0 0 30px`) for clearer separation from the description content below.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.152 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added per-tag "Tag Title Override" inputs in Media > Tag Groups for each selected group tag so admins can customize front-end breadcrumb labels without changing tag slugs or URLs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Saved Tag Group records now persist member title-override mappings and apply them to related/member link labels on the front end while preserving key-only slug URL behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.151 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Tag Group link targets to use the current page URL as the base path, then append key-only tag query style (`?[tag-slug]`).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag Group breadcrumb links now stay on the active page context while switching tag filters, instead of always linking from site root.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.150 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Tag Group breadcrumb duplication in parent-tag views: parent tag now renders only once (left side) and is no longer repeated in the right-side related list.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preserved current-tag non-link bold rendering while keeping related/member links distinct and non-duplicated.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.149 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Tag Group breadcrumb rendering so the currently viewed tag is always displayed in the list as non-link text with a dedicated current-tag class and bold styling.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied current-tag non-link behavior consistently for both parent-tag and member-tag views.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.148 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added sortable ordering controls to Media > Tag Groups: selected group tags can now be drag-and-dropped into a custom display order before saving.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end Tag Group related-link output now follows the saved tag order from Tag Groups so links render in the same sequence configured in admin.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.147 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Adjusted Tag Group breadcrumb output consistency: when viewing the parent tag, the parent tag now remains visible in the right-side tag list so parent/member screens share the same list structure.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Parent breadcrumb link is now always rendered for grouped tags, including parent-tag views.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.146 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Tag Group front-end link output to a single-line breadcrumb format: `[parent tag link] > [related tag links]` without "Parent Tag:" / "Related Tags:" labels.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Changed Tag Group links to use slug-key query form (`/?{tag-slug}`) instead of `?tag={slug}` URL parameter output.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.145 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated lightbox tap-side navigation behavior so left/right tap navigation only responds when clicking the actual displayed image, not surrounding overlay/background area.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Backdrop clicks outside the image continue to close the lightbox, preserving expected close-on-background behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.144 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Media > Tag Groups page to create parent-tag groups and assign related member tags from existing Library Tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag Group links now render above gallery tag descriptions on the front end: all other tags in the matching group plus a Parent Tag link, for both single and multi-tag expressions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Tag Groups save/delete handlers and persistent storage for group definitions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.143 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Redesigned Library Tags Bulk Editor table into a two-column layout: consolidated Tag Title, Slug, Featured Image, and Video Library summary into one "Tag Details" column.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Expanded Description editing into a dedicated large textarea column to maximize writing space and improve long-form description editing.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.142 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed `[um_media_library_tag_videos]` shortcode column layout rendering by injecting shared front-end video grid CSS when shortcode output is used outside the gallery block context.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Shortcode video wrappers now consistently honor `um-media-library-tag-videos-wrap-cols-*` desktop column classes (2/3/4) while still collapsing to one column on mobile.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.141 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tag description featured-image lightbox trigger rendering: description-area output now preserves the generated lightbox button attributes instead of re-sanitizing and stripping event attributes needed for click-to-open behavior.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Featured image in the description area now opens through the same lightbox trigger path as gallery images when Link To is set to "Open Image in Lightbox".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.140 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new `[um_media_library_tag_videos]` shortcode to render Video Library embeds using the same front-end layout/classes as Media Library Tag Gallery videos.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Shortcode now supports tag expressions (`tag1`, `tag1+tag2`, `tag1_tag2`, `tag1|tag2`) plus optional desktop column override (`desktop_columns` / `columns`, 1-4).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Video Library admin page now includes a shortcode usage note with expression examples and parameter guidance.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.139 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Refactored Media Library Tag lightbox trigger onclick handler to a compact API-only call path, reducing inline attribute JavaScript size and preventing parser edge cases that could block lightbox opening.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preserved fallback event prevention behavior while relying on the shared `window.umMltgInline.open()` runtime for all lightbox open flow state updates.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.138 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Improved Media Library Tag video embed layout so title/description metadata has dedicated space below each iframe and no longer gets clipped by the video frame container.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added responsive desktop column scaling for multiple videos: 2 columns for 2 videos, 3 columns for 3 videos, and up to 4 columns for 4+ videos (mobile still collapses to one column).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.137 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Media Library Tag lightbox inline JavaScript query-param regex escaping in all deep-link and debug query readers to prevent parser edge cases from breaking runtime initialization.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Normalized inline slideshow-seconds injection to JSON numeric output for safer JavaScript literal rendering in gallery runtime scripts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.136 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tag description featured-image lightbox trigger behavior so the featured image still opens in lightbox when Link To is set to "Open Image in Lightbox", even when duplicate featured-image tiles are hidden from the gallery grid.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preserved duplicate-tile hiding in the gallery grid while keeping the description featured image available as a lightbox entry point.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.135 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added two new Video Library display settings under Activate Video Library: "Display Video Title under each video" and "Display Video Description under each video".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end Media Library Tag video embeds now conditionally render each video title and/or description under the iframe based on those new settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.134 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Media Library Tag Gallery deep-link auto-open for `?image=<attachment_id>` by adding an early retry path in head bootstrap that repeatedly attempts opening until gallery triggers are available.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deep-link auto-open now routes through the resilient inline lightbox API even when unrelated later scripts throw front-end runtime errors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.133 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Video Library Edit form now shows an embedded YouTube preview directly under the YouTube Link field when a valid link is present.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The preview uses the canonical saved YouTube URL and appears only after a valid video URL has been entered/saved.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.132 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a Delete button next to Edit in Media > Video Library saved video rows so entries can be removed directly from the table.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added secure Video Library delete handling (nonce + capability checks) and post-delete success notice/redirect flow.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.131 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed an early translation-loading timing issue by deferring Media Library Tag Video Library legacy migration to run on init instead of during plugin bootstrap.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added init guards to the migration path to prevent pre-init taxonomy registration from triggering WordPress 6.7+ _load_textdomain_just_in_time notices for the user-manager textdomain.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.130 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery placeholder resolution now supports URL `title` override so `[tag-name]` can use `?title=...` when present.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When URL title override is set, `[tag-name]` uses the sanitized `title` query value while keeping tag-description lookup from the existing URL tag expression.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.129 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting: "Featured Image Max Width (px)" so the front-end featured image width is configurable from add-on settings instead of hardcoded CSS.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end featured-image wrap CSS now uses the configured max width value (with viewport-aware cap) for Media Library Tag description featured images.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.128 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new optional "Activate Video Library" setting under the Media Library Tags add-on settings.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, Media now includes a new "Video Library" page with a full add/edit form for YouTube link, title, description, date, and clickable Library Tag assignment.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a saved-videos table on the new Video Library page with per-row Edit actions that repopulate the same form for updates.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Library Tags Bulk Editor now replaces per-tag YouTube textareas with a Video Library summary column and manage links.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end gallery YouTube embeds now source from the centralized Video Library records assigned to active Library Tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added one-time migration to import existing legacy per-tag YouTube link meta into the new centralized Video Library records.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.127 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag description layout so text wraps around the tag Featured Image (including below the image) for a true flowing article-style presentation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag Featured Image now opens in the same lightbox collection as gallery images, including prev/next and deep-link index continuity.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new default-enabled setting to hide duplicate featured-image tiles when that same attachment already exists in the tagged gallery image set.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.126 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Changed Media Library Tag Gallery lightbox deep-link query parameter from um_lightbox_image_id to image for cleaner share URLs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox deep-link auto-open now reads both image (new) and um_lightbox_image_id (legacy) so old shared links continue to open the correct image.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.125 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added per-tag Featured Image support for Media Library Tags in both the taxonomy edit screen and the Library Tags Bulk Editor page.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end gallery tag descriptions now render the tag Featured Image left-aligned beside the description content when an image is assigned.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.124 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Restricted Access full-screen overlay coverage on mobile by enforcing viewport-height overlays with fixed inset positioning and dynamic viewport units.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Background overlay mode now uses mobile-safe viewport sizing (100dvh with 100vh fallback) so no page content peeks behind the lock screen on small devices.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.123 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new gallery style option: "Mosaic Grid (Taller Tiles)" that reuses the existing irregular mosaic pattern with 50% taller base tile rows.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Mosaic (Taller) shares the same large/tall/wide tile placement logic as Mosaic Grid while increasing visual tile height for a taller collage look.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.122 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag description paragraphs now preserve author-entered line breaks by converting newline characters to <br> in front-end output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag description output now explicitly allows basic inline formatting tags such as <b>, <strong>, <i>, and <em> while retaining safe sanitization.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.121 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting: "Allow Tap or Click on Left or Right side of image to go to Previous or Next Photo" directly under the existing swipe setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox now supports left/right side image click (or tap) navigation in both the primary and resilient fallback runtimes when enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.120 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added 25px bottom spacing to Media Library Tag Gallery wrapper output so gallery blocks have consistent space below the gallery container.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.119 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library admin sort labels to use neutral "Views" wording instead of "Lightbox Views" in list/grid sort dropdowns.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixed grid-view Media Library sort behavior so selecting a sort option now applies immediately to the wp.media attachment query and refreshes results in-place.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.118 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added lightbox deep-link URLs for Media Library Tag Gallery images using the um_lightbox_image_id query parameter so opening an image writes its attachment ID to the URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Pages loaded with a matching um_lightbox_image_id now auto-open the corresponding image in lightbox (including resilient fallback runtime), enabling shareable links to specific photos.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.117 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Extended Media Library Tag Gallery lightbox tracking to include current-period counters for Year, Month, Week, and Day alongside total Lightbox Views.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Attachment edit/tagging UI now shows Lightbox Views (Year/Month/Week/Day) under the existing Lightbox Views metric for each media item.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.116 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed WP_Term to int conversion warnings in Media Library menu-tag matching by extracting menu term IDs from wp_get_nav_menus() term objects before normalization.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Hardened term-ID handling in quick-search single-term redirects and category/tag report edit links so term objects are never passed directly into integer casts/absint paths.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.115 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Restricted Access shared-password session persistence by validating across all duplicate um_restricted_access cookie values present in the raw Cookie header, not only the single parsed $_COOKIE value.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Restricted Access now writes signed access cookies across all relevant path/domain variants (including host-only and common www/non-www host variants) to prevent homepage prompts caused by cookie scope collisions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.114 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added per-image Media Library Tag Gallery lightbox view tracking. Each time a lightbox image opens, the attachment now increments a stored "Lightbox Views" meta count.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library attachment edit/tagging UI now displays the current Lightbox Views value near Library Tags for quick backend visibility.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Media Library sort controls (list and grid) for Lightbox Views so admins can sort by highest/lowest viewed media.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.113 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Restricted Access setting under "No access message": "Password Submit Button Text".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Custom password submit button text now renders in both Restricted Access overlay modes (full-page overlay and background HTML overlay).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.112 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Restricted Access shared-password persistence by setting the access cookie across all relevant cookie paths (including site root) and host domain resolution.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Prevents repeated password prompts when navigating back to the homepage or other URLs that differ by cookie path scope.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.111 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed pre-open hover styling from Media Library Tag Gallery images when Link To is set to Lightbox, so thumbnails no longer animate/change on hover before opening the modal.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Kept hover styling behavior for non-lightbox link modes (Open Image / New Window) to avoid changing non-lightbox gallery interactions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.110 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tags setting: "Allow Swipe to Left or Right to go to Previous or Next Photo".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Swipe-to-navigate now works in the primary lightbox runtime and in resilient fallback runtimes when that setting is enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.109 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Applied slideshow transition classes in the resilient/fallback lightbox runtime during step changes so "Slideshow Transition" now visibly affects fallback slideshow playback.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fallback slideshow step changes now trigger the same image transition CSS class flow used by the main runtime (crossfade / slide-left) instead of hard cuts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.108 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reordered lightbox controls to display as Previous arrow, Play Slideshow button, Next arrow so Play appears centered between navigation arrows.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.107 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed fallback lightbox slideshow control wiring by defining the inline slideshow onclick callback used by the modal Play/Pause button.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Prevents Play Slideshow button no-op behavior in degraded front-end JavaScript conditions where fallback runtime is active.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.106 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Media Library Tag Gallery lightbox Previous/Next buttons to arrow-style controls (&lsaquo; / &rsaquo;) in modal output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Extended resilient inline lightbox fallback runtime to support Play/Pause slideshow, slideshow seconds-per-photo timing, and transition mode classes (none, crossfade, slide-left).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Simplified add-on settings label text from "Slideshow Transition (None, Crossfade, Slide to Left)" to "Slideshow Transition" to remove duplicated verbose wording.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.105 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tag Gallery inline fallback bootstrap registration by hooking the helper script to wp_head early, ensuring window.umMltgInline is available before gallery click handlers run.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Kept a tiny direct click-open fallback inside trigger onclick handlers so lightbox can still open if global helper registration is blocked by severe third-party script failures.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.104 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved the inline fallback lightbox helper into a dedicated PHP method and ensured it prints in the front-end head before gallery output, preventing parser breakage in block editor script payloads.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Kept emergency click-open resilience while removing the accidental editor-script contamination that could cause JavaScript syntax failures on front-end pages.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.103 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the Lightbox "Duplicate" quick link from Media Library Tag Gallery modal output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox now closes when clicking outside the image (overlay backdrop), including in the inline fail-safe fallback path.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Restored Previous/Next controls and ArrowLeft/ArrowRight keyboard navigation in both primary and inline-fallback lightbox paths when the "Add Previous & Next Links..." setting is enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.102 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added inline lightbox-open fallback directly on Media Library Tag Gallery image trigger elements so clicks can still open images even when external scripts throw page-level JS errors.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added inline close fallback on the lightbox close button to keep modal exit behavior available during degraded front-end script conditions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.101 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restored fallback lightbox support for "Add Previous & Next Links in Lightbox Window and Allow Keyboard Arrows Shortcut" so those controls continue to work even when the primary lightbox runtime is unavailable.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fallback modal runtime now reads the same Lightbox Previous/Next setting and supports Previous/Next button navigation plus ArrowLeft/ArrowRight keyboard shortcuts when enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.100 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a lightweight fallback modal runtime for Media Library Tag Gallery so image clicks can still open when the primary lightbox script is interrupted by unrelated front-end JavaScript errors.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated runtime trigger selector matching to avoid brittle quoted-attribute dependency and support class/data-attribute trigger detection paths.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.99 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Rebuilt Media Library Tag Gallery lightbox triggers to use dedicated modal data attributes and normalized runtime selector resolution, making "Link To: Open Image in Lightbox" far more resilient across gallery styles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a hardened click-open path with gallery-level and document-level capture fallback so third-party click handlers are less likely to bypass modal opening behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.98 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Pipe-separated Media Library Tag Gallery sections now suppress the built-in album description block inside each rendered sub-gallery so tag descriptions are not shown twice.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Each pipe section still keeps the centered heading/description block above the gallery and preserves the 50px bottom spacing between sequential pipe galleries.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.96 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery URL override now supports pipe-separated groups (example: ?tag=gallery1|gallery2|gallery3) to render multiple separate gallery sections in sequence instead of merging all photos into one result set.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When pipe-separated mode is used, each section now prints a centered H2 with the active tag name and a centered paragraph with that tag description (when available) above its corresponding gallery.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.95 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('SEO Basics now resolves Media Library placeholder values inside Page Title Override before printing head meta tags, so [tag-name] and [site-title] work in og:title and twitter:title output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Aligned SEO Basics title override resolution paths so document title filters and social title meta tags consistently use the same dynamic placeholder replacement behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.94 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Replaced the Media Library Tag Gallery "Modal Window" setting with a restored "Link To" selector in the add-on settings, with options: None, Open Image, Open Image in New Window, and Open Image in Lightbox.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added matching block-level "Link To" override controls (plus "Use add-on default"), and updated front-end rendering so each option now outputs the requested click behavior per gallery/block.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.93 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new Media Library Tag Gallery setting: "Allow Simple Lightbox when clicking on a thumbnail" with full save/load support in add-on defaults and block-level "Use add-on default" controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When Simple Lightbox thumbnail-click mode is enabled, gallery thumbnail clicks now open an image-only lightbox view (close button + image) and hide advanced modal controls for a simpler experience.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.92 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media > Library Tags > Bulk Editor now groups terms into two sections: tags detected as "Live in Menu Navigation" first, followed by all remaining tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added section header rows in the Bulk Editor table so navigation-live tags are separated from non-navigation tags for faster editing workflow.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.91 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags placeholder replacement now supports [site-title] alongside [tag-name] and [tag-description], including document title replacement paths.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('[site-title] now resolves to your WordPress site title (blogname), allowing combined title templates such as "[tag-name] | [site-title]".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.90 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access now includes a new checkbox under "Full Screen Overlay Image": "Display as normal Image Above No access message instead of Background Image".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, the overlay image is rendered as normal content above the no-access message (instead of as a full-screen background image) in both standard overlay mode and background-HTML overlay mode.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.89 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media > Library Tags > Bulk Editor now lists only individual tag terms and skips combined comma-style tag names (example: "Pets, Dating").', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Editor table rows now focus on single-token Library Tags only, so terms like "Pets" and "Dating" appear as separate editable rows when those individual tags exist.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.88 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags filter dropdowns in Media Library list/grid now append a trailing star (*) to tag options that are also detected in active navigation menu URLs.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reused the existing menu-slug matching logic so the starred dropdown indicators stay aligned with the "Live in Menu Navigation" badge behavior used in the Bulk Editor.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.87 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed front-end inline per-photo admin tag controls from Media Library Tags gallery output (tag list + Hide + Duplicate links).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Cleaned related inline-control CSS/JS hooks so those admin inline controls no longer render or bind click handlers in gallery runtime.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.86 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access now includes a new setting: "Still Allow Full Page HTML to be Rendered in Background behind Overlay for Social Media Share Link Meta Data".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled in Full Screen Overlay mode, full page HTML (including social meta tags) is still rendered while a fixed overlay is injected on top for visitors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.85 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reverted admin per-photo tag controls (tag list + Hide/Duplicate) back to the non-overlay inline placement under each image for clearer visibility and interaction.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added extra bottom spacing for Mosaic Grid image wrappers so inline admin controls have more room and are easier to read/click in mosaic layout.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.84 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Administrator-only per-photo tag actions (tag list + Hide/Duplicate) are now rendered as an overlay pinned to the bottom of each gallery image instead of below the photo flow.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Overlay styling includes a subtle dark backdrop and per-style spacing adjustments so controls remain readable while staying visually attached to each photo tile.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.83 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags front-end gallery now shows administrator-only per-photo tag tools under every image (all gallery styles), including the current tag list and quick-action links for Hide and Duplicate.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Hide/Duplicate quick actions now add tags via AJAX without page refresh and immediately update the per-photo admin tag tool display state for that image.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.82 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed full-size image href usage from Media Library Tags modal-window triggers and switched lightbox click targets to non-link modal trigger elements so browser navigation to image files cannot occur.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox runtime now resolves image sources from dedicated modal trigger data attributes, ensuring Mosaic Grid and other gallery styles open the modal window directly instead of following file URLs.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.81 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Mosaic Grid modal-window click behavior by hardening gallery link hit areas so image clicks consistently reach the lightbox trigger across irregular mosaic tiles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added explicit full-tile link coverage and click-layer priority for gallery links to ensure front-end modal opening remains reliable in mosaic style.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.80 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tags modal window opening regression by forcing gallery image click behavior to always render lightbox/modal links, including legacy blocks that still carried old Link To values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Block defaults and server-side rendering now normalize old link settings to modal window mode so images reliably open the modal on click.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.79 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags block/editor UI now removes the old "Link To" setting and presents the new Modal Window behavior as the standard image interaction mode.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Gallery rendering now defaults to modal window opening for images, while legacy saved link-to values are still safely normalized for backward compatibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.78 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on now includes a new "Access History" card that displays a log table with timestamp, IP, IP location, browser, URL accessed from, password used, and failed password values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added persistent restricted access history storage and automatic logging for shared-password submissions, including both successful and failed attempts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.77 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on now includes a new "Full Screen Overlay Image Max Width" setting directly under the overlay image URL field.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When an overlay image is used, it now renders at width: 100% and applies the optional max-width value when provided.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.76 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Mosaic Grid mobile behavior now preserves mosaic tile sizing when Number of Columns (Mobile) is 3 or more, instead of forcing all tiles to uniform size on mobile.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When mobile columns are 1–2, mosaic mobile reset behavior remains active for readability; 3+ columns now keep mosaic large/tall/wide tile spans.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.75 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media > Library Tags > Bulk Editor slug column now flags terms that appear in active menu navigation URLs with a "Live in Menu Navigation" badge beneath the slug input.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Menu-match detection scans active nav menu item URLs and performs boundary-aware slug token matching so manually linked tag slugs are easier to identify before editing.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.74 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Stabilized Media Library Tag Gallery lightbox modal open behavior by replacing brittle pointer/capture interception with a simpler delegated click-to-open modal flow per gallery instance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added lightbox modal color controls (background + text) to add-on defaults, settings save handling, and block-level override controls with "Use add-on default" toggles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox modal captions, Previous/Next controls, keyboard navigation, and slideshow controls are now rendered on top of the new modal color variables for consistent behavior and appearance.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.73 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the extra front-end CSS typography/color rule on .um-media-library-tag-description-paragraph so description paragraphs inherit theme/plugin defaults.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.72 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added plugin version display directly under the main "User Experience Manager" admin page title.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Version line now mirrors the page-header style pattern and automatically reflects the current plugin version constant.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.71 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Library Tags term edit/add screens now include a new "YouTube Video Links" textarea (one URL per line) with sanitized storage in term meta.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media > Library Tags > Bulk Editor now includes a matching "YouTube Video Links" column so links can be edited and saved for all tags from one screen.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery front-end now embeds tag-level YouTube videos above the gallery and below album descriptions, using one full-width video for a single link or a two-column layout for multiple links.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.70 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Dynamic Photo Gallery with Media Library Tags now includes a new "Display Album Tag Description(s)" default setting (none / above gallery / below gallery).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery block now includes a matching per-block override with "Use add-on default", and renders single/multi-tag descriptions (with admin edit links) above or below the gallery using the same URL tag expression logic as [tag-description].', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.69 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Library Tags Bulk Editor post-save redirect URL to load through upload.php, preventing the "Cannot load um-media-library-tags-bulk-editor" error after Save All.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Editor now returns to the correct admin page route with the success count notice after saving.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.68 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a protective admin-bar color reset stylesheet so plugin/user WP-Admin CSS rules no longer override default WordPress top-bar link colors.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('WP-Admin bar links and labels now stay on WordPress default white/light-blue states instead of inheriting blue link styles from broad custom CSS selectors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.67 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Lightbox debug activation now has a server-side fallback path so ?um_mltg_debug=1 reliably enables diagnostics even when front-end URL parsing is altered by caching/redirect layers.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a visible in-gallery debug badge and runtime debug data attributes so debug state can be verified at a glance without opening browser developer tools.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.66 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened front-end lightbox opening by intercepting gallery link activation earlier in the interaction lifecycle (capture-phase down events) before third-party click handlers can force file navigation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added duplicate-open suppression for click-after-pointer flows so links cannot navigate away while still avoiding double-opening the overlay.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.65 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Media Library Tags Bulk Editor admin menu registration so the screen reliably appears under Media in wp-admin.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Editor submenu registration now safely ensures the Library Tags taxonomy is registered before adding the menu item to avoid hook-order/timing misses.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.64 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added URL-based front-end lightbox diagnostics for Media Library Tags gallery: use ?um_mltg_debug=1 to enable detailed click/open/control logs for each gallery instance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Debug mode now includes an on-page floating panel and optional ?um_mltg_debug_open=1 auto-open behavior to quickly isolate whether failures are in click interception or overlay rendering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.62 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Refactored front-end lightbox runtime to a single source of truth by removing the global fallback overlay runtime that could conflict with per-gallery control wiring.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox control buttons now strictly honor settings for visibility/hidden/disabled state, preventing slideshow button display when disabled and restoring reliable control interactions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.61 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed lightbox Previous/Next/Play controls so click handlers no longer no-op when feature toggles are off but controls are visible.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox navigation now consistently advances/reverses images and slideshow playback whenever a lightbox image is active.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.60 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Library Tags taxonomy screen now includes a new "Bulk Editor" submenu under Media > Library Tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Editor provides an all-tags table with editable title, slug, and description fields plus a single Save All action.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.59 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('When a single URL tag value is used (example: ?cruise), [tag-description] now resolves to that one URL-selected tag only instead of expanded query-match aliases.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tag-query expansion for filtering remains active for gallery/media results, while placeholder description output now stays aligned to explicit URL tag input.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.58 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Lightbox click handling was simplified and made fully self-contained so gallery image links reliably open the overlay instead of navigating to the raw image file URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed fragile event-default checks in the lightbox intercept path and now force-intercept direct image-link clicks in both capture and bubble phases.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.57 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Lightbox open behavior hardened with direct per-link listeners plus delegated capture/bubble fallbacks, restoring reliable overlay opening instead of direct file navigation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Expanded tag-filter validation/matching now resolves tokenized filter values in Media Library grid/list and URL override parsing, so filter queries consistently match if the selected tag token exists in a combined tag string.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.56 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library tag filter dropdown now displays only unique individual tags, excluding combined/comma-composed term labels from the filter list.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied unique individual-tag options consistently in both list-view and grid-view media filter controls while preserving full term choices for bulk apply.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.55 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Library Tag filter matching for comma-separated tag names so matches are token-order independent (for example, both "Cruise, Honeymoon" and "Honeymoon, Cruise" now match either base filter token).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated compound tag matching to check each normalized token with boundary-aware matching instead of strict token equality, improving consistency between admin media filters and front-end gallery output.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.54 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Newly inserted Media Library Tag Gallery blocks now default all per-setting "Use add-on default" toggles to ON, so new blocks inherit add-on defaults unless manually untoggled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied this default-on behavior in both block attribute registration and editor attribute defaults for consistent behavior on fresh block insertion.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.53 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library tag filtering now includes compound/synonym tag slugs when matching a selected base tag (for example: selecting "cruise" now also matches combined tags like "honeymoon-cruise" and tag names containing "Cruise").', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied the same expanded tag matching logic to front-end gallery output and Media Library list/grid filters so counts/results stay consistent across admin and front-end.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Gallery query handling now explicitly sets nopaging when Page Limit is 0 (unlimited), preventing environment-level paging fallbacks from truncating results.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.52 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed front-end "Link To: lightbox" click handling so gallery images reliably open the lightbox again after recent admin lightbox tooling updates.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Hardened delegated click target resolution to safely handle non-element event targets while preserving existing lightbox open behavior.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.51 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Front-end gallery lightbox now includes a new admin-only "Duplicate" link that quickly adds a "duplicate" Library Tag to the active image.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added admin-only inline tag tools in the lightbox so tags can be added directly from the image overlay without opening the Media Library edit screen.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Lightbox tag actions use secure AJAX requests with the existing Media Library Tags nonce/capability checks and support comma-separated quick tag entry.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.50 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag placeholder replacement now resolves all URL override tags (single, AND, or OR expressions) in URL order for [tag-description].', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When [tag-description] is rendered in content, each matched tag description now outputs in its own paragraph with class "um-media-library-tag-description-paragraph".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Administrator edit links are now appended per tag description paragraph so each active tag description includes its own direct edit shortcut.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.49 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags gallery defaults now include a new Slideshow Transition setting with options: None, Crossfade, and Slide to Left.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery block now includes a per-block Slideshow Transition control with a "Use add-on default" toggle.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end slideshow playback now applies the configured transition style while advancing images in the lightbox.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.47 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Add-ons section save redirect sticking to the wrong add-on after save in nested-form contexts.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Email Log filter form now uses the prebuilt add-on base URL directly and no longer injects duplicate addon_section fields that can leak into unrelated Add-ons settings saves.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed redundant addon_section hidden inputs from Email Log action forms (resend/forward/clear) to prevent Add-ons save routing collisions.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.46 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed My Account Admin search form button clickability on frontend endpoint pages by strengthening stacking and pointer-event styles for the search form and submit button.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.45 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Email Log add-on UI wording was corrected from "Emali" to "Email" for user-facing labels/buttons, including "Clear Email Log History".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new modal HTML preview action in Email Log rows so rendered email HTML can be opened in a popup window without leaving the table.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.44 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated Documentation tab content to reflect the current tab architecture and new sub-page routing patterns.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Docs now explicitly describe Login Tools sub-pages (tab=login-tools with login_tools_section), Settings-related sub-pages (tab=settings/tab=email-templates/tab=tools), Add-ons block-specific deep links (addon_section/block_section), and Documentation docs_section sub-pages.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation catalogs were refreshed to include current Add-ons/Blocks naming and recent modules.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.43 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Email Log now includes a configurable retention setting: "Auto-delete log entries after X days" (0 keeps logs forever).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added automatic Email Log cleanup of old rows using daily WP-Cron scheduling plus a once-per-day fallback on normal requests.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clear Email Log History now also resets cleanup timing metadata so future retention cleanup restarts cleanly.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.42 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: Email Log.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When activated, Email Log records outgoing wp_mail events with full email header columns (To, From, Reply-To, CC, BCC, Content-Type), subject, status, and message body data.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Email Log tools for HTML email preview + raw source, resend email, forward email to another address, status/search filters, pagination, and clear-history controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Email Log stats cards for sent volume in the past hour, day, week, month, plus total logged emails.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.41 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons filter tags now include two new categories: Email and SMS.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Email/SMS tag matching is keyword-driven so messaging-related add-ons appear under those new filters.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.40 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Add-ons/Blocks save regression where normal section saves could be incorrectly treated as temporary-disable-only saves, preventing per add-on/block deactivation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Temporary-disable-only flow now starts from persisted raw settings only for that dedicated save action, while regular saves continue to process activation checkbox changes normally.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.39 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Add-ons temporary-disable toggle save flow so unchecking "Temporarily disable all add-ons runtime functionality" no longer clears active add-on checkboxes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Settings saves now start from persisted raw settings (without runtime disable overrides), preventing runtime-disabled values from being written back as false.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.38 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Invoice Approval invoice page now shows a summary directly under "Products & Services" with total line item count and total quantity (for example: "Total Line Items: 3 (Total Quantity: 14)").', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.37 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed fatal error on Add-ons/Blocks screens by adding missing User_Manager_Core::get_raw_settings() compatibility method.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('get_raw_settings() now returns persisted plugin options without runtime temporary-disable overrides, restoring admin screen rendering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.36 <span>(April 3, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated AI Notes/rules for Documentation > Versions updates so new changelog entries must use the real current date at edit time.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Prevents stale hardcoded changelog dates from being reused for future docs_section=versions updates.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.35 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Temporarily Disable controls are now split and independent: Add-ons has its own temporary-disable toggle, and Blocks has its own temporary-disable toggle.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons/Blocks screens now read saved (raw) activation states so cards remain checked/highlighted while temporary-disable is active; runtime behavior is disabled without changing active checkbox values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added temporary-disabled visual badges/icons on Add-ons and Blocks index views while their respective temporary-disable toggle is enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.34 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed "Temporarily Disable All" save behavior so using that card no longer unchecks/deactivates individual add-ons or blocks in saved settings.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Temporary disable now applies at runtime only and now also affects User Role Switching and Send Email while enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.33 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Blocks tab: moved the "Temporarily Disable All" card to the main tab=blocks index view (where all blocks are listed).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When viewing/editing an individual block via block_section, the temporary-disable card is now hidden.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.32 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('WP-Admin Bar Quick Search add-on now includes a new checkbox list setting: "Priority Post Types to Display Before All Remaining Post Types".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When set, selected post types are shown first in the Quick Search dropdown, while remaining post types continue to display alphabetically after the prioritized group.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.31 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tab: the "Temporarily Disable All" card now appears only on the main tab=addons view.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When editing/viewing a specific add-on via addon_section, the temporary-disable card is now hidden to keep section screens focused.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.30 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved the default "User Experience Manager" WP-Admin top-bar shortcut behind a new Settings > User Experience checkbox.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The admin-bar shortcut is now OFF by default and only appears when "Show User Experience Manager link in WP-Admin top bar" is enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.29 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons + Blocks tabs now include a bottom "Temporarily Disable All" card with checkbox and Save button to temporarily override and disable all add-ons/blocks runtime functionality.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Runtime disable-all now supports both URL-based override and saved settings-based override, and applies to all add-ons/blocks (including Send Email) until unchecked and saved.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.26 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-ons card: Product Notification, including global style controls for notification and button colors (normal + hover states).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When Product Notification is active, WooCommerce Product Data > General now includes a per-product field: "Display a Woocommerce Notification Above Product at All Times?" plus optional button title and URL.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('If a product notification message is set, a WooCommerce-style message now renders above the single product page at all times, with support for %PRODUCT_TITLE% replacement and optional custom button link.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.25 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access logged-out redirect modes are now authoritative: "Redirect to My Account" and "Redirect to WP-Admin" always redirect blocked visitors and never render the full-screen overlay for those modes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Shared-password gating remains tied to Full Screen Overlay mode so redirect behavior is consistent when redirect modes are selected.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.23 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Post Meta Viewer edit mode no longer posts every existing meta field on save; unchanged rows are now excluded from form submission to prevent oversized product-edit requests.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixes WooCommerce product fields (including price and related settings) being dropped when "Allow editing of post meta values" is enabled and forms exceed PHP input limits.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.21 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new SEO Basics add-on with activation toggle in Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When active, adds an "SEO Basics" meta box to Posts and Pages with Page Title Override and Page Description Override fields.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end meta image now resolves automatically using Featured Image first, then falls back to the first image found in the page/post content.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.20 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Gallery placeholder fix: [tag-name]/[tag-description] replacement in HTML document titles now resolves the current singular post context directly from the queried object when get_queried_object_id() is unavailable during title-generation timing.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This restores reliable <title> replacement for browser/SEO title output while keeping existing page title/body placeholder behavior unchanged.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.19 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-on runtime gating hardening: My Account Site Admin hooks are now only initialized when that add-on is active (including URL temporary disable support).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('New User Coupons debug panel hook now registers only when the New User Coupons add-on is active, preventing debug UI from running while the add-on is off.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.18 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Remaining Balance notices (checkout + order received) now suppress currency labels when the configured currency symbol/name is longer than 1 character (e.g. "Points"), showing numeric-only values like 90.00.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Single-character currency symbols (such as $) continue to display as before.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.17 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > Email Settings now defaults empty "Send From Name" to the website title, and defaults empty "Send From Email Address" / "Reply To Email Address" to noreply@{site-domain}.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Email header generation now applies the same fallbacks at runtime so outbound emails remain consistent even when those fields are left blank.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.16 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Updated "Send automated remaining balance coupon" demo email body to include both remaining balance amount and coupon code using %COUPONCODEVALUE% and %COUPONCODE%.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added %COUPONCODEVALUE% placeholder support across remaining-balance email send and preview flows, including automatic value resolution from the coupon amount.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.15 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons > User Coupon Remaining Balances: fixed Preview Email button reliability by binding the click handler with delegated events, so it works consistently even when the add-on card is conditionally rendered/toggled after page load.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This now matches the proven preview-modal flow used by other template preview buttons and avoids missed direct-bind timing issues.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.14 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Core hook registration hardening: New User Coupons, Checkout Address Selector (including debug footer hook), Quick Search, and Staging & Development Environment Overrides hooks now only register when their associated add-on is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Prevents add-on behavior from running when the add-on is disabled, reducing lingering side effects from inactive modules.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.13 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Staging & Development Environment Overrides: made the WooCommerce webhook-delivery filter callback signature backward-compatible with both 3-argument and 4-argument WooCommerce hook calls to prevent fatal argument-count exceptions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Prevents uncaught exceptions like "Too few arguments to function maybe_block_staging_dev_woocommerce_webhook()" from interrupting checkout/account flows when webhook delivery checks run.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.12 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('User Coupon Remaining Balances generation is now deferred to a scheduled background event from order status hooks, preventing checkout/order-status transition errors from bubbling into customer-facing order-processing failures.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added per-order processing lock for remaining-balance generation to avoid duplicate/concurrent processing and to harden reliability under multiple status/thank-you triggers.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.11 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('User Coupon Remaining Balances runtime now fully respects add-on activation state before registering checkout/thank-you hooks, so no remainder notices or processing run when the add-on is turned off.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added defensive error handling around remainder coupon generation to prevent checkout/order completion from failing if coupon processing encounters an exception.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.10 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons > User Coupon Remaining Balances: fixed Preview Email button by rendering the shared email preview modal on the Add-ons page context.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preview now correctly opens for the selected template in "Send Email to User when New Remaining Balance Code is Created", including %COUPONCODE% and [coupon_code] placeholder substitution.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.9 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Import Demo Email Templates now includes individual "Recreate" links for each demo template to upsert one template at a time without running the full import.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added secure admin-post handler for recreating single demo templates and a success notice message when a template is recreated.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.8 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Import Demo Email Templates now includes a new "Send automated remaining balance coupon" template with %COUPONCODE% support.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added default subject/body for the remaining-balance template: "You have a remaining balance" and coupon-code output in the message body.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.7 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Restricted Access add-on with logged-out behavior controls (redirect to My Account, redirect to WP-Admin, or full-screen overlay).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Restricted Access now supports shared password gate, appended URL string access, configurable re-auth time limit, role exclusions, custom no-access message, and centered full-screen overlay styling with background/text colors and image.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.6 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Order Received Page Customizer: improved H1 override reliability by adding fallback output hooks and title filters for thank-you page contexts where theme/Woo templates bypass woocommerce_page_title.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Custom heading now applies to page title, browser title parts, and template-rendered order-received heading blocks with stronger compatibility across themes.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.5 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Edit Email Templates shortcut links now pass an auto-expand flag so Add-ons > Send Email opens with the Email Templates panel expanded.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.4 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Send Email > Custom Email Lists table: action buttons (Edit, CSV, Delete) now render one-per-line for clearer row layout and easier click targets.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.3 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hardened Send Email always-on behavior: URL runtime disable overrides can no longer disable send-email-users.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons UI now forces Send Email fields visible in send-email-users section, even without an Activate checkbox state.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.2 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Send Email add-on is now always active and cannot be deactivated from Add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login Tools and other email-template consumers now always have Send Email templates/features available without activation dependencies.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.5.1 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Coupon edit screen: fixed Email List Converter field handling to avoid conflicting with WooCommerce\'s native Allowed emails input/select2 behavior.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed runtime replacement of the core customer_email field and now update the native field value directly, preventing editor UI spinner/locking issues.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.99 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports tab: date-based reports now show a Start Date / End Date filter directly under the Query summary when selected.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied date-range filtering to date-enabled report datasets and pagination URLs, including tracking reports in the extracted tracking trait.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.98 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports label update: renamed "Coupon Audit" to "Coupons Audit" in report naming and documentation references for consistent wording.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.97 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports tab: added a contextual "Query summary" description area under the Select report dropdown that appears when a report is selected.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added human-readable query explanations for all report options so admins can understand what each report is querying at a glance.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.96 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login Tools > Login As now includes a security note clarifying that temporary passwords are automatically restored after 15 minutes if not manually restored.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added Login As auto-restore expiry handling on normal page loads so original password hashes are reinstated after the 15-minute temporary session window.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.95 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Documentation tab content was refreshed to match the current top-level tab architecture, including Login Tools, Add-ons, Blocks, and Documentation sections.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated docs now include a dedicated Blocks Reference (with Dynamic Photo Gallery with Media Library Tags) and revised About/Installation copy for the current module structure.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.94 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Renamed "Media Library Tags & Photo Gallery" to "Dynamic Photo Gallery with Media Library Tags" across add-on/runtime labels.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved this gallery add-on into the Blocks tab (tab=blocks) and removed it from Add-ons, including block-section routing/save handling.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.93 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new top-level "Blocks" tab (page=user-manager&tab=blocks) next to Add-ons, with dedicated filtering and section navigation for content blocks.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Moved the four Page Block add-ons (Subpages Grid, Tabbed Content Area, Simple Icons, Menu Tiles) out of Add-ons into the new Blocks tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Refined block tags and copy to be content-focused (for example Icons, Grids, Tabs, Content, Navigation, Shortcodes) and updated block card descriptions/titles accordingly.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.92 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('When [tag-description] resolves from URL-based Library Tag context, WordPress administrators now see an inline "Edit Tag Description" link appended to that placeholder output for faster term editing.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new edit link is intentionally limited to front-end content replacement only; title and document-title placeholder replacement remain plain text.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.91 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag URL placeholders now also apply to the page document title (<title>) so [tag-name]/[tag-description] can resolve in browser tab titles and SEO title output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Placeholder replacement remains scoped to singular content that contains a Media Library Tag Gallery block with URL override behavior enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.90 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags add-on "Style" setting is now sorted A–Z for easier scanning in addon_section=media-library-tags.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new "Accent Color (frames/backgrounds)" setting so white UI surfaces in gallery styles (such as Polaroid/Split/Carousel controls) can be recolored for dark mode websites.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.89 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery defaults now include: "Do Not CSS Crop Any Images if Gallery Photos Total is Less Than..." (0 keeps CSS crop behavior always enabled).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When gallery image total is below this threshold, CSS crop styles are disabled so images render using natural proportions (no CSS crop/aspect-ratio forcing).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.88 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Mosaic Grid layout now uses a deterministic repeating pattern with dedicated large, tall, and wide tiles for more predictable balance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added consistent grid auto-row sizing plus dense packing behavior so smaller items backfill gaps more reliably and reduce dead space.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.87 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery URL override now supports multiple-tag expressions in the standard ?tag= parameter.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Use ?tag=tag+tag2 to require BOTH tags (AND), and ?tag=tag_tag2 to match EITHER tag (OR).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.86 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Front-end gallery lightbox now shows an "Edit image" link for WordPress administrators.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The admin-only lightbox shortcut opens the selected image directly in Media Library edit mode for faster metadata/content updates.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.85 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Mosaic Grid layout now uses column-aware tile span patterns to reduce stranded gaps and improve backfilling of smaller images.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('On mobile widths, Mosaic Grid now disables span overrides so tiles flow naturally and avoid empty-looking pockets.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.84 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery pagination is now rendered as basic links (unstyled link list) instead of button-styled pagination controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The current gallery page number now displays in bold text for clearer active-page visibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.83 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a front-end WP-Admin top bar shortcut: "Edit Library Tag" when a Media Library Tag Gallery URL tag is actively being viewed.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The shortcut only appears for users who can edit the resolved Library Tag and links directly to that term\'s edit screen in wp-admin.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.82 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags add-on defaults: added desktop column thresholds for album size — "Number of Columns (Desktop) if less than 50 photos", "if less than 25 photos", and "if less than 10 photos".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery now auto-selects desktop column count by image count (<10, <25, <50), while the existing Desktop Columns value remains the default for 50+ images.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.81 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added [tag-description] placeholder support alongside [tag-name] for Media Library Tag Gallery URL override-driven text replacement in post titles/content.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When a matching URL tag is found, [tag-description] now resolves to that Library Tag description; if not found, it resolves to an empty string.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.80 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed [tag-name] replacement timing for post titles/content by making placeholder config cache post-specific, preventing early false cache hits.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When "Allow Any URL Parameter..." is enabled, [tag-name] replacement now activates if either URL override toggle is enabled on the gallery block.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.79 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery block URL override setting note now documents [tag-name] placeholder replacement in post titles/content when URL tag override is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When no valid URL tag is found, [tag-name] now resolves to an empty string, as documented in the setting note.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.78 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery block: added "Allow Any URL Parameter to Be Used as a Tag Identifier such as ?tag-name for Shorter URLs" under URL override settings.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, URL query keys that match a Library Tag slug can act as the gallery tag override (in addition to standard ?tag=tag-slug).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.77 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery block: added "Do Not Allow Empty Tag / Do Not Load without Tag Value" setting under URL tag override options.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, the gallery block returns no output unless a tag is selected (via block setting or URL override), preventing all-images loads on empty tag values.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.76 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library "No tags" filter: fixed query handling to remove conflicting Library Tag clauses before applying the no-tags condition.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('No-tags filtering now reliably returns attachments with no Library Tags assigned in both list and grid Media Library views.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.75 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: added "Random" to Sort Order options in add-on defaults and block-level controls.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Gallery rendering now supports random image ordering when Sort Order is set to Random.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.74 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library tag filter label updated from "No Tags" to "No tags" in list and grid views.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Fixed "No tags" filtering to reliably return attachments with no Library Tags assigned by excluding all existing Library Tag term IDs via taxonomy NOT IN.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.73 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags add-on: added "Keep Media Library bulk tools header visible on mobile while scrolling" setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, the Media Library toolbar/header becomes sticky on mobile viewport widths so Bulk Select tools remain accessible without scrolling back to the top.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.72 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library tag filter: added a new "No Tags" option at the top so admins can quickly show only images with no Library Tags assigned.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Both list and grid Media Library views now apply a taxonomy "NOT EXISTS" query when "No Tags" is selected.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.71 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Edit User/Profile top notice is now hidden by default.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Settings > User Experience: added "Show notice at top of Edit User/Profile pages" checkbox so admins can enable that notice when desired.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.70 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags add-on: added "Show Tags on Thumbnails when Bulk Selecting" setting to display each selected image\'s Library Tags directly on media thumbnails in bulk-select mode.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: added "Tags to hide from front end gallery" (comma-separated) setting to permanently exclude matching Library Tags from front-end gallery output.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Example supported: create/use a Library Tag named "hide", then add hide in this setting to ensure those tagged images never render in front-end galleries.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.69 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: added new default settings "Description Display" (none, centered under photo, lightbox under photo, both) and "Description Value" (caption, title, description, alt text, filename, slug, date).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library Tag Gallery block now includes matching per-block override controls for Description Display and Description Value, including "Use add-on default" toggles for each.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Gallery rendering now outputs description text from the selected value source under photos and/or inside the lightbox (with dynamic lightbox caption support), based on the selected display mode.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.68 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags copy tweak: updated "enter tag" to "or enter tag" for bulk tag input placeholders.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Adjusted Media Library bulk-select toolbar alignment so Apply Tag controls sit lower and align better with Delete/Cancel controls.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.67 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags copy updates: changed "All Library Tags" to "All tags", "Bulk apply: choose Library Tag" to "Apply Tag", "or enter new Library Tag" to "enter tag", and "Apply Library Tag" to "Apply Tag(s)".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library bulk tag controls now stay hidden until Bulk Select mode is active in both list and grid views, reducing toolbar clutter.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.66 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tag Gallery block: added per-setting "Use add-on default" toggles for Columns (Desktop/Mobile), Sort Order, File Size, Style, Page Limit, and Link To.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled per setting, the block inspector disables that field and uses the corresponding default configured in the Media Library Tags & Photo Gallery add-on settings.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Front-end render now honors these per-setting default toggles while preserving existing block behavior when toggles are not enabled.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.65 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library grid toolbar: ensured Library Tag bulk controls remain visible in bulk-select mode by using dedicated control classes instead of default attachment-filters visibility toggles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk apply dropdown, new-tag text field, and Apply button now stay accessible in the media grid bulk-apply toolbar.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.64 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library attachment editor: added quick tag links above the Library Tags help text so clicking a tag auto-inserts it into the current item\'s Library Tags field.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Quick links append tags without duplicates and target the correct attachment field in the current media row/modal context.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.62 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags filter now reliably renders on Media Library "All items" views by allowing empty post_type values in the upload.php filter-control hook.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This restores Library Tag filtering visibility in list/grid contexts where WordPress does not pass "attachment" explicitly.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.61 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: restored legacy style options "Standard", "Square CSS Crop", "Wide Rectangle CSS Crop", "Tall Rectangle CSS Crop", and "Circle CSS Crop" alongside the newer style layouts.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Re-added these legacy styles across add-on settings, block editor Style selector, save validation, and front-end rendering classes so existing selections remain compatible.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.60 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Bulk Add to Cart shortcode: fixed undefined variable warning for $product_id_column_header by initializing the display header before the How-To instructions render.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Add to Cart shortcode: fixed undefined variable warnings for $show_sample_csv and $show_sample_with_data by initializing the sample-download visibility flags before rendering links.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.58 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Media Library Tags & Photo Gallery: updated Style choices to 12 layout modes (Mosaic Grid, Masonry/Pinterest, Uniform Grid, Justified Rows, Carousel/Slider, Fullscreen Lightbox Grid, Horizontal Scroll, Polaroid/Scrapbook, Split Screen Feature, Infinite Scroll, 3D Perspective, Timeline/Story).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Style rendering behavior and front-end scripts/CSS to support all 12 modes with responsive behavior and style-specific interactions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Normalized gallery style keys across add-on settings, block editor controls, and render logic to ensure selected styles save/apply correctly.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.56 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Media Library Tags" with Activate toggle and description in Add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Adds a new "Library Tags" submenu item under Media using an attachment taxonomy for tag management.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Media Library supports filtering by Library Tag, bulk applying tags (list and grid views), and per-item add/remove tags in attachment details.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.55 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Product Search by SKU add-on default changed to OFF for new installs (must be explicitly activated).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated Product Search by SKU add-on active-state checks so unset settings are treated as disabled by default.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.54 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Staging/Dev front-end notice bar now always renders at the top of the page instead of being output as footer content.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a dedicated footer fallback that injects the notice at the top of <body> for themes that do not call wp_body_open.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.53 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Data Anonymizer > Exceptions to Above: added "Exclude All WP Administrators" and "Exclude User if Email Address Matches Administration Email Address" checkboxes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Both new exception checkboxes default to checked when first introduced.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Users anonymization now skips matching users for those exceptions and logs skip counts in run notes/history.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.52 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hotfix: prevented duplicate Gutenberg block registration notices for custom/tabbed-content-area by guarding block registration with WP_Block_Type_Registry checks.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Tabbed Content Area add-on now safely skips registering custom/tabbed-content-area and custom/legacy-tabbed-content-area when they already exist.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.51 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Hotfix: removed a duplicate User_Manager_Core static property declaration (`$staging_dev_notice_rendered`) that caused a fatal "Cannot redeclare" error.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Staging/Dev notice rendering now uses a single property declaration, restoring normal plugin loading.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.50 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tag filter: added a new "Security" tag and positioned it directly after "Users" in the Add-ons sub-navigation.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated security-related add-on descriptions so they are matched by the new Security filter (for example: Security Hardening, Webhook URLs, Post Meta Viewer access controls, and related safety/security tools).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.49 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Edit User/Profile notice now includes a "Login As This User" button that links directly to Login Tools > Login As.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new button pre-fills the selected user email and can auto-run "Generate Temporary Password" to reduce clicks for admins.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login As screen now supports URL-driven prefill and auto-generate behavior for faster user impersonation workflows.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.48 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Staging & Development Environment Overrides" with Activate toggle and default-on safety settings for disabling emails, payment gateways, webhooks, and API/JSON requests in non-production.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added non-production notices for both front-end top bar and WP-Admin, each enabled by default when the add-on is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added optional "Data Anonymized" timestamp note in non-production notices, sourced from the latest Data Anonymizer history run.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.47 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Data Anonymizer" with Activate toggle and grouped settings for Order Data, User Data, Form Data, and exception domains.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added dedicated run actions/buttons for Orders, Users, and Forms plus a persistent Data Anonymizer History table showing runner, checked settings, counts, notes, and timestamp.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Forms anonymization now supports common storage sources including CFDB7, WPForms, Fluent Forms, Gravity Forms, Ninja Forms, Formidable Forms, and Flamingo (CF7 storage).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.46 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Coupon Remaining Balances add-on: added a new option to send an email whenever a new remaining balance code is created.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a template selector with a default-template option, an Email Templates shortcut link, and a Preview Email button directly in the add-on.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Remaining-balance emails now support both %COUPONCODE% and [coupon_code] placeholders and use Email Settings sender values for From/Reply-To headers.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.45 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Tabbed Content Area block editor now supports both a Page/Post selection dropdown and a manual Page/Post ID field for each tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When both values are saved, manual Page/Post ID now overrides the dropdown selection, as requested.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.44 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > User Experience: retitled the field label to "Legacy/Broken Shortcodes (comma-separated)".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When set, the plugin now registers empty shortcode handlers for listed tags (and lowercase variants) so removed shortcode sources do not break legacy content.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Block: Tile Grid for Subpages no longer owns this setting; it is now managed centrally in User Experience settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.43 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > User Experience: added "Legacy/Broken Shortcodes to No-op (comma-separated)" as a standard setting.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When set, the plugin now registers empty shortcode handlers for listed tags (and lowercase variants) so removed shortcode sources do not break legacy content.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Block: Tile Grid for Subpages no longer owns this setting; it is now managed centrally in User Experience settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.42 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the "Legacy/Broken Shortcodes to No-op (comma-separated)" setting from Page Block: Tile Grid for Subpages.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed related legacy no-op shortcode registration hooks and setting persistence for that option.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.40 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added four new Page Block add-ons with Activate toggles in Add-ons: Tile Grid for Subpages, Tabs with Content from Other Pages, Simple Icons, and Tile Grid for Menu.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, these add-ons now register their related Gutenberg blocks and editor UI scripts: custom/subpages-grid, custom/tabbed-content-area, custom/simple-icon, and custom/menu-tiles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Page Block: Tile Grid for Subpages includes [subpages_grid] support with front-end rendering.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.39 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Site Admin > Orders: added two new settings under "Hide Order Status" to optionally add WebToffee invoice action buttons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added "Add WebToffee WooCommerce PDF Invoices Download Invoice Button" and "Add WebToffee WooCommerce PDF Invoices Print Invoice Button" toggles.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('When enabled, Admin: Orders now pulls WebToffee invoice action URLs from WooCommerce account-order actions and appends matching Print Invoice / Download Invoice buttons to each order row when available.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.38 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Orders search now supports direct order IDs, order numbers with/without "#" prefixes, and partial order-number matching.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added sequential-order-number meta search support (including common "_order_number" style meta keys) for "Sequential Order Numbers Pro" style values.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Expanded Admin Orders search matching to include order-number meta fields and normalized search variants for better partial matching.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.37 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed early translation loading notice by hardening add-on runtime label translation to never run before the init hook.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added explicit plugin textdomain loading on init for the user-manager domain.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.36 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Add-on: "Add to Cart Min/Max Quantities" with an Activate toggle in Add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Adds WooCommerce product Inventory fields for "Minimum quantity" and "Maximum quantity" (per product).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Enforces min/max quantity rules during add-to-cart validation and cart/checkout quantity validation notices.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.35 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Post Meta Viewer add-on: added role-based access controls ("Allowed Roles") to decide which roles can view the meta box.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Post Meta Viewer add-on: added username/email allow-list ("Allowed Usernames/Emails"), one per line.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Access matching now supports role OR username/email logic, and defaults to allow all post editors when both lists are empty.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.34 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Post Meta Viewer add-on: added a post type checkbox list so admins can limit the meta box to selected post types.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Default behavior remains enabled for all post types when no specific selections are saved.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.33 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports > Admin Log: removed the "Add-ons Connected to Admin Log" card.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The Activity Log table and filters remain available; only the add-ons summary panel was removed.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.32 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Deactivate User(s): added a new "Deactivated Users History" card under the deactivated users list.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The new history keeps a persistent running log of deactivation and reactivation events (with date, action, user, identifier, before/after values, and actor).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate and Reactivate actions now append entries to this history so previous status changes remain visible even after reactivation.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.31 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Deactivate User(s): input now accepts usernames in addition to email addresses.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate User(s): added a per-user Reactivate button in the "Deactivated Users" table.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reactivation now clears deactivation flags and restores login/email values (with uniqueness safeguards) so accounts can sign in again.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.30 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a sub-navigation spacing override so cards/layout wrappers directly under `.subsubsub` no longer add extra top gap.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('This includes wrappers like `.um-admin-grid`, `.um-admin-card`, `.um-create-user-layout`, and `.um-email-templates-layout` when they appear immediately below sub-navigation.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.29 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons tab: removed extra top spacing beneath the add-on tag sub-navigation by clearing top margin on the top-level add-on grids/cards.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.28 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled the throttle count label from "Texts Per Batch" to "Emails/Texts Per Batch" in Settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.27 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the standalone "Import Automated Coupon Email" card from Send Email.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Merged coupon template imports into "Import Demo Email Templates" so one import now includes both coupon templates.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated the demo email import list to show all 6 templates, including coupon-focused entries with %COUPONCODE% support.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.26 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved "Import Demo SMS Text Templates" into the SMS Text Templates manager and placed it at the bottom of that panel.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed the duplicate "Import Demo SMS Text Templates" card from the surrounding Send SMS Text add-on wrapper.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.25 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved "Import Demo Email Templates" into the Email Templates manager and placed it at the bottom of that panel.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed the duplicate "Import Demo Email Templates" card from the surrounding Send Email add-on wrapper.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.24 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed the legacy top-level "Send Email" navigation tab (`tab=email-users`) now that Send Email is managed as an add-on.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Send Email remains available from Add-ons and optional add-on main-navigation shortcuts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.23 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved "Import Demo SMS Text Templates" from Tools into the Send SMS Text add-on area.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('SMS demo template imports now include automated coupon + $10 apology coupon SMS templates (with %COUPONCODE% support).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('SMS import actions submitted from the Send SMS Text add-on now redirect back to that same add-on context with success notices.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.22 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Moved "Import Demo Email Templates" and "Import Automated Coupon Email" into the Send Email add-on area.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Import actions posted from the Send Email add-on now redirect back to that same add-on context with success notices.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Removed those two email import cards from Tools to avoid duplicate management locations.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.21 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Removed "Email Templates" and "SMS Text Templates" sub-links from Settings after moving both template managers into their add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Legacy Settings template URLs now redirect to the relevant add-on cards (Send Email or Send SMS Text).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Template shortcut links now open the add-on template managers directly from Email/SMS template selector fields.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.20 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a new "Send Email" add-on card with Activate toggle and description, so Send Email is no longer shown by default unless enabled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Main navigation now shows the Send Email tab only when the Send Email add-on is active.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added an "Email Templates" manager card at the top of the Send Email add-on, collapsed by default and auto-expanded when editing a specific template.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added an "SMS Text Templates" manager card at the top of the Send SMS Text add-on, collapsed by default and auto-expanded when editing a specific SMS template.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Template manager forms now preserve add-on context so save/edit/delete/reorder actions return to the corresponding add-on card.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.19 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Retitled add-on shortcut checkbox label from "Add as Man Navigation Tab" to "Add to Main Navigation".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.18 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added shortcut edit links next to Email Template selectors so admins can jump directly to Settings → Email Templates.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added shortcut edit links next to SMS Text Template selectors so admins can jump directly to Settings → SMS Text Templates.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Applied template-editor shortcut links across Create, Bulk Create, Reset Password, Email Users, coupon-email template selectors, and SMS texting template selectors.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.17 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add-ons: each add-on now shows an "Add to Main Navigation" checkbox next to Activate when the add-on is enabled.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Main navigation: selected + active add-ons now appear as shortcut tabs to the right of Docs, linking directly to each add-on settings screen.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-on shortcut choices are now saved in plugin settings and automatically hidden when an add-on is not active.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.16 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Order Invoice & Approval: on front-end invoice pages, logged-in WordPress administrators now see an "Edit this order in WP Admin" link at the bottom.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The edit-order link opens in a new browser tab/window and is hidden for non-administrator viewers.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.15 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Send SMS Text: removed "skip on no user match" behavior so valid phone numbers are still sent even when no user is found.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Send SMS Text: improved user lookup by phone using flexible format matching (e.g. 952-200-7732, 9522007732, +19522007732).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated SMS send notices to report "Sent without user match" rather than "Skipped (no user match)".', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.14 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Tools: added a new "Import Demo SMS Text Templates" card next to "Import Demo Email Templates".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added backend import handler and action for demo SMS templates with nonce and capability checks.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added success notice feedback after importing demo SMS text templates.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.13 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login Tools: added a new "Deactivate User(s)" sub-menu next to Remove User(s) with bulk email-based deactivation workflow.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate User(s): preserves account/history data while blocking future logins via a deactivated-user authentication guard.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate User(s): added optional quiet password reset + optional [YYYYMMDD]-deactivated- login/email prefix behavior (both configurable in Settings).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Deactivate User(s): added a new "Deactivated Users" card with a paginated table of all deactivated accounts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.12 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login Tools sub-navigation labels were updated for clarity: Create Single User, Create Multiple Users, Reset Password(s), Remove User(s), and Login As a User.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.11 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed an early translation-loading notice by preventing add-on runtime labels from being translated during pre-init settings bootstrap.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-on runtime toggle labels are now translated only when needed in UI contexts, avoiding _load_textdomain_just_in_time warnings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.10 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > API Keys: added a new "Simple Texting API Token" setting for SMS sending.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Settings sub-navigation: added "SMS Text Templates" next to Email Templates, including full SMS template management.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Add-ons: added a new "Send SMS Text" add-on with Activate toggle and a texting workflow modeled after Email Users (phone numbers, template selection, login URL, coupon code, preview, recent texts, and shared custom lists).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added SMS send + next-batch handlers with support for "Send to all phone numbers even if they are not users."', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated throttling labels to include texting and enabled throttle/batch behavior for SMS sends using the same throttle settings.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.9 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Email Users > Saved Lists: added a CSV button in each list row to download that entire saved list as a CSV file.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a secure admin-post export handler for Saved Lists CSV downloads (capability check + nonce validation).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.8 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Navigation: added a new top-level "Login Tools" tab and moved Create, Bulk Create, Reset Pass, Remove, and Login As into a sub-navigation under it.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Login Tools now defaults to the Create screen when opening the plugin (Login Tools -> Create).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added two Login Tools sub-links at the end: "Recent Logins" and "More Reports", both linking to Reports > User Logins.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.7 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Reports: added a new "Orders Still Processing but have a Tracking Number" report in tab=reports.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('New report filters order notes to only processing orders whose notes contain "with tracking number", helping surface potentially stuck orders that already have tracking details.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added CSV export support for the new processing-with-tracking-number report.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.6 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('View Website by Role Permission: changed "Default Roles" to a single-selection "Default Role" dropdown on user profile permissions.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('View Website by Role Permission: added a new per-user "Roles to Hide" checkbox list so selected roles are hidden from that user\'s front-end role switcher.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Role Switching enforcement: hidden roles are now blocked in both switcher display and POST handling (including reset-to-default behavior).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.5 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Documentation: added a new Troubleshooting sub-link with practical isolation steps and URL-parameter guidance.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added temporary URL overrides to disable add-ons per request: ?um_disable_all_addons=1 for all add-ons, or ?um_disable_addons=slug1,slug2 for specific add-ons.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Documentation > Troubleshooting now includes a checkbox URL builder to generate disable-all and comma-separated add-on-disable test URLs.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.4.4 <span>(March 16, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Add to Cart Variation Table: added minimum total quantity validation with customizable JavaScript alert messaging and optional success alert before continuing.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new "Cart Total Items" add-on with Activate toggle, customizable copy, cart/checkout visibility controls, and above/below placement settings for each area.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added new "Order Received Page Customizer" add-on with Activate toggle and settings to override the Order Received heading and success paragraph text.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.4.3 <span>(March 15, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Add-ons tile list: removed green active-state text, border, and shadow styling in the "Choose an Add-on" area.', 'user-manager'); ?></li>

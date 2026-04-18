@@ -105,6 +105,7 @@ class User_Manager_Tab_Reports {
 			'orders-shipments-by-month',
 			'orders-tracking-numbers',
 			'orders-tracking-notes',
+			'orders-still-processing-with-tracking-number',
 			'user-data',
 			'product-purchases',
 			'product-category-purchases',
@@ -137,7 +138,7 @@ class User_Manager_Tab_Reports {
 			'coupons-free-shipping'       => __('Coupons with Free Shipping', 'user-manager'),
 			'coupons-remaining-balances'  => __('Coupons with Remaining Balances', 'user-manager'),
 			'coupons-unused'              => __('Coupons Unused', 'user-manager'),
-			'coupon-audit'                => __('Coupon Audit', 'user-manager'),
+			'coupon-audit'                => __('Coupons Audit', 'user-manager'),
 			'orders-with-refunds'         => __('Order Refunds', 'user-manager'),
 			'orders-zero-total'           => __('Orders with $0 Total', 'user-manager'),
 			'orders-free-shipping'        => __('Orders with Free Shipping', 'user-manager'),
@@ -152,6 +153,7 @@ class User_Manager_Tab_Reports {
 			'orders-shipments-by-month'   => __('Order Total Shipments by Month', 'user-manager'),
 			'orders-tracking-numbers'     => __('Order Tracking Numbers', 'user-manager'),
 			'orders-tracking-notes'       => __('Order Tracking Number Notes', 'user-manager'),
+			'orders-still-processing-with-tracking-number' => __('Orders Still Processing but have a Tracking Number', 'user-manager'),
 			'user-data'                   => __('User Data', 'user-manager'),
 			'product-purchases'           => __('Product Purchases', 'user-manager'),
 			'product-category-purchases'  => __('Product Category Purchases', 'user-manager'),
@@ -170,6 +172,7 @@ class User_Manager_Tab_Reports {
 			'product-tag-views'           => __('Product Tag Archives Views', 'user-manager'),
 			'post-meta-field-names'       => __('Post Meta Field Names (Unique List)', 'user-manager'),
 		];
+		$report_query_descriptions = self::get_report_query_descriptions();
 
 		// Build sorted (A–Z) list of available reports for the dropdown.
 		$report_options = [];
@@ -203,6 +206,17 @@ class User_Manager_Tab_Reports {
 								<?php endforeach; ?>
 							</select>
 						</form>
+						<?php if ($report !== '') : ?>
+							<?php
+							$report_query_description = $report_query_descriptions[$report] ?? __('Shows records that match this report\'s predefined conditions.', 'user-manager');
+							?>
+							<div class="notice notice-info inline" style="margin:12px 0 0 0; padding:10px 12px;">
+								<p style="margin:0;">
+									<strong><?php esc_html_e('Query summary:', 'user-manager'); ?></strong>
+									<?php echo esc_html($report_query_description); ?>
+								</p>
+							</div>
+						<?php endif; ?>
 					</div>
 					
 					<?php if ($report === 'user-logins') : ?>
@@ -243,6 +257,8 @@ class User_Manager_Tab_Reports {
 						<?php self::render_orders_tracking_numbers_report(); ?>
 					<?php elseif ($report === 'orders-tracking-notes') : ?>
 						<?php self::render_orders_tracking_notes_report(); ?>
+					<?php elseif ($report === 'orders-still-processing-with-tracking-number') : ?>
+						<?php self::render_orders_still_processing_with_tracking_number_report(); ?>
 					<?php elseif ($report === 'sales-vs-coupons') : ?>
 						<?php self::render_sales_vs_coupons_report(); ?>
 					<?php elseif ($report === 'password-reset') : ?>
@@ -325,6 +341,56 @@ class User_Manager_Tab_Reports {
 		self::export_csv('recent-user-logins', [
 			'User ID', 'Username', 'Email', 'Display Name', 'IP Address', 'User Agent', 'Login Date'
 		], $entries);
+	}
+
+	/**
+	 * Human-readable descriptions of each report query.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function get_report_query_descriptions(): array {
+		return [
+			'user-logins'                                => __('Reads login history entries captured by this plugin (with user record lookups when available), ordered by most recent login first.', 'user-manager'),
+			'coupons-used'                               => __('Finds WooCommerce orders that used at least one coupon and lists coupon usage details tied to those orders.', 'user-manager'),
+			'coupons-assigned'                           => __('Lists published WooCommerce coupons where an email restriction or assigned email value is present.', 'user-manager'),
+			'password-reset'                             => __('Shows activity log rows where users completed password reset actions, newest first.', 'user-manager'),
+			'user-password-changes'                      => __('Shows activity log rows where users changed passwords from account/profile flows, newest first.', 'user-manager'),
+			'sales-vs-coupons'                           => __('Builds an order-level comparison of sales totals versus coupon discount usage using WooCommerce order and coupon data.', 'user-manager'),
+			'coupons-no-expiration'                      => __('Returns published coupons that do not have an expiration date set.', 'user-manager'),
+			'coupons-free-shipping'                      => __('Returns published coupons where the WooCommerce free-shipping flag is enabled.', 'user-manager'),
+			'coupons-remaining-balances'                 => __('Returns coupons that include remaining-balance metadata so you can audit partially used value-style coupons.', 'user-manager'),
+			'coupons-unused'                             => __('Returns published coupons with no recorded usage count (unused coupons).', 'user-manager'),
+			'coupon-audit'                               => __('Builds an audit list of coupons with key fields (amount/type/limits/usage/expiry/email restrictions) to review coupon configuration and status.', 'user-manager'),
+			'orders-with-refunds'                        => __('Returns WooCommerce orders where refunded totals are greater than zero.', 'user-manager'),
+			'orders-zero-total'                          => __('Returns WooCommerce orders where the final order total is exactly 0.00.', 'user-manager'),
+			'orders-free-shipping'                       => __('Returns WooCommerce orders that include a shipping line with zero shipping cost.', 'user-manager'),
+			'order-payment-methods'                      => __('Groups/counts WooCommerce orders by selected payment method to show payment mix.', 'user-manager'),
+			'order-notes'                                => __('Returns WooCommerce order notes/comment records linked to orders, including note content and timestamps.', 'user-manager'),
+			'orders-processing-days'                     => __('Returns processing/completed orders and calculates elapsed days between order creation and fulfillment-related status timestamps.', 'user-manager'),
+			'orders-shipments-by-day'                    => __('Aggregates shipped/tracking-related order events into daily totals.', 'user-manager'),
+			'orders-shipments-by-week'                   => __('Aggregates shipped/tracking-related order events into weekly totals.', 'user-manager'),
+			'orders-shipments-by-month'                  => __('Aggregates shipped/tracking-related order events into monthly totals.', 'user-manager'),
+			'orders-tracking-numbers'                    => __('Returns orders that have tracking number metadata populated, including related order context.', 'user-manager'),
+			'orders-tracking-notes'                      => __('Returns order notes that look like tracking/shipment updates so shipping communications can be reviewed.', 'user-manager'),
+			'orders-still-processing-with-tracking-number' => __('Returns orders still in processing status where a tracking number already exists, highlighting potentially stale processing states.', 'user-manager'),
+			'user-data'                                  => __('Returns core WordPress user profile fields and selected account metadata for user-level audits.', 'user-manager'),
+			'product-purchases'                          => __('Aggregates WooCommerce line items by product to show quantity sold and order-level purchase activity.', 'user-manager'),
+			'product-category-purchases'                 => __('Aggregates WooCommerce purchased products by product category to show category-level purchase totals.', 'user-manager'),
+			'product-tag-purchases'                      => __('Aggregates WooCommerce purchased products by product tag to show tag-level purchase totals.', 'user-manager'),
+			'user-total-sales'                           => __('Aggregates WooCommerce order totals by customer/user to show lifetime sales per user.', 'user-manager'),
+			'users-who-used-coupons'                     => __('Returns users/customers who placed orders with coupons, including coupon usage totals per user.', 'user-manager'),
+			'page-not-found-404-errors'                  => __('Reads activity log entries where 404 page views were recorded and lists requested URLs with hit counts/timestamps.', 'user-manager'),
+			'search-queries'                             => __('Reads logged site search queries from activity records and summarizes terms users searched for.', 'user-manager'),
+			'page-views'                                 => __('Reads logged page-view activity and summarizes view totals for WordPress pages.', 'user-manager'),
+			'page-category-views'                        => __('Reads logged archive-view activity and summarizes view totals for page-category archive URLs.', 'user-manager'),
+			'post-views'                                 => __('Reads logged post-view activity and summarizes view totals for WordPress posts.', 'user-manager'),
+			'post-category-views'                        => __('Reads logged archive-view activity and summarizes view totals for post category archives.', 'user-manager'),
+			'post-tag-views'                             => __('Reads logged archive-view activity and summarizes view totals for post tag archives.', 'user-manager'),
+			'product-views'                              => __('Reads logged product-view activity and summarizes view totals for WooCommerce products.', 'user-manager'),
+			'product-category-views'                     => __('Reads logged archive-view activity and summarizes view totals for product category archives.', 'user-manager'),
+			'product-tag-views'                          => __('Reads logged archive-view activity and summarizes view totals for product tag archives.', 'user-manager'),
+			'post-meta-field-names'                      => __('Scans post meta records and returns a unique list of meta field keys used across posts.', 'user-manager'),
+		];
 	}
 
 	private static function render_user_logins_report(): void {
@@ -1003,7 +1069,7 @@ class User_Manager_Tab_Reports {
 	}
 
 	/**
-	 * Export "Coupon Audit" report to CSV.
+	 * Export "Coupons Audit" report to CSV.
 	 */
 	public static function export_coupon_audit_csv(): void {
 		if (!class_exists('WooCommerce')) {
@@ -2395,7 +2461,7 @@ class User_Manager_Tab_Reports {
 	}
 
 	/**
-	 * Render "Coupon Audit" report.
+	 * Render "Coupons Audit" report.
 	 */
 	private static function render_coupon_audit_report(): void {
 		if (!class_exists('WooCommerce')) {
@@ -4170,8 +4236,9 @@ class User_Manager_Tab_Reports {
 					<?php foreach ($rows as $row) : ?>
 						<tr>
 							<td>
-								<?php if (!empty($row['term_id'])) : ?>
-									<a href="<?php echo esc_url(get_edit_term_link((int) $row['term_id'], 'product_cat')); ?>">
+								<?php $term_id = isset($row['term_id']) ? absint($row['term_id']) : 0; ?>
+								<?php if ($term_id > 0) : ?>
+									<a href="<?php echo esc_url(get_edit_term_link($term_id, 'product_cat')); ?>">
 										<?php echo esc_html($row['name'] ?: '—'); ?>
 									</a>
 								<?php else : ?>
@@ -4253,8 +4320,9 @@ class User_Manager_Tab_Reports {
 					<?php foreach ($rows as $row) : ?>
 						<tr>
 							<td>
-								<?php if (!empty($row['term_id'])) : ?>
-									<a href="<?php echo esc_url(get_edit_term_link((int) $row['term_id'], 'product_tag')); ?>">
+								<?php $term_id = isset($row['term_id']) ? absint($row['term_id']) : 0; ?>
+								<?php if ($term_id > 0) : ?>
+									<a href="<?php echo esc_url(get_edit_term_link($term_id, 'product_tag')); ?>">
 										<?php echo esc_html($row['name'] ?: '—'); ?>
 									</a>
 								<?php else : ?>

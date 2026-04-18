@@ -81,7 +81,7 @@ class User_Manager_Addon_Cart_Price_Per_Piece {
 
 					<div class="um-form-field">
 						<label for="um-cart-price-per-piece-text-color"><?php esc_html_e('Unit Price Text Color', 'user-manager'); ?></label>
-						<input type="color" id="um-cart-price-per-piece-text-color" name="cart_price_per_piece_text_color" value="<?php echo esc_attr($text_color); ?>"<?php echo $form_attr; ?> />
+						<input type="text" id="um-cart-price-per-piece-text-color" name="cart_price_per_piece_text_color" class="regular-text um-color-picker-field" value="<?php echo esc_attr($text_color); ?>" data-default-color="#666666"<?php echo $form_attr; ?> />
 					</div>
 				</div>
 			</div>

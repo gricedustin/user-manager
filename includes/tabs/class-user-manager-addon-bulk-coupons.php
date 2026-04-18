@@ -155,7 +155,10 @@ class User_Manager_Addon_Bulk_Coupons {
 							<label for="um-bulk-coupons-send-email"><strong><?php esc_html_e('Send coupon emails to listed addresses', 'user-manager'); ?></strong></label>
 						</div>
 						<div id="um-bulk-coupons-template-select" style="margin-top:12px;<?php echo !empty($settings['bulk_coupons_send_email']) ? '' : 'display:none;'; ?>">
-							<label for="um-bulk-coupons-template-email"><?php esc_html_e('Select Email Template:', 'user-manager'); ?></label>
+							<label for="um-bulk-coupons-template-email">
+								<?php esc_html_e('Select Email Template:', 'user-manager'); ?>
+								<?php User_Manager_Tab_Shared::render_template_settings_shortcut('email'); ?>
+							</label>
 							<select name="email_template" id="um-bulk-coupons-template-email" class="regular-text" style="margin-top:6px;">
 								<option value=""><?php esc_html_e('- Select Template -', 'user-manager'); ?></option>
 								<?php foreach ($templates as $id => $template) : ?>

@@ -8,6 +8,58 @@ if (!defined('ABSPATH')) {
 }
 
 trait User_Manager_Tab_Reports_Tracking_Trait {
+		public static function export_orders_still_processing_with_tracking_number_csv(): void {
+			global $wpdb;
+
+			$comments_table = $wpdb->comments;
+			$posts_table    = $wpdb->posts;
+			$meta_table     = $wpdb->commentmeta;
+
+			$sql = $wpdb->prepare(
+				"SELECT c.comment_ID, c.comment_post_ID, c.comment_author, c.comment_content, c.comment_date_gmt,
+				        p.post_status,
+				        MAX(CASE WHEN cm.meta_key = '_wc_order_note_type' THEN cm.meta_value END) AS note_type
+				   FROM {$comments_table} c
+				   INNER JOIN {$posts_table} p ON c.comment_post_ID = p.ID
+				   LEFT JOIN {$meta_table} cm ON c.comment_ID = cm.comment_id
+				  WHERE c.comment_type = 'order_note'
+				    AND c.comment_approved = 1
+				    AND p.post_type = 'shop_order'
+				    AND p.post_status = 'wc-processing'
+				    AND c.comment_content LIKE %s
+				  GROUP BY c.comment_ID
+				  ORDER BY c.comment_date_gmt DESC",
+				'%with tracking number%'
+			);
+
+			$results = $wpdb->get_results($sql);
+			$rows    = [];
+
+			foreach ($results as $row) {
+				$rows[] = [
+					(int) $row->comment_post_ID,
+					(string) $row->comment_author,
+					(string) ($row->note_type ?: 'internal'),
+					wp_strip_all_tags((string) $row->comment_content),
+					(string) $row->comment_date_gmt,
+					(string) $row->post_status,
+				];
+			}
+
+			self::export_csv(
+				'orders-still-processing-with-tracking-number',
+				[
+					'Order ID',
+					'Author',
+					'Note Type',
+					'Content',
+					'Date (GMT)',
+					'Order Status',
+				],
+				$rows
+			);
+		}
+
 		public static function export_orders_tracking_numbers_csv(): void {
 			if (!class_exists('WooCommerce')) {
 				return;
@@ -411,6 +463,114 @@ trait User_Manager_Tab_Reports_Tracking_Trait {
 	
 				<?php if ($total_pages > 1) : ?>
 					<?php self::render_pagination($paged, $total_pages, $total_found, $current_url); ?>
+				<?php endif; ?>
+			<?php endif; ?>
+			<?php
+		}
+
+		private static function render_orders_still_processing_with_tracking_number_report(): void {
+			global $wpdb;
+
+			$per_page = 50;
+			$paged    = isset($_GET['paged']) ? max(1, absint($_GET['paged'])) : 1;
+			$offset   = ($paged - 1) * $per_page;
+
+			$comments_table = $wpdb->comments;
+			$posts_table    = $wpdb->posts;
+			$meta_table     = $wpdb->commentmeta;
+
+			$total_sql = $wpdb->prepare(
+				"SELECT COUNT(*)
+				   FROM {$comments_table} c
+				   INNER JOIN {$posts_table} p ON c.comment_post_ID = p.ID
+				  WHERE c.comment_type = 'order_note'
+				    AND c.comment_approved = 1
+				    AND p.post_type = 'shop_order'
+				    AND p.post_status = 'wc-processing'
+				    AND c.comment_content LIKE %s",
+				'%with tracking number%'
+			);
+			$total = (int) $wpdb->get_var($total_sql);
+
+			$sql = $wpdb->prepare(
+				"SELECT c.comment_ID, c.comment_post_ID, c.comment_author, c.comment_content, c.comment_date_gmt,
+				        p.post_status,
+				        MAX(CASE WHEN cm.meta_key = '_wc_order_note_type' THEN cm.meta_value END) AS note_type
+				   FROM {$comments_table} c
+				   INNER JOIN {$posts_table} p ON c.comment_post_ID = p.ID
+				   LEFT JOIN {$meta_table} cm ON c.comment_ID = cm.comment_id
+				  WHERE c.comment_type = 'order_note'
+				    AND c.comment_approved = 1
+				    AND p.post_type = 'shop_order'
+				    AND p.post_status = 'wc-processing'
+				    AND c.comment_content LIKE %s
+				  GROUP BY c.comment_ID
+				  ORDER BY c.comment_date_gmt DESC
+				  LIMIT %d OFFSET %d",
+				'%with tracking number%',
+				$per_page,
+				$offset
+			);
+
+			$results = $wpdb->get_results($sql);
+			$entries = [];
+			foreach ($results as $row) {
+				$entries[] = [
+					'order_id'      => (int) $row->comment_post_ID,
+					'author'        => (string) $row->comment_author,
+					'note_type'     => (string) ($row->note_type ?: 'internal'),
+					'content'       => (string) $row->comment_content,
+					'date_gmt'      => (string) $row->comment_date_gmt,
+					'order_status'  => (string) $row->post_status,
+				];
+			}
+
+			$total_pages = max(1, (int) ceil($total / $per_page));
+			$current_url = add_query_arg('report', 'orders-still-processing-with-tracking-number', User_Manager_Core::get_page_url(User_Manager_Core::TAB_REPORTS));
+
+			?>
+			<div style="margin-top:30px; margin-bottom:20px; clear:both; display:block;">
+				<a href="<?php echo esc_url(add_query_arg('export', 'csv', $current_url)); ?>" class="button">
+					<?php esc_html_e('Export to CSV', 'user-manager'); ?>
+				</a>
+			</div>
+
+			<?php if (empty($entries)) : ?>
+				<p><?php esc_html_e('No processing orders with tracking-number notes were found.', 'user-manager'); ?></p>
+			<?php else : ?>
+				<table class="widefat striped">
+					<thead>
+						<tr>
+							<th><?php esc_html_e('Order', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Author', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Note Type', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Content', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Date (GMT)', 'user-manager'); ?></th>
+							<th><?php esc_html_e('Order Status', 'user-manager'); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ($entries as $entry) : ?>
+							<tr>
+								<td>
+									<a href="<?php echo esc_url(admin_url('post.php?post=' . $entry['order_id'] . '&action=edit')); ?>">
+										#<?php echo esc_html($entry['order_id']); ?>
+									</a>
+								</td>
+								<td><?php echo esc_html($entry['author'] ?: '—'); ?></td>
+								<td><?php echo esc_html($entry['note_type']); ?></td>
+								<td style="max-width:400px; white-space:normal;">
+									<?php echo wp_kses_post(wpautop($entry['content'])); ?>
+								</td>
+								<td><?php echo esc_html($entry['date_gmt']); ?></td>
+								<td><?php echo esc_html($entry['order_status']); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+
+				<?php if ($total_pages > 1) : ?>
+					<?php self::render_pagination($paged, $total_pages, $total, $current_url); ?>
 				<?php endif; ?>
 			<?php endif; ?>
 			<?php
