@@ -132,9 +132,10 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 	/**
 	 * Render a single compare-flag row.
 	 *
-	 * @param array{meta_a?:string,meta_b?:string,operator?:string,grace?:string,title?:string,bg?:string,text?:string} $row
+	 * @param array{meta_a?:string,meta_b?:string,compare_b_custom?:string,operator?:string,grace?:string,title?:string,bg?:string,text?:string} $row
 	 */
 	private static function render_additional_meta_compare_flags_repeater_row(array $row): void {
+<<<<<<< Updated upstream
 		$meta_a   = isset($row['meta_a']) ? (string) $row['meta_a'] : '';
 		$meta_b   = isset($row['meta_b']) ? (string) $row['meta_b'] : '';
 		$grace    = isset($row['grace']) ? (string) $row['grace'] : '';
@@ -142,6 +143,17 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 		$bg       = isset($row['bg']) ? (string) $row['bg'] : '';
 		$text     = isset($row['text']) ? (string) $row['text'] : '';
 		$operator = isset($row['operator']) ? (string) $row['operator'] : 'are_they_equal';
+=======
+		$meta_a         = isset($row['meta_a']) ? (string) $row['meta_a'] : '';
+		$meta_b         = isset($row['meta_b']) ? (string) $row['meta_b'] : '';
+		$compare_custom = isset($row['compare_b_custom']) ? (string) $row['compare_b_custom'] : '';
+		$grace          = isset($row['grace']) ? (string) $row['grace'] : '';
+		$grace_operator = isset($row['grace_operator']) ? (string) $row['grace_operator'] : '';
+		$title          = isset($row['title']) ? (string) $row['title'] : '';
+		$bg             = isset($row['bg']) ? (string) $row['bg'] : '';
+		$text           = isset($row['text']) ? (string) $row['text'] : '';
+		$operator       = isset($row['operator']) ? (string) $row['operator'] : 'are_they_equal';
+>>>>>>> Stashed changes
 		if ($operator !== 'are_they_not_equal') {
 			$operator = 'are_they_equal';
 		}
@@ -155,6 +167,10 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				<label class="um-meta-fields-repeater-cell">
 					<span><?php esc_html_e('Meta Field B', 'user-manager'); ?></span>
 					<input type="text" class="regular-text" data-um-meta-compare-flags-b placeholder="_meta_field_b" value="<?php echo esc_attr($meta_b); ?>" />
+				</label>
+				<label class="um-meta-fields-repeater-cell">
+					<span><?php esc_html_e('OR Compare to Custom Value', 'user-manager'); ?></span>
+					<input type="text" class="regular-text" data-um-meta-compare-flags-b-custom placeholder="<?php esc_attr_e('e.g. No', 'user-manager'); ?>" value="<?php echo esc_attr($compare_custom); ?>" />
 				</label>
 				<label class="um-meta-fields-repeater-cell">
 					<span><?php esc_html_e('Show flag when', 'user-manager'); ?></span>
@@ -186,6 +202,9 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 					</span>
 				</label>
 			</div>
+			<p class="description" style="margin:6px 0 0;">
+				<?php esc_html_e('If "OR Compare to Custom Value" is set, that text is used as side B instead of reading Meta Field B from the order (e.g. Meta Field A is "Yes" vs custom "No"). Otherwise Meta Field B is read from order meta as before.', 'user-manager'); ?>
+			</p>
 			<p class="description" style="margin:6px 0 0;">
 				<?php esc_html_e('Without a grace value: "Values are equal" flags on exact match; "Values are NOT equal" flags when they differ. With a grace value (both values must be numeric): "Values are equal" flags when ABS(A − B) > grace, "Values are NOT equal" flags when ABS(A − B) ≤ grace.', 'user-manager'); ?>
 			</p>
@@ -323,7 +342,7 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 	 *   meta_a:meta_b:<operator>:TITLE:bg:text
 	 *   meta_a:meta_b:<operator>:grace:TITLE:bg:text
 	 *
-	 * @return array<int,array{meta_a:string,meta_b:string,operator:string,grace:string,title:string,bg:string,text:string}>
+	 * @return array<int,array{meta_a:string,meta_b:string,compare_b_custom:string,operator:string,grace:string,grace_operator:string,title:string,bg:string,text:string}>
 	 */
 	private static function parse_additional_meta_compare_flags_raw(string $raw): array {
 		$raw = trim($raw);
@@ -341,16 +360,14 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 			if ($line === '') {
 				continue;
 			}
-			$segments = explode(':', $line);
-			if (count($segments) < 4) {
+			if (!class_exists('User_Manager_My_Account_Site_Admin')) {
 				continue;
 			}
-			$meta_a = trim((string) $segments[0]);
-			$meta_b = trim((string) $segments[1]);
-			$operator = strtolower(trim((string) $segments[2]));
-			if (!in_array($operator, ['are_they_equal', 'are_they_not_equal'], true)) {
+			$parsed = User_Manager_My_Account_Site_Admin::parse_compare_flag_setting_line($line);
+			if (!is_array($parsed)) {
 				continue;
 			}
+<<<<<<< Updated upstream
 
 			$remaining = array_map('trim', array_slice($segments, 3));
 			$grace = '';
@@ -386,6 +403,19 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				'title'    => $title,
 				'bg'       => $bg,
 				'text'     => $text,
+=======
+			$gv = $parsed['grace_value'];
+			$rows[] = [
+				'meta_a'           => (string) $parsed['meta_key_a'],
+				'meta_b'           => (string) $parsed['meta_key_b'],
+				'compare_b_custom' => (string) $parsed['compare_b_custom'],
+				'operator'         => (string) $parsed['operator'],
+				'grace'            => ($gv !== null && is_numeric($gv)) ? (string) $gv : '',
+				'grace_operator'   => (string) $parsed['grace_operator'],
+				'title'            => (string) $parsed['title'],
+				'bg'               => (string) $parsed['background_color'],
+				'text'             => (string) $parsed['text_color'],
+>>>>>>> Stashed changes
 			];
 		}
 
@@ -442,10 +472,13 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 			gap: 10px;
 		}
 		.um-meta-fields-repeater-row-grid-compare {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
+			grid-template-columns: repeat(4, minmax(0, 1fr));
 		}
 		.um-meta-fields-repeater-cell-wide {
 			grid-column: span 3;
+		}
+		.um-meta-fields-repeater-row-grid-compare .um-meta-fields-repeater-cell-wide {
+			grid-column: span 4;
 		}
 		@media (max-width: 900px) {
 			.um-meta-fields-repeater-row-grid,
@@ -453,6 +486,9 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				grid-template-columns: 1fr;
 			}
 			.um-meta-fields-repeater-cell-wide {
+				grid-column: auto;
+			}
+			.um-meta-fields-repeater-row-grid-compare .um-meta-fields-repeater-cell-wide {
 				grid-column: auto;
 			}
 		}
@@ -574,6 +610,7 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 					var row = rows[i];
 					var a = (row.querySelector('[data-um-meta-compare-flags-a]') || {value:''}).value.trim();
 					var b = (row.querySelector('[data-um-meta-compare-flags-b]') || {value:''}).value.trim();
+					var customB = (row.querySelector('[data-um-meta-compare-flags-b-custom]') || {value:''}).value.trim();
 					var opInput = row.querySelector('[data-um-meta-compare-flags-operator]');
 					var op = (opInput && opInput.value ? opInput.value : 'are_they_equal').trim();
 					if (op !== 'are_they_not_equal') { op = 'are_they_equal'; }
@@ -581,8 +618,9 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 					var title = (row.querySelector('[data-um-meta-compare-flags-title]') || {value:''}).value.trim();
 					var bg = normalizeHexColor((row.querySelector('[data-um-meta-compare-flags-bg]') || {value:''}).value);
 					var text = normalizeHexColor((row.querySelector('[data-um-meta-compare-flags-text]') || {value:''}).value);
-					if (!a || !b || !title) { continue; }
-					var parts = [a, b, op];
+					if (!a || !title) { continue; }
+					if (!customB && !b) { continue; }
+					var parts = customB !== '' ? [a, b, customB, op] : [a, b, op];
 					if (grace !== '' && !isNaN(parseFloat(grace))) {
 						parts.push(grace);
 					}

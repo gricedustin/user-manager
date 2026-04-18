@@ -791,10 +791,39 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 			#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles > .ab-item .ab-icon { display: inline-block; }
 			#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles > .ab-item .ab-icon::before { content: "\f103"; font-family: dashicons; top: 2px; }
 			@media screen and (max-width: 782px) {
-				#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles { display: block !important; }
-				#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles > .ab-item { padding: 0 8px; position: relative; text-indent: 100%; overflow: hidden; white-space: nowrap; }
-				#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles > .ab-item .ab-icon { position: absolute; left: 8px; top: 0; text-indent: 0; }
-				#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles > .ab-item .ab-icon::before { color: #a7aaad; }
+				/*
+				 * Core admin-bar.css sets #wp-toolbar > ul > li { display: none } then only whitelists
+				 * built-in items — custom nodes in #wp-admin-bar-top-secondary stay hidden unless
+				 * we override. Show the Portal item and present icon-only (label is already
+				 * visually hidden via core #wpadminbar .ab-label rules).
+				 */
+				#wpadminbar li#wp-admin-bar-um-admin-custom-dashboard-tiles {
+					display: block !important;
+				}
+				#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles > .ab-item {
+					width: 52px;
+					height: 46px;
+					padding: 0;
+					line-height: 1;
+					overflow: visible;
+					text-indent: 0;
+					position: relative;
+				}
+				#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles > .ab-item .ab-icon {
+					display: block;
+					position: static;
+					width: 52px;
+					height: 46px;
+					margin: 0;
+					text-align: center;
+					text-indent: 0;
+				}
+				#wpadminbar #wp-admin-bar-um-admin-custom-dashboard-tiles > .ab-item .ab-icon::before {
+					font: 28px/1 dashicons !important;
+					line-height: 46px !important;
+					top: 0;
+					color: #a7aaad;
+				}
 			}
 		</style>
 		<?php

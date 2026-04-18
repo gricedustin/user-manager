@@ -2,12 +2,118 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
+<<<<<<< Updated upstream
  * Version: 2.6.15
+=======
+ * Version: 2.6.35
+>>>>>>> Stashed changes
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  *
+<<<<<<< Updated upstream
+=======
+ * 2.6.35 - April 18, 2026
+ * - Administrator Custom Dashboard Tiles admin bar: on viewports ≤782px, WordPress core hides every `#wp-toolbar > ul > li` except a fixed whitelist, so the Portal dropdown never appeared. Added a targeted `display: block !important` for `#wp-admin-bar-um-admin-custom-dashboard-tiles` and adjusted mobile styles so only the link icon shows (label remains in the DOM; core `.ab-label` rules keep it off-screen).
+ *
+ * 2.6.34 - April 18, 2026
+ * - My Account Site Admin → Additional Flag (compare) repeater: added "OR Compare to Custom Value" next to Meta Field B. When set, the flag compares Meta Field A to that literal text instead of reading Meta Field B from the order (e.g. A = order meta "Yes" vs custom "No"). Stored as an extended line format parsed by `User_Manager_My_Account_Site_Admin::parse_compare_flag_setting_line()`.
+ *
+ * 2.6.33 - April 18, 2026
+ * - “Bulk Create all N administrators” deep link: `esc_url()` strips `%0A`/`%0D` from hrefs (WordPress core), so newline-separated `um_prefill_paste_data` was merged into one string and emails corrupted in Paste Data. The notice now passes a comma-separated list in the query string; Bulk Create still hydrates one email per line in the textarea.
+ *
+ * 2.6.32 - April 18, 2026
+ * - Remote Admin Email List notice links: fixed double URL-encoding when building `add_query_arg()` links. Values were pre-encoded with `rawurlencode()` and encoded again by WordPress, which broke `um_prefill_paste_data` (Bulk Create “Paste Data” showed empty/invalid emails instead of one email per line) and could corrupt `um_prefill_user_email` / `um_prefill_email` prefills. Unencoded values are now passed through; `add_query_arg()` handles encoding once.
+ *
+ * 2.6.31 - April 18, 2026
+ * - "Also Display Notification with All Users with X Role" setting: added a new "Hide Notification for Each if No Users are Found" checkbox. When enabled, the per-role admin notice is only rendered for roles that actually have at least one user assigned — roles with zero users stay silent instead of showing an empty-state card.
+ *
+ * 2.6.30 - April 18, 2026
+ * - "User Manager: Missing WP Administrators from Remote Admin List" admin notice: added a "Bulk Create all N administrators" button at the bottom that opens the Bulk Create tool with every missing email prefilled in "Paste from Spreadsheet" and the Default Role preset to Administrator.
+ * - Bulk Create tab now accepts two URL prefill parameters so deep-links from other screens work without extra typing: `um_prefill_paste_data` (space/comma/newline-separated list of emails; each token individually validated through sanitize_email + is_email before hydration) and `um_prefill_role` (sanitize_key, must exist in the live WP role registry). Both CSV Upload and Paste from Spreadsheet forms honor the role prefill so either workflow preselects the same default.
+ *
+ * 2.6.29 - April 18, 2026
+ * - Remote Admin Email List admin notices: reordered so "User Manager: WP Administrators Not in Remote Admin List" renders ABOVE "User Manager: Missing WP Administrators from Remote Admin List". Admins now see the higher-severity "unexpected local admin" finding first before the "create this missing admin" prompt.
+ *
+ * 2.6.28 - April 18, 2026
+ * - Settings > User Creation & Import: added a new "Also Display Notification with All Users with X Role" area directly under the "Remote TXT File URL List of WP Administrator Emails for This Site" field. Lists every registered role on the site as a checkbox.
+ * - For each checked role, a dedicated admin notice now renders on User Manager admin screens, the WP Users list, and the Dashboard, listing every user currently assigned that role with per-row "Remove this user" and "Change role for this user" links. The Change Role link preselects the Customer role.
+ * - Each role notice also gets bulk buttons at the bottom: "Remove all N {role} users" and "Change all N {role} users' roles", both prefilling the corresponding tab with the full comma-separated email list (and the role preselected to Customer for the bulk Change Role button).
+ * - Runs independently of whether the Remote TXT URL is configured, so admins can use the per-role notice feature on its own. Selected role keys are sanitized with sanitize_key() AND validated against the live WP role registry at save time so a deleted role cannot trigger an unbounded user-enumeration query.
+ *
+ * 2.6.27 - April 18, 2026
+ * - "User Manager: WP Administrators Not in Remote Admin List" admin notice: added a per-row "Change Role" link next to the existing "Remove this administrator" link. The link opens the new Change Role(s) screen with the email prefilled and the role preselected to Customer.
+ * - Added two bulk-action buttons at the bottom of the notice: "Remove all N administrators" opens the Remove User(s) screen with every listed email prefilled, and "Change all N roles" opens the Change Role(s) screen with every listed email prefilled and the role preselected to Customer. Both buttons pluralize correctly.
+ * - The Change Role(s) screen now also honors `um_prefill_user_email` (comma- and newline-separated) and `um_prefill_role` query parameters, matching the Remove User(s) screen\'s prefill convention so both notices pass values through the same URL contract. The legacy `um_email` parameter is still accepted for backward compatibility.
+ *
+ * 2.6.26 - April 18, 2026
+ * - Login Tools: added a new "Change Role(s)" sub-page (?page=user-manager&tab=login-tools&login_tools_section=change-role) positioned right next to Reset Password(s) in the sub-nav, with the same layout/look as Reset Password(s).
+ * - The form accepts a list of email addresses, a single role picker (populated from WordPress\'s registered roles), and an optional "Send Role Change Email" checkbox with a visible "Not recommended in most cases" note explaining that role changes are normally best done silently.
+ * - Submissions route through admin-post.php (action: user_manager_change_role) with nonce protection and manage_options capability check; each matched user is reassigned via WP_User::set_role() so WordPress fires its standard set_user_role action and other plugins that listen for role changes keep running.
+ * - Every attempt is written to the Admin Activity Log as `role_change`, `role_change_failed`, or `role_change_unchanged` with the old role(s), new role, whether an email was sent, and whether the run was bulk — so Reports > Admin Log keeps full history, and the right-hand "Recent Role Changes" sidebar on the screen reads from that log.
+ * - Optional notification email is a lightweight wp_mail() message (not a template-editor form) that tells the user their role changed on the site and suggests they contact the admin if unexpected.
+ * - Added matching redirect message codes (role_change, role_change_email_sent, role_unchanged, invalid_role, bulk_role_change, bulk_role_change_email_sent) with user-friendly notices that show the new role key and the unchanged/not-found/sent counts.
+ *
+ * 2.6.25 - April 18, 2026
+ * - Settings tab (?page=user-manager&tab=settings): fixed the Save Settings button and pressing Enter inside form fields not persisting changes.
+ * - Root cause: the collapsible-card click + keydown handler bound on `.um-admin-card-header` was intercepting Enter keydowns that bubbled up from inputs nested inside the card body and canceling the implicit form submit. Tightened the handler to only toggle when the event originated on the header itself (or its icon/title span).
+ * - Added a defensive fallback: if the native submit event does not fire within a microtask after clicking Save, the JS now explicitly calls `form.submit()` so an ancestor `preventDefault()` (from any past or future handler) can no longer swallow the submission.
+ * - Also fixed a long-standing field-name mismatch on the User Experience card's "Legacy/Broken Shortcodes" input: it was rendered under the name `legacy_noop_shortcodes_list` while the save handler persists under `legacy_broken_shortcodes_noop_list`, so admin-entered values were silently discarded. The input now uses the canonical key and falls back to either stored value during hydration for round-trip compatibility.
+ *
+ * 2.6.24 - April 18, 2026
+ * - Fixed FCF PRO file Preview still failing in Office Web Viewer with "We can't process this request" even after the 2.6.22 signed-proxy work.
+ * - Root cause #1: Office Web Viewer sniffs the file type from the URL PATH, not from the query string. The `?um_fcf_file=1&file=Foo.xlsx&sig=…` URL we sent had the extension in the query, so Microsoft's servers treated the URL as "no extension" and refused to open it.
+ * - Root cause #2: Office Web Viewer also trips on responses that carry `Cache-Control: private` or `Pragma: no-cache`; the inline response from 2.6.22 was sending both.
+ * - Added a new path-based proxy URL variant used for Preview only: `https://example.com/um-fcf-file/<filename>?hash=…&expires=…&sig=…`. The URL path now ends in the real filename + extension (e.g. `.xlsx`) so Office can sniff it correctly.
+ * - Added an `init` priority 0 hook that matches `REQUEST_URI` against `/um-fcf-file/<filename>` and serves the file before WordPress resolves the URL into a 404 (no rewrite flush required, works on subdirectory WP installs via `home_url()` prefix normalization, rejects traversal via single-segment + sanitized filename + `realpath()` sandbox against the FCF base directory).
+ * - Inline (Preview) responses now send `Cache-Control: public, max-age=600` with `Pragma` explicitly removed, plus `Access-Control-Allow-Methods: GET, HEAD, OPTIONS`, `Access-Control-Expose-Headers: Content-Disposition, Content-Length, Content-Type`, and `Accept-Ranges: none` so Microsoft's CDN is happy fetching the file.
+ * - Download links continue to use the existing `?um_fcf_file=1` query URL with `dl=1`, since Download worked already and keeps sending the hard-no-cache headers.
+ * - Signatures still HMAC `hash|filename|expires` with `wp_salt('auth')`; the path variant just moves `filename` from the query to the path and the intercept pulls it back out during verification.
+ *
+ * 2.6.23 - April 18, 2026
+ * - Added a shortcut inside the WordPress Admin Bar "Site Name" dropdown (next to Dashboard, Plugins, Themes) that opens the plugin's Add-ons tab.
+ * - The label honors the existing Plugin Title Override setting so admins who renamed the plugin (e.g. "Company Portal") see that custom title in the dropdown instead of "UX Manager".
+ * - The shortcut only renders for users with the `manage_options` capability and is emitted at admin_bar_menu priority 35 (after WordPress registers the site-name parent, before our other custom admin-bar nodes) so the ordering stays stable next to the built-in WP items.
+ *
+ * 2.6.22 - April 18, 2026
+ * - Fixed Flexible Checkout Fields PRO file-upload rows: Download was 403-ing and Preview in Office Web Viewer was returning "We can't process this request", because FCF PRO drops a `Deny from all` .htaccess into its own upload directory, so the public URL is intentionally blocked.
+ * - Added a HMAC-signed, capability-guarded PHP proxy endpoint (`?um_fcf_file=1&hash=…&file=…&expires=…&sig=…`) that reads the resolved file from disk after verifying the signature and streams it back with the correct Content-Type + Content-Disposition. Signatures use `wp_salt('auth')`, tokens expire after 15 minutes, and the resolved path is sandboxed with `realpath()` + prefix match against `wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/` so symlinks or traversal cannot escape the FCF base directory.
+ * - Download links now target the proxy with `dl=1` so the browser sees `Content-Disposition: attachment; filename="…"` and downloads the real filename.
+ * - Preview links also target the proxy; Office Web Viewer fetches the signed URL from Microsoft's servers over the public internet (no WordPress session required) and now renders Excel/Word/PowerPoint files correctly.
+ * - The Preview trigger now carries a `data-um-preview-filename` attribute so the modal header can still display the real filename, and extension-based routing (CSV/TSV/TXT inline table vs Excel Office Viewer) keeps working even though the proxy URL has no filename path segment.
+ * - No file duplication: files stay in the FCF protected directory where they were uploaded. Access stays gated by WordPress, not by Apache `.htaccess`.
+ *
+ * 2.6.21 - April 18, 2026
+ * - My Account Admin Additional Meta Fields (file-URL rows): removed the inline "(N lines)" badge that used to render next to the links on flagged file rows. Line counting still runs in the background so the cached value stays fresh for the Grace Value compare-flag feature.
+ * - Renamed the action links: "Open File" → "Download", "Preview File" → "Preview".
+ * - Reordered the links so Preview renders first and Download renders second, and dropped the `|` separator between them in favor of a small inline gap.
+ *
+ * 2.6.20 - April 18, 2026
+ * - My Account Admin "Additional Flag to Display Below Additional Fields" repeater: added a new "Grace Value Operator" dropdown next to the Grace Value field so admins can explicitly control how the grace calculation triggers the flag.
+ * - Three options: "Auto (match the equal / NOT equal selector)" (default, preserves legacy behavior), "Only flag when diff EXCEEDS grace (>)", and "Only flag when diff is WITHIN grace (≤)".
+ * - Example use case: with "Values are NOT equal", grace 3, and Grace Value Operator = "Only flag when diff EXCEEDS grace (>)", ABS(3 − 6) = 3 does NOT trigger the flag (3 > 3 is false); ABS(3 − 7) = 4 does (4 > 3 is true).
+ * - Stored format now accepts an optional `exceeds` / `within` segment directly after the grace value — `meta_a:meta_b:operator:grace_value:grace_operator:FLAG TITLE:...`. Rows saved before this release (without the segment) parse unchanged and continue to use the legacy operator-derived behavior, so no data migration is needed.
+ * - Updated the settings description, the per-order preview strip, and the calculation text under each preview row to reflect whether the grace operator is EXCEEDS or WITHIN.
+ *
+ * 2.6.19 - April 18, 2026
+ * - My Account Admin Additional Meta Fields repeaters: added per-row Move Up / Move Down arrow buttons to help admins manually reorder rows without drag-and-drop, across all three settings — "Additional Meta Fields to Display Under Order", "Additional Meta Fields to Display Under Order in All Orders Screen", and "Additional Flag to Display Below Additional Fields in All Orders Screen".
+ * - Move arrows auto-hide on the topmost / bottommost rows so admins never click a dead button, and the hidden raw-value input is re-synced on every move so the new order is captured immediately (save as usual to persist).
+ *
+ * 2.6.18 - April 18, 2026
+ * - Administrator Custom Dashboard Tiles: changed the default Page Title and Menu Title from "Custom Dashboard Tiles" / "Dashboard Tiles" to "Admin Tiles". The Page Title Override and Menu Title Override settings still win when set.
+ * - Placeholder text on the Page Title Override and Menu Title Override settings inputs and the admin-bar "Add Current Page to…" label now reflect the new default (and the admin-bar label tracks the resolved menu title when overridden).
+ * - Added a "Recently Clicked" sidebar on the right side of the Dashboard tab (20% wide, 280px min width, sticky to the top on scroll) that lists the most recently clicked tiles sorted by last-clicked time, with click count, last-clicker email, and relative time per row.
+ * - Clicking a sidebar row is click-tracked through the same AJAX endpoint as the main grid tiles, so the sidebar surfaces the freshest activity in real time.
+ * - Sidebar collapses out of view below 1024px viewports so small screens keep the full-width tile grid.
+ *
+ * 2.6.17 - April 18, 2026
+ * - Fixed "Fatal error: Traits cannot have constants" on PHP 8.1 and earlier by converting every trait-level `const` declaration to a static accessor method.
+ * - PHP only allows `const` declarations inside a trait starting with PHP 8.2; the plugin targets PHP 7.4+, so the trait-level constants introduced in 2.6.14 (Restricted Access grant query param / transient prefix / password action) and 2.6.15 (Administrator Custom Dashboard Tiles option keys / page slug / AJAX action names) caused a hard fatal on any older PHP install.
+ * - Replaced those constants with equivalent static accessor methods (e.g. `User_Manager_Core::admin_custom_dashboard_tiles_page_slug()`, `self::restricted_access_password_action()`) so the string values are identical to what 2.6.14 / 2.6.15 shipped with — no stored option keys or URL paths changed.
+ * - Updated the three call sites outside the traits (the dashboard tiles admin-page renderer and the dashboard tiles add-on card) to use the new accessor methods and added a graceful `method_exists()` fallback so the Add-ons card cannot fatal on legacy installs.
+ *
+>>>>>>> Stashed changes
  * 2.6.15 - April 18, 2026
  * - New add-on: "Administrator Custom Dashboard Tiles" — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.
  * - Add-on settings include Page Title Override, Menu Title Override, Menu Location Priority, and a WP-Admin Bar Dropdown toggle.

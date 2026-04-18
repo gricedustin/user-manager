@@ -39,6 +39,165 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+<<<<<<< Updated upstream
+=======
+						<h4>2.6.35 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Administrator Custom Dashboard Tiles admin bar: fixed Portal menu missing on mobile — WordPress core hides non-whitelisted toolbar list items below 782px; the Portal node is now forced visible with icon-only presentation on small screens.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.34 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Site Admin → Additional Flag (compare) repeater: added "OR Compare to Custom Value" next to Meta Field B. When set, the flag compares Meta Field A to that literal text instead of reading Meta Field B from the order.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.33 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('"Bulk Create all N administrators" deep link: esc_url() strips percent-encoded newlines from hrefs (WordPress core), so newline-separated um_prefill_paste_data was merged and corrupted Paste Data. The notice now uses a comma-separated query value; Bulk Create still shows one email per line in the textarea.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.32 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Remote Admin Email List notice links: fixed double URL-encoding when building add_query_arg() links. Pre-encoding with rawurlencode() and encoding again in WordPress broke um_prefill_paste_data (Bulk Create Paste Data showed empty or invalid emails instead of one per line) and could corrupt other email prefills. Values are now passed unencoded so add_query_arg encodes once.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.31 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('"Also Display Notification with All Users with X Role" setting: added a new "Hide Notification for Each if No Users are Found" checkbox. When enabled, the per-role admin notice is only rendered for roles that actually have at least one user assigned — roles with zero users stay silent instead of showing an empty-state card.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.30 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('"User Manager: Missing WP Administrators from Remote Admin List" admin notice: added a "Bulk Create all N administrators" button at the bottom that opens the Bulk Create tool with every missing email prefilled in "Paste from Spreadsheet" and the Default Role preset to Administrator.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Bulk Create tab now accepts two URL prefill parameters (um_prefill_paste_data and um_prefill_role) so deep-links from other admin notices work without extra typing. Each email token runs through sanitize_email + is_email before hydration; the role is sanitize_key\'d and validated against the live WP role registry.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.29 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Remote Admin Email List admin notices: reordered so "User Manager: WP Administrators Not in Remote Admin List" renders ABOVE "User Manager: Missing WP Administrators from Remote Admin List". Admins now see the higher-severity "unexpected local admin" finding first before the "create this missing admin" prompt.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.28 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings > User Creation & Import: added a new "Also Display Notification with All Users with X Role" area directly under the "Remote TXT File URL List of WP Administrator Emails for This Site" field. Lists every registered role on the site as a checkbox.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('For each checked role, a dedicated admin notice now renders on User Manager admin screens, the WP Users list, and the Dashboard, listing every user currently assigned that role with per-row "Remove this user" and "Change role for this user" links. The Change Role link preselects the Customer role.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Each role notice also gets bulk buttons at the bottom: "Remove all N {role} users" and "Change all N {role} users\' roles", both prefilling the corresponding tab with the full comma-separated email list (and the role preselected to Customer for the bulk Change Role button).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Runs independently of whether the Remote TXT URL is configured, so admins can use the per-role notice feature on its own. Selected role keys are sanitized with sanitize_key() AND validated against the live WP role registry at save time so a deleted role cannot trigger an unbounded user-enumeration query.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.27 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('"User Manager: WP Administrators Not in Remote Admin List" admin notice: added a per-row "Change Role" link next to the existing "Remove this administrator" link. The link opens the new Change Role(s) screen with the email prefilled and the role preselected to Customer.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added two bulk-action buttons at the bottom of the notice: "Remove all N administrators" opens the Remove User(s) screen with every listed email prefilled, and "Change all N roles" opens the Change Role(s) screen with every listed email prefilled and the role preselected to Customer. Both buttons pluralize correctly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The Change Role(s) screen now honors um_prefill_user_email (comma- and newline-separated) and um_prefill_role query parameters, matching the Remove User(s) screen\'s prefill convention. The legacy um_email parameter is still accepted for backward compatibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.26 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Login Tools: added a new "Change Role(s)" sub-page (?page=user-manager&tab=login-tools&login_tools_section=change-role) positioned next to Reset Password(s).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The screen accepts a list of email addresses, a single role picker populated from WordPress\'s registered roles, and an optional "Send Role Change Email" checkbox with a "Not recommended in most cases" note explaining role changes are normally best done silently.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Submissions go through admin-post.php (action: user_manager_change_role) with nonce + manage_options checks; each user is reassigned via WP_User::set_role() so WordPress fires the standard set_user_role action and other plugins that listen for role changes keep running.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Every attempt is written to the Admin Activity Log (role_change, role_change_failed, role_change_unchanged) with old role(s), new role, whether an email was sent, and whether the run was bulk. The right-hand "Recent Role Changes" sidebar on the screen reads from that log, and Reports > Admin Log shows the full history.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Optional notification email is a lightweight wp_mail() message that tells the user their role changed on the site and suggests they contact the admin if unexpected.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added matching redirect notice codes (role_change, role_change_email_sent, role_unchanged, invalid_role, bulk_role_change, bulk_role_change_email_sent) with user-friendly messages that show the new role key and the unchanged/not-found/sent counts.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.25 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Settings tab (?page=user-manager&tab=settings): fixed the Save Settings button and pressing Enter inside form fields not persisting changes.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Root cause: the collapsible-card click + keydown handler bound on .um-admin-card-header was intercepting Enter keydowns that bubbled up from inputs nested inside the card body and canceling the implicit form submit. Tightened the handler to only toggle when the event originated on the header itself (or its icon/title span).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a defensive fallback: if the native submit event does not fire within a microtask after clicking Save, the JS now explicitly calls form.submit() so an ancestor preventDefault() (from any past or future handler) can no longer swallow the submission.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Also fixed a long-standing field-name mismatch on the User Experience card\'s "Legacy/Broken Shortcodes" input: it was rendered under the name legacy_noop_shortcodes_list while the save handler persists under legacy_broken_shortcodes_noop_list, so admin-entered values were silently discarded. The input now uses the canonical key and falls back to either stored value during hydration.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.24 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed FCF PRO file Preview still failing in Office Web Viewer with "We can\'t process this request" even after the 2.6.22 signed-proxy work.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Root cause #1: Office Web Viewer sniffs the file type from the URL PATH, not from the query string. The old proxy URL put the filename + extension in the query, so Microsoft\'s servers treated the URL as "no extension" and refused to open it.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Root cause #2: Office Web Viewer also trips on responses that carry Cache-Control: private or Pragma: no-cache; the inline response from 2.6.22 was sending both.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new path-based proxy URL used for Preview only: /um-fcf-file/<filename>?hash=…&expires=…&sig=…. The URL path now ends in the real filename + extension so Office can sniff it correctly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added an init priority 0 hook that matches REQUEST_URI against /um-fcf-file/<filename> and serves the file before WordPress resolves the URL into a 404 (no rewrite flush required, works on subdirectory WP installs, rejects traversal).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Inline (Preview) responses now send Cache-Control: public, max-age=600 with Pragma explicitly removed, plus Access-Control-Allow-Methods, Access-Control-Expose-Headers, and Accept-Ranges: none so Microsoft\'s CDN is happy fetching the file.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Download links continue to use the existing ?um_fcf_file=1 query URL with dl=1 (Download already worked and keeps the hard-no-cache headers).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.23 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a shortcut inside the WordPress Admin Bar "Site Name" dropdown (next to Dashboard, Plugins, Themes) that opens the plugin\'s Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The label honors the existing Plugin Title Override setting so admins who renamed the plugin (e.g. "Company Portal") see that custom title in the dropdown instead of "UX Manager".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The shortcut only renders for users with the manage_options capability and is emitted at admin_bar_menu priority 35 (after WordPress registers the site-name parent, before our other custom admin-bar nodes) so the ordering stays stable next to the built-in WP items.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.22 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed Flexible Checkout Fields PRO file-upload rows: Download was 403-ing and Preview in Office Web Viewer was returning "We can\'t process this request", because FCF PRO drops a "Deny from all" .htaccess into its own upload directory so the public URL is intentionally blocked.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a HMAC-signed PHP proxy endpoint (?um_fcf_file=1&hash=…&file=…&expires=…&sig=…) that reads the resolved file from disk after verifying the signature and streams it back with the correct Content-Type + Content-Disposition.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Signatures use wp_salt(\'auth\'), tokens expire after 15 minutes, and the resolved path is sandboxed with realpath() + prefix match against wp-content/uploads/woocommerce_uploads/flexible-checkout-fields/ so symlinks or traversal cannot escape the FCF base directory.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Download links now target the proxy with dl=1 so the browser sees Content-Disposition: attachment and downloads the real filename.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Preview links also target the proxy; Office Web Viewer fetches the signed URL from Microsoft\'s servers over the public internet (no WordPress session required) and now renders Excel/Word/PowerPoint files correctly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The Preview trigger now carries a data-um-preview-filename attribute so the modal header can still display the real filename, and extension-based routing (CSV/TSV/TXT inline table vs Excel Office Viewer) keeps working even though the proxy URL has no filename path segment.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('No file duplication: files stay in the FCF protected directory where they were uploaded. Access stays gated by WordPress, not by Apache .htaccess.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.21 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Additional Meta Fields (file-URL rows): removed the inline "(N lines)" badge that used to render next to the links on flagged file rows. Line counting still runs in the background so the cached value stays fresh for the Grace Value compare-flag feature.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Renamed the action links: "Open File" is now "Download", and "Preview File" is now "Preview".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reordered the links so Preview renders first and Download renders second, and dropped the | separator between them in favor of a small inline gap.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.20 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin "Additional Flag to Display Below Additional Fields" repeater: added a new "Grace Value Operator" dropdown next to the Grace Value field so admins can explicitly control how the grace calculation triggers the flag.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Three options: "Auto (match the equal / NOT equal selector)" (default, preserves legacy behavior), "Only flag when diff EXCEEDS grace (>)", and "Only flag when diff is WITHIN grace (≤)".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Example use case: with "Values are NOT equal", grace 3, and Grace Value Operator = "Only flag when diff EXCEEDS grace (>)", ABS(3 − 6) = 3 does NOT trigger the flag (3 > 3 is false); ABS(3 − 7) = 4 does (4 > 3 is true).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Stored format now accepts an optional "exceeds" / "within" segment directly after the grace value. Rows saved before this release (without the segment) parse unchanged and continue to use the legacy operator-derived behavior, so no data migration is needed.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated the settings description, the per-order preview strip, and the calculation text under each preview row to reflect whether the grace operator is EXCEEDS or WITHIN.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.19 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Additional Meta Fields repeaters: added per-row Move Up / Move Down arrow buttons so admins can manually reorder rows without drag-and-drop, across all three settings — "Additional Meta Fields to Display Under Order", "Additional Meta Fields to Display Under Order in All Orders Screen", and "Additional Flag to Display Below Additional Fields in All Orders Screen".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Move arrows auto-hide on the topmost / bottommost rows so admins never click a dead button, and the hidden raw-value input is re-synced on every move so the new order is captured immediately (save as usual to persist).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.18 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Administrator Custom Dashboard Tiles: changed the default Page Title and Menu Title from "Custom Dashboard Tiles" / "Dashboard Tiles" to "Admin Tiles". The Page Title Override and Menu Title Override settings still win when set.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Placeholder text on the Page Title Override and Menu Title Override settings inputs and the admin-bar "Add Current Page to…" label now reflect the new default (and the admin-bar label tracks the resolved menu title when overridden).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a "Recently Clicked" sidebar on the right side of the Dashboard tab (20% wide, 280px min width, sticky to the top on scroll) that lists the most recently clicked tiles sorted by last-clicked time, with click count, last-clicker email, and relative time per row.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clicking a sidebar row is click-tracked through the same AJAX endpoint as the main grid tiles, so the sidebar surfaces the freshest activity in real time.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Sidebar collapses out of view below 1024px viewports so small screens keep the full-width tile grid.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+						<h4>2.6.17 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed "Fatal error: Traits cannot have constants" on PHP 8.1 and earlier by converting every trait-level const declaration to a static accessor method.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('PHP only allows const declarations inside a trait starting with PHP 8.2; the plugin targets PHP 7.4+, so the trait-level constants introduced in 2.6.14 (Restricted Access grant query param / transient prefix / password action) and 2.6.15 (Administrator Custom Dashboard Tiles option keys / page slug / AJAX action names) caused a hard fatal on any older PHP install.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Replaced those constants with equivalent static accessor methods — the string values are identical to what 2.6.14 / 2.6.15 shipped with, so no stored option keys or URL paths changed.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated the three call sites outside the traits (the dashboard tiles admin-page renderer and the dashboard tiles add-on card) and added a graceful method_exists() fallback so the Add-ons card cannot fatal on legacy installs.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
+>>>>>>> Stashed changes
 						<h4>2.6.15 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('New add-on: Administrator Custom Dashboard Tiles — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.', 'user-manager'); ?></li>

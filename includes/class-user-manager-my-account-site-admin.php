@@ -2751,6 +2751,11 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Format per line (supported operators: `are_they_equal`, `are_they_not_equal`):
 	 * - meta_field_a:meta_field_b:<operator>:FLAG TITLE[:bgcolor[:textcolor]]
 	 * - meta_field_a:meta_field_b:<operator>:grace_value:FLAG TITLE[:bgcolor[:textcolor]]
+<<<<<<< Updated upstream
+=======
+	 * - meta_field_a:meta_field_b:<operator>:grace_value:grace_operator:FLAG TITLE[:bgcolor[:textcolor]]
+	 * - meta_field_a:meta_field_b:<literal_compare_b>:<operator>:… — when segment 3 is an operator and segment 2 is not, segment 2 is a custom literal compared against meta A (instead of reading meta B from the order). Meta field B may be empty in this form.
+>>>>>>> Stashed changes
 	 *
 	 * Semantics:
 	 * - `are_they_equal`     — flag when the two meta values ARE equal (case-insensitive).
@@ -2762,6 +2767,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @return array<int,array{
 	 *   meta_key_a:string,
 	 *   meta_key_b:string,
+	 *   compare_b_custom:string,
 	 *   operator:string,
 	 *   grace_value:float|null,
 	 *   title:string,
@@ -2786,11 +2792,11 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($part === '') {
 				continue;
 			}
-
-			$segments = explode(':', $part);
-			if (count($segments) < 4) {
+			$row = self::parse_compare_flag_setting_line($part);
+			if (!is_array($row)) {
 				continue;
 			}
+<<<<<<< Updated upstream
 
 			$meta_key_a = sanitize_key(trim((string) $segments[0]));
 			$meta_key_b = sanitize_key(trim((string) $segments[1]));
@@ -2846,19 +2852,184 @@ final class User_Manager_My_Account_Site_Admin {
 				'background_color' => $bg ? $bg : '#000000',
 				'text_color' => $text ? $text : '#ffffff',
 			];
+=======
+			$flags[] = $row;
+>>>>>>> Stashed changes
 		}
 
 		return $flags;
 	}
 
 	/**
+<<<<<<< Updated upstream
+=======
+	 * Parse one compare-flag line from addon settings (repeatable row / raw textarea).
+	 *
+	 * Extended form (literal B): when there are at least five segments and segment[3] is
+	 * `are_they_equal` or `are_they_not_equal` while segment[2] is not, then segment[2] is
+	 * the custom value for B (not a meta key). Otherwise segment[2] is the operator (legacy).
+	 *
+	 * @return array{
+	 *   meta_key_a:string,
+	 *   meta_key_b:string,
+	 *   compare_b_custom:string,
+	 *   operator:string,
+	 *   grace_value:float|null,
+	 *   grace_operator:string,
+	 *   title:string,
+	 *   background_color:string,
+	 *   text_color:string
+	 * }|null
+	 */
+	public static function parse_compare_flag_setting_line(string $line): ?array {
+		$line = trim($line);
+		if ($line === '') {
+			return null;
+		}
+
+		$segments = explode(':', $line);
+		if (count($segments) < 4) {
+			return null;
+		}
+
+		$allowed_operators = ['are_they_equal', 'are_they_not_equal'];
+
+		$meta_key_a = sanitize_key(trim((string) $segments[0]));
+		$meta_key_b  = sanitize_key(trim((string) $segments[1]));
+
+		$compare_b_custom = '';
+		$operator_raw     = '';
+		$remaining        = [];
+
+		$legacy_op = strtolower(trim((string) $segments[2]));
+		$extended  = false;
+		if (count($segments) >= 5) {
+			$maybe_op_at_3 = strtolower(trim((string) $segments[3]));
+			if (in_array($maybe_op_at_3, $allowed_operators, true) && !in_array($legacy_op, $allowed_operators, true)) {
+				$extended         = true;
+				$compare_b_custom = sanitize_text_field(wp_unslash(trim((string) $segments[2])));
+				$operator_raw     = $maybe_op_at_3;
+				$remaining        = array_map('trim', array_slice($segments, 4));
+			}
+		}
+
+		if (!$extended) {
+			$operator_raw = $legacy_op;
+			$remaining    = array_map('trim', array_slice($segments, 3));
+		}
+
+		if ($meta_key_a === '' || empty($remaining)) {
+			return null;
+		}
+		if (!in_array($operator_raw, $allowed_operators, true)) {
+			return null;
+		}
+
+		if ($compare_b_custom === '' && $meta_key_b === '') {
+			return null;
+		}
+
+		$grace_value = null;
+		if (count($remaining) >= 2 && is_numeric((string) $remaining[0])) {
+			$grace_value = abs((float) $remaining[0]);
+			array_shift($remaining);
+		}
+
+		$grace_operator = '';
+		if ($grace_value !== null && count($remaining) >= 2) {
+			$canonical_grace_operator = self::canonicalize_compare_flag_grace_operator((string) $remaining[0]);
+			if ($canonical_grace_operator !== '') {
+				$grace_operator = $canonical_grace_operator;
+				array_shift($remaining);
+			}
+		}
+
+		$bg = '';
+		$text = '';
+		$remaining_count = count($remaining);
+		if ($remaining_count >= 3) {
+			$maybe_bg = self::normalize_compare_flag_hex_color((string) $remaining[$remaining_count - 2]);
+			$maybe_text = self::normalize_compare_flag_hex_color((string) $remaining[$remaining_count - 1]);
+			if ($maybe_bg && $maybe_text) {
+				$bg = $maybe_bg;
+				$text = $maybe_text;
+				array_pop($remaining);
+				array_pop($remaining);
+			}
+		}
+		if ($bg === '' && $text === '' && count($remaining) >= 2) {
+			$maybe_bg = self::normalize_compare_flag_hex_color((string) $remaining[count($remaining) - 1]);
+			if ($maybe_bg) {
+				$bg = $maybe_bg;
+				array_pop($remaining);
+			}
+		}
+
+		$title = sanitize_text_field(trim(implode(':', $remaining)));
+		if ($title === '') {
+			return null;
+		}
+
+		return [
+			'meta_key_a'       => $meta_key_a,
+			'meta_key_b'       => $meta_key_b,
+			'compare_b_custom' => $compare_b_custom,
+			'operator'         => $operator_raw,
+			'grace_value'      => $grace_value,
+			'grace_operator'   => $grace_operator,
+			'title'            => $title,
+			'background_color' => $bg ? $bg : '#000000',
+			'text_color'       => $text ? $text : '#ffffff',
+		];
+	}
+
+	/**
+	 * Normalize user-supplied Grace Value Operator tokens to the canonical
+	 * `exceeds` / `within` values. Returns an empty string when the token
+	 * is unrecognized — callers should then fall back to the legacy
+	 * operator-derived behavior for backward compatibility.
+	 */
+	private static function canonicalize_compare_flag_grace_operator(string $raw): string {
+		$raw = strtolower(trim($raw));
+		if ($raw === '') {
+			return '';
+		}
+		$exceeds_aliases = ['exceeds', 'greater_than', 'gt', 'more_than', 'over', 'above'];
+		$within_aliases  = ['within', 'less_than_or_equal', 'lte', 'at_most', 'within_or_equal', 'below_or_equal', 'equal_or_under'];
+		if (in_array($raw, $exceeds_aliases, true)) {
+			return 'exceeds';
+		}
+		if (in_array($raw, $within_aliases, true)) {
+			return 'within';
+		}
+		return '';
+	}
+
+	/**
+	 * Resolve the effective Grace Value Operator to apply when evaluating a
+	 * compare-flag row. Returns `exceeds` or `within`; honors an explicit
+	 * stored Grace Value Operator when set, otherwise falls back to the
+	 * legacy operator-derived behavior so pre-2.6.20 rows keep working.
+	 */
+	private static function resolve_compare_flag_effective_grace_operator(string $grace_operator, string $operator): string {
+		$grace_operator = self::canonicalize_compare_flag_grace_operator($grace_operator);
+		if ($grace_operator !== '') {
+			return $grace_operator;
+		}
+		return $operator === 'are_they_equal' ? 'exceeds' : 'within';
+	}
+
+	/**
+>>>>>>> Stashed changes
 	 * Get configured compare-flags for order-list additional meta rendering.
 	 *
 	 * @return array<int,array{
 	 *   meta_key_a:string,
 	 *   meta_key_b:string,
+	 *   compare_b_custom:string,
 	 *   operator:string,
 	 *   grace_value:float|null,
+	 *   grace_operator:string,
 	 *   title:string,
 	 *   background_color:string,
 	 *   text_color:string
@@ -2907,6 +3078,20 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Resolve the "B" side of a compare flag: optional custom literal, else order meta `meta_key_b`.
+	 *
+	 * @param array $flag Row from {@see parse_compare_flag_setting_line()} / {@see get_order_list_additional_meta_compare_flags()}.
+	 */
+	private static function resolve_compare_flag_value_b_for_order(int $order_id, array $flag): string {
+		$custom = isset($flag['compare_b_custom']) ? trim((string) $flag['compare_b_custom']) : '';
+		if ($custom !== '') {
+			return self::normalize_meta_scalar_for_prefixed_link($custom);
+		}
+
+		return self::get_first_normalized_order_meta_scalar($order_id, (string) ($flag['meta_key_b'] ?? ''));
 	}
 
 	/**
@@ -3050,10 +3235,15 @@ final class User_Manager_My_Account_Site_Admin {
 			$row_flags = [];
 			foreach ($flags as $flag) {
 				$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
-				$value_b = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
+				$value_b = self::resolve_compare_flag_value_b_for_order($order_id, $flag);
 				$grace_value = isset($flag['grace_value']) && is_numeric($flag['grace_value'])
 					? (float) $flag['grace_value']
 					: null;
+<<<<<<< Updated upstream
+=======
+				$grace_operator = isset($flag['grace_operator']) ? (string) $flag['grace_operator'] : '';
+				$used_custom_b = isset($flag['compare_b_custom']) && trim((string) $flag['compare_b_custom']) !== '';
+>>>>>>> Stashed changes
 				$would_display = self::evaluate_order_list_additional_meta_compare_flag(
 					(string) $flag['operator'],
 					$value_a,
@@ -3064,6 +3254,7 @@ final class User_Manager_My_Account_Site_Admin {
 				$row_flags[] = [
 					'meta_key_a'       => (string) $flag['meta_key_a'],
 					'meta_key_b'       => (string) $flag['meta_key_b'],
+					'compare_b_custom' => isset($flag['compare_b_custom']) ? (string) $flag['compare_b_custom'] : '',
 					'value_a'          => $value_a,
 					'value_b'          => $value_b,
 					'operator'         => (string) $flag['operator'],
@@ -3076,7 +3267,13 @@ final class User_Manager_My_Account_Site_Admin {
 						(string) $flag['operator'],
 						$value_a,
 						$value_b,
+<<<<<<< Updated upstream
 						$grace_value
+=======
+						$grace_value,
+						$grace_operator,
+						$used_custom_b
+>>>>>>> Stashed changes
 					),
 				];
 			}
@@ -3095,13 +3292,20 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Produce a short, human-readable description of the comparison the
 	 * flag performed, e.g. "5 == 5 (equal)" or "ABS(5 − 7) = 2, grace 1 ⇒ 2 > 1".
 	 */
+<<<<<<< Updated upstream
 	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value): string {
+=======
+	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = '', bool $compare_b_used_custom = false): string {
+>>>>>>> Stashed changes
 		if ($value_a === '' || $value_b === '') {
 			if ($value_a === '' && $value_b === '') {
-				return __('Both meta values are empty; flag skipped.', 'user-manager');
+				return __('Both comparison values are empty; flag skipped.', 'user-manager');
 			}
-			return $value_a === ''
-				? __('Meta A is empty; flag skipped.', 'user-manager')
+			if ($value_a === '') {
+				return __('Meta A is empty; flag skipped.', 'user-manager');
+			}
+			return $compare_b_used_custom
+				? __('Compare-to custom value is empty; flag skipped.', 'user-manager')
 				: __('Meta B is empty; flag skipped.', 'user-manager');
 		}
 
@@ -3178,7 +3382,7 @@ final class User_Manager_My_Account_Site_Admin {
 		$badges = [];
 		foreach ($flags as $flag) {
 			$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
-			$value_b = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
+			$value_b = self::resolve_compare_flag_value_b_for_order($order_id, $flag);
 			if ($value_a === '' || $value_b === '') {
 				continue;
 			}
