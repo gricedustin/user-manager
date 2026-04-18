@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.12 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin file preview modal: forced the close (×) button color to black so it stays visible on themes that inherit a light or white link color.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.11 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Restricted Access shared-password prompt sometimes requiring the password to be entered twice when the Set-Cookie response was stripped by a CDN/proxy or conflicting cookie path/domain rules.', 'user-manager'); ?></li>

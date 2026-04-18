@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.11
+ * Version: 2.6.12
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.12 - April 18, 2026
+ * - My Account Admin file preview modal: forced the close (×) button color to black so it stays visible on themes that inherit a light or white link color.
+ *
  * 2.6.11 - April 18, 2026
  * - Fixed Restricted Access shared-password prompt sometimes requiring the password to be entered twice. After a successful password, the POST→redirect→GET round-trip could lose the `um_restricted_access` cookie (CDN/reverse-proxy stripping `Set-Cookie`, conflicting cookie path/domain rules, or aggressive caching), leaving visitors back at the overlay with "Incorrect password. Please try again."
  * - Successful password submissions now append a short-lived (90 seconds), signed, one-time access token to the redirect URL (`?um_ra_ok=...`). The enforcement pass validates the HMAC-signed token on the follow-up GET, (re-)sets the access cookie + optional trusted-IP cookie, strips the token from the URL, and redirects to a clean URL — so access still works even when the Set-Cookie response from the POST is dropped upstream.

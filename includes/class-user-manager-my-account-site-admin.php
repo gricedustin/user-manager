@@ -4303,6 +4303,11 @@ final class User_Manager_My_Account_Site_Admin {
 				line-height: 1;
 				cursor: pointer;
 				padding: 2px 6px;
+				color: #000;
+			}
+			.um-my-account-file-preview-modal-close:hover,
+			.um-my-account-file-preview-modal-close:focus {
+				color: #000;
 			}
 			.um-my-account-file-preview-meta {
 				display: flex;
