@@ -2,11 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.18
+ * Version: 2.6.19
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.19 - April 18, 2026
+ * - My Account Admin Additional Meta Fields repeaters: added per-row Move Up / Move Down arrow buttons to help admins manually reorder rows without drag-and-drop, across all three settings — "Additional Meta Fields to Display Under Order", "Additional Meta Fields to Display Under Order in All Orders Screen", and "Additional Flag to Display Below Additional Fields in All Orders Screen".
+ * - Move arrows auto-hide on the topmost / bottommost rows so admins never click a dead button, and the hidden raw-value input is re-synced on every move so the new order is captured immediately (save as usual to persist).
  *
  * 2.6.18 - April 18, 2026
  * - Administrator Custom Dashboard Tiles: changed the default Page Title and Menu Title from "Custom Dashboard Tiles" / "Dashboard Tiles" to "Admin Tiles". The Page Title Override and Menu Title Override settings still win when set.

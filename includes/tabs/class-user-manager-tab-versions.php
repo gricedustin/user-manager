@@ -39,6 +39,13 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.19 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Additional Meta Fields repeaters: added per-row Move Up / Move Down arrow buttons so admins can manually reorder rows without drag-and-drop, across all three settings — "Additional Meta Fields to Display Under Order", "Additional Meta Fields to Display Under Order in All Orders Screen", and "Additional Flag to Display Below Additional Fields in All Orders Screen".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Move arrows auto-hide on the topmost / bottommost rows so admins never click a dead button, and the hidden raw-value input is re-synced on every move so the new order is captured immediately (save as usual to persist).', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.18 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Administrator Custom Dashboard Tiles: changed the default Page Title and Menu Title from "Custom Dashboard Tiles" / "Dashboard Tiles" to "Admin Tiles". The Page Title Override and Menu Title Override settings still win when set.', 'user-manager'); ?></li>

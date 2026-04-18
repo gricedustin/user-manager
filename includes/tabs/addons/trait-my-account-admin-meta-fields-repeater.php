@@ -86,6 +86,12 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				<label title="<?php esc_attr_e('Treat the stored meta value as a Flexible Checkout Fields PRO upload hash and resolve the actual file before linking/previewing/counting lines.', 'user-manager'); ?>"><input type="checkbox" data-um-meta-fields-flag="fcf_file" <?php checked(in_array('fcf_file', $flags, true)); ?> /> <?php esc_html_e('Render as Flexible Checkout Fields PRO File Upload Field', 'user-manager'); ?></label>
 			</div>
 			<div class="um-meta-fields-repeater-row-actions">
+				<button type="button" class="button button-small um-meta-fields-repeater-move-btn" data-um-meta-fields-move="up" aria-label="<?php esc_attr_e('Move row up', 'user-manager'); ?>" title="<?php esc_attr_e('Move row up', 'user-manager'); ?>">
+					<span class="dashicons dashicons-arrow-up-alt2" style="line-height:1.4;"></span>
+				</button>
+				<button type="button" class="button button-small um-meta-fields-repeater-move-btn" data-um-meta-fields-move="down" aria-label="<?php esc_attr_e('Move row down', 'user-manager'); ?>" title="<?php esc_attr_e('Move row down', 'user-manager'); ?>">
+					<span class="dashicons dashicons-arrow-down-alt2" style="line-height:1.4;"></span>
+				</button>
 				<button type="button" class="button-link button-link-delete" data-um-meta-fields-remove>
 					<span class="dashicons dashicons-trash" style="line-height:1.4;"></span>
 					<?php esc_html_e('Remove', 'user-manager'); ?>
@@ -190,6 +196,12 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				<?php esc_html_e('Without a grace value: "Values are equal" flags on exact match; "Values are NOT equal" flags when they differ. With a grace value (both values must be numeric): "Values are equal" flags when ABS(A − B) > grace, "Values are NOT equal" flags when ABS(A − B) ≤ grace.', 'user-manager'); ?>
 			</p>
 			<div class="um-meta-fields-repeater-row-actions">
+				<button type="button" class="button button-small um-meta-fields-repeater-move-btn" data-um-meta-compare-flags-move="up" aria-label="<?php esc_attr_e('Move row up', 'user-manager'); ?>" title="<?php esc_attr_e('Move row up', 'user-manager'); ?>">
+					<span class="dashicons dashicons-arrow-up-alt2" style="line-height:1.4;"></span>
+				</button>
+				<button type="button" class="button button-small um-meta-fields-repeater-move-btn" data-um-meta-compare-flags-move="down" aria-label="<?php esc_attr_e('Move row down', 'user-manager'); ?>" title="<?php esc_attr_e('Move row down', 'user-manager'); ?>">
+					<span class="dashicons dashicons-arrow-down-alt2" style="line-height:1.4;"></span>
+				</button>
 				<button type="button" class="button-link button-link-delete" data-um-meta-compare-flags-remove>
 					<span class="dashicons dashicons-trash" style="line-height:1.4;"></span>
 					<?php esc_html_e('Remove', 'user-manager'); ?>
@@ -483,7 +495,33 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 		}
 		.um-meta-fields-repeater-row-actions {
 			margin-top: 8px;
-			text-align: right;
+			display: flex;
+			justify-content: flex-end;
+			align-items: center;
+			gap: 6px;
+		}
+		.um-meta-fields-repeater-row-actions .um-meta-fields-repeater-move-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
+			width: 28px;
+			min-width: 28px;
+			height: 28px;
+		}
+		.um-meta-fields-repeater-row-actions .um-meta-fields-repeater-move-btn .dashicons {
+			font-size: 16px;
+			width: 16px;
+			height: 16px;
+			line-height: 1;
+		}
+		.um-meta-fields-repeater-row:first-child .um-meta-fields-repeater-move-btn[data-um-meta-fields-move="up"],
+		.um-meta-fields-repeater-row:first-child .um-meta-fields-repeater-move-btn[data-um-meta-compare-flags-move="up"] {
+			visibility: hidden;
+		}
+		.um-meta-fields-repeater-row:last-child .um-meta-fields-repeater-move-btn[data-um-meta-fields-move="down"],
+		.um-meta-fields-repeater-row:last-child .um-meta-fields-repeater-move-btn[data-um-meta-compare-flags-move="down"] {
+			visibility: hidden;
 		}
 		.um-meta-fields-repeater-actions .button {
 			display: inline-flex;
@@ -623,7 +661,48 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				return clone;
 			}
 
+			function moveRow(row, direction) {
+				if (!row || !row.parentNode) { return false; }
+				var parent = row.parentNode;
+				if (direction === 'up') {
+					var prev = row.previousElementSibling;
+					if (prev) {
+						parent.insertBefore(row, prev);
+						return true;
+					}
+				} else if (direction === 'down') {
+					var next = row.nextElementSibling;
+					if (next) {
+						parent.insertBefore(next, row);
+						return true;
+					}
+				}
+				return false;
+			}
+
 			document.addEventListener('click', function(ev) {
+				var moveBtnMeta = ev.target.closest && ev.target.closest('[data-um-meta-fields-move]');
+				if (moveBtnMeta) {
+					ev.preventDefault();
+					var direction = moveBtnMeta.getAttribute('data-um-meta-fields-move') || 'up';
+					var rowMove = moveBtnMeta.closest('[data-um-meta-fields-row]');
+					var containerMove = moveBtnMeta.closest('[data-um-meta-fields-repeater]');
+					if (rowMove && containerMove && moveRow(rowMove, direction)) {
+						syncMetaFieldsRepeater(containerMove);
+					}
+					return;
+				}
+				var moveBtnCmp = ev.target.closest && ev.target.closest('[data-um-meta-compare-flags-move]');
+				if (moveBtnCmp) {
+					ev.preventDefault();
+					var directionCmp = moveBtnCmp.getAttribute('data-um-meta-compare-flags-move') || 'up';
+					var rowMoveCmp = moveBtnCmp.closest('[data-um-meta-compare-flags-row]');
+					var containerMoveCmp = moveBtnCmp.closest('[data-um-meta-compare-flags-repeater]');
+					if (rowMoveCmp && containerMoveCmp && moveRow(rowMoveCmp, directionCmp)) {
+						syncCompareFlagsRepeater(containerMoveCmp);
+					}
+					return;
+				}
 				var addBtn = ev.target.closest && ev.target.closest('[data-um-meta-fields-add]');
 				if (addBtn) {
 					ev.preventDefault();
