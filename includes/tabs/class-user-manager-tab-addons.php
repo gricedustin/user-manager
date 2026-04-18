@@ -46,6 +46,7 @@ require_once __DIR__ . '/class-user-manager-addon-wp-admin-bar-menu-items.php';
 require_once __DIR__ . '/class-user-manager-addon-wp-admin-css.php';
 require_once __DIR__ . '/class-user-manager-addon-api.php';
 require_once __DIR__ . '/class-user-manager-addon-role-switching.php';
+require_once __DIR__ . '/class-user-manager-addon-administrator-custom-dashboard-tiles.php';
 
 class User_Manager_Tab_Addons {
 
@@ -366,6 +367,9 @@ class User_Manager_Tab_Addons {
 			</div>
 			<div class="um-addon-section" data-addon-section="user-role-switching">
 				<?php User_Manager_Addon_Role_Switching::render($settings_form_id); ?>
+			</div>
+			<div class="um-addon-section" data-addon-section="administrator-custom-dashboard-tiles">
+				<?php User_Manager_Addon_Administrator_Custom_Dashboard_Tiles::render($settings, $settings_form_id); ?>
 			</div>
 			<div class="um-addon-section" data-addon-section="wp-admin-bar-menu-items">
 				<?php User_Manager_Addon_WP_Admin_Bar_Menu_Items::render($settings, $settings_form_id); ?>
@@ -1626,6 +1630,11 @@ class User_Manager_Tab_Addons {
 				'label'  => __('User Role Switching', 'user-manager'),
 				'description' => __('Enable front-end role switching controls with profile permission/security support.', 'user-manager'),
 				'active' => !empty($role_switch_settings['enabled']),
+			],
+			'administrator-custom-dashboard-tiles' => [
+				'label'  => __('Administrator Custom Dashboard Tiles', 'user-manager'),
+				'description' => __('Build a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, search, import/export, and an optional WP-Admin bar dropdown.', 'user-manager'),
+				'active' => !empty($settings['admin_custom_dashboard_tiles_enabled']),
 			],
 			'wp-admin-bar-menu-items' => [
 				'label'  => __('WP-Admin Bar Menu Items', 'user-manager'),

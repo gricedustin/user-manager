@@ -2,11 +2,19 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.14
+ * Version: 2.6.15
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.15 - April 18, 2026
+ * - New add-on: "Administrator Custom Dashboard Tiles" — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.
+ * - Add-on settings include Page Title Override, Menu Title Override, Menu Location Priority, and a WP-Admin Bar Dropdown toggle.
+ * - The WP-Admin Bar dropdown lists the current user's favorite tiles, includes an "Add Current Page to Dashboard Tiles" quick action, and is pinned as an icon on mobile viewports so the shortcut stays reachable.
+ * - Dashboard page has two tabs: Settings (jQuery UI sortable section + tile forms with persistent reordering) and Dashboard (color-coded tile cards with click-count, last-clicked user/time, and a global search).
+ * - Click tracking + favorites use dedicated AJAX endpoints (um_admin_dashboard_tile_click, um_admin_dashboard_tile_toggle_favorite, um_admin_dashboard_tiles_reorder) guarded by nonces and the current user's read capability.
+ * - JSON import/export rebuilds or migrates the tile set between sites; duplicates (matched by id or by section title / tile title+URL) are skipped instead of duplicated.
  *
  * 2.6.14 - April 18, 2026
  * - Restricted Access add-on: replaced the 2.6.11 short-lived token fix with a fuller shared-password gate rewrite so visitors are always granted on the first submit.
