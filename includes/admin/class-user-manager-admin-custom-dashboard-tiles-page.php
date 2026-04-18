@@ -26,7 +26,7 @@ final class User_Manager_Admin_Custom_Dashboard_Tiles_Page {
 		$data       = User_Manager_Core::get_admin_custom_dashboard_tiles_data();
 		$clicks     = User_Manager_Core::get_admin_custom_dashboard_tiles_clicks();
 		$favorites  = User_Manager_Core::get_admin_custom_dashboard_tiles_favorites_for_current_user();
-		$page_slug  = User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG;
+		$page_slug  = User_Manager_Core::admin_custom_dashboard_tiles_page_slug();
 
 		$active_tab = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : 'dashboard';
 		if (!in_array($active_tab, ['dashboard', 'settings'], true)) {
@@ -514,16 +514,19 @@ final class User_Manager_Admin_Custom_Dashboard_Tiles_Page {
 		if ($is_settings_tab) {
 			wp_enqueue_script('jquery-ui-sortable');
 		}
-		$click_nonce    = wp_create_nonce(User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_CLICK_ACTION);
-		$favorite_nonce = wp_create_nonce(User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITE_ACTION);
-		$reorder_nonce  = wp_create_nonce(User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_REORDER_ACTION);
+		$click_action   = User_Manager_Core::admin_custom_dashboard_tiles_click_action();
+		$favorite_action = User_Manager_Core::admin_custom_dashboard_tiles_favorite_action();
+		$reorder_action = User_Manager_Core::admin_custom_dashboard_tiles_reorder_action();
+		$click_nonce    = wp_create_nonce($click_action);
+		$favorite_nonce = wp_create_nonce($favorite_action);
+		$reorder_nonce  = wp_create_nonce($reorder_action);
 		$config = [
 			'ajaxUrl'          => admin_url('admin-ajax.php'),
-			'clickAction'      => User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_CLICK_ACTION,
+			'clickAction'      => $click_action,
 			'clickNonce'       => $click_nonce,
-			'favoriteAction'   => User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITE_ACTION,
+			'favoriteAction'   => $favorite_action,
 			'favoriteNonce'    => $favorite_nonce,
-			'reorderAction'    => User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_REORDER_ACTION,
+			'reorderAction'    => $reorder_action,
 			'reorderNonce'     => $reorder_nonce,
 			'isSettingsTab'    => $is_settings_tab,
 			'strings'          => [

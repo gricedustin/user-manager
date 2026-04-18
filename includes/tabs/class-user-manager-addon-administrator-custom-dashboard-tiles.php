@@ -16,7 +16,7 @@ class User_Manager_Addon_Administrator_Custom_Dashboard_Tiles {
 		$page_title = isset($settings['admin_custom_dashboard_tiles_page_title']) ? (string) $settings['admin_custom_dashboard_tiles_page_title'] : '';
 		$menu_title = isset($settings['admin_custom_dashboard_tiles_menu_title']) ? (string) $settings['admin_custom_dashboard_tiles_menu_title'] : '';
 		$menu_priority = isset($settings['admin_custom_dashboard_tiles_menu_priority']) ? (int) $settings['admin_custom_dashboard_tiles_menu_priority'] : 80;
-		$page_url = admin_url('admin.php?page=' . (class_exists('User_Manager_Core') ? User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG : 'user-manager-custom-dashboard-tiles'));
+		$page_url = admin_url('admin.php?page=' . (class_exists('User_Manager_Core') && method_exists('User_Manager_Core', 'admin_custom_dashboard_tiles_page_slug') ? User_Manager_Core::admin_custom_dashboard_tiles_page_slug() : 'user-manager-custom-dashboard-tiles'));
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-administrator-custom-dashboard-tiles" data-um-active-selectors="#um-admin-custom-dashboard-tiles-enabled">
 			<div class="um-admin-card-header">

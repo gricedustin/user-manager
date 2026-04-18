@@ -13,32 +13,53 @@ if (!defined('ABSPATH')) {
 
 trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 
+	// NOTE: PHP 8.1 and earlier do not allow `const` declarations inside a
+	// trait (that syntax is PHP 8.2+), so the slugs/keys below are exposed
+	// as public static accessor methods instead. Callers that used to do
+	// `User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG` should
+	// now call `User_Manager_Core::admin_custom_dashboard_tiles_page_slug()`
+	// (and the same pattern for the other names).
+
 	/**
 	 * Option key that stores sections + tiles definitions.
 	 */
-	public const ADMIN_CUSTOM_DASHBOARD_TILES_DATA_OPTION = 'user_manager_admin_custom_dashboard_tiles_data';
+	public static function admin_custom_dashboard_tiles_data_option(): string {
+		return 'user_manager_admin_custom_dashboard_tiles_data';
+	}
 
 	/**
 	 * Option key that stores per-tile click statistics.
 	 */
-	public const ADMIN_CUSTOM_DASHBOARD_TILES_CLICKS_OPTION = 'user_manager_admin_custom_dashboard_tiles_clicks';
+	public static function admin_custom_dashboard_tiles_clicks_option(): string {
+		return 'user_manager_admin_custom_dashboard_tiles_clicks';
+	}
 
 	/**
 	 * User meta key that stores per-user favorite tile ids.
 	 */
-	public const ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITES_META = '_um_admin_custom_dashboard_tiles_favorites';
+	public static function admin_custom_dashboard_tiles_favorites_meta(): string {
+		return '_um_admin_custom_dashboard_tiles_favorites';
+	}
 
 	/**
 	 * WP-admin page slug.
 	 */
-	public const ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG = 'user-manager-custom-dashboard-tiles';
+	public static function admin_custom_dashboard_tiles_page_slug(): string {
+		return 'user-manager-custom-dashboard-tiles';
+	}
 
 	/**
 	 * AJAX action names.
 	 */
-	public const ADMIN_CUSTOM_DASHBOARD_TILES_CLICK_ACTION = 'um_admin_dashboard_tile_click';
-	public const ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITE_ACTION = 'um_admin_dashboard_tile_toggle_favorite';
-	public const ADMIN_CUSTOM_DASHBOARD_TILES_REORDER_ACTION = 'um_admin_dashboard_tiles_reorder';
+	public static function admin_custom_dashboard_tiles_click_action(): string {
+		return 'um_admin_dashboard_tile_click';
+	}
+	public static function admin_custom_dashboard_tiles_favorite_action(): string {
+		return 'um_admin_dashboard_tile_toggle_favorite';
+	}
+	public static function admin_custom_dashboard_tiles_reorder_action(): string {
+		return 'um_admin_dashboard_tiles_reorder';
+	}
 
 	/**
 	 * Boot runtime hooks when the add-on is enabled.
@@ -62,9 +83,9 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 		add_action('admin_post_um_admin_dashboard_tiles_delete_tile', [__CLASS__, 'handle_admin_custom_dashboard_tiles_delete_tile']);
 		add_action('admin_post_um_admin_dashboard_tiles_import', [__CLASS__, 'handle_admin_custom_dashboard_tiles_import']);
 
-		add_action('wp_ajax_' . self::ADMIN_CUSTOM_DASHBOARD_TILES_CLICK_ACTION, [__CLASS__, 'handle_admin_custom_dashboard_tiles_click_ajax']);
-		add_action('wp_ajax_' . self::ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITE_ACTION, [__CLASS__, 'handle_admin_custom_dashboard_tiles_favorite_ajax']);
-		add_action('wp_ajax_' . self::ADMIN_CUSTOM_DASHBOARD_TILES_REORDER_ACTION, [__CLASS__, 'handle_admin_custom_dashboard_tiles_reorder_ajax']);
+		add_action('wp_ajax_' . self::admin_custom_dashboard_tiles_click_action(), [__CLASS__, 'handle_admin_custom_dashboard_tiles_click_ajax']);
+		add_action('wp_ajax_' . self::admin_custom_dashboard_tiles_favorite_action(), [__CLASS__, 'handle_admin_custom_dashboard_tiles_favorite_ajax']);
+		add_action('wp_ajax_' . self::admin_custom_dashboard_tiles_reorder_action(), [__CLASS__, 'handle_admin_custom_dashboard_tiles_reorder_ajax']);
 
 		if (!empty($settings['admin_custom_dashboard_tiles_admin_bar_enabled'])) {
 			add_action('admin_bar_menu', [__CLASS__, 'add_admin_custom_dashboard_tiles_admin_bar_node'], 101);
@@ -90,7 +111,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 			$page_title,
 			$menu_title,
 			'manage_options',
-			self::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG,
+			self::admin_custom_dashboard_tiles_page_slug(),
 			['User_Manager_Admin_Custom_Dashboard_Tiles_Page', 'render'],
 			'dashicons-admin-links',
 			$priority
@@ -142,7 +163,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 	 * @return array{sections:array<int,array<string,mixed>>,tiles:array<int,array<string,mixed>>}
 	 */
 	public static function get_admin_custom_dashboard_tiles_data(): array {
-		$raw = get_option(self::ADMIN_CUSTOM_DASHBOARD_TILES_DATA_OPTION, []);
+		$raw = get_option(self::admin_custom_dashboard_tiles_data_option(), []);
 		if (!is_array($raw)) {
 			$raw = [];
 		}
@@ -162,7 +183,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 	public static function save_admin_custom_dashboard_tiles_data(array $data): void {
 		$sections = isset($data['sections']) && is_array($data['sections']) ? array_values($data['sections']) : [];
 		$tiles    = isset($data['tiles']) && is_array($data['tiles']) ? array_values($data['tiles']) : [];
-		update_option(self::ADMIN_CUSTOM_DASHBOARD_TILES_DATA_OPTION, [
+		update_option(self::admin_custom_dashboard_tiles_data_option(), [
 			'sections' => array_map([__CLASS__, 'normalize_admin_custom_dashboard_tiles_section'], $sections),
 			'tiles'    => array_map([__CLASS__, 'normalize_admin_custom_dashboard_tiles_tile'], $tiles),
 		], false);
@@ -244,7 +265,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 	 * @return array<string,array{count:int,last_user_id:int,last_user_login:string,last_user_email:string,last_timestamp:int}>
 	 */
 	public static function get_admin_custom_dashboard_tiles_clicks(): array {
-		$raw = get_option(self::ADMIN_CUSTOM_DASHBOARD_TILES_CLICKS_OPTION, []);
+		$raw = get_option(self::admin_custom_dashboard_tiles_clicks_option(), []);
 		if (!is_array($raw)) {
 			return [];
 		}
@@ -292,7 +313,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 			'last_user_email' => (string) $user->user_email,
 			'last_timestamp'  => time(),
 		];
-		update_option(self::ADMIN_CUSTOM_DASHBOARD_TILES_CLICKS_OPTION, $clicks, false);
+		update_option(self::admin_custom_dashboard_tiles_clicks_option(), $clicks, false);
 	}
 
 	/**
@@ -305,7 +326,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 		if ($user_id <= 0) {
 			return [];
 		}
-		$raw = get_user_meta($user_id, self::ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITES_META, true);
+		$raw = get_user_meta($user_id, self::admin_custom_dashboard_tiles_favorites_meta(), true);
 		if (!is_array($raw)) {
 			return [];
 		}
@@ -337,7 +358,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 			$favorites = array_values(array_unique($favorites));
 			$is_favorite = true;
 		}
-		update_user_meta($user_id, self::ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITES_META, $favorites);
+		update_user_meta($user_id, self::admin_custom_dashboard_tiles_favorites_meta(), $favorites);
 		return $is_favorite;
 	}
 
@@ -345,7 +366,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 	 * AJAX: record a tile click from the portal page.
 	 */
 	public static function handle_admin_custom_dashboard_tiles_click_ajax(): void {
-		check_ajax_referer(self::ADMIN_CUSTOM_DASHBOARD_TILES_CLICK_ACTION, 'nonce');
+		check_ajax_referer(self::admin_custom_dashboard_tiles_click_action(), 'nonce');
 		if (!current_user_can('read')) {
 			wp_send_json_error(['code' => 'forbidden'], 403);
 		}
@@ -361,7 +382,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 	 * AJAX: toggle favorite for the current user.
 	 */
 	public static function handle_admin_custom_dashboard_tiles_favorite_ajax(): void {
-		check_ajax_referer(self::ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITE_ACTION, 'nonce');
+		check_ajax_referer(self::admin_custom_dashboard_tiles_favorite_action(), 'nonce');
 		if (!current_user_can('read')) {
 			wp_send_json_error(['code' => 'forbidden'], 403);
 		}
@@ -380,7 +401,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 	 * AJAX: persist drag-drop ordering of sections and tiles.
 	 */
 	public static function handle_admin_custom_dashboard_tiles_reorder_ajax(): void {
-		check_ajax_referer(self::ADMIN_CUSTOM_DASHBOARD_TILES_REORDER_ACTION, 'nonce');
+		check_ajax_referer(self::admin_custom_dashboard_tiles_reorder_action(), 'nonce');
 		if (!current_user_can('manage_options')) {
 			wp_send_json_error(['code' => 'forbidden'], 403);
 		}
@@ -688,7 +709,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 	private static function redirect_to_admin_custom_dashboard_tiles_settings(string $status): void {
 		$url = add_query_arg(
 			[
-				'page'       => self::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG,
+				'page'       => self::admin_custom_dashboard_tiles_page_slug(),
 				'tab'        => 'settings',
 				'um_ctiles'  => sanitize_key($status),
 			],
@@ -728,7 +749,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 		}
 		$favorite_count = count($favorite_tiles);
 
-		$page_url = admin_url('admin.php?page=' . self::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG);
+		$page_url = admin_url('admin.php?page=' . self::admin_custom_dashboard_tiles_page_slug());
 		$label = $favorite_count > 0
 			? sprintf('%s (%d)', $menu_title, $favorite_count)
 			: $menu_title;
@@ -761,7 +782,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 		$current_path = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
 		$prefill_url = add_query_arg(
 			[
-				'page'             => self::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG,
+				'page'             => self::admin_custom_dashboard_tiles_page_slug(),
 				'tab'              => 'settings',
 				'prefill_tile_url' => rawurlencode($current_path),
 			],

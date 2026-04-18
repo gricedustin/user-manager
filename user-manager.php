@@ -2,11 +2,17 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.15
+ * Version: 2.6.17
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.17 - April 18, 2026
+ * - Fixed "Fatal error: Traits cannot have constants" on PHP 8.1 and earlier by converting every trait-level `const` declaration to a static accessor method.
+ * - PHP only allows `const` declarations inside a trait starting with PHP 8.2; the plugin targets PHP 7.4+, so the trait-level constants introduced in 2.6.14 (Restricted Access grant query param / transient prefix / password action) and 2.6.15 (Administrator Custom Dashboard Tiles option keys / page slug / AJAX action names) caused a hard fatal on any older PHP install.
+ * - Replaced those constants with equivalent static accessor methods (e.g. `User_Manager_Core::admin_custom_dashboard_tiles_page_slug()`, `self::restricted_access_password_action()`) so the string values are identical to what 2.6.14 / 2.6.15 shipped with — no stored option keys or URL paths changed.
+ * - Updated the three call sites outside the traits (the dashboard tiles admin-page renderer and the dashboard tiles add-on card) to use the new accessor methods and added a graceful `method_exists()` fallback so the Add-ons card cannot fatal on legacy installs.
  *
  * 2.6.15 - April 18, 2026
  * - New add-on: "Administrator Custom Dashboard Tiles" — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.

@@ -39,6 +39,15 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.17 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Fixed "Fatal error: Traits cannot have constants" on PHP 8.1 and earlier by converting every trait-level const declaration to a static accessor method.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('PHP only allows const declarations inside a trait starting with PHP 8.2; the plugin targets PHP 7.4+, so the trait-level constants introduced in 2.6.14 (Restricted Access grant query param / transient prefix / password action) and 2.6.15 (Administrator Custom Dashboard Tiles option keys / page slug / AJAX action names) caused a hard fatal on any older PHP install.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Replaced those constants with equivalent static accessor methods — the string values are identical to what 2.6.14 / 2.6.15 shipped with, so no stored option keys or URL paths changed.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated the three call sites outside the traits (the dashboard tiles admin-page renderer and the dashboard tiles add-on card) and added a graceful method_exists() fallback so the Add-ons card cannot fatal on legacy installs.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.15 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('New add-on: Administrator Custom Dashboard Tiles — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.', 'user-manager'); ?></li>
