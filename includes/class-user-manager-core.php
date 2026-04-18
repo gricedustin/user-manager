@@ -59,7 +59,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.6.6';
+	const VERSION = '2.6.7';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -1509,7 +1509,7 @@ final class User_Manager_Core {
 	}
 
 	/**
-	 * Get enabled post types for Post Meta Viewer.
+	 * Get enabled post types for Post Meta Field Viewer & Editor.
 	 *
 	 * Default behavior: all UI post types are enabled when no explicit list is saved.
 	 *
@@ -1533,7 +1533,7 @@ final class User_Manager_Core {
 	}
 
 	/**
-	 * Whether current user can access the Post Meta Viewer.
+	 * Whether current user can access the Post Meta Field Viewer & Editor.
 	 *
 	 * Access logic:
 	 * - No role/user restrictions configured => allow all users who can edit posts.
@@ -9714,7 +9714,7 @@ html body .woocommerce-layout__header {
 				'settings_keys' => ['media_library_tags_enabled'],
 			],
 			'post-meta' => [
-				'label' => 'Post Meta Viewer',
+				'label' => 'Post Meta Field Viewer & Editor',
 				'settings_keys' => ['display_post_meta_meta_box'],
 			],
 			'product-search-by-sku' => [
