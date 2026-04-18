@@ -333,31 +333,10 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 			}
 		}
 
-		if (!empty($missing_locally)) {
-			echo '<div class="notice notice-warning"><p><strong>'
-				. esc_html__('User Manager: Missing WP Administrators from Remote Admin List', 'user-manager')
-				. '</strong></p>';
-			echo '<p>' . esc_html__('The following administrator email(s) are in the remote TXT list but do not exist as WP Administrators on this site. Click a link to create each user:', 'user-manager') . '</p>';
-			echo '<ul style="list-style:disc;margin-left:20px;">';
-			foreach ($missing_locally as $missing_email) {
-				$create_url = add_query_arg(
-					[
-						'page'                => self::SETTINGS_PAGE_SLUG,
-						'tab'                 => self::TAB_LOGIN_TOOLS,
-						'login_tools_section' => self::TAB_CREATE_USER,
-						'um_prefill_email'    => rawurlencode($missing_email),
-						'um_prefill_role'     => 'administrator',
-					],
-					admin_url('admin.php')
-				);
-				echo '<li>'
-					. '<code>' . esc_html($missing_email) . '</code> — '
-					. '<a href="' . esc_url($create_url) . '">' . esc_html__('Create this administrator', 'user-manager') . '</a>'
-					. '</li>';
-			}
-			echo '</ul></div>';
-		}
-
+		// Render "Not in Remote Admin List" FIRST. These are local WP
+		// Administrators that should probably be demoted or removed — a
+		// higher-severity finding — so admins see it before the
+		// "Missing from Remote Admin List" add-missing-user prompt.
 		if (!empty($extra_locally)) {
 			echo '<div class="notice notice-error"><p><strong>'
 				. esc_html__('User Manager: WP Administrators Not in Remote Admin List', 'user-manager')
@@ -441,6 +420,31 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 			}
 
 			echo '</div>';
+		}
+
+		if (!empty($missing_locally)) {
+			echo '<div class="notice notice-warning"><p><strong>'
+				. esc_html__('User Manager: Missing WP Administrators from Remote Admin List', 'user-manager')
+				. '</strong></p>';
+			echo '<p>' . esc_html__('The following administrator email(s) are in the remote TXT list but do not exist as WP Administrators on this site. Click a link to create each user:', 'user-manager') . '</p>';
+			echo '<ul style="list-style:disc;margin-left:20px;">';
+			foreach ($missing_locally as $missing_email) {
+				$create_url = add_query_arg(
+					[
+						'page'                => self::SETTINGS_PAGE_SLUG,
+						'tab'                 => self::TAB_LOGIN_TOOLS,
+						'login_tools_section' => self::TAB_CREATE_USER,
+						'um_prefill_email'    => rawurlencode($missing_email),
+						'um_prefill_role'     => 'administrator',
+					],
+					admin_url('admin.php')
+				);
+				echo '<li>'
+					. '<code>' . esc_html($missing_email) . '</code> — '
+					. '<a href="' . esc_url($create_url) . '">' . esc_html__('Create this administrator', 'user-manager') . '</a>'
+					. '</li>';
+			}
+			echo '</ul></div>';
 		}
 	}
 

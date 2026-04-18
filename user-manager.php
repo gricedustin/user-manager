@@ -2,11 +2,14 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.28
+ * Version: 2.6.29
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.29 - April 18, 2026
+ * - Remote Admin Email List admin notices: reordered so "User Manager: WP Administrators Not in Remote Admin List" renders ABOVE "User Manager: Missing WP Administrators from Remote Admin List". Admins now see the higher-severity "unexpected local admin" finding first before the "create this missing admin" prompt.
  *
  * 2.6.28 - April 18, 2026
  * - Settings > User Creation & Import: added a new "Also Display Notification with All Users with X Role" area directly under the "Remote TXT File URL List of WP Administrator Emails for This Site" field. Lists every registered role on the site as a checkbox.

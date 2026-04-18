@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.29 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Remote Admin Email List admin notices: reordered so "User Manager: WP Administrators Not in Remote Admin List" renders ABOVE "User Manager: Missing WP Administrators from Remote Admin List". Admins now see the higher-severity "unexpected local admin" finding first before the "create this missing admin" prompt.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.28 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Settings > User Creation & Import: added a new "Also Display Notification with All Users with X Role" area directly under the "Remote TXT File URL List of WP Administrator Emails for This Site" field. Lists every registered role on the site as a checkbox.', 'user-manager'); ?></li>
