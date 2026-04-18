@@ -39,6 +39,12 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.10 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added .cursor/rules/branching-policy.mdc AI workspace rule: never start a new branch unless every other cursor/... branch is already merged into main or deleted; always branch from an up-to-date main; never stack feature branches; clean up local + remote branches after each merge.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.9 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Background/Text Color values saving into the Flag Title field in the "Additional Flag" repeater when admins typed a hex value without a leading # (e.g. 000000).', 'user-manager'); ?></li>

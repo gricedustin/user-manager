@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.9
+ * Version: 2.6.10
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.10 - April 18, 2026
+ * - Added `.cursor/rules/branching-policy.mdc` AI workspace rule: never start a new branch unless every other cursor/... branch is already merged into main or deleted; always branch from an up-to-date main, never stack feature branches on top of another unmerged feature branch, and clean up local + remote branches after each merge.
+ *
  * 2.6.9 - April 18, 2026
  * - Fixed the "Additional Flag to Display Below Additional Fields in All Orders Screen" repeater saving Background/Text Color values into the Flag Title field when admins typed a hex value without a leading `#` (e.g. `000000`).
  * - The JS composer now normalizes every color to `#XXXXXX` before joining the raw row, and the PHP parsers (both backend evaluator and UI hydrator) accept hex values with or without a leading `#` so previously-saved broken rows are rehydrated correctly.
