@@ -141,15 +141,19 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 	 * @param array{meta_a?:string,meta_b?:string,operator?:string,grace?:string,title?:string,bg?:string,text?:string} $row
 	 */
 	private static function render_additional_meta_compare_flags_repeater_row(array $row): void {
-		$meta_a   = isset($row['meta_a']) ? (string) $row['meta_a'] : '';
-		$meta_b   = isset($row['meta_b']) ? (string) $row['meta_b'] : '';
-		$grace    = isset($row['grace']) ? (string) $row['grace'] : '';
-		$title    = isset($row['title']) ? (string) $row['title'] : '';
-		$bg       = isset($row['bg']) ? (string) $row['bg'] : '';
-		$text     = isset($row['text']) ? (string) $row['text'] : '';
-		$operator = isset($row['operator']) ? (string) $row['operator'] : 'are_they_equal';
+		$meta_a         = isset($row['meta_a']) ? (string) $row['meta_a'] : '';
+		$meta_b         = isset($row['meta_b']) ? (string) $row['meta_b'] : '';
+		$grace          = isset($row['grace']) ? (string) $row['grace'] : '';
+		$grace_operator = isset($row['grace_operator']) ? (string) $row['grace_operator'] : '';
+		$title          = isset($row['title']) ? (string) $row['title'] : '';
+		$bg             = isset($row['bg']) ? (string) $row['bg'] : '';
+		$text           = isset($row['text']) ? (string) $row['text'] : '';
+		$operator       = isset($row['operator']) ? (string) $row['operator'] : 'are_they_equal';
 		if ($operator !== 'are_they_not_equal') {
 			$operator = 'are_they_equal';
+		}
+		if (!in_array($grace_operator, ['exceeds', 'within'], true)) {
+			$grace_operator = '';
 		}
 		?>
 		<div class="um-meta-fields-repeater-row um-meta-fields-repeater-row-compare" data-um-meta-compare-flags-row>
@@ -172,6 +176,14 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				<label class="um-meta-fields-repeater-cell">
 					<span><?php esc_html_e('Grace Value (optional, numeric)', 'user-manager'); ?></span>
 					<input type="text" class="regular-text" data-um-meta-compare-flags-grace placeholder="3" value="<?php echo esc_attr($grace); ?>" />
+				</label>
+				<label class="um-meta-fields-repeater-cell">
+					<span><?php esc_html_e('Grace Value Operator', 'user-manager'); ?></span>
+					<select class="regular-text" data-um-meta-compare-flags-grace-operator>
+						<option value="" <?php selected($grace_operator, ''); ?>><?php esc_html_e('Auto (match the equal / NOT equal selector)', 'user-manager'); ?></option>
+						<option value="exceeds" <?php selected($grace_operator, 'exceeds'); ?>><?php esc_html_e('Only flag when diff EXCEEDS grace (>)', 'user-manager'); ?></option>
+						<option value="within" <?php selected($grace_operator, 'within'); ?>><?php esc_html_e('Only flag when diff is WITHIN grace (≤)', 'user-manager'); ?></option>
+					</select>
 				</label>
 				<label class="um-meta-fields-repeater-cell um-meta-fields-repeater-cell-wide">
 					<span><?php esc_html_e('Flag Title', 'user-manager'); ?></span>
@@ -371,6 +383,18 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 				array_shift($remaining);
 			}
 
+			// Optional Grace Value Operator. Only consume when a grace
+			// value was set AND the next segment matches a supported token
+			// AND there is still at least one title segment left.
+			$grace_operator = '';
+			if ($grace !== '' && count($remaining) >= 2) {
+				$candidate = strtolower($remaining[0]);
+				if (in_array($candidate, ['exceeds', 'within'], true)) {
+					$grace_operator = $candidate;
+					array_shift($remaining);
+				}
+			}
+
 			$bg = '';
 			$text = '';
 			$remaining_count = count($remaining);
@@ -391,13 +415,14 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 			}
 
 			$rows[] = [
-				'meta_a'   => $meta_a,
-				'meta_b'   => $meta_b,
-				'operator' => $operator,
-				'grace'    => $grace,
-				'title'    => $title,
-				'bg'       => $bg,
-				'text'     => $text,
+				'meta_a'         => $meta_a,
+				'meta_b'         => $meta_b,
+				'operator'       => $operator,
+				'grace'          => $grace,
+				'grace_operator' => $grace_operator,
+				'title'          => $title,
+				'bg'             => $bg,
+				'text'           => $text,
 			];
 		}
 
@@ -616,6 +641,9 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 					var op = (opInput && opInput.value ? opInput.value : 'are_they_equal').trim();
 					if (op !== 'are_they_not_equal') { op = 'are_they_equal'; }
 					var grace = (row.querySelector('[data-um-meta-compare-flags-grace]') || {value:''}).value.trim();
+					var graceOperatorInput = row.querySelector('[data-um-meta-compare-flags-grace-operator]');
+					var graceOperator = (graceOperatorInput && graceOperatorInput.value ? graceOperatorInput.value : '').trim().toLowerCase();
+					if (graceOperator !== 'exceeds' && graceOperator !== 'within') { graceOperator = ''; }
 					var title = (row.querySelector('[data-um-meta-compare-flags-title]') || {value:''}).value.trim();
 					var bg = normalizeHexColor((row.querySelector('[data-um-meta-compare-flags-bg]') || {value:''}).value);
 					var text = normalizeHexColor((row.querySelector('[data-um-meta-compare-flags-text]') || {value:''}).value);
@@ -623,6 +651,9 @@ trait User_Manager_Addon_My_Account_Admin_Meta_Fields_Repeater_Trait {
 					var parts = [a, b, op];
 					if (grace !== '' && !isNaN(parseFloat(grace))) {
 						parts.push(grace);
+						if (graceOperator !== '') {
+							parts.push(graceOperator);
+						}
 					}
 					parts.push(title);
 					if (bg !== '' || text !== '') {

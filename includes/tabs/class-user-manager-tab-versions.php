@@ -39,6 +39,16 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.20 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin "Additional Flag to Display Below Additional Fields" repeater: added a new "Grace Value Operator" dropdown next to the Grace Value field so admins can explicitly control how the grace calculation triggers the flag.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Three options: "Auto (match the equal / NOT equal selector)" (default, preserves legacy behavior), "Only flag when diff EXCEEDS grace (>)", and "Only flag when diff is WITHIN grace (≤)".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Example use case: with "Values are NOT equal", grace 3, and Grace Value Operator = "Only flag when diff EXCEEDS grace (>)", ABS(3 − 6) = 3 does NOT trigger the flag (3 > 3 is false); ABS(3 − 7) = 4 does (4 > 3 is true).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Stored format now accepts an optional "exceeds" / "within" segment directly after the grace value. Rows saved before this release (without the segment) parse unchanged and continue to use the legacy operator-derived behavior, so no data migration is needed.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Updated the settings description, the per-order preview strip, and the calculation text under each preview row to reflect whether the grace operator is EXCEEDS or WITHIN.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.19 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin Additional Meta Fields repeaters: added per-row Move Up / Move Down arrow buttons so admins can manually reorder rows without drag-and-drop, across all three settings — "Additional Meta Fields to Display Under Order", "Additional Meta Fields to Display Under Order in All Orders Screen", and "Additional Flag to Display Below Additional Fields in All Orders Screen".', 'user-manager'); ?></li>

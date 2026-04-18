@@ -2,11 +2,18 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.19
+ * Version: 2.6.20
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.20 - April 18, 2026
+ * - My Account Admin "Additional Flag to Display Below Additional Fields" repeater: added a new "Grace Value Operator" dropdown next to the Grace Value field so admins can explicitly control how the grace calculation triggers the flag.
+ * - Three options: "Auto (match the equal / NOT equal selector)" (default, preserves legacy behavior), "Only flag when diff EXCEEDS grace (>)", and "Only flag when diff is WITHIN grace (≤)".
+ * - Example use case: with "Values are NOT equal", grace 3, and Grace Value Operator = "Only flag when diff EXCEEDS grace (>)", ABS(3 − 6) = 3 does NOT trigger the flag (3 > 3 is false); ABS(3 − 7) = 4 does (4 > 3 is true).
+ * - Stored format now accepts an optional `exceeds` / `within` segment directly after the grace value — `meta_a:meta_b:operator:grace_value:grace_operator:FLAG TITLE:...`. Rows saved before this release (without the segment) parse unchanged and continue to use the legacy operator-derived behavior, so no data migration is needed.
+ * - Updated the settings description, the per-order preview strip, and the calculation text under each preview row to reflect whether the grace operator is EXCEEDS or WITHIN.
  *
  * 2.6.19 - April 18, 2026
  * - My Account Admin Additional Meta Fields repeaters: added per-row Move Up / Move Down arrow buttons to help admins manually reorder rows without drag-and-drop, across all three settings — "Additional Meta Fields to Display Under Order", "Additional Meta Fields to Display Under Order in All Orders Screen", and "Additional Flag to Display Below Additional Fields in All Orders Screen".

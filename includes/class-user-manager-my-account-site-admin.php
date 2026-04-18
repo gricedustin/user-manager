@@ -2751,12 +2751,19 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Format per line (supported operators: `are_they_equal`, `are_they_not_equal`):
 	 * - meta_field_a:meta_field_b:<operator>:FLAG TITLE[:bgcolor[:textcolor]]
 	 * - meta_field_a:meta_field_b:<operator>:grace_value:FLAG TITLE[:bgcolor[:textcolor]]
+	 * - meta_field_a:meta_field_b:<operator>:grace_value:grace_operator:FLAG TITLE[:bgcolor[:textcolor]]
 	 *
 	 * Semantics:
 	 * - `are_they_equal`     — flag when the two meta values ARE equal (case-insensitive).
-	 *                          With grace_value: flag when ABS(a − b) > grace_value.
 	 * - `are_they_not_equal` — flag when the two meta values are NOT equal (case-insensitive).
-	 *                          With grace_value: flag when ABS(a − b) <= grace_value (inverse).
+	 *
+	 * Grace Value Operator (when grace_value is set):
+	 * - `exceeds` — flag when ABS(a − b) > grace_value.
+	 * - `within`  — flag when ABS(a − b) <= grace_value.
+	 * - (absent) — legacy/auto behavior: `are_they_equal` implies `exceeds`,
+	 *              `are_they_not_equal` implies `within`. This preserves the
+	 *              pre-2.6.20 behavior for rows saved before the explicit
+	 *              Grace Value Operator field existed.
 	 *
 	 * @param string $raw Raw setting value.
 	 * @return array<int,array{
@@ -2764,6 +2771,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 *   meta_key_b:string,
 	 *   operator:string,
 	 *   grace_value:float|null,
+	 *   grace_operator:string,
 	 *   title:string,
 	 *   background_color:string,
 	 *   text_color:string
@@ -2806,6 +2814,18 @@ final class User_Manager_My_Account_Site_Admin {
 				array_shift($remaining);
 			}
 
+			// Optional Grace Value Operator. Only consume if a grace value
+			// was set AND the next segment is one of our supported tokens
+			// AND there is still at least one segment left for the title.
+			$grace_operator = '';
+			if ($grace_value !== null && count($remaining) >= 2) {
+				$canonical_grace_operator = self::canonicalize_compare_flag_grace_operator((string) $remaining[0]);
+				if ($canonical_grace_operator !== '') {
+					$grace_operator = $canonical_grace_operator;
+					array_shift($remaining);
+				}
+			}
+
 			$bg = '';
 			$text = '';
 			$remaining_count = count($remaining);
@@ -2842,6 +2862,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'meta_key_b' => $meta_key_b,
 				'operator' => $operator_raw,
 				'grace_value' => $grace_value,
+				'grace_operator' => $grace_operator,
 				'title' => $title,
 				'background_color' => $bg ? $bg : '#000000',
 				'text_color' => $text ? $text : '#ffffff',
@@ -2849,6 +2870,42 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return $flags;
+	}
+
+	/**
+	 * Normalize user-supplied Grace Value Operator tokens to the canonical
+	 * `exceeds` / `within` values. Returns an empty string when the token
+	 * is unrecognized — callers should then fall back to the legacy
+	 * operator-derived behavior for backward compatibility.
+	 */
+	private static function canonicalize_compare_flag_grace_operator(string $raw): string {
+		$raw = strtolower(trim($raw));
+		if ($raw === '') {
+			return '';
+		}
+		$exceeds_aliases = ['exceeds', 'greater_than', 'gt', 'more_than', 'over', 'above'];
+		$within_aliases  = ['within', 'less_than_or_equal', 'lte', 'at_most', 'within_or_equal', 'below_or_equal', 'equal_or_under'];
+		if (in_array($raw, $exceeds_aliases, true)) {
+			return 'exceeds';
+		}
+		if (in_array($raw, $within_aliases, true)) {
+			return 'within';
+		}
+		return '';
+	}
+
+	/**
+	 * Resolve the effective Grace Value Operator to apply when evaluating a
+	 * compare-flag row. Returns `exceeds` or `within`; honors an explicit
+	 * stored Grace Value Operator when set, otherwise falls back to the
+	 * legacy operator-derived behavior so pre-2.6.20 rows keep working.
+	 */
+	private static function resolve_compare_flag_effective_grace_operator(string $grace_operator, string $operator): string {
+		$grace_operator = self::canonicalize_compare_flag_grace_operator($grace_operator);
+		if ($grace_operator !== '') {
+			return $grace_operator;
+		}
+		return $operator === 'are_they_equal' ? 'exceeds' : 'within';
 	}
 
 	/**
@@ -2960,39 +3017,40 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @param string     $value_a        First normalized meta value.
 	 * @param string     $value_b        Second normalized meta value.
 	 * @param float|null $grace_value    Optional numeric grace value.
+	 * @param string     $grace_operator Optional `exceeds` / `within`. Empty
+	 *                                   string falls back to legacy operator-
+	 *                                   derived behavior (`are_they_equal` →
+	 *                                   `exceeds`, `are_they_not_equal` →
+	 *                                   `within`).
 	 * @return bool
 	 */
-	public static function evaluate_order_list_additional_meta_compare_flag(string $operator, string $value_a, string $value_b, ?float $grace_value): bool {
+	public static function evaluate_order_list_additional_meta_compare_flag(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = ''): bool {
 		if ($value_a === '' || $value_b === '') {
 			return false;
 		}
 
 		$normalized_grace = ($grace_value !== null && is_numeric($grace_value)) ? max(0, abs((float) $grace_value)) : null;
 
-		if ($operator === 'are_they_equal') {
-			if ($normalized_grace !== null) {
-				$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
-				$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
-				if ($numeric_a === null || $numeric_b === null) {
-					return false;
-				}
-				return abs($numeric_a - $numeric_b) > $normalized_grace;
+		if ($normalized_grace !== null) {
+			$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
+			$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+			if ($numeric_a === null || $numeric_b === null) {
+				return false;
 			}
+			$effective_grace_operator = self::resolve_compare_flag_effective_grace_operator($grace_operator, $operator);
+			$diff = abs($numeric_a - $numeric_b);
+			if ($effective_grace_operator === 'within') {
+				return $diff <= $normalized_grace;
+			}
+			return $diff > $normalized_grace;
+		}
+
+		if ($operator === 'are_they_equal') {
 			return strcasecmp($value_a, $value_b) === 0;
 		}
-
 		if ($operator === 'are_they_not_equal') {
-			if ($normalized_grace !== null) {
-				$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
-				$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
-				if ($numeric_a === null || $numeric_b === null) {
-					return false;
-				}
-				return abs($numeric_a - $numeric_b) <= $normalized_grace;
-			}
 			return strcasecmp($value_a, $value_b) !== 0;
 		}
-
 		return false;
 	}
 
@@ -3054,11 +3112,13 @@ final class User_Manager_My_Account_Site_Admin {
 				$grace_value = isset($flag['grace_value']) && is_numeric($flag['grace_value'])
 					? (float) $flag['grace_value']
 					: null;
+				$grace_operator = isset($flag['grace_operator']) ? (string) $flag['grace_operator'] : '';
 				$would_display = self::evaluate_order_list_additional_meta_compare_flag(
 					(string) $flag['operator'],
 					$value_a,
 					$value_b,
-					$grace_value
+					$grace_value,
+					$grace_operator
 				);
 
 				$row_flags[] = [
@@ -3068,6 +3128,7 @@ final class User_Manager_My_Account_Site_Admin {
 					'value_b'          => $value_b,
 					'operator'         => (string) $flag['operator'],
 					'grace_value'      => $grace_value,
+					'grace_operator'   => $grace_operator,
 					'title'            => (string) $flag['title'],
 					'background_color' => (string) $flag['background_color'],
 					'text_color'       => (string) $flag['text_color'],
@@ -3076,7 +3137,8 @@ final class User_Manager_My_Account_Site_Admin {
 						(string) $flag['operator'],
 						$value_a,
 						$value_b,
-						$grace_value
+						$grace_value,
+						$grace_operator
 					),
 				];
 			}
@@ -3095,7 +3157,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Produce a short, human-readable description of the comparison the
 	 * flag performed, e.g. "5 == 5 (equal)" or "ABS(5 − 7) = 2, grace 1 ⇒ 2 > 1".
 	 */
-	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value): string {
+	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = ''): string {
 		if ($value_a === '' || $value_b === '') {
 			if ($value_a === '' && $value_b === '') {
 				return __('Both meta values are empty; flag skipped.', 'user-manager');
@@ -3113,10 +3175,11 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 			$diff = abs($numeric_a - $numeric_b);
 			$grace_abs = max(0, abs($grace_value));
-			if ($operator === 'are_they_equal') {
+			$effective_grace_operator = self::resolve_compare_flag_effective_grace_operator($grace_operator, $operator);
+			if ($effective_grace_operator === 'exceeds') {
 				return sprintf(
 					/* translators: 1: numeric a, 2: numeric b, 3: diff, 4: grace, 5: comparison sign */
-					__('ABS(%1$s − %2$s) = %3$s; flags when diff > grace (%4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
+					__('ABS(%1$s − %2$s) = %3$s; flags when diff exceeds grace (> %4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
 					self::format_compare_preview_number($numeric_a),
 					self::format_compare_preview_number($numeric_b),
 					self::format_compare_preview_number($diff),
@@ -3125,7 +3188,8 @@ final class User_Manager_My_Account_Site_Admin {
 				);
 			}
 			return sprintf(
-				__('ABS(%1$s − %2$s) = %3$s; flags when diff ≤ grace (%4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
+				/* translators: 1: numeric a, 2: numeric b, 3: diff, 4: grace, 5: comparison sign */
+				__('ABS(%1$s − %2$s) = %3$s; flags when diff is within grace (≤ %4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
 				self::format_compare_preview_number($numeric_a),
 				self::format_compare_preview_number($numeric_b),
 				self::format_compare_preview_number($diff),
@@ -3135,11 +3199,6 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		$equal = strcasecmp($value_a, $value_b) === 0;
-		if ($operator === 'are_they_equal') {
-			return $equal
-				? sprintf(__('"%1$s" == "%2$s" → equal.', 'user-manager'), $value_a, $value_b)
-				: sprintf(__('"%1$s" != "%2$s" → not equal.', 'user-manager'), $value_a, $value_b);
-		}
 		return $equal
 			? sprintf(__('"%1$s" == "%2$s" → equal.', 'user-manager'), $value_a, $value_b)
 			: sprintf(__('"%1$s" != "%2$s" → not equal.', 'user-manager'), $value_a, $value_b);
@@ -3187,7 +3246,8 @@ final class User_Manager_My_Account_Site_Admin {
 				(string) $flag['operator'],
 				$value_a,
 				$value_b,
-				isset($flag['grace_value']) && is_numeric($flag['grace_value']) ? (float) $flag['grace_value'] : null
+				isset($flag['grace_value']) && is_numeric($flag['grace_value']) ? (float) $flag['grace_value'] : null,
+				isset($flag['grace_operator']) ? (string) $flag['grace_operator'] : ''
 			);
 			if (!$matches) {
 				continue;
