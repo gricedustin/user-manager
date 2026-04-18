@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.21 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('My Account Admin Additional Meta Fields (file-URL rows): removed the inline "(N lines)" badge that used to render next to the links on flagged file rows. Line counting still runs in the background so the cached value stays fresh for the Grace Value compare-flag feature.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Renamed the action links: "Open File" is now "Download", and "Preview File" is now "Preview".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Reordered the links so Preview renders first and Download renders second, and dropped the | separator between them in favor of a small inline gap.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.20 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('My Account Admin "Additional Flag to Display Below Additional Fields" repeater: added a new "Grace Value Operator" dropdown next to the Grace Value field so admins can explicitly control how the grace calculation triggers the flag.', 'user-manager'); ?></li>

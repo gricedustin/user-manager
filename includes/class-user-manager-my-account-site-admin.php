@@ -3460,14 +3460,18 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
 				$url = esc_url_raw($trimmed);
 				if ($url !== '') {
-					$link_actions = [
-						'<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>',
-					];
+					// Preview first, then Download; no separator pipe between them.
+					$link_actions = [];
 					if ($enable_file_preview) {
-						$link_actions[] = '<a href="' . esc_url($url) . '" class="um-my-account-file-preview-trigger">' . esc_html__('Preview File', 'user-manager') . '</a>';
+						$link_actions[] = '<a href="' . esc_url($url) . '" class="um-my-account-file-preview-trigger">' . esc_html__('Preview', 'user-manager') . '</a>';
 					}
-					$link_html = implode(' <span class="um-my-account-meta-file-link-sep">|</span> ', $link_actions);
+					$link_actions[] = '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Download', 'user-manager') . '</a>';
+					$link_html = '<span class="um-my-account-meta-file-link-actions">' . implode(' ', $link_actions) . '</span>';
 					if ($count_text_file_lines) {
+						// Still run the line-count fetch so the cached number
+						// stays fresh for downstream consumers (the Grace Value
+						// compare-flag uses `_um_text_file_line_count_cache_number_only`).
+						// We no longer render the "(N lines)" badge inline.
 						$local_path_for_count = ($is_fcf_file_upload && is_array($fcf_resolution) && !empty($fcf_resolution['path']))
 							? (string) $fcf_resolution['path']
 							: '';
@@ -3475,12 +3479,6 @@ final class User_Manager_My_Account_Site_Admin {
 							$line_count_debug = self::get_text_file_line_count_debug_data_from_local_path($local_path_for_count, $url, $order_id);
 						} else {
 							$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
-						}
-						$line_count = isset($line_count_debug['line_count']) && is_int($line_count_debug['line_count'])
-							? (int) $line_count_debug['line_count']
-							: null;
-						if ($line_count !== null) {
-							$link_html .= ' <span class="um-my-account-order-list-meta-line-count">(' . esc_html((string) $line_count) . ' ' . esc_html__('lines', 'user-manager') . ')</span>';
 						}
 						if ($debug_enabled) {
 							$debug_payload['resolved_url'] = $url;
@@ -4649,13 +4647,17 @@ final class User_Manager_My_Account_Site_Admin {
 			.um-my-account-order-list-meta-item a {
 				word-break: break-all;
 			}
-			.um-my-account-meta-file-link-sep {
-				margin: 0 4px;
-				color: #646970;
+			.um-my-account-meta-file-link-actions {
+				display: inline-flex;
+				gap: 12px;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+			.um-my-account-meta-file-link-actions a {
+				white-space: nowrap;
 			}
 			.um-my-account-file-preview-trigger {
 				display: inline-block;
-				margin-left: 6px;
 			}
 			.um-my-account-admin-order-meta-block {
 				margin-top: 8px;

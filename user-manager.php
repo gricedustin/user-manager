@@ -2,11 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.20
+ * Version: 2.6.21
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.21 - April 18, 2026
+ * - My Account Admin Additional Meta Fields (file-URL rows): removed the inline "(N lines)" badge that used to render next to the links on flagged file rows. Line counting still runs in the background so the cached value stays fresh for the Grace Value compare-flag feature.
+ * - Renamed the action links: "Open File" → "Download", "Preview File" → "Preview".
+ * - Reordered the links so Preview renders first and Download renders second, and dropped the `|` separator between them in favor of a small inline gap.
  *
  * 2.6.20 - April 18, 2026
  * - My Account Admin "Additional Flag to Display Below Additional Fields" repeater: added a new "Grace Value Operator" dropdown next to the Grace Value field so admins can explicitly control how the grace calculation triggers the flag.
