@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.27 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('"User Manager: WP Administrators Not in Remote Admin List" admin notice: added a per-row "Change Role" link next to the existing "Remove this administrator" link. The link opens the new Change Role(s) screen with the email prefilled and the role preselected to Customer.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added two bulk-action buttons at the bottom of the notice: "Remove all N administrators" opens the Remove User(s) screen with every listed email prefilled, and "Change all N roles" opens the Change Role(s) screen with every listed email prefilled and the role preselected to Customer. Both buttons pluralize correctly.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The Change Role(s) screen now honors um_prefill_user_email (comma- and newline-separated) and um_prefill_role query parameters, matching the Remove User(s) screen\'s prefill convention. The legacy um_email parameter is still accepted for backward compatibility.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.26 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Login Tools: added a new "Change Role(s)" sub-page (?page=user-manager&tab=login-tools&login_tools_section=change-role) positioned next to Reset Password(s).', 'user-manager'); ?></li>

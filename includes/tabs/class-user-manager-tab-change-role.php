@@ -38,7 +38,58 @@ class User_Manager_Tab_Change_Role {
 		$recent_changes = array_slice($recent_changes, 0, 15);
 
 		$roles = User_Manager_Core::get_user_roles();
-		$prefill_emails = isset($_GET['um_email']) ? sanitize_textarea_field(wp_unslash($_GET['um_email'])) : '';
+
+		// Prefill support — matches the Remove User(s) screen convention so
+		// the Admin Email List Check notices can link to either screen with
+		// the same `um_prefill_user_email` parameter (comma and/or newline
+		// separated). Legacy `um_email` is also honored for back-compat.
+		$prefill_emails_raw = [];
+		if (isset($_GET['um_prefill_user_email'])) {
+			$raw_value = (string) wp_unslash($_GET['um_prefill_user_email']);
+			$raw_value = rawurldecode($raw_value);
+			$tokens = preg_split('/[\r\n,]+/', $raw_value);
+			if (is_array($tokens)) {
+				foreach ($tokens as $token) {
+					$token = trim((string) $token);
+					if ($token === '') {
+						continue;
+					}
+					$sanitized = sanitize_email($token);
+					if ($sanitized !== '' && is_email($sanitized)) {
+						$prefill_emails_raw[] = $sanitized;
+					}
+				}
+			}
+		}
+		if (empty($prefill_emails_raw) && isset($_GET['um_email'])) {
+			$legacy_value = sanitize_textarea_field(wp_unslash($_GET['um_email']));
+			$tokens = preg_split('/[\r\n,]+/', $legacy_value);
+			if (is_array($tokens)) {
+				foreach ($tokens as $token) {
+					$token = trim((string) $token);
+					if ($token === '') {
+						continue;
+					}
+					$sanitized = sanitize_email($token);
+					if ($sanitized !== '' && is_email($sanitized)) {
+						$prefill_emails_raw[] = $sanitized;
+					}
+				}
+			}
+		}
+		$prefill_emails = implode("\n", array_values(array_unique($prefill_emails_raw)));
+
+		// Default role prefill — callers can request a specific role (e.g.
+		// `um_prefill_role=customer`). Validated against the WP role registry
+		// before being selected to prevent accidental assignment to an
+		// unknown role key.
+		$prefill_role = '';
+		if (isset($_GET['um_prefill_role'])) {
+			$candidate = sanitize_key(wp_unslash($_GET['um_prefill_role']));
+			if ($candidate !== '' && isset($roles[$candidate])) {
+				$prefill_role = $candidate;
+			}
+		}
 		?>
 		<div class="um-create-user-layout">
 			<div class="um-create-user-form">
@@ -63,7 +114,7 @@ class User_Manager_Tab_Change_Role {
 								<select name="new_role" id="um-change-role-role" class="regular-text" required>
 									<option value=""><?php esc_html_e('— Select Role —', 'user-manager'); ?></option>
 									<?php foreach ($roles as $role_key => $role_name) : ?>
-										<option value="<?php echo esc_attr($role_key); ?>"><?php echo esc_html($role_name); ?> (<code><?php echo esc_html($role_key); ?></code>)</option>
+										<option value="<?php echo esc_attr($role_key); ?>" <?php selected($prefill_role, $role_key); ?>><?php echo esc_html($role_name); ?> (<code><?php echo esc_html($role_key); ?></code>)</option>
 									<?php endforeach; ?>
 								</select>
 								<p class="description"><?php esc_html_e('The new role replaces the user\'s existing role(s) entirely. WordPress will fire its standard set_user_role action so other plugins that listen for role changes still run.', 'user-manager'); ?></p>

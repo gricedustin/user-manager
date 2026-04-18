@@ -356,7 +356,7 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 			echo '<div class="notice notice-error"><p><strong>'
 				. esc_html__('User Manager: WP Administrators Not in Remote Admin List', 'user-manager')
 				. '</strong></p>';
-			echo '<p>' . esc_html__('The following WP Administrator email(s) exist on this site but are NOT in the remote TXT list. Click a link to remove each administrator:', 'user-manager') . '</p>';
+			echo '<p>' . esc_html__('The following WP Administrator email(s) exist on this site but are NOT in the remote TXT list. Click a link to remove each administrator, or use Change Role to demote them instead:', 'user-manager') . '</p>';
 			echo '<ul style="list-style:disc;margin-left:20px;">';
 			foreach ($extra_locally as $entry) {
 				$remove_url = add_query_arg(
@@ -369,12 +369,72 @@ trait User_Manager_Core_Admin_Email_List_Check_Trait {
 					],
 					admin_url('admin.php')
 				);
+				$change_role_url = add_query_arg(
+					[
+						'page'                  => self::SETTINGS_PAGE_SLUG,
+						'tab'                   => self::TAB_LOGIN_TOOLS,
+						'login_tools_section'   => self::TAB_CHANGE_ROLE,
+						'um_prefill_user_email' => rawurlencode($entry['email']),
+						'um_prefill_role'       => 'customer',
+					],
+					admin_url('admin.php')
+				);
 				echo '<li>'
 					. '<code>' . esc_html($entry['email']) . '</code> (user ID ' . esc_html((string) $entry['id']) . ') — '
 					. '<a href="' . esc_url($remove_url) . '">' . esc_html__('Remove this administrator', 'user-manager') . '</a>'
+					. ' | '
+					. '<a href="' . esc_url($change_role_url) . '">' . esc_html__('Change Role', 'user-manager') . '</a>'
 					. '</li>';
 			}
-			echo '</ul></div>';
+			echo '</ul>';
+
+			// Bulk action buttons — prefill the full email list (comma-
+			// separated because it is shorter in the URL than newline
+			// encoding, and both the Remove User and Change Role tabs
+			// accept comma or newline separators when hydrating prefills).
+			$all_emails = array_values(array_filter(array_map(static function ($entry) {
+				return isset($entry['email']) ? (string) $entry['email'] : '';
+			}, $extra_locally)));
+			if (!empty($all_emails)) {
+				$bulk_list = rawurlencode(implode(',', $all_emails));
+				$bulk_remove_url = add_query_arg(
+					[
+						'page'                  => self::SETTINGS_PAGE_SLUG,
+						'tab'                   => self::TAB_LOGIN_TOOLS,
+						'login_tools_section'   => self::TAB_REMOVE_USER,
+						'um_prefill_user_email' => $bulk_list,
+					],
+					admin_url('admin.php')
+				);
+				$bulk_change_role_url = add_query_arg(
+					[
+						'page'                  => self::SETTINGS_PAGE_SLUG,
+						'tab'                   => self::TAB_LOGIN_TOOLS,
+						'login_tools_section'   => self::TAB_CHANGE_ROLE,
+						'um_prefill_user_email' => $bulk_list,
+						'um_prefill_role'       => 'customer',
+					],
+					admin_url('admin.php')
+				);
+				echo '<p style="margin-top:12px;">'
+					. '<a href="' . esc_url($bulk_remove_url) . '" class="button button-secondary" style="margin-right:8px;">'
+					. esc_html(sprintf(
+						/* translators: %d: number of administrators */
+						_n('Remove all %d administrator', 'Remove all %d administrators', count($all_emails), 'user-manager'),
+						count($all_emails)
+					))
+					. '</a>'
+					. '<a href="' . esc_url($bulk_change_role_url) . '" class="button button-primary">'
+					. esc_html(sprintf(
+						/* translators: %d: number of administrators */
+						_n('Change %d role', 'Change all %d roles', count($all_emails), 'user-manager'),
+						count($all_emails)
+					))
+					. '</a>'
+					. '</p>';
+			}
+
+			echo '</div>';
 		}
 	}
 

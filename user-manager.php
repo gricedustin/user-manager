@@ -2,11 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.26
+ * Version: 2.6.27
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.27 - April 18, 2026
+ * - "User Manager: WP Administrators Not in Remote Admin List" admin notice: added a per-row "Change Role" link next to the existing "Remove this administrator" link. The link opens the new Change Role(s) screen with the email prefilled and the role preselected to Customer.
+ * - Added two bulk-action buttons at the bottom of the notice: "Remove all N administrators" opens the Remove User(s) screen with every listed email prefilled, and "Change all N roles" opens the Change Role(s) screen with every listed email prefilled and the role preselected to Customer. Both buttons pluralize correctly.
+ * - The Change Role(s) screen now also honors `um_prefill_user_email` (comma- and newline-separated) and `um_prefill_role` query parameters, matching the Remove User(s) screen\'s prefill convention so both notices pass values through the same URL contract. The legacy `um_email` parameter is still accepted for backward compatibility.
  *
  * 2.6.26 - April 18, 2026
  * - Login Tools: added a new "Change Role(s)" sub-page (?page=user-manager&tab=login-tools&login_tools_section=change-role) positioned right next to Reset Password(s) in the sub-nav, with the same layout/look as Reset Password(s).
