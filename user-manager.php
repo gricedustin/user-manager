@@ -2,11 +2,18 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.17
+ * Version: 2.6.18
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.18 - April 18, 2026
+ * - Administrator Custom Dashboard Tiles: changed the default Page Title and Menu Title from "Custom Dashboard Tiles" / "Dashboard Tiles" to "Admin Tiles". The Page Title Override and Menu Title Override settings still win when set.
+ * - Placeholder text on the Page Title Override and Menu Title Override settings inputs and the admin-bar "Add Current Page to…" label now reflect the new default (and the admin-bar label tracks the resolved menu title when overridden).
+ * - Added a "Recently Clicked" sidebar on the right side of the Dashboard tab (20% wide, 280px min width, sticky to the top on scroll) that lists the most recently clicked tiles sorted by last-clicked time, with click count, last-clicker email, and relative time per row.
+ * - Clicking a sidebar row is click-tracked through the same AJAX endpoint as the main grid tiles, so the sidebar surfaces the freshest activity in real time.
+ * - Sidebar collapses out of view below 1024px viewports so small screens keep the full-width tile grid.
  *
  * 2.6.17 - April 18, 2026
  * - Fixed "Fatal error: Traits cannot have constants" on PHP 8.1 and earlier by converting every trait-level `const` declaration to a static accessor method.

@@ -127,7 +127,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 		$override = isset($settings['admin_custom_dashboard_tiles_page_title'])
 			? trim((string) $settings['admin_custom_dashboard_tiles_page_title'])
 			: '';
-		return $override !== '' ? $override : __('Custom Dashboard Tiles', 'user-manager');
+		return $override !== '' ? $override : __('Admin Tiles', 'user-manager');
 	}
 
 	/**
@@ -139,7 +139,7 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 		$override = isset($settings['admin_custom_dashboard_tiles_menu_title'])
 			? trim((string) $settings['admin_custom_dashboard_tiles_menu_title'])
 			: '';
-		return $override !== '' ? $override : __('Dashboard Tiles', 'user-manager');
+		return $override !== '' ? $override : __('Admin Tiles', 'user-manager');
 	}
 
 	/**
@@ -790,11 +790,11 @@ trait User_Manager_Core_Admin_Custom_Dashboard_Tiles_Trait {
 		);
 		$wp_admin_bar->add_node([
 			'id'     => 'um-admin-custom-dashboard-tiles-add-current-page',
-			'title'  => esc_html__('Add Current Page to Dashboard Tiles', 'user-manager'),
+			'title'  => esc_html(sprintf(__('Add Current Page to %s', 'user-manager'), $menu_title)),
 			'href'   => esc_url($prefill_url),
 			'parent' => 'um-admin-custom-dashboard-tiles',
 			'meta'   => [
-				'title' => __('Open Dashboard Tiles settings with the current URL pre-filled', 'user-manager'),
+				'title' => sprintf(__('Open %s settings with the current URL pre-filled', 'user-manager'), $menu_title),
 			],
 		]);
 	}

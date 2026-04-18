@@ -39,6 +39,16 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.18 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Administrator Custom Dashboard Tiles: changed the default Page Title and Menu Title from "Custom Dashboard Tiles" / "Dashboard Tiles" to "Admin Tiles". The Page Title Override and Menu Title Override settings still win when set.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Placeholder text on the Page Title Override and Menu Title Override settings inputs and the admin-bar "Add Current Page to…" label now reflect the new default (and the admin-bar label tracks the resolved menu title when overridden).', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a "Recently Clicked" sidebar on the right side of the Dashboard tab (20% wide, 280px min width, sticky to the top on scroll) that lists the most recently clicked tiles sorted by last-clicked time, with click count, last-clicker email, and relative time per row.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Clicking a sidebar row is click-tracked through the same AJAX endpoint as the main grid tiles, so the sidebar surfaces the freshest activity in real time.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Sidebar collapses out of view below 1024px viewports so small screens keep the full-width tile grid.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.17 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed "Fatal error: Traits cannot have constants" on PHP 8.1 and earlier by converting every trait-level const declaration to a static accessor method.', 'user-manager'); ?></li>
