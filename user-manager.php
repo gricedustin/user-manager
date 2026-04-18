@@ -2,12 +2,15 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.6
+ * Version: 2.6.7
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.7 - April 18, 2026
+ * - Retitled the "Post Meta Viewer" add-on to "Post Meta Field Viewer & Editor" across the Add-ons tab, the add-on card header, the add-on registry, the Documentation tab feature list, and related role-access copy. Historical changelog entries retain their original wording.
+ *
  * 2.6.6 - April 18, 2026
  * - Moved "Show Meta Data area for Order details" directly below "Default all new orders into a payment pending status" so related Order viewer toggles group together above the Additional Meta Fields repeaters.
  *

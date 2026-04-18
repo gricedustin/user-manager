@@ -1,6 +1,6 @@
 <?php
 /**
- * Add-on card: Post Meta Viewer.
+ * Add-on card: Post Meta Field Viewer & Editor.
  */
 
 if (!defined('ABSPATH')) {
@@ -38,7 +38,7 @@ class User_Manager_Addon_Post_Meta {
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-post-meta" data-um-active-selectors="#um-post-meta-enabled">
 			<div class="um-admin-card-header">
 				<span class="dashicons dashicons-editor-code"></span>
-				<h2><?php esc_html_e('Post Meta Viewer', 'user-manager'); ?></h2>
+				<h2><?php esc_html_e('Post Meta Field Viewer & Editor', 'user-manager'); ?></h2>
 			</div>
 			<div class="um-admin-card-body">
 				<div class="um-form-field">
@@ -85,7 +85,7 @@ class User_Manager_Addon_Post_Meta {
 						<p class="description"><?php esc_html_e('When the post meta meta box is enabled, allow changing meta values directly from the meta box. Save the post to apply changes.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field">
-						<label><strong><?php esc_html_e('Allowed Roles (who can see Post Meta Viewer)', 'user-manager'); ?></strong></label>
+						<label><strong><?php esc_html_e('Allowed Roles (who can see Post Meta Field Viewer & Editor)', 'user-manager'); ?></strong></label>
 						<?php if (empty($available_roles)) : ?>
 							<p class="description"><?php esc_html_e('No roles found.', 'user-manager'); ?></p>
 						<?php else : ?>

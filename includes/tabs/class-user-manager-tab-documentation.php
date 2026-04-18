@@ -313,7 +313,7 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'icon'    => 'dashicons-editor-code',
-				'title'   => __('Post Meta Viewer', 'user-manager'),
+				'title'   => __('Post Meta Field Viewer & Editor', 'user-manager'),
 				'summary' => __('Display and optionally edit post meta values from the editor to simplify debugging and content data operations.', 'user-manager'),
 			],
 			[
@@ -429,7 +429,7 @@ class User_Manager_Tab_Documentation {
 			],
 			[
 				'title'       => __('Operate a Content Pipeline Faster', 'user-manager'),
-				'description' => __('Use Post Idea Generator to plan topics, Post Content Generator to draft posts, and Post Meta Viewer to inspect or adjust underlying content metadata.', 'user-manager'),
+				'description' => __('Use Post Idea Generator to plan topics, Post Content Generator to draft posts, and Post Meta Field Viewer & Editor to inspect or adjust underlying content metadata.', 'user-manager'),
 			],
 			[
 				'title'       => __('Audit Changes and Maintain Accountability', 'user-manager'),
@@ -817,7 +817,7 @@ class User_Manager_Tab_Documentation {
 						<li><?php esc_html_e('My Account Coupons Page', 'user-manager'); ?></li>
 						<li><?php esc_html_e('My Account Menu Tiles', 'user-manager'); ?></li>
 						<li><?php esc_html_e('My Account Admin', 'user-manager'); ?></li>
-						<li><?php esc_html_e('Post Meta Viewer', 'user-manager'); ?></li>
+						<li><?php esc_html_e('Post Meta Field Viewer & Editor', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Product Notification', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Product Search by SKU', 'user-manager'); ?></li>
 						<li><?php esc_html_e('Post Content Generator', 'user-manager'); ?></li>
