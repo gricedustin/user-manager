@@ -39,6 +39,14 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.23 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added a shortcut inside the WordPress Admin Bar "Site Name" dropdown (next to Dashboard, Plugins, Themes) that opens the plugin\'s Add-ons tab.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The label honors the existing Plugin Title Override setting so admins who renamed the plugin (e.g. "Company Portal") see that custom title in the dropdown instead of "UX Manager".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('The shortcut only renders for users with the manage_options capability and is emitted at admin_bar_menu priority 35 (after WordPress registers the site-name parent, before our other custom admin-bar nodes) so the ordering stays stable next to the built-in WP items.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.22 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed Flexible Checkout Fields PRO file-upload rows: Download was 403-ing and Preview in Office Web Viewer was returning "We can\'t process this request", because FCF PRO drops a "Deny from all" .htaccess into its own upload directory so the public URL is intentionally blocked.', 'user-manager'); ?></li>

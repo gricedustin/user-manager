@@ -61,7 +61,7 @@ final class User_Manager_Core {
 	const SMS_TEXT_TEMPLATES_KEY = 'user_manager_sms_text_templates';
 	const IMPORTED_FILES_KEY = 'user_manager_imported_files';
 	const SETTINGS_PAGE_SLUG = 'user-manager';
-	const VERSION = '2.6.22';
+	const VERSION = '2.6.23';
 	const URL_PARAM_DISABLE_ALL_ADDONS = 'um_disable_all_addons';
 	const URL_PARAM_DISABLE_ADDONS = 'um_disable_addons';
 	const USER_DEACTIVATED_META_KEY = 'um_user_deactivated';
@@ -251,6 +251,7 @@ final class User_Manager_Core {
 		}
 
 		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_admin_bar_link'], 98);
+		add_action('admin_bar_menu', [__CLASS__, 'add_user_manager_site_name_shortcut'], 35);
 		add_action('admin_bar_menu', [__CLASS__, 'add_custom_admin_bar_menu_items'], 99);
 		// Quick Search add-on runs only when explicitly activated.
 		$quick_search_enabled = !empty($settings['um_quick_search_enabled']) && !self::is_addon_temporarily_disabled('quick-search');
@@ -2239,6 +2240,48 @@ html body .woocommerce-layout__header {
 				'title' => sprintf(
 					/* translators: %s: plugin title */
 					__('%s Add-ons', 'user-manager'),
+					$plugin_title
+				),
+			],
+		]);
+	}
+
+	/**
+	 * Append a "UX Manager" (or the admin's custom Plugin Title Override)
+	 * shortcut to the WP Admin Bar site-name dropdown, next to Dashboard,
+	 * Plugins, Themes, etc. The shortcut links to the plugin's Add-ons tab
+	 * and uses `get_plugin_title_display_text()` so a custom override title
+	 * is honored automatically.
+	 *
+	 * @param WP_Admin_Bar $wp_admin_bar Admin bar instance.
+	 */
+	public static function add_user_manager_site_name_shortcut($wp_admin_bar): void {
+		if (!($wp_admin_bar instanceof WP_Admin_Bar)) {
+			return;
+		}
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+		if (!is_admin_bar_showing()) {
+			return;
+		}
+
+		// Bail quietly if WordPress has not registered the site-name parent
+		// node for this request (some custom admin bars strip it).
+		if (method_exists($wp_admin_bar, 'get_node') && $wp_admin_bar->get_node('site-name') === null) {
+			return;
+		}
+
+		$plugin_title = self::get_plugin_title_display_text();
+		$wp_admin_bar->add_node([
+			'id'     => 'user-manager-site-name-shortcut',
+			'title'  => esc_html($plugin_title),
+			'href'   => esc_url(self::get_page_url(self::TAB_ADDONS)),
+			'parent' => 'site-name-default',
+			'meta'   => [
+				'title' => sprintf(
+					/* translators: %s: plugin title */
+					__('Open %s Add-ons', 'user-manager'),
 					$plugin_title
 				),
 			],

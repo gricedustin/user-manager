@@ -2,11 +2,16 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.22
+ * Version: 2.6.23
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.23 - April 18, 2026
+ * - Added a shortcut inside the WordPress Admin Bar "Site Name" dropdown (next to Dashboard, Plugins, Themes) that opens the plugin's Add-ons tab.
+ * - The label honors the existing Plugin Title Override setting so admins who renamed the plugin (e.g. "Company Portal") see that custom title in the dropdown instead of "UX Manager".
+ * - The shortcut only renders for users with the `manage_options` capability and is emitted at admin_bar_menu priority 35 (after WordPress registers the site-name parent, before our other custom admin-bar nodes) so the ordering stays stable next to the built-in WP items.
  *
  * 2.6.22 - April 18, 2026
  * - Fixed Flexible Checkout Fields PRO file-upload rows: Download was 403-ing and Preview in Office Web Viewer was returning "We can't process this request", because FCF PRO drops a `Deny from all` .htaccess into its own upload directory, so the public URL is intentionally blocked.
