@@ -60,6 +60,7 @@ class User_Manager_Actions {
 		add_action('admin_post_user_manager_create_basic_coupon_template', [__CLASS__, 'handle_create_basic_coupon_template']);
 		add_action('admin_post_user_manager_reset_view_reports', [__CLASS__, 'handle_reset_view_reports']);
 		add_action('admin_post_user_manager_reset_text_file_line_count_cache', [__CLASS__, 'handle_reset_text_file_line_count_cache']);
+		add_action('admin_post_user_manager_clear_admin_email_list_check_cache', [__CLASS__, 'handle_clear_admin_email_list_check_cache']);
 		add_action('admin_post_user_manager_blog_post_importer', [__CLASS__, 'handle_blog_post_importer']);
 		add_action('admin_post_user_manager_bulk_page_creator', [__CLASS__, 'handle_bulk_page_creator']);
 		add_action('admin_post_user_manager_run_data_anonymizer_orders', [__CLASS__, 'handle_run_data_anonymizer_orders']);
@@ -148,6 +149,31 @@ class User_Manager_Actions {
 				User_Manager_Core::TAB_ADDONS,
 				$message_key,
 				$redirect_extra
+			)
+		);
+		exit;
+	}
+
+	/**
+	 * Clear the cached remote TXT file of WP Administrator emails used by
+	 * the "Remote TXT File URL List of WP Administrator Emails" setting so
+	 * the next admin page load re-fetches the file.
+	 */
+	public static function handle_clear_admin_email_list_check_cache(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_clear_admin_email_list_check_cache');
+
+		if (method_exists('User_Manager_Core', 'clear_admin_email_list_check_cache')) {
+			User_Manager_Core::clear_admin_email_list_check_cache();
+		}
+
+		wp_safe_redirect(
+			User_Manager_Core::get_redirect_with_message(
+				User_Manager_Core::TAB_SETTINGS,
+				'admin_email_list_check_cache_cleared'
 			)
 		);
 		exit;
@@ -2328,6 +2354,15 @@ class User_Manager_Actions {
 				$param_name = isset($_POST['coupon_code_url_param_name']) ? sanitize_key(str_replace(' ', '-', wp_unslash($_POST['coupon_code_url_param_name']))) : 'coupon-code';
 				$settings['coupon_code_url_param_name'] = $param_name !== '' ? $param_name : 'coupon-code';
 				$settings['sftp_directories'] = isset($_POST['sftp_directories']) ? sanitize_textarea_field(wp_unslash($_POST['sftp_directories'])) : '';
+				$admin_email_list_check_key = method_exists('User_Manager_Core', 'admin_email_list_check_url_setting_key')
+					? User_Manager_Core::admin_email_list_check_url_setting_key()
+					: 'admin_email_list_check_remote_url';
+				$settings[$admin_email_list_check_key] = isset($_POST[$admin_email_list_check_key])
+					? esc_url_raw(trim((string) wp_unslash($_POST[$admin_email_list_check_key])))
+					: '';
+				if (method_exists('User_Manager_Core', 'clear_admin_email_list_check_cache')) {
+					User_Manager_Core::clear_admin_email_list_check_cache();
+				}
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['simple_texting_api_token'] = isset($_POST['simple_texting_api_token']) ? sanitize_text_field(wp_unslash($_POST['simple_texting_api_token'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';

@@ -2,12 +2,19 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.1
+ * Version: 2.6.2
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
  * 
+ * 2.6.2 - April 18, 2026
+ * - Added new Settings field "Remote TXT File URL List of WP Administrator Emails for This Site" beneath "SFTP/Directory Paths for CSV Import".
+ * - Accepts a remote TXT URL (emails separated line-by-line and/or comma separated); list is fetched and cached on a daily basis.
+ * - Displays a WP Admin Notification listing any remote emails that are not yet WP Administrators on this site, each with a quick link to the Add New User form (page=user-manager&tab=login-tools&login_tools_section=create-user) prefilled with the email.
+ * - Displays a second WP Admin Notification listing any WP Administrators on this site that are NOT in the remote TXT list, each with a quick link to the Remove User tool (page=user-manager&tab=login-tools&login_tools_section=remove-user) prefilled with the user.
+ * - Added a new "Remove TXT File Cache" button that clears the daily cache and forces a fresh re-check of the remote file.
+ *
  * 2.6.1 - April 18, 2026
  * - Fixed My Account Admin "Export to CSV" downloads containing HTML page markup by intercepting the export request at `template_redirect` before WooCommerce/theme output begins.
  * - The CSV handler now clears any buffered output, sends proper CSV headers, and streams only the CSV rows so the downloaded file is valid CSV (no leading HTML).

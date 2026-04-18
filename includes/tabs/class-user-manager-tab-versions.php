@@ -39,6 +39,16 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.2 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Added new Settings field "Remote TXT File URL List of WP Administrator Emails for This Site" beneath "SFTP/Directory Paths for CSV Import".', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Accepts a remote TXT URL (emails separated line-by-line and/or comma separated); list is fetched and cached on a daily basis.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Displays a WP Admin Notification listing any remote emails that are not yet WP Administrators on this site, each with a quick link to the Add New User form prefilled with the email.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Displays a second WP Admin Notification listing any WP Administrators on this site that are NOT in the remote TXT list, each with a quick link to the Remove User tool prefilled with the user.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Added a new "Remove TXT File Cache" button that clears the daily cache and forces a fresh re-check of the remote file.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.1 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('Fixed My Account Admin "Export to CSV" downloads that were producing CSV files with HTML page markup at the top of the file.', 'user-manager'); ?></li>
