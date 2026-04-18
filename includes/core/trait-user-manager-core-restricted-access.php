@@ -57,6 +57,21 @@ trait User_Manager_Core_Restricted_Access_Trait {
 
 		add_action('template_redirect', [__CLASS__, 'maybe_enforce_restricted_access'], 1);
 
+		// Always mark ALL public front-end requests as uncacheable whenever
+		// the add-on is active — no matter whether the request ends up gated,
+		// granted, or re-prompted. This prevents page caches (WP Rocket,
+		// LiteSpeed, W3TC, WP Super Cache, Cloudflare edge rules, etc.) from
+		// storing an overlay/403 for a URL (most commonly the home page) and
+		// then serving that stale overlay to already-authenticated visitors.
+		//
+		// The hook fires at `send_headers` priority 1 so it runs before the
+		// usual template output stage and before most cache layers make their
+		// "should I store this?" decision. We still also mark on
+		// template_redirect as a belt-and-suspenders for cache layers that
+		// check later in the pipeline.
+		add_action('send_headers', [__CLASS__, 'restricted_access_mark_public_request_uncacheable'], 1, 0);
+		add_action('template_redirect', [__CLASS__, 'restricted_access_mark_public_request_uncacheable'], 0, 0);
+
 		// Lightweight, cache-friendly AJAX + classic POST endpoints. These run
 		// regardless of where the request was initiated from so a submission
 		// from a background-overlay page still works when the normal
@@ -66,6 +81,55 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		add_action('wp_ajax_nopriv_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_ajax']);
 		add_action('admin_post_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_post']);
 		add_action('admin_post_nopriv_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_post']);
+	}
+
+	/**
+	 * Mark the current public-facing request as uncacheable for page-cache
+	 * layers (WP Rocket, LiteSpeed, W3TC, WP Super Cache, Hummingbird, etc.)
+	 * and for browser/CDN caches. This is the main fix for "the home page
+	 * keeps re-prompting for the password": without it, an already-cached
+	 * overlay at /, /home, etc., would be served to authenticated users.
+	 */
+	public static function restricted_access_mark_public_request_uncacheable(): void {
+		// Do not affect admin, AJAX, cron, or REST requests — those have
+		// their own caching semantics and should not be marked no-store here.
+		if (is_admin() || wp_doing_ajax() || wp_doing_cron()) {
+			return;
+		}
+		if (defined('REST_REQUEST') && REST_REQUEST) {
+			return;
+		}
+
+		if (!defined('DONOTCACHEPAGE')) {
+			define('DONOTCACHEPAGE', true);
+		}
+		if (!defined('DONOTCACHEOBJECT')) {
+			define('DONOTCACHEOBJECT', true);
+		}
+		if (!defined('DONOTCACHEDB')) {
+			define('DONOTCACHEDB', true);
+		}
+
+		// Signal to WP Rocket that this page must not be cached.
+		if (!defined('DONOTROCKETCACHE')) {
+			define('DONOTROCKETCACHE', true);
+		}
+
+		// Signal to LiteSpeed Cache that this page must not be cached.
+		do_action('litespeed_control_set_nocache', 'um_restricted_access');
+
+		if (headers_sent()) {
+			return;
+		}
+
+		// Make sure responsive cache layers see a Cache-Control: no-store AND
+		// a Vary: Cookie so cached entries key on cookie state. nocache_headers()
+		// alone still lets some layers store the response; these explicit
+		// headers cover the remaining edge cases.
+		header('Cache-Control: no-store, no-cache, private, must-revalidate, max-age=0', true);
+		header('Pragma: no-cache', true);
+		header('Expires: 0', true);
+		header('Vary: Cookie', false);
 	}
 
 	/**
@@ -210,6 +274,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	 */
 	private static function queue_restricted_access_background_overlay(array $settings, bool $show_password_form): void {
 		nocache_headers();
+		self::restricted_access_mark_public_request_uncacheable();
 		if (!is_array(self::$restricted_access_background_overlay_context)) {
 			self::$restricted_access_background_overlay_context = [
 				'settings' => $settings,
@@ -478,6 +543,10 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
 			self::restricted_access_set_trusted_ip_cookie();
 		}
+		self::restricted_access_purge_cached_urls([
+			self::restricted_access_get_home_url(),
+			$redirect_target,
+		]);
 
 		$grant_token = self::restricted_access_create_grant_token($settings);
 		$final_redirect = self::restricted_access_append_grant_token_to_url($redirect_target, $grant_token);
@@ -529,6 +598,10 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
 			self::restricted_access_set_trusted_ip_cookie();
 		}
+		self::restricted_access_purge_cached_urls([
+			self::restricted_access_get_home_url(),
+			$redirect_target,
+		]);
 
 		$grant_token = self::restricted_access_create_grant_token($settings);
 		$final_redirect = self::restricted_access_append_grant_token_to_url($redirect_target, $grant_token);
@@ -578,6 +651,10 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
 			self::restricted_access_set_trusted_ip_cookie();
 		}
+		self::restricted_access_purge_cached_urls([
+			self::restricted_access_get_home_url(),
+			$redirect_target,
+		]);
 
 		$grant_token = self::restricted_access_create_grant_token($settings);
 		$final_redirect = self::restricted_access_append_grant_token_to_url($redirect_target, $grant_token);
@@ -589,14 +666,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	 * POST→GET transition is never cached by a CDN or browser.
 	 */
 	private static function restricted_access_send_post_redirect_get_response(string $redirect_url): void {
-		nocache_headers();
-		header('Cache-Control: no-store, no-cache, private, must-revalidate, max-age=0', true);
-		header('Pragma: no-cache', true);
-		header('Expires: 0', true);
-		header('Vary: Cookie', false);
-		if (!defined('DONOTCACHEPAGE')) {
-			define('DONOTCACHEPAGE', true);
-		}
+		self::restricted_access_mark_public_request_uncacheable();
 		wp_safe_redirect($redirect_url, 303);
 		exit;
 	}
@@ -715,7 +785,115 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
 			self::restricted_access_set_trusted_ip_cookie();
 		}
+
+		// Best-effort cache purge: if a page-cache layer already stored the
+		// overlay/403 for the home page or the URL the visitor just landed
+		// on, clear it so subsequent visits actually hit PHP and see that
+		// the access cookie grants them through.
+		self::restricted_access_purge_cached_urls([
+			self::restricted_access_get_home_url(),
+			self::restricted_access_get_current_url(),
+		]);
+
 		return true;
+	}
+
+	/**
+	 * Best-effort "clear the cached overlay" helper. Tries every widely-used
+	 * page-cache plugin and any generic `wp_cache_flush()` hook. Failures are
+	 * swallowed silently because this is best-effort and the no-cache headers
+	 * added by `restricted_access_mark_public_request_uncacheable()` already
+	 * prevent future cache poisoning; this just clears anything that was
+	 * cached before the add-on was enabled or the password was set.
+	 *
+	 * @param array<int,string> $urls Absolute URLs to purge.
+	 */
+	private static function restricted_access_purge_cached_urls(array $urls): void {
+		$urls = array_values(array_unique(array_filter(array_map(static function ($url): string {
+			$url = is_string($url) ? trim($url) : '';
+			return $url !== '' ? (string) esc_url_raw($url) : '';
+		}, $urls))));
+		if (empty($urls)) {
+			return;
+		}
+
+		foreach ($urls as $url) {
+			// WP Rocket
+			if (function_exists('rocket_clean_files')) {
+				@rocket_clean_files($url);
+			}
+			if (function_exists('rocket_clean_post')) {
+				$post_id = url_to_postid($url);
+				if ($post_id > 0) {
+					@rocket_clean_post($post_id);
+				}
+			}
+
+			// LiteSpeed Cache
+			if (class_exists('LiteSpeed\\Purge') && method_exists('LiteSpeed\\Purge', 'purge_url')) {
+				try {
+					\LiteSpeed\Purge::purge_url($url);
+				} catch (\Throwable $e) {
+					// best-effort
+				}
+			}
+			if (has_action('litespeed_purge_url')) {
+				do_action('litespeed_purge_url', $url);
+			}
+
+			// W3 Total Cache
+			if (function_exists('w3tc_flush_url')) {
+				@w3tc_flush_url($url);
+			}
+
+			// WP Super Cache
+			if (function_exists('wp_cache_post_change')) {
+				$post_id = url_to_postid($url);
+				if ($post_id > 0) {
+					@wp_cache_post_change($post_id);
+				}
+			}
+
+			// WP Fastest Cache
+			if (class_exists('WpFastestCache') && method_exists('WpFastestCache', 'singleDeleteCache')) {
+				try {
+					$wpfc = new \WpFastestCache();
+					if (method_exists($wpfc, 'singleDeleteCache')) {
+						@$wpfc->singleDeleteCache(false, url_to_postid($url));
+					}
+				} catch (\Throwable $e) {
+					// best-effort
+				}
+			}
+
+			// Cache Enabler
+			if (class_exists('Cache_Enabler') && method_exists('Cache_Enabler', 'clear_page_cache_by_url')) {
+				try {
+					\Cache_Enabler::clear_page_cache_by_url($url);
+				} catch (\Throwable $e) {
+					// best-effort
+				}
+			}
+
+			// Hummingbird
+			if (has_action('wphb_clear_page_cache')) {
+				do_action('wphb_clear_page_cache', $url);
+			}
+
+			// Autoptimize (rare, but it honors generic do_action)
+			if (has_action('autoptimize_action_cachepurged')) {
+				do_action('autoptimize_action_cachepurged');
+			}
+
+			// Generic shared signal for custom cache plugins.
+			do_action('user_manager_restricted_access_purge_url', $url);
+		}
+
+		// Fall-through: if a cache plugin only exposes a global flush hook,
+		// give it one chance to do the right thing without being too broad.
+		if (has_action('user_manager_restricted_access_purge_complete')) {
+			do_action('user_manager_restricted_access_purge_complete', $urls);
+		}
 	}
 
 	/**
@@ -729,13 +907,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		// Also strip the transient error marker so it does not stick around.
 		$cleaned_uri = remove_query_arg('um_ra_error', $cleaned_uri);
 		$target = home_url($cleaned_uri);
-		nocache_headers();
-		header('Cache-Control: no-store, no-cache, private, must-revalidate, max-age=0', true);
-		header('Pragma: no-cache', true);
-		header('Vary: Cookie', false);
-		if (!defined('DONOTCACHEPAGE')) {
-			define('DONOTCACHEPAGE', true);
-		}
+		self::restricted_access_mark_public_request_uncacheable();
 		wp_safe_redirect($target, 302);
 		exit;
 	}
@@ -920,13 +1092,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	 * @param array<string,mixed> $settings Plugin settings.
 	 */
 	private static function render_restricted_access_overlay_and_exit(array $settings, bool $show_password_form): void {
-		nocache_headers();
-		header('Cache-Control: no-store, no-cache, private, must-revalidate, max-age=0', true);
-		header('Pragma: no-cache', true);
-		header('Vary: Cookie', false);
-		if (!defined('DONOTCACHEPAGE')) {
-			define('DONOTCACHEPAGE', true);
-		}
+		self::restricted_access_mark_public_request_uncacheable();
 		status_header(403);
 
 		$message     = self::restricted_access_get_no_access_message($settings);

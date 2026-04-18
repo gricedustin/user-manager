@@ -39,6 +39,18 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
+						<h4>2.6.16 <span>(April 18, 2026)</span></h4>
+						<ul>
+							<li><?php esc_html_e('Restricted Access add-on: fixed an issue where returning to the home page (or any previously-cached URL) always re-prompted for the shared password even after a successful login.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Root cause: a page-cache layer (WP Rocket, LiteSpeed, W3TC, WP Super Cache, WP Fastest Cache, Cache Enabler, Hummingbird, Cloudflare/edge, etc.) had already stored the 403 overlay HTML for that URL and was serving it before the PHP enforcement hook could check the access cookie.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Now marks every public front-end request as uncacheable while the add-on is active (DONOTCACHEPAGE, DONOTROCKETCACHE, DONOTCACHEOBJECT, DONOTCACHEDB plus Cache-Control: no-store, no-cache, private, Pragma: no-cache, Expires: 0, Vary: Cookie). Fires at send_headers priority 1 so it runs before most cache layers decide whether to store the response.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Also fires the LiteSpeed litespeed_control_set_nocache hook so LSCache is told explicitly not to store the response.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('On every successful password submission (inline, AJAX, admin-post) and on every grant-token consumption, best-effort purges any previously-cached copy of the home page and the target URL across WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, and Hummingbird.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Adds user_manager_restricted_access_purge_url + user_manager_restricted_access_purge_complete action hooks so custom cache integrations can subscribe.', 'user-manager'); ?></li>
+							<li><?php esc_html_e('Both overlay render paths (exit mode and background-HTML mode) now route their cache headers through the shared uncacheable-marker, so the "render full HTML in background for social-meta" mode is no longer cacheable either.', 'user-manager'); ?></li>
+						</ul>
+					</div>
+					<div class="um-changelog-item">
 						<h4>2.6.15 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('New add-on: Administrator Custom Dashboard Tiles — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.', 'user-manager'); ?></li>

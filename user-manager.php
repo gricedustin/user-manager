@@ -2,11 +2,19 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
- * Version: 2.6.15
+ * Version: 2.6.16
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
+ *
+ * 2.6.16 - April 18, 2026
+ * - Restricted Access add-on: fixed an issue where returning to the home page (or any cached URL) always re-prompted the visitor for the shared password even after a successful login.
+ * - Root cause: a page-cache layer (WP Rocket, LiteSpeed, W3TC, WP Super Cache, WP Fastest Cache, Cache Enabler, Hummingbird, Cloudflare/edge, etc.) had already stored the 403 overlay HTML for that URL and was serving it to visitors before the PHP enforcement hook could check the access cookie.
+ * - Now marks every public front-end request as uncacheable while the add-on is active (`DONOTCACHEPAGE`, `DONOTROCKETCACHE`, `DONOTCACHEOBJECT`, `DONOTCACHEDB` + `Cache-Control: no-store, no-cache, private`, `Pragma: no-cache`, `Expires: 0`, `Vary: Cookie`). The headers fire at `send_headers` priority 1 so they run before most cache layers make their "should I store this?" decision.
+ * - Also fires the LiteSpeed `litespeed_control_set_nocache` hook so LSCache is told explicitly not to store the response.
+ * - On every successful password submission (inline, AJAX, admin-post) and on every grant-token consumption, best-effort purges any previously-cached copy of the home page and the target URL across WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache, WP Fastest Cache, Cache Enabler, and Hummingbird. Adds a `user_manager_restricted_access_purge_url` action + a `user_manager_restricted_access_purge_complete` action so custom cache integrations can subscribe.
+ * - Both overlay render paths (exit mode and background-HTML mode) now route their cache headers through the shared uncacheable-marker, so the "render full HTML in background for social-meta" mode is no longer cacheable either.
  *
  * 2.6.15 - April 18, 2026
  * - New add-on: "Administrator Custom Dashboard Tiles" — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.
