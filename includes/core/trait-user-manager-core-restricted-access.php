@@ -10,21 +10,32 @@ if (!defined('ABSPATH')) {
 trait User_Manager_Core_Restricted_Access_Trait {
 	private static string $restricted_access_trusted_ip_cookie_name = 'um_restricted_access_ip_trust';
 
+	// NOTE: PHP 8.1 and earlier do not allow `const` declarations inside a
+	// trait (that syntax is PHP 8.2+), so the slugs/keys below are exposed
+	// as private static accessor methods instead. Every consumer is internal
+	// to this trait, so the visibility stays effectively private.
+
 	/**
 	 * Query-string parameter used to deliver a signed one-time access grant
 	 * across a POST→GET redirect when cookies are dropped by proxies/CDNs.
 	 */
-	private const RESTRICTED_ACCESS_GRANT_QUERY_PARAM = 'um_ra_grant';
+	private static function restricted_access_grant_query_param(): string {
+		return 'um_ra_grant';
+	}
 
 	/**
 	 * Transient key prefix for one-time grant tokens stored in the options table.
 	 */
-	private const RESTRICTED_ACCESS_GRANT_TRANSIENT_PREFIX = 'um_ra_grant_';
+	private static function restricted_access_grant_transient_prefix(): string {
+		return 'um_ra_grant_';
+	}
 
 	/**
 	 * Action name used by the admin-ajax / admin-post style password submit endpoint.
 	 */
-	private const RESTRICTED_ACCESS_PASSWORD_ACTION = 'um_restricted_access_submit';
+	private static function restricted_access_password_action(): string {
+		return 'um_restricted_access_submit';
+	}
 
 	/**
 	 * Runtime password error for the current request.
@@ -61,7 +72,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		// regardless of where the request was initiated from so a submission
 		// from a background-overlay page still works when the normal
 		// template_redirect path does not re-serve the restricted gate.
-		$ajax_action = self::RESTRICTED_ACCESS_PASSWORD_ACTION;
+		$ajax_action = self::restricted_access_password_action();
 		add_action('wp_ajax_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_ajax']);
 		add_action('wp_ajax_nopriv_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_ajax']);
 		add_action('admin_post_' . $ajax_action, [__CLASS__, 'handle_restricted_access_password_post']);
@@ -126,6 +137,9 @@ trait User_Manager_Core_Restricted_Access_Trait {
 		// behind a redirect/overlay branch decision or a cached response. A
 		// successful submission issues its own 303 redirect and exits.
 		self::restricted_access_maybe_handle_password_submission($settings);
+
+		// Optional GET ?um_ra_pwd=… when "password in URL" mode is enabled (see settings).
+		self::restricted_access_maybe_handle_password_query_param($settings);
 
 		// Signed one-time grant token in the URL. Used as a cookie-drop
 		// recovery path after a password submit or AJAX success, and also
@@ -380,8 +394,8 @@ trait User_Manager_Core_Restricted_Access_Trait {
 				<h1><?php echo esc_html($message); ?></h1>
 				<?php if ($show_password_form) : ?>
 					<p><?php esc_html_e('Enter shared password to continue.', 'user-manager'); ?></p>
-					<form class="um-restricted-access-background-overlay-form um-restricted-access-form-root" method="post" action="<?php echo esc_url($post_url); ?>" data-um-ra-ajax="<?php echo esc_attr($ajax_url); ?>" data-um-ra-redirect="<?php echo esc_attr($current_url); ?>" novalidate>
-						<input type="hidden" name="action" value="<?php echo esc_attr(self::RESTRICTED_ACCESS_PASSWORD_ACTION); ?>" />
+					<form class="um-restricted-access-background-overlay-form um-restricted-access-form-root" method="post" action="<?php echo esc_url($post_url); ?>" data-um-ra-ajax="<?php echo esc_attr($ajax_url); ?>" data-um-ra-redirect="<?php echo esc_attr($current_url); ?>"<?php echo !empty($settings['restricted_access_password_in_url_query']) ? ' data-um-ra-url-password="1"' : ''; ?> novalidate>
+						<input type="hidden" name="action" value="<?php echo esc_attr(self::restricted_access_password_action()); ?>" />
 						<input type="hidden" name="um_restricted_access_submit" value="1" />
 						<input type="hidden" name="um_restricted_access_redirect" value="<?php echo esc_attr($current_url); ?>" />
 						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required autofocus />
@@ -481,6 +495,49 @@ trait User_Manager_Core_Restricted_Access_Trait {
 
 		$grant_token = self::restricted_access_create_grant_token($settings);
 		$final_redirect = self::restricted_access_append_grant_token_to_url($redirect_target, $grant_token);
+		self::restricted_access_send_post_redirect_get_response($final_redirect);
+	}
+
+	/**
+	 * When enabled in settings, accept shared password via GET ?um_ra_pwd=…,
+	 * then redirect to a clean URL (and/or grant token) like a successful POST.
+	 */
+	private static function restricted_access_maybe_handle_password_query_param(array $settings): void {
+		if (empty($settings['restricted_access_password_in_url_query'])) {
+			return;
+		}
+		if (!isset($_SERVER['REQUEST_METHOD']) || strtoupper((string) $_SERVER['REQUEST_METHOD']) !== 'GET') {
+			return;
+		}
+		if (!isset($_GET['um_ra_pwd'])) {
+			return;
+		}
+		$saved_password = self::restricted_access_get_shared_password($settings);
+		if ($saved_password === '') {
+			return;
+		}
+		$submitted_password = sanitize_text_field(wp_unslash((string) $_GET['um_ra_pwd']));
+		$current_url = self::restricted_access_get_current_url();
+		$clean_url = remove_query_arg(['um_ra_pwd', 'um_ra_error'], $current_url);
+		$clean_url = self::restricted_access_sanitize_redirect_url($clean_url);
+		if ($clean_url === '') {
+			$clean_url = self::restricted_access_get_home_url();
+		}
+
+		if (!hash_equals($saved_password, $submitted_password)) {
+			self::restricted_access_log_access_attempt('', false, $submitted_password);
+			wp_safe_redirect(add_query_arg('um_ra_error', '1', $clean_url));
+			exit;
+		}
+
+		self::restricted_access_log_access_attempt($submitted_password, true, '');
+		self::restricted_access_set_access_cookie($settings);
+		if (self::restricted_access_should_trust_ip_after_password_success($settings)) {
+			self::restricted_access_set_trusted_ip_cookie();
+		}
+
+		$grant_token = self::restricted_access_create_grant_token($settings);
+		$final_redirect = self::restricted_access_append_grant_token_to_url($clean_url, $grant_token);
 		self::restricted_access_send_post_redirect_get_response($final_redirect);
 	}
 
@@ -663,7 +720,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			'ip'         => self::restricted_access_get_request_ip_address(),
 			'created_at' => time(),
 		];
-		set_transient(self::RESTRICTED_ACCESS_GRANT_TRANSIENT_PREFIX . $token, $payload, $grant_ttl);
+		set_transient(self::restricted_access_grant_transient_prefix() . $token, $payload, $grant_ttl);
 		return $token;
 	}
 
@@ -676,7 +733,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			return $redirect_url;
 		}
 		return add_query_arg(
-			self::RESTRICTED_ACCESS_GRANT_QUERY_PARAM,
+			self::restricted_access_grant_query_param(),
 			rawurlencode($grant_token),
 			$redirect_url
 		);
@@ -689,8 +746,8 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	 * @param array<string,mixed> $settings Plugin settings.
 	 */
 	private static function restricted_access_consume_grant_query_param(array $settings): bool {
-		$raw = isset($_GET[self::RESTRICTED_ACCESS_GRANT_QUERY_PARAM])
-			? (string) wp_unslash($_GET[self::RESTRICTED_ACCESS_GRANT_QUERY_PARAM])
+		$raw = isset($_GET[self::restricted_access_grant_query_param()])
+			? (string) wp_unslash($_GET[self::restricted_access_grant_query_param()])
 			: '';
 		$raw = trim($raw);
 		if ($raw === '') {
@@ -701,7 +758,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 			return false;
 		}
 
-		$transient_key = self::RESTRICTED_ACCESS_GRANT_TRANSIENT_PREFIX . $raw;
+		$transient_key = self::restricted_access_grant_transient_prefix() . $raw;
 		$payload = get_transient($transient_key);
 		if (!is_array($payload)) {
 			return false;
@@ -725,7 +782,7 @@ trait User_Manager_Core_Restricted_Access_Trait {
 	 */
 	private static function restricted_access_redirect_removing_grant_param(): void {
 		$request_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/';
-		$cleaned_uri = remove_query_arg(self::RESTRICTED_ACCESS_GRANT_QUERY_PARAM, $request_uri);
+		$cleaned_uri = remove_query_arg(self::restricted_access_grant_query_param(), $request_uri);
 		// Also strip the transient error marker so it does not stick around.
 		$cleaned_uri = remove_query_arg('um_ra_error', $cleaned_uri);
 		$target = home_url($cleaned_uri);
@@ -1068,8 +1125,8 @@ trait User_Manager_Core_Restricted_Access_Trait {
 					$inline_error = self::restricted_access_get_inline_error_message();
 				?>
 					<p><?php esc_html_e('Enter shared password to continue.', 'user-manager'); ?></p>
-					<form class="um-restricted-access-form um-restricted-access-form-root" method="post" action="<?php echo esc_url($post_url); ?>" data-um-ra-ajax="<?php echo esc_attr($ajax_url); ?>" data-um-ra-redirect="<?php echo esc_attr($current_url); ?>" novalidate>
-						<input type="hidden" name="action" value="<?php echo esc_attr(self::RESTRICTED_ACCESS_PASSWORD_ACTION); ?>" />
+					<form class="um-restricted-access-form um-restricted-access-form-root" method="post" action="<?php echo esc_url($post_url); ?>" data-um-ra-ajax="<?php echo esc_attr($ajax_url); ?>" data-um-ra-redirect="<?php echo esc_attr($current_url); ?>"<?php echo !empty($settings['restricted_access_password_in_url_query']) ? ' data-um-ra-url-password="1"' : ''; ?> novalidate>
+						<input type="hidden" name="action" value="<?php echo esc_attr(self::restricted_access_password_action()); ?>" />
 						<input type="hidden" name="um_restricted_access_submit" value="1" />
 						<input type="hidden" name="um_restricted_access_redirect" value="<?php echo esc_attr($current_url); ?>" />
 						<input type="password" name="um_restricted_access_password" autocomplete="current-password" required autofocus />
@@ -1469,13 +1526,25 @@ trait User_Manager_Core_Restricted_Access_Trait {
 				}
 
 				form.addEventListener('submit', function(e){
+					if(form.getAttribute('data-um-ra-url-password') === '1'){
+						e.preventDefault();
+						var password = pwInput ? pwInput.value : '';
+						if(!password){
+							showError('<?php echo esc_js(__('Please enter the password.', 'user-manager')); ?>');
+							return;
+						}
+						var base = fallbackRedirect;
+						var sep = base.indexOf('?') === -1 ? '?' : '&';
+						window.location.href = base + sep + 'um_ra_pwd=' + encodeURIComponent(password);
+						return;
+					}
 					if(!window.fetch || !ajaxUrl){return;}
 					e.preventDefault();
 					showError('');
 					setBusy(true);
 					var password = pwInput ? pwInput.value : '';
 					var body = new URLSearchParams();
-					body.set('action', '<?php echo esc_js(self::RESTRICTED_ACCESS_PASSWORD_ACTION); ?>');
+					body.set('action', '<?php echo esc_js(self::restricted_access_password_action()); ?>');
 					body.set('password', password);
 					body.set('redirect', fallbackRedirect);
 					fetch(ajaxUrl, {

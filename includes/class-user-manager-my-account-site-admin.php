@@ -69,6 +69,12 @@ final class User_Manager_My_Account_Site_Admin {
 		add_action('woocommerce_account_admin_users_endpoint', [__CLASS__, 'render_admin_users_endpoint']);
 		add_action('woocommerce_account_admin_activity_endpoint', [__CLASS__, 'render_admin_activity_endpoint']);
 		add_action('template_redirect', [__CLASS__, 'maybe_intercept_csv_export_request'], 1, 0);
+		add_action('template_redirect', [__CLASS__, 'maybe_intercept_fcf_file_proxy_request'], 1, 0);
+		// Early path-based intercept for Office Web Viewer friendliness.
+		// Office sniffs the file extension from the URL path, not the
+		// query string, so we serve Preview URLs as /um-fcf-file/<name>.xlsx
+		// and resolve them before WordPress has decided the request is a 404.
+		add_action('init', [__CLASS__, 'maybe_intercept_fcf_file_path_proxy_request'], 0, 0);
 	}
 
 	/**
@@ -113,6 +119,369 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		self::maybe_handle_my_account_admin_csv_export_download($area_key);
+	}
+
+	/**
+	 * Intercept Flexible Checkout Fields PRO file-upload proxy requests.
+	 *
+	 * FCF PRO stores uploads in `wp-content/uploads/woocommerce_uploads/
+	 * flexible-checkout-fields/<hash>/` and drops a `Deny from all` .htaccess
+	 * alongside them so the direct URLs 403 — which is great for security
+	 * but breaks our Download + Preview links in the My Account Admin
+	 * Additional Meta Fields repeater output, and makes Office Web Viewer
+	 * fail with "We can't process this request".
+	 *
+	 * This proxy reads the file from disk after verifying a short-lived
+	 * HMAC-signed token and streams it back with the correct Content-Type
+	 * and Content-Disposition headers. The HMAC is keyed off `wp_salt('auth')`
+	 * and the token embeds expiry, hash, and filename, so:
+	 *
+	 *  - Download links work for the logged-in admin immediately.
+	 *  - Preview links work for Office Web Viewer because Microsoft's
+	 *    servers fetch over the public internet using the signed token
+	 *    (no WordPress session required).
+	 *  - Tokens expire after ~15 minutes; a leaked URL stops working
+	 *    quickly even if scraped from browser history/referrer.
+	 */
+	public static function maybe_intercept_fcf_file_proxy_request(): void {
+		if (!isset($_GET['um_fcf_file']) || (string) wp_unslash($_GET['um_fcf_file']) !== '1') {
+			return;
+		}
+
+		$hash          = isset($_GET['hash']) ? sanitize_text_field(wp_unslash($_GET['hash'])) : '';
+		$filename      = isset($_GET['file']) ? sanitize_text_field(wp_unslash($_GET['file'])) : '';
+		$expires       = isset($_GET['expires']) ? absint($_GET['expires']) : 0;
+		$signature     = isset($_GET['sig']) ? sanitize_text_field(wp_unslash($_GET['sig'])) : '';
+		$disposition   = isset($_GET['dl']) && (string) wp_unslash($_GET['dl']) === '1' ? 'attachment' : 'inline';
+
+		if ($hash === '' || $filename === '' || $expires <= 0 || $signature === '') {
+			self::send_fcf_file_proxy_error_response(400, 'um_fcf_missing_params');
+		}
+
+		if ($expires < time()) {
+			self::send_fcf_file_proxy_error_response(410, 'um_fcf_token_expired');
+		}
+
+		$expected = self::build_fcf_file_proxy_signature($hash, $filename, $expires);
+		if (!hash_equals($expected, $signature)) {
+			self::send_fcf_file_proxy_error_response(403, 'um_fcf_invalid_signature');
+		}
+
+		// Resolve hash + filename against the FCF uploads directory. Reuses
+		// the same resolver that powers the inline render pipeline so a
+		// value like `<hash>` or `<hash>/<filename>` works identically.
+		$resolution = self::resolve_flexible_checkout_fields_file_upload_value($hash . '/' . $filename);
+		if (!is_array($resolution) || empty($resolution['path']) || !is_file((string) $resolution['path'])) {
+			// Try the hash alone as a last-resort fallback (latest file).
+			$resolution = self::resolve_flexible_checkout_fields_file_upload_value($hash);
+		}
+		if (!is_array($resolution) || empty($resolution['path']) || !is_file((string) $resolution['path'])) {
+			self::send_fcf_file_proxy_error_response(404, 'um_fcf_file_not_found');
+		}
+
+		$absolute_path = (string) $resolution['path'];
+		$resolved_name = isset($resolution['filename']) ? (string) $resolution['filename'] : basename($absolute_path);
+
+		// Strict sandbox check: the resolved path must live under the FCF
+		// base upload directory. Guards against any future resolver change
+		// that might otherwise let a symlink or traversal escape.
+		$base_dir = self::get_flexible_checkout_fields_base_upload_dir();
+		$normalized_path = realpath($absolute_path);
+		$normalized_base = $base_dir !== '' ? realpath($base_dir) : '';
+		if ($normalized_path === false || $normalized_base === '' || strpos($normalized_path, $normalized_base) !== 0) {
+			self::send_fcf_file_proxy_error_response(403, 'um_fcf_outside_base');
+		}
+
+		self::stream_fcf_file_proxy_response($normalized_path, $resolved_name, $disposition);
+	}
+
+	/**
+	 * Path-based proxy intercept for Office Web Viewer friendliness.
+	 *
+	 * Office Web Viewer sniffs the file type from the URL path, not the
+	 * query string, and prefers URLs whose last path segment ends in the
+	 * original extension (e.g. `…/Volunteer-List.xlsx`). When we hand it
+	 * `?um_fcf_file=1&file=Volunteer-List.xlsx&sig=…` it fails with
+	 * "We can't process this request" even though the bytes stream fine.
+	 *
+	 * This hook runs on `init` priority 0 and inspects `REQUEST_URI` for
+	 * our canonical prefix (`/um-fcf-file/<urlencoded_filename>`). When it
+	 * matches we resolve + stream the file before WordPress has resolved
+	 * the request into a 404, so the URL never has to be a real rewrite
+	 * rule.
+	 */
+	public static function maybe_intercept_fcf_file_path_proxy_request(): void {
+		$request_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
+		if ($request_uri === '') {
+			return;
+		}
+		$path = (string) parse_url($request_uri, PHP_URL_PATH);
+		if ($path === '') {
+			return;
+		}
+
+		// Resolve the host-relative path under the WP root so subdirectory
+		// installs still match correctly.
+		$home_path = (string) parse_url(home_url('/'), PHP_URL_PATH);
+		$home_path = $home_path === '' ? '/' : $home_path;
+		if ($home_path !== '/' && strpos($path, $home_path) === 0) {
+			$path = substr($path, strlen($home_path) - 1);
+		}
+
+		$prefix = '/um-fcf-file/';
+		if (strpos($path, $prefix) !== 0) {
+			return;
+		}
+
+		$after_prefix = substr($path, strlen($prefix));
+		if ($after_prefix === '' || $after_prefix === false) {
+			return;
+		}
+		// Only a single path segment is expected (the filename). Any extra
+		// slashes would indicate a path-traversal attempt or a bogus URL.
+		if (strpos($after_prefix, '/') !== false) {
+			self::send_fcf_file_proxy_error_response(400, 'um_fcf_bad_path');
+		}
+
+		$path_filename = self::sanitize_fcf_filename_token(rawurldecode($after_prefix));
+		if ($path_filename === '') {
+			self::send_fcf_file_proxy_error_response(400, 'um_fcf_bad_filename');
+		}
+
+		$hash        = isset($_GET['hash']) ? sanitize_text_field(wp_unslash($_GET['hash'])) : '';
+		$expires     = isset($_GET['expires']) ? absint($_GET['expires']) : 0;
+		$signature   = isset($_GET['sig']) ? sanitize_text_field(wp_unslash($_GET['sig'])) : '';
+		$disposition = isset($_GET['dl']) && (string) wp_unslash($_GET['dl']) === '1' ? 'attachment' : 'inline';
+
+		if ($hash === '' || $expires <= 0 || $signature === '') {
+			self::send_fcf_file_proxy_error_response(400, 'um_fcf_missing_params');
+		}
+		if ($expires < time()) {
+			self::send_fcf_file_proxy_error_response(410, 'um_fcf_token_expired');
+		}
+
+		$expected = self::build_fcf_file_proxy_signature($hash, $path_filename, $expires);
+		if (!hash_equals($expected, $signature)) {
+			self::send_fcf_file_proxy_error_response(403, 'um_fcf_invalid_signature');
+		}
+
+		$resolution = self::resolve_flexible_checkout_fields_file_upload_value($hash . '/' . $path_filename);
+		if (!is_array($resolution) || empty($resolution['path']) || !is_file((string) $resolution['path'])) {
+			$resolution = self::resolve_flexible_checkout_fields_file_upload_value($hash);
+		}
+		if (!is_array($resolution) || empty($resolution['path']) || !is_file((string) $resolution['path'])) {
+			self::send_fcf_file_proxy_error_response(404, 'um_fcf_file_not_found');
+		}
+
+		$absolute_path = (string) $resolution['path'];
+		$resolved_name = isset($resolution['filename']) ? (string) $resolution['filename'] : basename($absolute_path);
+
+		$base_dir = self::get_flexible_checkout_fields_base_upload_dir();
+		$normalized_path = realpath($absolute_path);
+		$normalized_base = $base_dir !== '' ? realpath($base_dir) : '';
+		if ($normalized_path === false || $normalized_base === '' || strpos($normalized_path, $normalized_base) !== 0) {
+			self::send_fcf_file_proxy_error_response(403, 'um_fcf_outside_base');
+		}
+
+		self::stream_fcf_file_proxy_response($normalized_path, $resolved_name, $disposition);
+	}
+
+	/**
+	 * Build the HMAC signature for a proxy-URL token.
+	 */
+	private static function build_fcf_file_proxy_signature(string $hash, string $filename, int $expires): string {
+		$payload = $hash . '|' . $filename . '|' . $expires;
+		return hash_hmac('sha256', $payload, wp_salt('auth'));
+	}
+
+	/**
+	 * Build the proxied public URL for a FCF file. The token is valid for
+	 * roughly 15 minutes so a page reload refreshes expiring links while
+	 * keeping any leaked URL short-lived.
+	 *
+	 * @param string $hash        FCF hash folder.
+	 * @param string $filename    Resolved filename (within the hash folder).
+	 * @param bool   $as_download If true, proxy sends `attachment` disposition.
+	 */
+	public static function build_fcf_file_proxy_url(string $hash, string $filename, bool $as_download = false): string {
+		$hash     = self::sanitize_fcf_hash_token($hash);
+		$filename = self::sanitize_fcf_filename_token($filename);
+		if ($hash === '' || $filename === '') {
+			return '';
+		}
+		$expires = time() + (15 * MINUTE_IN_SECONDS);
+		$sig     = self::build_fcf_file_proxy_signature($hash, $filename, $expires);
+		$args    = [
+			'um_fcf_file' => '1',
+			'hash'        => $hash,
+			'file'        => $filename,
+			'expires'     => $expires,
+			'sig'         => $sig,
+		];
+		if ($as_download) {
+			$args['dl'] = '1';
+		}
+		return add_query_arg($args, home_url('/'));
+	}
+
+	/**
+	 * Path-based proxy URL variant used for Preview links. Office Web Viewer
+	 * sniffs the file extension from the URL path (not the query string), so
+	 * we emit a URL whose last path segment IS the original filename:
+	 *
+	 *   https://example.com/um-fcf-file/Volunteer-List.xlsx?hash=…&expires=…&sig=…
+	 *
+	 * The `maybe_intercept_fcf_file_path_proxy_request()` hook recognizes
+	 * that prefix on `init` priority 0 and serves the file before WordPress
+	 * has a chance to resolve the URL into a 404.
+	 */
+	public static function build_fcf_file_proxy_path_url(string $hash, string $filename): string {
+		$hash     = self::sanitize_fcf_hash_token($hash);
+		$filename = self::sanitize_fcf_filename_token($filename);
+		if ($hash === '' || $filename === '') {
+			return '';
+		}
+		$expires = time() + (15 * MINUTE_IN_SECONDS);
+		$sig     = self::build_fcf_file_proxy_signature($hash, $filename, $expires);
+		$url = home_url('/um-fcf-file/' . rawurlencode($filename));
+		return add_query_arg(
+			[
+				'hash'    => $hash,
+				'expires' => $expires,
+				'sig'     => $sig,
+			],
+			$url
+		);
+	}
+
+	/**
+	 * Stream the resolved file to the client, inline or as an attachment.
+	 */
+	private static function stream_fcf_file_proxy_response(string $absolute_path, string $filename, string $disposition): void {
+		while (ob_get_level() > 0) {
+			@ob_end_clean();
+		}
+
+		$mime = self::detect_fcf_file_mime_type($absolute_path, $filename);
+		$size = @filesize($absolute_path);
+
+		$disposition = $disposition === 'attachment' ? 'attachment' : 'inline';
+
+		// Office Web Viewer (view.officeapps.live.com) fetches the src URL
+		// from Microsoft's CDN. It has historically refused responses that
+		// carry `Cache-Control: private` or `Pragma: no-cache`, and it
+		// ignores the query string when sniffing file type. For inline
+		// responses we emit cache headers that Microsoft's fetcher will
+		// accept and a filename/extension that matches the URL path.
+		if (function_exists('nocache_headers') && $disposition !== 'inline') {
+			nocache_headers();
+		}
+		if ($disposition === 'inline') {
+			header('Cache-Control: public, max-age=600', true);
+			header_remove('Pragma');
+		} else {
+			header('Cache-Control: private, max-age=600', true);
+		}
+		header('Content-Type: ' . $mime, true);
+		if (is_int($size) && $size > 0) {
+			header('Content-Length: ' . $size, true);
+		}
+		$ascii_name = preg_replace('/[^\x20-\x7E]+/', '_', $filename);
+		$ascii_name = is_string($ascii_name) && $ascii_name !== '' ? $ascii_name : 'file';
+		$utf8_name = rawurlencode($filename);
+		header(sprintf(
+			'Content-Disposition: %s; filename="%s"; filename*=UTF-8\'\'%s',
+			$disposition,
+			addslashes($ascii_name),
+			$utf8_name
+		));
+		header('X-Content-Type-Options: nosniff', true);
+		header('X-Robots-Tag: noindex, nofollow', true);
+		header('Access-Control-Allow-Origin: *', true);
+		header('Access-Control-Allow-Methods: GET, HEAD, OPTIONS', true);
+		header('Access-Control-Expose-Headers: Content-Disposition, Content-Length, Content-Type', true);
+		header('Accept-Ranges: none', true);
+
+		$handle = @fopen($absolute_path, 'rb');
+		if ($handle === false) {
+			self::send_fcf_file_proxy_error_response(500, 'um_fcf_open_failed');
+		}
+		while (!feof($handle)) {
+			$chunk = fread($handle, 64 * 1024);
+			if ($chunk === false) {
+				break;
+			}
+			echo $chunk;
+			@ob_flush();
+			flush();
+		}
+		fclose($handle);
+		exit;
+	}
+
+	/**
+	 * Best-effort MIME type resolution for a FCF file based on its extension,
+	 * falling back to finfo when available.
+	 */
+	private static function detect_fcf_file_mime_type(string $absolute_path, string $filename): string {
+		$ext = strtolower((string) pathinfo($filename, PATHINFO_EXTENSION));
+		$map = [
+			'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			'xlsm' => 'application/vnd.ms-excel.sheet.macroEnabled.12',
+			'xlsb' => 'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+			'xls'  => 'application/vnd.ms-excel',
+			'csv'  => 'text/csv',
+			'tsv'  => 'text/tab-separated-values',
+			'tab'  => 'text/tab-separated-values',
+			'txt'  => 'text/plain',
+			'log'  => 'text/plain',
+			'pdf'  => 'application/pdf',
+			'doc'  => 'application/msword',
+			'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			'ppt'  => 'application/vnd.ms-powerpoint',
+			'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+			'png'  => 'image/png',
+			'jpg'  => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'gif'  => 'image/gif',
+			'webp' => 'image/webp',
+			'svg'  => 'image/svg+xml',
+			'zip'  => 'application/zip',
+			'xml'  => 'application/xml',
+			'html' => 'text/html',
+			'htm'  => 'text/html',
+			'json' => 'application/json',
+		];
+		if (isset($map[$ext])) {
+			return $map[$ext];
+		}
+		if (class_exists('finfo')) {
+			try {
+				$finfo = new \finfo(FILEINFO_MIME_TYPE);
+				$detected = $finfo->file($absolute_path);
+				if (is_string($detected) && $detected !== '') {
+					return $detected;
+				}
+			} catch (\Throwable $e) {
+				// fall through
+			}
+		}
+		return 'application/octet-stream';
+	}
+
+	/**
+	 * Emit a plain-text error for the proxy endpoint and exit.
+	 */
+	private static function send_fcf_file_proxy_error_response(int $status, string $code): void {
+		while (ob_get_level() > 0) {
+			@ob_end_clean();
+		}
+		nocache_headers();
+		status_header($status);
+		header('Content-Type: text/plain; charset=utf-8', true);
+		header('X-Content-Type-Options: nosniff', true);
+		echo esc_html($code);
+		exit;
 	}
 
 	/**
@@ -2751,17 +3120,22 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Format per line (supported operators: `are_they_equal`, `are_they_not_equal`):
 	 * - meta_field_a:meta_field_b:<operator>:FLAG TITLE[:bgcolor[:textcolor]]
 	 * - meta_field_a:meta_field_b:<operator>:grace_value:FLAG TITLE[:bgcolor[:textcolor]]
-<<<<<<< Updated upstream
-=======
 	 * - meta_field_a:meta_field_b:<operator>:grace_value:grace_operator:FLAG TITLE[:bgcolor[:textcolor]]
-	 * - meta_field_a:meta_field_b:<literal_compare_b>:<operator>:… — when segment 3 is an operator and segment 2 is not, segment 2 is a custom literal compared against meta A (instead of reading meta B from the order). Meta field B may be empty in this form.
->>>>>>> Stashed changes
+	 * - meta_field_a:um_cmp_custom:<urlencoded_literal>:<operator>:… — compare Meta Field A to a
+	 *   fixed string (rawurl-encoded so `:` and other characters are safe). When present,
+	 *   `compare_b_custom` is set and Meta Field B is not read from the order.
 	 *
 	 * Semantics:
 	 * - `are_they_equal`     — flag when the two meta values ARE equal (case-insensitive).
-	 *                          With grace_value: flag when ABS(a − b) > grace_value.
 	 * - `are_they_not_equal` — flag when the two meta values are NOT equal (case-insensitive).
-	 *                          With grace_value: flag when ABS(a − b) <= grace_value (inverse).
+	 *
+	 * Grace Value Operator (when grace_value is set):
+	 * - `exceeds` — flag when ABS(a − b) > grace_value.
+	 * - `within`  — flag when ABS(a − b) <= grace_value.
+	 * - (absent) — legacy/auto behavior: `are_they_equal` implies `exceeds`,
+	 *              `are_they_not_equal` implies `within`. This preserves the
+	 *              pre-2.6.20 behavior for rows saved before the explicit
+	 *              Grace Value Operator field existed.
 	 *
 	 * @param string $raw Raw setting value.
 	 * @return array<int,array{
@@ -2770,6 +3144,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 *   compare_b_custom:string,
 	 *   operator:string,
 	 *   grace_value:float|null,
+	 *   grace_operator:string,
 	 *   title:string,
 	 *   background_color:string,
 	 *   text_color:string
@@ -2792,16 +3167,27 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($part === '') {
 				continue;
 			}
-			$row = self::parse_compare_flag_setting_line($part);
-			if (!is_array($row)) {
+
+			$segments = explode(':', $part);
+			if (count($segments) < 4) {
 				continue;
 			}
-<<<<<<< Updated upstream
 
 			$meta_key_a = sanitize_key(trim((string) $segments[0]));
-			$meta_key_b = sanitize_key(trim((string) $segments[1]));
-			$operator_raw = strtolower(trim((string) $segments[2]));
-			$remaining = array_map('trim', array_slice($segments, 3));
+			$peek_b = sanitize_key(trim((string) $segments[1]));
+			$compare_b_custom = '';
+
+			if ($peek_b === 'um_cmp_custom' && count($segments) >= 5) {
+				$compare_b_custom = (string) rawurldecode(trim((string) $segments[2]));
+				$operator_raw = strtolower(trim((string) $segments[3]));
+				$remaining = array_map('trim', array_slice($segments, 4));
+				$meta_key_b = 'um_cmp_custom';
+			} else {
+				$meta_key_b = $peek_b;
+				$operator_raw = strtolower(trim((string) $segments[2]));
+				$remaining = array_map('trim', array_slice($segments, 3));
+			}
+
 			if (empty($remaining)) {
 				continue;
 			}
@@ -2810,6 +3196,18 @@ final class User_Manager_My_Account_Site_Admin {
 			if (count($remaining) >= 2 && is_numeric((string) $remaining[0])) {
 				$grace_value = abs((float) $remaining[0]);
 				array_shift($remaining);
+			}
+
+			// Optional Grace Value Operator. Only consume if a grace value
+			// was set AND the next segment is one of our supported tokens
+			// AND there is still at least one segment left for the title.
+			$grace_operator = '';
+			if ($grace_value !== null && count($remaining) >= 2) {
+				$canonical_grace_operator = self::canonicalize_compare_flag_grace_operator((string) $remaining[0]);
+				if ($canonical_grace_operator !== '') {
+					$grace_operator = $canonical_grace_operator;
+					array_shift($remaining);
+				}
 			}
 
 			$bg = '';
@@ -2835,7 +3233,13 @@ final class User_Manager_My_Account_Site_Admin {
 
 			$title = sanitize_text_field(trim(implode(':', $remaining)));
 
-			if ($meta_key_a === '' || $meta_key_b === '' || $title === '') {
+			if ($meta_key_a === '' || $title === '') {
+				continue;
+			}
+			if ($compare_b_custom === '' && $meta_key_b === '') {
+				continue;
+			}
+			if ($compare_b_custom === '' && $meta_key_b === 'um_cmp_custom') {
 				continue;
 			}
 			$allowed_operators = ['are_they_equal', 'are_they_not_equal'];
@@ -2846,141 +3250,17 @@ final class User_Manager_My_Account_Site_Admin {
 			$flags[] = [
 				'meta_key_a' => $meta_key_a,
 				'meta_key_b' => $meta_key_b,
+				'compare_b_custom' => $compare_b_custom,
 				'operator' => $operator_raw,
 				'grace_value' => $grace_value,
+				'grace_operator' => $grace_operator,
 				'title' => $title,
 				'background_color' => $bg ? $bg : '#000000',
 				'text_color' => $text ? $text : '#ffffff',
 			];
-=======
-			$flags[] = $row;
->>>>>>> Stashed changes
 		}
 
 		return $flags;
-	}
-
-	/**
-<<<<<<< Updated upstream
-=======
-	 * Parse one compare-flag line from addon settings (repeatable row / raw textarea).
-	 *
-	 * Extended form (literal B): when there are at least five segments and segment[3] is
-	 * `are_they_equal` or `are_they_not_equal` while segment[2] is not, then segment[2] is
-	 * the custom value for B (not a meta key). Otherwise segment[2] is the operator (legacy).
-	 *
-	 * @return array{
-	 *   meta_key_a:string,
-	 *   meta_key_b:string,
-	 *   compare_b_custom:string,
-	 *   operator:string,
-	 *   grace_value:float|null,
-	 *   grace_operator:string,
-	 *   title:string,
-	 *   background_color:string,
-	 *   text_color:string
-	 * }|null
-	 */
-	public static function parse_compare_flag_setting_line(string $line): ?array {
-		$line = trim($line);
-		if ($line === '') {
-			return null;
-		}
-
-		$segments = explode(':', $line);
-		if (count($segments) < 4) {
-			return null;
-		}
-
-		$allowed_operators = ['are_they_equal', 'are_they_not_equal'];
-
-		$meta_key_a = sanitize_key(trim((string) $segments[0]));
-		$meta_key_b  = sanitize_key(trim((string) $segments[1]));
-
-		$compare_b_custom = '';
-		$operator_raw     = '';
-		$remaining        = [];
-
-		$legacy_op = strtolower(trim((string) $segments[2]));
-		$extended  = false;
-		if (count($segments) >= 5) {
-			$maybe_op_at_3 = strtolower(trim((string) $segments[3]));
-			if (in_array($maybe_op_at_3, $allowed_operators, true) && !in_array($legacy_op, $allowed_operators, true)) {
-				$extended         = true;
-				$compare_b_custom = sanitize_text_field(wp_unslash(trim((string) $segments[2])));
-				$operator_raw     = $maybe_op_at_3;
-				$remaining        = array_map('trim', array_slice($segments, 4));
-			}
-		}
-
-		if (!$extended) {
-			$operator_raw = $legacy_op;
-			$remaining    = array_map('trim', array_slice($segments, 3));
-		}
-
-		if ($meta_key_a === '' || empty($remaining)) {
-			return null;
-		}
-		if (!in_array($operator_raw, $allowed_operators, true)) {
-			return null;
-		}
-
-		if ($compare_b_custom === '' && $meta_key_b === '') {
-			return null;
-		}
-
-		$grace_value = null;
-		if (count($remaining) >= 2 && is_numeric((string) $remaining[0])) {
-			$grace_value = abs((float) $remaining[0]);
-			array_shift($remaining);
-		}
-
-		$grace_operator = '';
-		if ($grace_value !== null && count($remaining) >= 2) {
-			$canonical_grace_operator = self::canonicalize_compare_flag_grace_operator((string) $remaining[0]);
-			if ($canonical_grace_operator !== '') {
-				$grace_operator = $canonical_grace_operator;
-				array_shift($remaining);
-			}
-		}
-
-		$bg = '';
-		$text = '';
-		$remaining_count = count($remaining);
-		if ($remaining_count >= 3) {
-			$maybe_bg = self::normalize_compare_flag_hex_color((string) $remaining[$remaining_count - 2]);
-			$maybe_text = self::normalize_compare_flag_hex_color((string) $remaining[$remaining_count - 1]);
-			if ($maybe_bg && $maybe_text) {
-				$bg = $maybe_bg;
-				$text = $maybe_text;
-				array_pop($remaining);
-				array_pop($remaining);
-			}
-		}
-		if ($bg === '' && $text === '' && count($remaining) >= 2) {
-			$maybe_bg = self::normalize_compare_flag_hex_color((string) $remaining[count($remaining) - 1]);
-			if ($maybe_bg) {
-				$bg = $maybe_bg;
-				array_pop($remaining);
-			}
-		}
-
-		$title = sanitize_text_field(trim(implode(':', $remaining)));
-		if ($title === '') {
-			return null;
-		}
-
-		return [
-			'meta_key_a'       => $meta_key_a,
-			'meta_key_b'       => $meta_key_b,
-			'compare_b_custom' => $compare_b_custom,
-			'operator'         => $operator_raw,
-			'grace_value'      => $grace_value,
-			'grace_operator'   => $grace_operator,
-			'title'            => $title,
-			'background_color' => $bg ? $bg : '#000000',
-			'text_color'       => $text ? $text : '#ffffff',
-		];
 	}
 
 	/**
@@ -3020,7 +3300,6 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
->>>>>>> Stashed changes
 	 * Get configured compare-flags for order-list additional meta rendering.
 	 *
 	 * @return array<int,array{
@@ -3029,7 +3308,6 @@ final class User_Manager_My_Account_Site_Admin {
 	 *   compare_b_custom:string,
 	 *   operator:string,
 	 *   grace_value:float|null,
-	 *   grace_operator:string,
 	 *   title:string,
 	 *   background_color:string,
 	 *   text_color:string
@@ -3081,17 +3359,14 @@ final class User_Manager_My_Account_Site_Admin {
 	}
 
 	/**
-	 * Resolve the "B" side of a compare flag: optional custom literal, else order meta `meta_key_b`.
-	 *
-	 * @param array $flag Row from {@see parse_compare_flag_setting_line()} / {@see get_order_list_additional_meta_compare_flags()}.
+	 * Resolve the "B" side value for a compare-flag row: either order meta
+	 * `meta_key_b`, or a stored literal when `compare_b_custom` is set.
 	 */
-	private static function resolve_compare_flag_value_b_for_order(int $order_id, array $flag): string {
-		$custom = isset($flag['compare_b_custom']) ? trim((string) $flag['compare_b_custom']) : '';
-		if ($custom !== '') {
-			return self::normalize_meta_scalar_for_prefixed_link($custom);
+	private static function get_compare_flag_normalized_value_b(int $order_id, array $flag): string {
+		if (isset($flag['compare_b_custom']) && (string) $flag['compare_b_custom'] !== '') {
+			return self::normalize_meta_scalar_for_prefixed_link((string) $flag['compare_b_custom']);
 		}
-
-		return self::get_first_normalized_order_meta_scalar($order_id, (string) ($flag['meta_key_b'] ?? ''));
+		return self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
 	}
 
 	/**
@@ -3145,39 +3420,40 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @param string     $value_a        First normalized meta value.
 	 * @param string     $value_b        Second normalized meta value.
 	 * @param float|null $grace_value    Optional numeric grace value.
+	 * @param string     $grace_operator Optional `exceeds` / `within`. Empty
+	 *                                   string falls back to legacy operator-
+	 *                                   derived behavior (`are_they_equal` →
+	 *                                   `exceeds`, `are_they_not_equal` →
+	 *                                   `within`).
 	 * @return bool
 	 */
-	public static function evaluate_order_list_additional_meta_compare_flag(string $operator, string $value_a, string $value_b, ?float $grace_value): bool {
+	public static function evaluate_order_list_additional_meta_compare_flag(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = ''): bool {
 		if ($value_a === '' || $value_b === '') {
 			return false;
 		}
 
 		$normalized_grace = ($grace_value !== null && is_numeric($grace_value)) ? max(0, abs((float) $grace_value)) : null;
 
-		if ($operator === 'are_they_equal') {
-			if ($normalized_grace !== null) {
-				$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
-				$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
-				if ($numeric_a === null || $numeric_b === null) {
-					return false;
-				}
-				return abs($numeric_a - $numeric_b) > $normalized_grace;
+		if ($normalized_grace !== null) {
+			$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
+			$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+			if ($numeric_a === null || $numeric_b === null) {
+				return false;
 			}
+			$effective_grace_operator = self::resolve_compare_flag_effective_grace_operator($grace_operator, $operator);
+			$diff = abs($numeric_a - $numeric_b);
+			if ($effective_grace_operator === 'within') {
+				return $diff <= $normalized_grace;
+			}
+			return $diff > $normalized_grace;
+		}
+
+		if ($operator === 'are_they_equal') {
 			return strcasecmp($value_a, $value_b) === 0;
 		}
-
 		if ($operator === 'are_they_not_equal') {
-			if ($normalized_grace !== null) {
-				$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
-				$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
-				if ($numeric_a === null || $numeric_b === null) {
-					return false;
-				}
-				return abs($numeric_a - $numeric_b) <= $normalized_grace;
-			}
 			return strcasecmp($value_a, $value_b) !== 0;
 		}
-
 		return false;
 	}
 
@@ -3235,20 +3511,17 @@ final class User_Manager_My_Account_Site_Admin {
 			$row_flags = [];
 			foreach ($flags as $flag) {
 				$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
-				$value_b = self::resolve_compare_flag_value_b_for_order($order_id, $flag);
+				$value_b = self::get_compare_flag_normalized_value_b($order_id, $flag);
 				$grace_value = isset($flag['grace_value']) && is_numeric($flag['grace_value'])
 					? (float) $flag['grace_value']
 					: null;
-<<<<<<< Updated upstream
-=======
 				$grace_operator = isset($flag['grace_operator']) ? (string) $flag['grace_operator'] : '';
-				$used_custom_b = isset($flag['compare_b_custom']) && trim((string) $flag['compare_b_custom']) !== '';
->>>>>>> Stashed changes
 				$would_display = self::evaluate_order_list_additional_meta_compare_flag(
 					(string) $flag['operator'],
 					$value_a,
 					$value_b,
-					$grace_value
+					$grace_value,
+					$grace_operator
 				);
 
 				$row_flags[] = [
@@ -3259,6 +3532,7 @@ final class User_Manager_My_Account_Site_Admin {
 					'value_b'          => $value_b,
 					'operator'         => (string) $flag['operator'],
 					'grace_value'      => $grace_value,
+					'grace_operator'   => $grace_operator,
 					'title'            => (string) $flag['title'],
 					'background_color' => (string) $flag['background_color'],
 					'text_color'       => (string) $flag['text_color'],
@@ -3267,13 +3541,8 @@ final class User_Manager_My_Account_Site_Admin {
 						(string) $flag['operator'],
 						$value_a,
 						$value_b,
-<<<<<<< Updated upstream
-						$grace_value
-=======
 						$grace_value,
-						$grace_operator,
-						$used_custom_b
->>>>>>> Stashed changes
+						$grace_operator
 					),
 				];
 			}
@@ -3292,20 +3561,13 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Produce a short, human-readable description of the comparison the
 	 * flag performed, e.g. "5 == 5 (equal)" or "ABS(5 − 7) = 2, grace 1 ⇒ 2 > 1".
 	 */
-<<<<<<< Updated upstream
-	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value): string {
-=======
-	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = '', bool $compare_b_used_custom = false): string {
->>>>>>> Stashed changes
+	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = ''): string {
 		if ($value_a === '' || $value_b === '') {
 			if ($value_a === '' && $value_b === '') {
-				return __('Both comparison values are empty; flag skipped.', 'user-manager');
+				return __('Both meta values are empty; flag skipped.', 'user-manager');
 			}
-			if ($value_a === '') {
-				return __('Meta A is empty; flag skipped.', 'user-manager');
-			}
-			return $compare_b_used_custom
-				? __('Compare-to custom value is empty; flag skipped.', 'user-manager')
+			return $value_a === ''
+				? __('Meta A is empty; flag skipped.', 'user-manager')
 				: __('Meta B is empty; flag skipped.', 'user-manager');
 		}
 
@@ -3317,10 +3579,11 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 			$diff = abs($numeric_a - $numeric_b);
 			$grace_abs = max(0, abs($grace_value));
-			if ($operator === 'are_they_equal') {
+			$effective_grace_operator = self::resolve_compare_flag_effective_grace_operator($grace_operator, $operator);
+			if ($effective_grace_operator === 'exceeds') {
 				return sprintf(
 					/* translators: 1: numeric a, 2: numeric b, 3: diff, 4: grace, 5: comparison sign */
-					__('ABS(%1$s − %2$s) = %3$s; flags when diff > grace (%4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
+					__('ABS(%1$s − %2$s) = %3$s; flags when diff exceeds grace (> %4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
 					self::format_compare_preview_number($numeric_a),
 					self::format_compare_preview_number($numeric_b),
 					self::format_compare_preview_number($diff),
@@ -3329,7 +3592,8 @@ final class User_Manager_My_Account_Site_Admin {
 				);
 			}
 			return sprintf(
-				__('ABS(%1$s − %2$s) = %3$s; flags when diff ≤ grace (%4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
+				/* translators: 1: numeric a, 2: numeric b, 3: diff, 4: grace, 5: comparison sign */
+				__('ABS(%1$s − %2$s) = %3$s; flags when diff is within grace (≤ %4$s). Result: %3$s %5$s %4$s.', 'user-manager'),
 				self::format_compare_preview_number($numeric_a),
 				self::format_compare_preview_number($numeric_b),
 				self::format_compare_preview_number($diff),
@@ -3339,11 +3603,6 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		$equal = strcasecmp($value_a, $value_b) === 0;
-		if ($operator === 'are_they_equal') {
-			return $equal
-				? sprintf(__('"%1$s" == "%2$s" → equal.', 'user-manager'), $value_a, $value_b)
-				: sprintf(__('"%1$s" != "%2$s" → not equal.', 'user-manager'), $value_a, $value_b);
-		}
 		return $equal
 			? sprintf(__('"%1$s" == "%2$s" → equal.', 'user-manager'), $value_a, $value_b)
 			: sprintf(__('"%1$s" != "%2$s" → not equal.', 'user-manager'), $value_a, $value_b);
@@ -3382,7 +3641,7 @@ final class User_Manager_My_Account_Site_Admin {
 		$badges = [];
 		foreach ($flags as $flag) {
 			$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
-			$value_b = self::resolve_compare_flag_value_b_for_order($order_id, $flag);
+			$value_b = self::get_compare_flag_normalized_value_b($order_id, $flag);
 			if ($value_a === '' || $value_b === '') {
 				continue;
 			}
@@ -3391,7 +3650,8 @@ final class User_Manager_My_Account_Site_Admin {
 				(string) $flag['operator'],
 				$value_a,
 				$value_b,
-				isset($flag['grace_value']) && is_numeric($flag['grace_value']) ? (float) $flag['grace_value'] : null
+				isset($flag['grace_value']) && is_numeric($flag['grace_value']) ? (float) $flag['grace_value'] : null,
+				isset($flag['grace_operator']) ? (string) $flag['grace_operator'] : ''
 			);
 			if (!$matches) {
 				continue;
@@ -3604,14 +3864,57 @@ final class User_Manager_My_Account_Site_Admin {
 			if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed)) {
 				$url = esc_url_raw($trimmed);
 				if ($url !== '') {
-					$link_actions = [
-						'<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Open File', 'user-manager') . '</a>',
-					];
-					if ($enable_file_preview) {
-						$link_actions[] = '<a href="' . esc_url($url) . '" class="um-my-account-file-preview-trigger">' . esc_html__('Preview File', 'user-manager') . '</a>';
+					// For FCF PRO uploads, the original public URL is typically
+					// blocked by FCF's own `Deny from all` .htaccess inside its
+					// upload directory — which makes Download 403 and Office
+					// Web Viewer Preview fail with "We can't process this
+					// request". Generate signed proxy URLs instead.
+					$preview_url  = $url;
+					$download_url = $url;
+					if ($is_fcf_file_upload && is_array($fcf_resolution) && !empty($fcf_resolution['hash']) && !empty($fcf_resolution['filename'])) {
+						// Preview uses the path-based URL so the URL ends in
+						// the original extension (e.g. /um-fcf-file/File.xlsx?…).
+						// Office Web Viewer sniffs the extension from the URL
+						// path — using the query-string URL here causes
+						// "We can't process this request" even when the
+						// response bytes are correct.
+						$proxy_inline_path = self::build_fcf_file_proxy_path_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename']);
+						$proxy_inline      = self::build_fcf_file_proxy_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename'], false);
+						$proxy_download    = self::build_fcf_file_proxy_url((string) $fcf_resolution['hash'], (string) $fcf_resolution['filename'], true);
+						if ($proxy_inline_path !== '') {
+							$preview_url = $proxy_inline_path;
+						} elseif ($proxy_inline !== '') {
+							$preview_url = $proxy_inline;
+						}
+						if ($proxy_download !== '') {
+							$download_url = $proxy_download;
+						}
 					}
-					$link_html = implode(' <span class="um-my-account-meta-file-link-sep">|</span> ', $link_actions);
+
+					// Preview first, then Download; no separator pipe between them.
+					// For FCF rows we also pass the original filename through
+					// data attributes so the preview modal can display the
+					// real name and route extension-based previews correctly
+					// (the proxy URL itself has no filename path segment).
+					$preview_filename = '';
+					if ($is_fcf_file_upload && is_array($fcf_resolution) && !empty($fcf_resolution['filename'])) {
+						$preview_filename = (string) $fcf_resolution['filename'];
+					}
+					$link_actions = [];
+					if ($enable_file_preview) {
+						$preview_attrs = '';
+						if ($preview_filename !== '') {
+							$preview_attrs = ' data-um-preview-filename="' . esc_attr($preview_filename) . '"';
+						}
+						$link_actions[] = '<a href="' . esc_url($preview_url) . '" class="um-my-account-file-preview-trigger"' . $preview_attrs . '>' . esc_html__('Preview', 'user-manager') . '</a>';
+					}
+					$link_actions[] = '<a href="' . esc_url($download_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Download', 'user-manager') . '</a>';
+					$link_html = '<span class="um-my-account-meta-file-link-actions">' . implode(' ', $link_actions) . '</span>';
 					if ($count_text_file_lines) {
+						// Still run the line-count fetch so the cached number
+						// stays fresh for downstream consumers (the Grace Value
+						// compare-flag uses `_um_text_file_line_count_cache_number_only`).
+						// We no longer render the "(N lines)" badge inline.
 						$local_path_for_count = ($is_fcf_file_upload && is_array($fcf_resolution) && !empty($fcf_resolution['path']))
 							? (string) $fcf_resolution['path']
 							: '';
@@ -3619,12 +3922,6 @@ final class User_Manager_My_Account_Site_Admin {
 							$line_count_debug = self::get_text_file_line_count_debug_data_from_local_path($local_path_for_count, $url, $order_id);
 						} else {
 							$line_count_debug = self::get_text_file_line_count_debug_data_from_url($url, $order_id);
-						}
-						$line_count = isset($line_count_debug['line_count']) && is_int($line_count_debug['line_count'])
-							? (int) $line_count_debug['line_count']
-							: null;
-						if ($line_count !== null) {
-							$link_html .= ' <span class="um-my-account-order-list-meta-line-count">(' . esc_html((string) $line_count) . ' ' . esc_html__('lines', 'user-manager') . ')</span>';
 						}
 						if ($debug_enabled) {
 							$debug_payload['resolved_url'] = $url;
@@ -4793,13 +5090,17 @@ final class User_Manager_My_Account_Site_Admin {
 			.um-my-account-order-list-meta-item a {
 				word-break: break-all;
 			}
-			.um-my-account-meta-file-link-sep {
-				margin: 0 4px;
-				color: #646970;
+			.um-my-account-meta-file-link-actions {
+				display: inline-flex;
+				gap: 12px;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+			.um-my-account-meta-file-link-actions a {
+				white-space: nowrap;
 			}
 			.um-my-account-file-preview-trigger {
 				display: inline-block;
-				margin-left: 6px;
 			}
 			.um-my-account-admin-order-meta-block {
 				margin-top: 8px;
@@ -5236,8 +5537,19 @@ final class User_Manager_My_Account_Site_Admin {
 					renderIframePreview(officeEmbedUrl);
 				}
 
-				function renderPreview(url) {
-					var extension = getFileExtension(url);
+				function renderPreview(url, filenameHint) {
+					// Prefer an explicit filename hint (supplied via
+					// `data-um-preview-filename` on the trigger) so extension-
+					// based routing still works when the URL is a signed
+					// proxy URL whose path does not end in the original
+					// filename.
+					var extension = '';
+					if (filenameHint) {
+						extension = getFileExtension(filenameHint);
+					}
+					if (!extension) {
+						extension = getFileExtension(url);
+					}
 					if (extension === 'csv' || extension === 'tsv' || extension === 'txt') {
 						renderTextPreview(url, extension);
 						return;
@@ -5262,7 +5574,7 @@ final class User_Manager_My_Account_Site_Admin {
 					}
 				}
 
-				function openModal(url, trigger) {
+				function openModal(url, trigger, filenameHint) {
 					if (!url) {
 						setStatus(i18n.unsupported, true);
 						return;
@@ -5270,7 +5582,8 @@ final class User_Manager_My_Account_Site_Admin {
 					currentUrl = url;
 					lastActiveElement = trigger || null;
 					if (filenameEl) {
-						filenameEl.textContent = getFilename(url);
+						var label = filenameHint || getFilename(url);
+						filenameEl.textContent = label;
 					}
 					if (openLinkEl) {
 						openLinkEl.href = url;
@@ -5279,7 +5592,7 @@ final class User_Manager_My_Account_Site_Admin {
 					modal.removeAttribute('hidden');
 					modal.setAttribute('aria-hidden', 'false');
 					document.body.style.overflow = 'hidden';
-					renderPreview(url);
+					renderPreview(url, filenameHint);
 				}
 
 				document.addEventListener('click', function (event) {
@@ -5287,7 +5600,8 @@ final class User_Manager_My_Account_Site_Admin {
 					if (previewTrigger) {
 						event.preventDefault();
 						var previewUrl = previewTrigger.getAttribute('href') || '';
-						openModal(previewUrl, previewTrigger);
+						var filenameHint = previewTrigger.getAttribute('data-um-preview-filename') || '';
+						openModal(previewUrl, previewTrigger, filenameHint);
 						return;
 					}
 					var closeTrigger = event.target.closest('[data-um-close-preview="1"]');

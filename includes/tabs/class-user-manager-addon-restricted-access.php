@@ -15,6 +15,7 @@ class User_Manager_Addon_Restricted_Access {
 		$behavior = isset($settings['restricted_access_logged_out_behavior']) ? (string) $settings['restricted_access_logged_out_behavior'] : 'overlay';
 		$password = isset($settings['restricted_access_shared_password']) ? (string) $settings['restricted_access_shared_password'] : '';
 		$remember_ip_for_30_days_after_password = !empty($settings['restricted_access_remember_ip_for_30_days']);
+		$password_in_url_query = !empty($settings['restricted_access_password_in_url_query']);
 		$appended_url_key = isset($settings['restricted_access_url_string']) ? (string) $settings['restricted_access_url_string'] : '';
 		$session_minutes = isset($settings['restricted_access_time_limit_minutes']) ? absint($settings['restricted_access_time_limit_minutes']) : 30;
 		if ($session_minutes < 1) {
@@ -64,6 +65,14 @@ class User_Manager_Addon_Restricted_Access {
 						<label for="um-restricted-access-shared-password"><strong><?php esc_html_e('Add a Shared Password to Access Website', 'user-manager'); ?></strong></label>
 						<input type="text" id="um-restricted-access-shared-password" name="restricted_access_shared_password" class="regular-text" value="<?php echo esc_attr($password); ?>"<?php echo $form_attr; ?> />
 						<p class="description"><?php esc_html_e('When set, blocked visitors can submit this password to gain temporary access.', 'user-manager'); ?></p>
+					</div>
+
+					<div class="um-form-field">
+						<label>
+							<input type="checkbox" id="um-restricted-access-password-in-url-query" name="restricted_access_password_in_url_query" value="1" <?php checked($password_in_url_query); ?><?php echo $form_attr; ?> />
+							<strong><?php esc_html_e('Instead of a traditional login form, send the password through to a new request with the password in the URL after ?', 'user-manager'); ?></strong>
+						</label>
+						<p class="description"><?php esc_html_e('When enabled, submit uses the redirect target with an um_ra_pwd=… query argument (server validates, then redirects to a clean URL with access granted). Passwords in URLs are visible in logs, history, and referrers — use only when you need this.', 'user-manager'); ?></p>
 					</div>
 
 					<div class="um-form-field">

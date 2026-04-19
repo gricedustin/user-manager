@@ -23,6 +23,7 @@ class User_Manager_Actions {
 	public static function init(): void {
 		add_action('admin_post_user_manager_create_user', [__CLASS__, 'handle_create_user']);
 		add_action('admin_post_user_manager_reset_password', [__CLASS__, 'handle_reset_password']);
+		add_action('admin_post_user_manager_change_role', [__CLASS__, 'handle_change_role']);
 		add_action('admin_post_user_manager_remove_user', [__CLASS__, 'handle_remove_user']);
 		add_action('admin_post_user_manager_deactivate_user', [__CLASS__, 'handle_deactivate_user']);
 		add_action('admin_post_user_manager_reactivate_user', [__CLASS__, 'handle_reactivate_user']);
@@ -765,6 +766,205 @@ class User_Manager_Actions {
 			}
 		}
 		exit;
+	}
+
+	/**
+	 * Handle Change Role(s) form submission.
+	 *
+	 * Mirrors `handle_reset_password()`: accepts one or more emails, a new
+	 * role key, and an optional "Send Role Change Email" checkbox. Each
+	 * matched user is reassigned via `WP_User::set_role()` so WP fires its
+	 * standard `set_user_role` action and other plugins that listen for
+	 * role changes keep working. Old role(s) and the new role are persisted
+	 * to the Admin Activity Log so Reports > Admin Log retains history.
+	 */
+	public static function handle_change_role(): void {
+		if (!current_user_can('manage_options')) {
+			wp_die(__('You do not have permission to access this page.', 'user-manager'));
+		}
+
+		check_admin_referer('user_manager_change_role');
+
+		$emails_raw = isset($_POST['emails']) ? sanitize_textarea_field(wp_unslash($_POST['emails'])) : '';
+		$new_role   = isset($_POST['new_role']) ? sanitize_key(wp_unslash($_POST['new_role'])) : '';
+		$send_email = isset($_POST['send_email']) && $_POST['send_email'] === '1';
+
+		// Validate role: must exist in the WordPress role registry AND
+		// be assignable (not a virtual role like 'super admin').
+		$available_roles = [];
+		if (function_exists('wp_roles')) {
+			$wp_roles = wp_roles();
+			if ($wp_roles && method_exists($wp_roles, 'get_names')) {
+				$available_roles = $wp_roles->get_names();
+			}
+		}
+		if ($new_role === '' || !is_array($available_roles) || !isset($available_roles[$new_role])) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CHANGE_ROLE, 'invalid_role'));
+			exit;
+		}
+
+		// Parse emails (one per line) — handle both \r\n and \n line endings.
+		$emails_raw = str_replace("\r\n", "\n", $emails_raw);
+		$emails_raw = str_replace("\r", "\n", $emails_raw);
+		$emails = array_filter(array_map('trim', explode("\n", $emails_raw)));
+		$emails = array_map('sanitize_email', $emails);
+		$emails = array_filter($emails, static function ($email) {
+			return !empty($email) && is_email($email);
+		});
+
+		if (empty($emails)) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CHANGE_ROLE, 'error'));
+			exit;
+		}
+
+		$settings        = User_Manager_Core::get_settings();
+		$log_activity    = array_key_exists('log_activity', $settings) ? !empty($settings['log_activity']) : true;
+		$is_bulk         = count($emails) > 1;
+		$new_role_label  = isset($available_roles[$new_role]) ? (string) $available_roles[$new_role] : $new_role;
+
+		$changed_count   = 0;
+		$not_found_count = 0;
+		$unchanged_count = 0;
+		$emails_sent     = 0;
+
+		foreach ($emails as $email) {
+			$user = get_user_by('email', $email);
+			if (!$user instanceof WP_User) {
+				$not_found_count++;
+				if ($log_activity) {
+					User_Manager_Core::add_activity_log('role_change_failed', 0, 'Change Role', [
+						'error'           => __('User not found', 'user-manager'),
+						'attempted_email' => $email,
+						'new_role'        => $new_role,
+						'bulk'            => $is_bulk,
+					]);
+				}
+				continue;
+			}
+
+			$old_roles = is_array($user->roles) ? array_values(array_map('sanitize_key', $user->roles)) : [];
+
+			// If the user already has exactly the target role, skip silently
+			// so we do not produce noise in the admin log or accidentally
+			// fire set_user_role for a no-op.
+			if (count($old_roles) === 1 && $old_roles[0] === $new_role) {
+				$unchanged_count++;
+				if ($log_activity) {
+					User_Manager_Core::add_activity_log('role_change_unchanged', $user->ID, 'Change Role', [
+						'old_roles' => $old_roles,
+						'new_role'  => $new_role,
+						'bulk'      => $is_bulk,
+					]);
+				}
+				continue;
+			}
+
+			// set_role() replaces all existing roles with the new one and
+			// fires the standard WordPress `set_user_role` action that
+			// other plugins listen for.
+			$user->set_role($new_role);
+			$changed_count++;
+
+			if ($log_activity) {
+				User_Manager_Core::add_activity_log('role_change', $user->ID, 'Change Role', [
+					'old_roles'     => $old_roles,
+					'new_role'      => $new_role,
+					'new_role_label' => $new_role_label,
+					'email_sent'    => $send_email,
+					'bulk'          => $is_bulk,
+				]);
+			}
+
+			if ($send_email) {
+				if (self::send_role_change_notification_email($user, $old_roles, $new_role, $new_role_label)) {
+					$emails_sent++;
+				}
+			}
+		}
+
+		// Redirect with appropriate message.
+		if ($is_bulk) {
+			$message = $send_email ? 'bulk_role_change_email_sent' : 'bulk_role_change';
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CHANGE_ROLE, $message, [
+				'changed'   => $changed_count,
+				'not_found' => $not_found_count,
+				'unchanged' => $unchanged_count,
+				'emails'    => $emails_sent,
+				'new_role'  => $new_role,
+			]));
+		} elseif ($changed_count === 0 && $not_found_count > 0) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CHANGE_ROLE, 'user_not_found'));
+		} elseif ($changed_count === 0 && $unchanged_count > 0) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CHANGE_ROLE, 'role_unchanged', [
+				'new_role' => $new_role,
+			]));
+		} elseif ($send_email) {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CHANGE_ROLE, 'role_change_email_sent', [
+				'new_role' => $new_role,
+			]));
+		} else {
+			wp_safe_redirect(User_Manager_Core::get_redirect_with_message(User_Manager_Core::TAB_CHANGE_ROLE, 'role_change', [
+				'new_role' => $new_role,
+			]));
+		}
+		exit;
+	}
+
+	/**
+	 * Send a lightweight "Your role has changed" notification email.
+	 *
+	 * This is intentionally a small wp_mail() message (not a template
+	 * editor form) because the Change Role tool itself discourages sending
+	 * a user-facing notification — most admins change roles silently.
+	 *
+	 * @param WP_User            $user           Target user.
+	 * @param array<int,string>  $old_roles      Previous role keys.
+	 * @param string             $new_role       New role key.
+	 * @param string             $new_role_label Human-readable new-role label.
+	 */
+	private static function send_role_change_notification_email(WP_User $user, array $old_roles, string $new_role, string $new_role_label): bool {
+		$email = (string) $user->user_email;
+		if (!is_email($email)) {
+			return false;
+		}
+
+		$site_name = wp_specialchars_decode((string) get_bloginfo('name'), ENT_QUOTES);
+		$site_url  = home_url('/');
+		$display   = (string) ($user->display_name !== '' ? $user->display_name : $user->user_login);
+
+		$subject = sprintf(
+			/* translators: %s: site name */
+			__('Your %s account role has been updated', 'user-manager'),
+			$site_name !== '' ? $site_name : parse_url($site_url, PHP_URL_HOST)
+		);
+
+		$old_role_label = !empty($old_roles) ? implode(', ', $old_roles) : __('(no previous role)', 'user-manager');
+
+		$body  = sprintf(__('Hi %s,', 'user-manager'), $display) . "\n\n";
+		$body .= sprintf(
+			/* translators: 1: site name, 2: new role label */
+			__('Your account on %1$s has been assigned a new role: %2$s.', 'user-manager'),
+			$site_name,
+			$new_role_label
+		) . "\n\n";
+		$body .= sprintf(
+			/* translators: %s: previous role list */
+			__('Previous role: %s', 'user-manager'),
+			$old_role_label
+		) . "\n\n";
+		$body .= sprintf(
+			/* translators: %s: site URL */
+			__('If you did not expect this change, please reply to this email or contact the site administrator.', 'user-manager'),
+			$site_url
+		) . "\n\n";
+		$body .= $site_url;
+
+		$headers = method_exists('User_Manager_Email', 'build_email_headers')
+			? User_Manager_Email::build_email_headers()
+			: [];
+
+		$sent = wp_mail($email, $subject, $body, $headers);
+		return (bool) $sent;
 	}
 
 	/**
@@ -2430,6 +2630,26 @@ class User_Manager_Actions {
 				if (method_exists('User_Manager_Core', 'clear_admin_email_list_check_cache')) {
 					User_Manager_Core::clear_admin_email_list_check_cache();
 				}
+
+				// "Also Display Notification with All Users with X Role".
+				// Each saved role key must be sanitize_key'd AND still exist
+				// in the WP role registry at save time so a removed-role
+				// leftover cannot trigger an unbounded user-enumeration
+				// query every admin page load.
+				$settings['admin_email_list_check_role_notification_roles'] = [];
+				if (isset($_POST['admin_email_list_check_role_notification_roles']) && is_array($_POST['admin_email_list_check_role_notification_roles'])) {
+					$allowed_role_keys = array_keys(User_Manager_Core::get_user_roles());
+					foreach (wp_unslash($_POST['admin_email_list_check_role_notification_roles']) as $role_key) {
+						$role_key = sanitize_key((string) $role_key);
+						if ($role_key === '' || !in_array($role_key, $allowed_role_keys, true)) {
+							continue;
+						}
+						$settings['admin_email_list_check_role_notification_roles'][] = $role_key;
+					}
+					$settings['admin_email_list_check_role_notification_roles'] = array_values(array_unique($settings['admin_email_list_check_role_notification_roles']));
+				}
+				$settings['admin_email_list_check_role_notification_hide_empty'] = isset($_POST['admin_email_list_check_role_notification_hide_empty'])
+					&& $_POST['admin_email_list_check_role_notification_hide_empty'] === '1';
 				$settings['openai_api_key'] = isset($_POST['openai_api_key']) ? sanitize_text_field(wp_unslash($_POST['openai_api_key'])) : '';
 				$settings['simple_texting_api_token'] = isset($_POST['simple_texting_api_token']) ? sanitize_text_field(wp_unslash($_POST['simple_texting_api_token'])) : '';
 				$settings['send_from_name'] = isset($_POST['send_from_name']) ? sanitize_text_field(wp_unslash($_POST['send_from_name'])) : '';
@@ -2977,6 +3197,7 @@ class User_Manager_Actions {
 				$allowed_restricted_logged_out_behaviors = ['redirect_my_account', 'redirect_wp_admin', 'overlay'];
 				$settings['restricted_access_logged_out_behavior'] = in_array($restricted_logged_out_behavior, $allowed_restricted_logged_out_behaviors, true) ? $restricted_logged_out_behavior : 'overlay';
 				$settings['restricted_access_shared_password'] = isset($_POST['restricted_access_shared_password']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_shared_password'])) : '';
+				$settings['restricted_access_password_in_url_query'] = isset($_POST['restricted_access_password_in_url_query']) && $_POST['restricted_access_password_in_url_query'] === '1';
 				$settings['restricted_access_remember_ip_for_30_days'] = isset($_POST['restricted_access_remember_ip_for_30_days']) && $_POST['restricted_access_remember_ip_for_30_days'] === '1';
 				$settings['restricted_access_url_string'] = isset($_POST['restricted_access_url_string']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_url_string'])) : '';
 				$settings['restricted_access_time_limit_minutes'] = isset($_POST['restricted_access_time_limit_minutes']) ? max(1, absint($_POST['restricted_access_time_limit_minutes'])) : 30;

@@ -176,7 +176,7 @@ class User_Manager_Addon_My_Account_Site_Admin {
 					</div>
 					<div class="um-form-field" id="um-my-account-admin-order-additional-flag-list-field" style="<?php echo empty($settings['my_account_admin_order_viewer_enabled']) ? 'display:none;' : ''; ?>">
 						<label><?php esc_html_e('Additional Flag to Display Below Additional Fields in All Orders Screen', 'user-manager'); ?></label>
-						<p class="description"><?php esc_html_e('Compare two meta values per row and pick whether the flag should show when the values ARE equal or when they are NOT equal. With a grace value, both values must be numeric — "equal" flags when ABS(A − B) > grace, "not equal" flags when ABS(A − B) ≤ grace. Default colors are black background and white text.', 'user-manager'); ?></p>
+						<p class="description"><?php esc_html_e('Compare two meta values per row and pick whether the flag should show when the values ARE equal or when they are NOT equal. With a grace value, both values must be numeric. Use the Grace Value Operator to explicitly pick "Only flag when diff EXCEEDS grace (>)" or "Only flag when diff is WITHIN grace (≤)" — or leave it on Auto to keep the legacy behavior where ARE equal pairs with EXCEEDS and NOT equal pairs with WITHIN. Default colors are black background and white text.', 'user-manager'); ?></p>
 						<?php self::render_additional_meta_compare_flags_repeater(
 							'my_account_admin_order_list_additional_flag_fields',
 							'um-my-account-admin-order-additional-flag-fields-list',
@@ -355,7 +355,18 @@ class User_Manager_Addon_My_Account_Site_Admin {
 											<br />
 											<span class="description"><?php echo esc_html($operator_label); ?><?php
 												if (isset($f['grace_value']) && $f['grace_value'] !== null) {
-													echo esc_html(sprintf(' — ' . __('grace %s', 'user-manager'), (string) $f['grace_value']));
+													$grace_operator_raw = isset($f['grace_operator']) ? (string) $f['grace_operator'] : '';
+													if ($grace_operator_raw === '') {
+														$grace_operator_raw = $f['operator'] === 'are_they_equal' ? 'exceeds' : 'within';
+													}
+													$grace_operator_label = $grace_operator_raw === 'within'
+														? __('within', 'user-manager')
+														: __('exceeds', 'user-manager');
+													echo esc_html(sprintf(
+														' — ' . __('grace %1$s (%2$s)', 'user-manager'),
+														(string) $f['grace_value'],
+														$grace_operator_label
+													));
 												}
 											?></span>
 											<br />

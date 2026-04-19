@@ -256,7 +256,20 @@ if (!defined('ABSPATH')) {
 						</div>
 					<div class="um-form-field">
 						<label for="um-legacy-noop-shortcodes"><?php esc_html_e('Legacy/Broken Shortcodes (comma-separated)', 'user-manager'); ?></label>
-						<input type="text" name="legacy_noop_shortcodes_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($settings['legacy_noop_shortcodes_list'] ?? ''); ?>" placeholder="old_shortcode_one, old_shortcode_two" />
+						<?php
+						// Saved key on the server side is
+						// `legacy_broken_shortcodes_noop_list`. A prior revision
+						// had the input rendered under the unrelated name
+						// `legacy_noop_shortcodes_list`, which meant admin
+						// typed values were never persisted. Read from either
+						// key for display while writing under the canonical
+						// save-handler key.
+						$legacy_noop_shortcodes_value = (string) (
+							$settings['legacy_broken_shortcodes_noop_list']
+								?? ($settings['legacy_noop_shortcodes_list'] ?? '')
+						);
+						?>
+						<input type="text" name="legacy_broken_shortcodes_noop_list" id="um-legacy-noop-shortcodes" class="large-text" value="<?php echo esc_attr($legacy_noop_shortcodes_value); ?>" placeholder="old_shortcode_one, old_shortcode_two" />
 						<p class="description"><?php esc_html_e('Optional. Registers empty handlers for legacy shortcodes so old content does not break when those shortcode sources are removed.', 'user-manager'); ?></p>
 					</div>
 					</div>
@@ -432,6 +445,40 @@ if (!defined('ABSPATH')) {
 								</span>
 							</p>
 						</div>
+						<div class="um-form-field">
+							<?php
+							$role_notification_roles = isset($settings['admin_email_list_check_role_notification_roles'])
+								&& is_array($settings['admin_email_list_check_role_notification_roles'])
+								? array_map('sanitize_key', $settings['admin_email_list_check_role_notification_roles'])
+								: [];
+							$all_site_roles = User_Manager_Core::get_user_roles();
+							?>
+							<label class="um-label-block"><strong><?php esc_html_e('Also Display Notification with All Users with X Role', 'user-manager'); ?></strong></label>
+							<p class="description" style="margin-top:0;">
+								<?php esc_html_e('Select one or more roles. For each selected role, User Manager will render a separate admin notice listing every user with that role, plus per-row "Remove this user" and "Change role for this user" links (the Change Role link prefills the role to Customer).', 'user-manager'); ?>
+							</p>
+							<div class="um-checkbox-list" style="border:1px solid #c3c4c7; padding:10px 12px; background:#fff; border-radius:4px; max-width:720px;">
+								<?php foreach ($all_site_roles as $role_key => $role_label) : ?>
+									<label style="display:block; margin-bottom:6px;">
+										<input type="checkbox" name="admin_email_list_check_role_notification_roles[]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $role_notification_roles, true)); ?> />
+										<?php echo esc_html($role_label); ?> (<code><?php echo esc_html($role_key); ?></code>)
+									</label>
+								<?php endforeach; ?>
+								<?php if (empty($all_site_roles)) : ?>
+									<p class="description" style="margin:0;"><?php esc_html_e('No registered roles found.', 'user-manager'); ?></p>
+								<?php endif; ?>
+							</div>
+							<p class="description" style="margin-top:6px;">
+								<?php esc_html_e('Notifications only display to WP Administrators and only on User Manager admin screens, the Users list screen, and the Dashboard, matching where the other Remote Admin Email List notices render.', 'user-manager'); ?>
+							</p>
+							<label style="display:block; margin-top:10px;">
+								<input type="checkbox" name="admin_email_list_check_role_notification_hide_empty" value="1" <?php checked(!empty($settings['admin_email_list_check_role_notification_hide_empty'])); ?> />
+								<?php esc_html_e('Hide Notification for Each if No Users are Found', 'user-manager'); ?>
+							</label>
+							<p class="description" style="margin-top:4px;">
+								<?php esc_html_e('When checked, a per-role notification is only rendered for roles that actually have at least one user assigned. Roles with zero users stay silent instead of showing a "No users are currently assigned this role" card.', 'user-manager'); ?>
+							</p>
+						</div>
 					</div>
 				</div>
 
@@ -593,6 +640,14 @@ if (!defined('ABSPATH')) {
 					if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') {
 						return;
 					}
+					// Defensive guard: only toggle when the event originated on
+					// the header itself (or its direct icon/title span). Without
+					// this, a click on a form-control-ish descendant inside the
+					// header, or an Enter key bubbling up from a nested field,
+					// would be intercepted and the outer form submit swallowed.
+					if (e.target !== this && !$(e.target).closest('.um-settings-collapse-indicator, .dashicons, h2', this).length) {
+						return;
+					}
 					if (isSettingsFilterActive()) {
 						return;
 					}
@@ -653,6 +708,32 @@ if (!defined('ABSPATH')) {
 			});
 			initSettingsCardCollapse();
 			applySettingsFilter();
+
+			// Belt-and-suspenders: if the native submit does not fire within
+			// a microtask after the Save button is clicked (because some
+			// ancestor handler called preventDefault), force it explicitly.
+			// We track the native submit event so the fallback only triggers
+			// when the native path was actually blocked.
+			var $settingsForm = $('.um-settings-save-card').closest('form');
+			if ($settingsForm.length) {
+				$settingsForm.on('submit', function() {
+					$settingsForm.data('umNativeSubmitFired', true);
+				});
+				$('.um-settings-save-card input[name="submit"], .um-settings-save-card button[name="submit"]').on('click', function() {
+					$settingsForm.data('umNativeSubmitFired', false);
+					setTimeout(function() {
+						if ($settingsForm.data('umNativeSubmitFired')) {
+							return;
+						}
+						try {
+							var el = $settingsForm[0];
+							if (el && typeof el.submit === 'function') {
+								el.submit();
+							}
+						} catch (err) { /* ignore */ }
+					}, 0);
+				});
+			}
 		});
 		</script>
 		<?php

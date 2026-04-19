@@ -2,23 +2,11 @@
 /**
  * Plugin Name: User Experience Manager
  * Description: User Experience Manager for B2B/B2C WooCommerce sites, built to improve admin and front-end user experience across welcome emails, bulk user management, dynamic coupon management, and workflow tools via tabs (Create User, Bulk Create, Reset Password, Remove User, Login As, Email Users, Settings, Reports, Add-ons, Documentation).
-<<<<<<< Updated upstream
- * Version: 2.6.15
-=======
- * Version: 2.6.35
->>>>>>> Stashed changes
+ * Version: 2.6.33
  * Author: Grice Projects
  * Author URI: https://griceprojects.com
  * 
  * Changelog:
- *
-<<<<<<< Updated upstream
-=======
- * 2.6.35 - April 18, 2026
- * - Administrator Custom Dashboard Tiles admin bar: on viewports ≤782px, WordPress core hides every `#wp-toolbar > ul > li` except a fixed whitelist, so the Portal dropdown never appeared. Added a targeted `display: block !important` for `#wp-admin-bar-um-admin-custom-dashboard-tiles` and adjusted mobile styles so only the link icon shows (label remains in the DOM; core `.ab-label` rules keep it off-screen).
- *
- * 2.6.34 - April 18, 2026
- * - My Account Site Admin → Additional Flag (compare) repeater: added "OR Compare to Custom Value" next to Meta Field B. When set, the flag compares Meta Field A to that literal text instead of reading Meta Field B from the order (e.g. A = order meta "Yes" vs custom "No"). Stored as an extended line format parsed by `User_Manager_My_Account_Site_Admin::parse_compare_flag_setting_line()`.
  *
  * 2.6.33 - April 18, 2026
  * - “Bulk Create all N administrators” deep link: `esc_url()` strips `%0A`/`%0D` from hrefs (WordPress core), so newline-separated `um_prefill_paste_data` was merged into one string and emails corrupted in Paste Data. The notice now passes a comma-separated list in the query string; Bulk Create still hydrates one email per line in the textarea.
@@ -113,7 +101,6 @@
  * - Replaced those constants with equivalent static accessor methods (e.g. `User_Manager_Core::admin_custom_dashboard_tiles_page_slug()`, `self::restricted_access_password_action()`) so the string values are identical to what 2.6.14 / 2.6.15 shipped with — no stored option keys or URL paths changed.
  * - Updated the three call sites outside the traits (the dashboard tiles admin-page renderer and the dashboard tiles add-on card) to use the new accessor methods and added a graceful `method_exists()` fallback so the Add-ons card cannot fatal on legacy installs.
  *
->>>>>>> Stashed changes
  * 2.6.15 - April 18, 2026
  * - New add-on: "Administrator Custom Dashboard Tiles" — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.
  * - Add-on settings include Page Title Override, Menu Title Override, Menu Location Priority, and a WP-Admin Bar Dropdown toggle.

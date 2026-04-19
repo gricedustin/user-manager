@@ -26,7 +26,7 @@ final class User_Manager_Admin_Custom_Dashboard_Tiles_Page {
 		$data       = User_Manager_Core::get_admin_custom_dashboard_tiles_data();
 		$clicks     = User_Manager_Core::get_admin_custom_dashboard_tiles_clicks();
 		$favorites  = User_Manager_Core::get_admin_custom_dashboard_tiles_favorites_for_current_user();
-		$page_slug  = User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG;
+		$page_slug  = User_Manager_Core::admin_custom_dashboard_tiles_page_slug();
 
 		$active_tab = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : 'dashboard';
 		if (!in_array($active_tab, ['dashboard', 'settings'], true)) {
@@ -406,6 +406,91 @@ final class User_Manager_Admin_Custom_Dashboard_Tiles_Page {
 			echo '</div></div></div>';
 		}
 
+		echo '</div>';
+		self::render_dashboard_recently_clicked_sidebar($tiles_by_id, $clicks);
+		echo '</div>';
+	}
+
+	/**
+	 * Render the "Recently Clicked" sidebar shown on the right of the Dashboard tab.
+	 *
+	 * Surfaces the tiles that have been clicked by any user, most-recent first,
+	 * so admins can jump back to a workflow they were just in. Limited to a
+	 * reasonable number of rows so the column stays scannable.
+	 *
+	 * @param array<string,array<string,mixed>> $tiles_by_id Map of tile id to normalized tile.
+	 * @param array<string,array<string,mixed>> $clicks      Click stats map.
+	 */
+	private static function render_dashboard_recently_clicked_sidebar(array $tiles_by_id, array $clicks): void {
+		if (empty($clicks) || empty($tiles_by_id)) {
+			return;
+		}
+
+		$rows = [];
+		foreach ($clicks as $tile_id => $entry) {
+			$tile_id = (string) $tile_id;
+			if (!isset($tiles_by_id[$tile_id])) {
+				continue;
+			}
+			$last_ts = isset($entry['last_timestamp']) ? (int) $entry['last_timestamp'] : 0;
+			if ($last_ts <= 0) {
+				continue;
+			}
+			$rows[] = [
+				'tile'   => $tiles_by_id[$tile_id],
+				'click'  => $entry,
+				'ts'     => $last_ts,
+			];
+		}
+		if (empty($rows)) {
+			return;
+		}
+		usort($rows, static function (array $a, array $b): int {
+			return $b['ts'] <=> $a['ts'];
+		});
+		$rows = array_slice($rows, 0, 15);
+
+		echo '<div class="um-admin-custom-dashboard-tiles-sidebar" style="width:20%; min-width:280px;">';
+		echo '<div style="position:sticky; top:20px;">';
+		echo '<div class="um-admin-custom-dashboard-tiles-sidebar-header" style="margin-bottom:20px;">';
+		echo '<h2 style="margin:0 0 10px 0; font-size:20px; font-weight:600; color:#1d2327;">' . esc_html__('Recently Clicked', 'user-manager') . '</h2>';
+		echo '<p style="margin:0; font-size:13px; color:#646970; line-height:1.5;">' . esc_html__('Tiles sorted by most recent click time.', 'user-manager') . '</p>';
+		echo '</div>';
+
+		$now = current_time('timestamp');
+		foreach ($rows as $row) {
+			$tile  = $row['tile'];
+			$click = $row['click'];
+			$count = isset($click['count']) ? max(0, (int) $click['count']) : 0;
+			$email = isset($click['last_user_email']) ? (string) $click['last_user_email'] : '';
+			$target_attrs = !empty($tile['new_window']) ? ' target="_blank" rel="noopener noreferrer"' : '';
+			$relative = human_time_diff((int) $row['ts'], $now) . ' ' . __('ago', 'user-manager');
+
+			echo '<div class="um-admin-custom-dashboard-tiles-click-card" style="margin-bottom:15px;">';
+			echo '<a href="' . esc_url($tile['url']) . '"' . $target_attrs . ' class="um-admin-custom-dashboard-tiles-click-card-link" data-tile-click-link="' . esc_attr($tile['id']) . '">';
+			echo '<div class="um-admin-custom-dashboard-tiles-click-card-content">';
+			echo '<div class="um-admin-custom-dashboard-tiles-click-card-title">' . esc_html($tile['title']) . '</div>';
+			echo '<div class="um-admin-custom-dashboard-tiles-click-card-stats">';
+			if ($count > 0) {
+				echo '<div class="um-admin-custom-dashboard-tiles-click-count">';
+				echo '<span class="dashicons dashicons-chart-line" style="font-size:14px; width:14px; height:14px; vertical-align:middle;"></span> ';
+				echo esc_html(sprintf(_n('%d click', '%d clicks', $count, 'user-manager'), $count));
+				echo '</div>';
+			}
+			if ($email !== '') {
+				echo '<div class="um-admin-custom-dashboard-tiles-click-last">';
+				echo '<span class="dashicons dashicons-admin-users" style="font-size:12px; width:12px; height:12px; vertical-align:middle;"></span> ';
+				echo esc_html($email);
+				echo '</div>';
+			}
+			echo '<div class="um-admin-custom-dashboard-tiles-click-time">';
+			echo '<span class="dashicons dashicons-clock" style="font-size:12px; width:12px; height:12px; vertical-align:middle;"></span> ';
+			echo esc_html($relative);
+			echo '</div>';
+			echo '</div>';
+			echo '</div></a></div>';
+		}
+
 		echo '</div></div>';
 	}
 
@@ -500,6 +585,15 @@ final class User_Manager_Admin_Custom_Dashboard_Tiles_Page {
 			.um-admin-custom-dashboard-tiles-favorite-btn.um-admin-custom-dashboard-tiles-favorite-active .dashicons { color:#f0b429; }
 			@media (max-width: 768px) { .um-admin-custom-dashboard-tiles-tiles-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:15px; } }
 			@media (max-width: 480px) { .um-admin-custom-dashboard-tiles-tiles-grid { grid-template-columns: 1fr; } }
+			.um-admin-custom-dashboard-tiles-sidebar { box-sizing:border-box; }
+			.um-admin-custom-dashboard-tiles-click-card { background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.08); transition:all 0.3s ease; overflow:hidden; }
+			.um-admin-custom-dashboard-tiles-click-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.15); transform:translateY(-2px); border-color:#2271b1; }
+			.um-admin-custom-dashboard-tiles-click-card-link { display:block; text-decoration:none; color:inherit; }
+			.um-admin-custom-dashboard-tiles-click-card-content { padding:16px; }
+			.um-admin-custom-dashboard-tiles-click-card-title { font-size:14px; font-weight:600; color:#2271b1; margin-bottom:10px; line-height:1.4; }
+			.um-admin-custom-dashboard-tiles-click-card-link:hover .um-admin-custom-dashboard-tiles-click-card-title { color:#135e96; }
+			.um-admin-custom-dashboard-tiles-click-card-stats { display:flex; flex-direction:column; gap:6px; }
+			@media (max-width: 1024px) { .um-admin-custom-dashboard-tiles-sidebar { display:none; } }
 		</style>
 		<?php
 	}
@@ -514,16 +608,19 @@ final class User_Manager_Admin_Custom_Dashboard_Tiles_Page {
 		if ($is_settings_tab) {
 			wp_enqueue_script('jquery-ui-sortable');
 		}
-		$click_nonce    = wp_create_nonce(User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_CLICK_ACTION);
-		$favorite_nonce = wp_create_nonce(User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITE_ACTION);
-		$reorder_nonce  = wp_create_nonce(User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_REORDER_ACTION);
+		$click_action   = User_Manager_Core::admin_custom_dashboard_tiles_click_action();
+		$favorite_action = User_Manager_Core::admin_custom_dashboard_tiles_favorite_action();
+		$reorder_action = User_Manager_Core::admin_custom_dashboard_tiles_reorder_action();
+		$click_nonce    = wp_create_nonce($click_action);
+		$favorite_nonce = wp_create_nonce($favorite_action);
+		$reorder_nonce  = wp_create_nonce($reorder_action);
 		$config = [
 			'ajaxUrl'          => admin_url('admin-ajax.php'),
-			'clickAction'      => User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_CLICK_ACTION,
+			'clickAction'      => $click_action,
 			'clickNonce'       => $click_nonce,
-			'favoriteAction'   => User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_FAVORITE_ACTION,
+			'favoriteAction'   => $favorite_action,
 			'favoriteNonce'    => $favorite_nonce,
-			'reorderAction'    => User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_REORDER_ACTION,
+			'reorderAction'    => $reorder_action,
 			'reorderNonce'     => $reorder_nonce,
 			'isSettingsTab'    => $is_settings_tab,
 			'strings'          => [

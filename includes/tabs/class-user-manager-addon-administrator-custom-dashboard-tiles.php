@@ -16,7 +16,7 @@ class User_Manager_Addon_Administrator_Custom_Dashboard_Tiles {
 		$page_title = isset($settings['admin_custom_dashboard_tiles_page_title']) ? (string) $settings['admin_custom_dashboard_tiles_page_title'] : '';
 		$menu_title = isset($settings['admin_custom_dashboard_tiles_menu_title']) ? (string) $settings['admin_custom_dashboard_tiles_menu_title'] : '';
 		$menu_priority = isset($settings['admin_custom_dashboard_tiles_menu_priority']) ? (int) $settings['admin_custom_dashboard_tiles_menu_priority'] : 80;
-		$page_url = admin_url('admin.php?page=' . (class_exists('User_Manager_Core') ? User_Manager_Core::ADMIN_CUSTOM_DASHBOARD_TILES_PAGE_SLUG : 'user-manager-custom-dashboard-tiles'));
+		$page_url = admin_url('admin.php?page=' . (class_exists('User_Manager_Core') && method_exists('User_Manager_Core', 'admin_custom_dashboard_tiles_page_slug') ? User_Manager_Core::admin_custom_dashboard_tiles_page_slug() : 'user-manager-custom-dashboard-tiles'));
 		?>
 		<div class="um-admin-card um-addon-collapsible" id="um-addon-card-administrator-custom-dashboard-tiles" data-um-active-selectors="#um-admin-custom-dashboard-tiles-enabled">
 			<div class="um-admin-card-header">
@@ -37,12 +37,12 @@ class User_Manager_Addon_Administrator_Custom_Dashboard_Tiles {
 				<div id="um-admin-custom-dashboard-tiles-fields" style="<?php echo $enabled ? '' : 'display:none;'; ?>">
 					<div class="um-form-field">
 						<label for="um-admin-custom-dashboard-tiles-page-title"><strong><?php esc_html_e('Page Title Override', 'user-manager'); ?></strong></label>
-						<input type="text" id="um-admin-custom-dashboard-tiles-page-title" name="admin_custom_dashboard_tiles_page_title" class="regular-text" value="<?php echo esc_attr($page_title); ?>" placeholder="<?php esc_attr_e('Custom Dashboard Tiles', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<input type="text" id="um-admin-custom-dashboard-tiles-page-title" name="admin_custom_dashboard_tiles_page_title" class="regular-text" value="<?php echo esc_attr($page_title); ?>" placeholder="<?php esc_attr_e('Admin Tiles', 'user-manager'); ?>"<?php echo $form_attr; ?> />
 						<p class="description"><?php esc_html_e('Shown as the H1 heading and browser tab title on the dashboard. Leave blank for the default.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field">
 						<label for="um-admin-custom-dashboard-tiles-menu-title"><strong><?php esc_html_e('Menu Title Override', 'user-manager'); ?></strong></label>
-						<input type="text" id="um-admin-custom-dashboard-tiles-menu-title" name="admin_custom_dashboard_tiles_menu_title" class="regular-text" value="<?php echo esc_attr($menu_title); ?>" placeholder="<?php esc_attr_e('Dashboard Tiles', 'user-manager'); ?>"<?php echo $form_attr; ?> />
+						<input type="text" id="um-admin-custom-dashboard-tiles-menu-title" name="admin_custom_dashboard_tiles_menu_title" class="regular-text" value="<?php echo esc_attr($menu_title); ?>" placeholder="<?php esc_attr_e('Admin Tiles', 'user-manager'); ?>"<?php echo $form_attr; ?> />
 						<p class="description"><?php esc_html_e('Shown in the WP-Admin sidebar menu and in the admin bar dropdown label. Leave blank for the default.', 'user-manager'); ?></p>
 					</div>
 					<div class="um-form-field">
@@ -60,7 +60,7 @@ class User_Manager_Addon_Administrator_Custom_Dashboard_Tiles {
 					<?php if ($enabled) : ?>
 						<div class="um-form-field">
 							<a class="button button-secondary" href="<?php echo esc_url($page_url); ?>">
-								<?php esc_html_e('Open Dashboard Tiles', 'user-manager'); ?>
+								<?php esc_html_e('Open Admin Tiles', 'user-manager'); ?>
 							</a>
 							<p class="description"><?php esc_html_e('Jump straight to the dashboard page to add or edit tiles.', 'user-manager'); ?></p>
 						</div>

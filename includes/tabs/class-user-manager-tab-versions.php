@@ -39,20 +39,6 @@ class User_Manager_Tab_Versions {
 				</div>
 				<div class="um-admin-card-body">
 					<div class="um-changelog-item">
-<<<<<<< Updated upstream
-=======
-						<h4>2.6.35 <span>(April 18, 2026)</span></h4>
-						<ul>
-							<li><?php esc_html_e('Administrator Custom Dashboard Tiles admin bar: fixed Portal menu missing on mobile — WordPress core hides non-whitelisted toolbar list items below 782px; the Portal node is now forced visible with icon-only presentation on small screens.', 'user-manager'); ?></li>
-						</ul>
-					</div>
-					<div class="um-changelog-item">
-						<h4>2.6.34 <span>(April 18, 2026)</span></h4>
-						<ul>
-							<li><?php esc_html_e('My Account Site Admin → Additional Flag (compare) repeater: added "OR Compare to Custom Value" next to Meta Field B. When set, the flag compares Meta Field A to that literal text instead of reading Meta Field B from the order.', 'user-manager'); ?></li>
-						</ul>
-					</div>
-					<div class="um-changelog-item">
 						<h4>2.6.33 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('"Bulk Create all N administrators" deep link: esc_url() strips percent-encoded newlines from hrefs (WordPress core), so newline-separated um_prefill_paste_data was merged and corrupted Paste Data. The notice now uses a comma-separated query value; Bulk Create still shows one email per line in the textarea.', 'user-manager'); ?></li>
@@ -197,7 +183,6 @@ class User_Manager_Tab_Versions {
 						</ul>
 					</div>
 					<div class="um-changelog-item">
->>>>>>> Stashed changes
 						<h4>2.6.15 <span>(April 18, 2026)</span></h4>
 						<ul>
 							<li><?php esc_html_e('New add-on: Administrator Custom Dashboard Tiles — a drag-and-drop administrator dashboard of link tiles grouped by custom sections, with click tracking, per-user favorites, a search filter, and JSON import/export.', 'user-manager'); ?></li>
