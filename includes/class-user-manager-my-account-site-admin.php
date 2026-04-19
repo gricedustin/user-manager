@@ -3142,6 +3142,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 *   meta_key_a:string,
 	 *   meta_key_b:string,
 	 *   compare_b_custom:string,
+	 *   allow_empty_meta:bool,
 	 *   operator:string,
 	 *   grace_value:float|null,
 	 *   grace_operator:string,
@@ -3188,6 +3189,15 @@ final class User_Manager_My_Account_Site_Admin {
 				$remaining = array_map('trim', array_slice($segments, 3));
 			}
 
+			if (empty($remaining)) {
+				continue;
+			}
+
+			$allow_empty_meta = false;
+			if (isset($remaining[0]) && strtolower(trim((string) $remaining[0])) === 'um_allow_empty') {
+				$allow_empty_meta = true;
+				array_shift($remaining);
+			}
 			if (empty($remaining)) {
 				continue;
 			}
@@ -3251,6 +3261,7 @@ final class User_Manager_My_Account_Site_Admin {
 				'meta_key_a' => $meta_key_a,
 				'meta_key_b' => $meta_key_b,
 				'compare_b_custom' => $compare_b_custom,
+				'allow_empty_meta' => $allow_empty_meta,
 				'operator' => $operator_raw,
 				'grace_value' => $grace_value,
 				'grace_operator' => $grace_operator,
@@ -3306,6 +3317,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 *   meta_key_a:string,
 	 *   meta_key_b:string,
 	 *   compare_b_custom:string,
+	 *   allow_empty_meta:bool,
 	 *   operator:string,
 	 *   grace_value:float|null,
 	 *   title:string,
@@ -3425,10 +3437,11 @@ final class User_Manager_My_Account_Site_Admin {
 	 *                                   derived behavior (`are_they_equal` →
 	 *                                   `exceeds`, `are_they_not_equal` →
 	 *                                   `within`).
+	 * @param bool       $allow_empty_meta When true, empty A/B is allowed; grace uses 0 for blanks.
 	 * @return bool
 	 */
-	public static function evaluate_order_list_additional_meta_compare_flag(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = ''): bool {
-		if ($value_a === '' || $value_b === '') {
+	public static function evaluate_order_list_additional_meta_compare_flag(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = '', bool $allow_empty_meta = false): bool {
+		if (!$allow_empty_meta && ($value_a === '' || $value_b === '')) {
 			return false;
 		}
 
@@ -3437,6 +3450,14 @@ final class User_Manager_My_Account_Site_Admin {
 		if ($normalized_grace !== null) {
 			$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
 			$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+			if ($allow_empty_meta) {
+				if ($value_a === '' && $numeric_a === null) {
+					$numeric_a = 0.0;
+				}
+				if ($value_b === '' && $numeric_b === null) {
+					$numeric_b = 0.0;
+				}
+			}
 			if ($numeric_a === null || $numeric_b === null) {
 				return false;
 			}
@@ -3516,12 +3537,14 @@ final class User_Manager_My_Account_Site_Admin {
 					? (float) $flag['grace_value']
 					: null;
 				$grace_operator = isset($flag['grace_operator']) ? (string) $flag['grace_operator'] : '';
+				$allow_empty_meta = !empty($flag['allow_empty_meta']);
 				$would_display = self::evaluate_order_list_additional_meta_compare_flag(
 					(string) $flag['operator'],
 					$value_a,
 					$value_b,
 					$grace_value,
-					$grace_operator
+					$grace_operator,
+					$allow_empty_meta
 				);
 
 				$row_flags[] = [
@@ -3542,7 +3565,8 @@ final class User_Manager_My_Account_Site_Admin {
 						$value_a,
 						$value_b,
 						$grace_value,
-						$grace_operator
+						$grace_operator,
+						$allow_empty_meta
 					),
 				];
 			}
@@ -3561,8 +3585,8 @@ final class User_Manager_My_Account_Site_Admin {
 	 * Produce a short, human-readable description of the comparison the
 	 * flag performed, e.g. "5 == 5 (equal)" or "ABS(5 − 7) = 2, grace 1 ⇒ 2 > 1".
 	 */
-	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = ''): string {
-		if ($value_a === '' || $value_b === '') {
+	private static function describe_order_list_additional_meta_compare_calculation(string $operator, string $value_a, string $value_b, ?float $grace_value, string $grace_operator = '', bool $allow_empty_meta = false): string {
+		if (!$allow_empty_meta && ($value_a === '' || $value_b === '')) {
 			if ($value_a === '' && $value_b === '') {
 				return __('Both meta values are empty; flag skipped.', 'user-manager');
 			}
@@ -3574,6 +3598,14 @@ final class User_Manager_My_Account_Site_Admin {
 		if ($grace_value !== null) {
 			$numeric_a = self::maybe_parse_order_meta_scalar_as_float($value_a);
 			$numeric_b = self::maybe_parse_order_meta_scalar_as_float($value_b);
+			if ($allow_empty_meta) {
+				if ($value_a === '' && $numeric_a === null) {
+					$numeric_a = 0.0;
+				}
+				if ($value_b === '' && $numeric_b === null) {
+					$numeric_b = 0.0;
+				}
+			}
 			if ($numeric_a === null || $numeric_b === null) {
 				return __('Grace value set, but one or both values are not numeric; flag skipped.', 'user-manager');
 			}
@@ -3642,7 +3674,8 @@ final class User_Manager_My_Account_Site_Admin {
 		foreach ($flags as $flag) {
 			$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
 			$value_b = self::get_compare_flag_normalized_value_b($order_id, $flag);
-			if ($value_a === '' || $value_b === '') {
+			$allow_empty_meta = !empty($flag['allow_empty_meta']);
+			if (!$allow_empty_meta && ($value_a === '' || $value_b === '')) {
 				continue;
 			}
 
@@ -3651,7 +3684,8 @@ final class User_Manager_My_Account_Site_Admin {
 				$value_a,
 				$value_b,
 				isset($flag['grace_value']) && is_numeric($flag['grace_value']) ? (float) $flag['grace_value'] : null,
-				isset($flag['grace_operator']) ? (string) $flag['grace_operator'] : ''
+				isset($flag['grace_operator']) ? (string) $flag['grace_operator'] : '',
+				$allow_empty_meta
 			);
 			if (!$matches) {
 				continue;

@@ -9044,6 +9044,9 @@ html body .woocommerce-layout__header {
 			case 'settings_saved':
 				$content = __('Settings saved successfully.', 'user-manager');
 				break;
+			case 'restricted_access_sessions_cleared':
+				$content = __('All restricted-access sessions were cleared. Visitors must use the shared password, URL key, or other access method again.', 'user-manager');
+				break;
 			case 'text_file_line_count_cache_reset':
 				$cache_reset_count = isset($_GET['cache_reset_count']) ? max(0, absint($_GET['cache_reset_count'])) : 0;
 				/* translators: %d: number of orders whose line-count cache was reset */

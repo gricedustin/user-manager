@@ -3217,6 +3217,12 @@ class User_Manager_Actions {
 				$settings['restricted_access_overlay_image_max_width'] = isset($_POST['restricted_access_overlay_image_max_width']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_overlay_image_max_width'])) : '';
 				$settings['restricted_access_overlay_image_display_as_normal_above_message'] = isset($_POST['restricted_access_overlay_image_display_as_normal_above_message']) && $_POST['restricted_access_overlay_image_display_as_normal_above_message'] === '1';
 				$settings['restricted_access_render_background_html_for_social_meta'] = isset($_POST['restricted_access_render_background_html_for_social_meta']) && $_POST['restricted_access_render_background_html_for_social_meta'] === '1';
+				$ra_epoch = isset($settings['restricted_access_session_epoch']) ? max(0, (int) $settings['restricted_access_session_epoch']) : 0;
+				if (isset($_POST['restricted_access_clear_all_sessions']) && (string) wp_unslash($_POST['restricted_access_clear_all_sessions']) === '1') {
+					$ra_epoch++;
+					User_Manager_Core::restricted_access_clear_pending_grant_tokens();
+				}
+				$settings['restricted_access_session_epoch'] = $ra_epoch;
 				// Administrator Custom Dashboard Tiles
 				$settings['admin_custom_dashboard_tiles_enabled'] = isset($_POST['admin_custom_dashboard_tiles_enabled']) && $_POST['admin_custom_dashboard_tiles_enabled'] === '1';
 				$settings['admin_custom_dashboard_tiles_admin_bar_enabled'] = isset($_POST['admin_custom_dashboard_tiles_admin_bar_enabled']) && $_POST['admin_custom_dashboard_tiles_admin_bar_enabled'] === '1';
@@ -3514,7 +3520,9 @@ class User_Manager_Actions {
 		}
 
 		$redirect_message = 'settings_saved';
-		if ($should_reset_media_library_tag_reports) {
+		if (isset($_POST['restricted_access_clear_all_sessions']) && (string) wp_unslash($_POST['restricted_access_clear_all_sessions']) === '1') {
+			$redirect_message = 'restricted_access_sessions_cleared';
+		} elseif ($should_reset_media_library_tag_reports) {
 			$redirect_message = 'media_library_tag_reports_cleared';
 		}
 		$redirect_url = User_Manager_Core::get_redirect_with_message($redirect_tab, $redirect_message);
@@ -3550,6 +3558,9 @@ class User_Manager_Actions {
 					$redirect_url = add_query_arg('block_tag', $block_tag, $redirect_url);
 				}
 			}
+		}
+		if ($redirect_tab === User_Manager_Core::TAB_SETTINGS && in_array($section, ['general', 'tools'], true)) {
+			$redirect_url = add_query_arg('settings_section', $section, $redirect_url);
 		}
 
 		wp_safe_redirect($redirect_url);
