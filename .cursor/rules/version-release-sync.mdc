@@ -1,0 +1,16 @@
+---
+description: Keep plugin version numbers aligned across headers, core constant, and changelog UI
+alwaysApply: true
+---
+
+# User Manager — version number sync
+
+Whenever you bump the plugin version or add release notes, update **all** of the following so they show the **same** version string (currently they must match each other exactly):
+
+1. **`user-manager.php`** — Plugin header comment: `Version: x.y.z`
+2. **`includes/class-user-manager-core.php`** — `User_Manager_Core::VERSION` constant (used for the **“Version %s”** line under the main admin title, script/style cache-busting, and other runtime references)
+3. **`includes/tabs/class-user-manager-tab-versions.php`** — New changelog block at the **top** of the Changelog list (same version + date + bullets as the header changelog in `user-manager.php`)
+
+If you only change one of these, the UI under **User Experience Manager** will disagree with Plugins list / Documentation, or cache-bust strings will be wrong.
+
+**Do not** change older historical `<h4>` blocks in the Versions tab unless you are correcting a factual error; only **prepend** a new block for the new release.

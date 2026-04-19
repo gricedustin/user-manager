@@ -3121,6 +3121,9 @@ final class User_Manager_My_Account_Site_Admin {
 	 * - meta_field_a:meta_field_b:<operator>:FLAG TITLE[:bgcolor[:textcolor]]
 	 * - meta_field_a:meta_field_b:<operator>:grace_value:FLAG TITLE[:bgcolor[:textcolor]]
 	 * - meta_field_a:meta_field_b:<operator>:grace_value:grace_operator:FLAG TITLE[:bgcolor[:textcolor]]
+	 * - meta_field_a:um_cmp_custom:<urlencoded_literal>:<operator>:… — compare Meta Field A to a
+	 *   fixed string (rawurl-encoded so `:` and other characters are safe). When present,
+	 *   `compare_b_custom` is set and Meta Field B is not read from the order.
 	 *
 	 * Semantics:
 	 * - `are_they_equal`     — flag when the two meta values ARE equal (case-insensitive).
@@ -3138,6 +3141,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @return array<int,array{
 	 *   meta_key_a:string,
 	 *   meta_key_b:string,
+	 *   compare_b_custom:string,
 	 *   operator:string,
 	 *   grace_value:float|null,
 	 *   grace_operator:string,
@@ -3170,9 +3174,20 @@ final class User_Manager_My_Account_Site_Admin {
 			}
 
 			$meta_key_a = sanitize_key(trim((string) $segments[0]));
-			$meta_key_b = sanitize_key(trim((string) $segments[1]));
-			$operator_raw = strtolower(trim((string) $segments[2]));
-			$remaining = array_map('trim', array_slice($segments, 3));
+			$peek_b = sanitize_key(trim((string) $segments[1]));
+			$compare_b_custom = '';
+
+			if ($peek_b === 'um_cmp_custom' && count($segments) >= 5) {
+				$compare_b_custom = (string) rawurldecode(trim((string) $segments[2]));
+				$operator_raw = strtolower(trim((string) $segments[3]));
+				$remaining = array_map('trim', array_slice($segments, 4));
+				$meta_key_b = 'um_cmp_custom';
+			} else {
+				$meta_key_b = $peek_b;
+				$operator_raw = strtolower(trim((string) $segments[2]));
+				$remaining = array_map('trim', array_slice($segments, 3));
+			}
+
 			if (empty($remaining)) {
 				continue;
 			}
@@ -3218,7 +3233,13 @@ final class User_Manager_My_Account_Site_Admin {
 
 			$title = sanitize_text_field(trim(implode(':', $remaining)));
 
-			if ($meta_key_a === '' || $meta_key_b === '' || $title === '') {
+			if ($meta_key_a === '' || $title === '') {
+				continue;
+			}
+			if ($compare_b_custom === '' && $meta_key_b === '') {
+				continue;
+			}
+			if ($compare_b_custom === '' && $meta_key_b === 'um_cmp_custom') {
 				continue;
 			}
 			$allowed_operators = ['are_they_equal', 'are_they_not_equal'];
@@ -3229,6 +3250,7 @@ final class User_Manager_My_Account_Site_Admin {
 			$flags[] = [
 				'meta_key_a' => $meta_key_a,
 				'meta_key_b' => $meta_key_b,
+				'compare_b_custom' => $compare_b_custom,
 				'operator' => $operator_raw,
 				'grace_value' => $grace_value,
 				'grace_operator' => $grace_operator,
@@ -3283,6 +3305,7 @@ final class User_Manager_My_Account_Site_Admin {
 	 * @return array<int,array{
 	 *   meta_key_a:string,
 	 *   meta_key_b:string,
+	 *   compare_b_custom:string,
 	 *   operator:string,
 	 *   grace_value:float|null,
 	 *   title:string,
@@ -3333,6 +3356,17 @@ final class User_Manager_My_Account_Site_Admin {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Resolve the "B" side value for a compare-flag row: either order meta
+	 * `meta_key_b`, or a stored literal when `compare_b_custom` is set.
+	 */
+	private static function get_compare_flag_normalized_value_b(int $order_id, array $flag): string {
+		if (isset($flag['compare_b_custom']) && (string) $flag['compare_b_custom'] !== '') {
+			return self::normalize_meta_scalar_for_prefixed_link((string) $flag['compare_b_custom']);
+		}
+		return self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
 	}
 
 	/**
@@ -3477,7 +3511,7 @@ final class User_Manager_My_Account_Site_Admin {
 			$row_flags = [];
 			foreach ($flags as $flag) {
 				$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
-				$value_b = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
+				$value_b = self::get_compare_flag_normalized_value_b($order_id, $flag);
 				$grace_value = isset($flag['grace_value']) && is_numeric($flag['grace_value'])
 					? (float) $flag['grace_value']
 					: null;
@@ -3493,6 +3527,7 @@ final class User_Manager_My_Account_Site_Admin {
 				$row_flags[] = [
 					'meta_key_a'       => (string) $flag['meta_key_a'],
 					'meta_key_b'       => (string) $flag['meta_key_b'],
+					'compare_b_custom' => isset($flag['compare_b_custom']) ? (string) $flag['compare_b_custom'] : '',
 					'value_a'          => $value_a,
 					'value_b'          => $value_b,
 					'operator'         => (string) $flag['operator'],
@@ -3606,7 +3641,7 @@ final class User_Manager_My_Account_Site_Admin {
 		$badges = [];
 		foreach ($flags as $flag) {
 			$value_a = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_a']);
-			$value_b = self::get_first_normalized_order_meta_scalar($order_id, (string) $flag['meta_key_b']);
+			$value_b = self::get_compare_flag_normalized_value_b($order_id, $flag);
 			if ($value_a === '' || $value_b === '') {
 				continue;
 			}

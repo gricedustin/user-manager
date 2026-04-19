@@ -3197,6 +3197,7 @@ class User_Manager_Actions {
 				$allowed_restricted_logged_out_behaviors = ['redirect_my_account', 'redirect_wp_admin', 'overlay'];
 				$settings['restricted_access_logged_out_behavior'] = in_array($restricted_logged_out_behavior, $allowed_restricted_logged_out_behaviors, true) ? $restricted_logged_out_behavior : 'overlay';
 				$settings['restricted_access_shared_password'] = isset($_POST['restricted_access_shared_password']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_shared_password'])) : '';
+				$settings['restricted_access_password_in_url_query'] = isset($_POST['restricted_access_password_in_url_query']) && $_POST['restricted_access_password_in_url_query'] === '1';
 				$settings['restricted_access_remember_ip_for_30_days'] = isset($_POST['restricted_access_remember_ip_for_30_days']) && $_POST['restricted_access_remember_ip_for_30_days'] === '1';
 				$settings['restricted_access_url_string'] = isset($_POST['restricted_access_url_string']) ? sanitize_text_field(wp_unslash($_POST['restricted_access_url_string'])) : '';
 				$settings['restricted_access_time_limit_minutes'] = isset($_POST['restricted_access_time_limit_minutes']) ? max(1, absint($_POST['restricted_access_time_limit_minutes'])) : 30;
